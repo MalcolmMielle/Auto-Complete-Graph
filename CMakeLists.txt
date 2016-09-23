@@ -136,16 +136,16 @@ include_directories(
 # add_dependencies(auto_complete_graph ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(auto_complete_graph_node src/auto_complete_graph_node.cpp)
+add_executable(acg_node src/acg_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(auto_complete_graph_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(auto_complete_graph_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(acg_node
+  ${catkin_LIBRARIES} -L/usr/local/lib/flirtlib -lgui #Need both, first to find the-lgui and then the -lgui. Ask Henril why :S ?
+)
 
 #############
 ## Install ##
