@@ -12,7 +12,10 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
+
 )
+
+set(CMAKE_CXX_STANDARD 11)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -122,18 +125,23 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} include
 )
 
+
 ## Declare a C++ library
-# add_library(auto_complete_graph
-#   src/${PROJECT_NAME}/auto_complete_graph.cpp
-# )
+add_library(auto_complete_graph_lib
+  src/ACG.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(auto_complete_graph ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## TODO : find a way to remove this by linking it where it should be in ndt_feature
+include_directories(/usr/local/include/flirtlib)
+set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry -lgui -lsensors -lsensorstream -lutils_flirt -lutils)
 
 ## Declare a C++ executable
 add_executable(acg_node src/acg_node.cpp)
@@ -144,7 +152,7 @@ add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node
-  ${catkin_LIBRARIES} -L/usr/local/lib/flirtlib -lgui #Need both, first to find the-lgui and then the -lgui. Ask Henril why :S ?
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
 )
 
 #############

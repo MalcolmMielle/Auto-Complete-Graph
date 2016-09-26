@@ -35,8 +35,9 @@
 #include "covariance.hpp"
 #include "conversion.hpp"
 
-namespace ndt_feature {
-	
+namespace AASS {
+
+namespace acg{	
 	
 	class VertexPrior : public g2o::VertexSE2{
 		
@@ -117,7 +118,7 @@ namespace ndt_feature {
 		g2o::SE2 _sensorOffsetTransf;
 		
 		///@brief vector storing all node from the prior 
-		std::vector<ndt_feature::VertexPrior*> _nodes_prior;
+		std::vector<VertexPrior*> _nodes_prior;
 		///@brief vector storing all node from the prior 
 		std::vector<g2o::VertexPointXY*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
@@ -162,8 +163,8 @@ namespace ndt_feature {
 		
 		
 		/** Accessor**/
-		std::vector<ndt_feature::VertexPrior*>& getPriorNodes(){return _nodes_prior;}
-		const std::vector<ndt_feature::VertexPrior*>& getPriorNodes() const {return _nodes_prior;}
+		std::vector<VertexPrior*>& getPriorNodes(){return _nodes_prior;}
+		const std::vector<VertexPrior*>& getPriorNodes() const {return _nodes_prior;}
 		///@brief vector storing all node from the prior 
 		std::vector<g2o::VertexPointXY*>& getLandmarkNodes(){return _nodes_landmark;}
 		const std::vector<g2o::VertexPointXY*>& getLandmarkNodes() const {return _nodes_landmark;}
@@ -195,9 +196,9 @@ namespace ndt_feature {
 		g2o::VertexPointXY* addLandmarkPose(const g2o::Vector2D& pos, int strength = 1);
 		g2o::VertexPointXY* addLandmarkPose(double x, double y, int strength = 1);
 		
-		ndt_feature::VertexPrior* addPriorLandmarkPose(const g2o::SE2& se2);
-		ndt_feature::VertexPrior* addPriorLandmarkPose(const Eigen::Vector3d& lan);
-		ndt_feature::VertexPrior* addPriorLandmarkPose(double x, double y, double theta);
+		VertexPrior* addPriorLandmarkPose(const g2o::SE2& se2);
+		VertexPrior* addPriorLandmarkPose(const Eigen::Vector3d& lan);
+		VertexPrior* addPriorLandmarkPose(double x, double y, double theta);
 		
 		
 		/** FUNCTION TO ADD THE EGDES **/
@@ -266,4 +267,5 @@ namespace ndt_feature {
 	};
 }
 
+}
 #endif
