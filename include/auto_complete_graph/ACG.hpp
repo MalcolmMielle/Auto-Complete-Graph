@@ -21,6 +21,7 @@
 #include "g2o/core/optimization_algorithm_factory.h"
 #include "g2o/core/optimization_algorithm_gauss_newton.h"
 #include "g2o/solvers/csparse/linear_solver_csparse.h"
+#include "g2o/types/slam2d/vertex_se2_prior.h"
 
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/utils.h"
@@ -39,9 +40,14 @@ namespace AASS {
 
 namespace acg{	
 	
-	class VertexPrior : public g2o::VertexSE2{
-		
-	};
+	
+	//ATTENTION : if I use this class without not from g2o package then it can't be saved cause it has no tag :/
+// 	class g2o::VertexPrior : public g2o::VertexSE2{
+// 	public:
+// //       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+// 		g2o::VertexPrior(){};
+// 	};
+	
 	
 	class NDTCornerGraphElement{
 	public:
@@ -118,8 +124,8 @@ namespace acg{
 		g2o::SE2 _sensorOffsetTransf;
 		
 		///@brief vector storing all node from the prior 
-		std::vector<VertexPrior*> _nodes_prior;
-		///@brief vector storing all node from the prior 
+		std::vector<g2o::VertexSE2Prior*> _nodes_prior;
+		///@brief vector storing all node from the landarks 
 		std::vector<g2o::VertexPointXY*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
 		std::vector<g2o::VertexSE2*> _nodes_ndt;
@@ -161,10 +167,23 @@ namespace acg{
 						_sensorOffset->setId(0);
 					}
 		
+		AutoCompleteGraph(const g2o::SE2& sensoffset, 
+						const Eigen::Vector2d& tn, 
+						double rn,
+						const Eigen::Vector2d& ln,
+						const Eigen::Vector2d& pn,
+						const Eigen::Vector2d& linkn
+					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0){
+						// add the parameter representing the sensor offset ATTENTION was ist das ?
+						_sensorOffset = new g2o::ParameterSE2Offset;
+						_sensorOffset->setOffset(_sensorOffsetTransf);
+						_sensorOffset->setId(0);
+						_ndt_graph = NULL;
+					}
 		
 		/** Accessor**/
-		std::vector<VertexPrior*>& getPriorNodes(){return _nodes_prior;}
-		const std::vector<VertexPrior*>& getPriorNodes() const {return _nodes_prior;}
+		std::vector<g2o::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
+		const std::vector<g2o::VertexSE2Prior*>& getPriorNodes() const {return _nodes_prior;}
 		///@brief vector storing all node from the prior 
 		std::vector<g2o::VertexPointXY*>& getLandmarkNodes(){return _nodes_landmark;}
 		const std::vector<g2o::VertexPointXY*>& getLandmarkNodes() const {return _nodes_landmark;}
@@ -196,21 +215,21 @@ namespace acg{
 		g2o::VertexPointXY* addLandmarkPose(const g2o::Vector2D& pos, int strength = 1);
 		g2o::VertexPointXY* addLandmarkPose(double x, double y, int strength = 1);
 		
-		VertexPrior* addPriorLandmarkPose(const g2o::SE2& se2);
-		VertexPrior* addPriorLandmarkPose(const Eigen::Vector3d& lan);
-		VertexPrior* addPriorLandmarkPose(double x, double y, double theta);
+		g2o::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2);
+		g2o::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan);
+		g2o::VertexSE2Prior* addPriorLandmarkPose(double x, double y, double theta);
 		
 		
 		/** FUNCTION TO ADD THE EGDES **/
 		
-		void addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		void addOdometry(const g2o::SE2& observ, int from, int toward);
-		void addOdometry(double x, double y, double theta, int from, int toward);
+		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from, int toward);
+		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from, int toward);
 		
-		void addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		void addLandmarkObservation(const g2o::Vector2D& pos, int from, int toward);
+		g2o::EdgeSE2PointXY* addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeSE2PointXY* addLandmarkObservation(const g2o::Vector2D& pos, int from, int toward);
 		
-		void addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 		

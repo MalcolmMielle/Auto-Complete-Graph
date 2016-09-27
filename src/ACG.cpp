@@ -34,26 +34,26 @@ g2o::VertexPointXY* AASS::acg::AutoCompleteGraph::addLandmarkPose(double x, doub
 	return addLandmarkPose(lan, strength);
 }
 
-AASS::acg::VertexPrior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(const g2o::SE2& se2){
-	AASS::acg::VertexPrior* priorlandmark = new AASS::acg::VertexPrior;
+g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(const g2o::SE2& se2){
+	g2o::VertexSE2Prior* priorlandmark = new g2o::VertexSE2Prior;
 	priorlandmark->setId(_optimizable_graph.vertices().size());
 	priorlandmark->setEstimate(se2);
 	_optimizable_graph.addVertex(priorlandmark);
 	_nodes_prior.push_back(priorlandmark);
 	return priorlandmark;
 }
-AASS::acg::VertexPrior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(const Eigen::Vector3d& lan){
+g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(const Eigen::Vector3d& lan){
 	g2o::SE2 se2(lan(0), lan(1), lan(2));
 	return addPriorLandmarkPose(se2);
 }
-AASS::acg::VertexPrior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(double x, double y, double theta){
+g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(double x, double y, double theta){
 	Eigen::Vector3d lan;
 	lan << x, y, theta;
 	return addPriorLandmarkPose(lan);
 }
 
 
-void AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 			
 	Eigen::Matrix3d covariance;
 	covariance.fill(0.);
@@ -69,18 +69,19 @@ void AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGr
 	odometry->setInformation(information);
 	_optimizable_graph.addEdge(odometry);
 	_edge_odometry.push_back(odometry);
+	return odometry;
 }
-void AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from, int toward){
+g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from, int toward){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward);
-	addOdometry(observ, from_ptr, toward_ptr);
+	return addOdometry(observ, from_ptr, toward_ptr);
 }
-void AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from, int toward){
+g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from, int toward){
 	g2o::SE2 se2(x, y, theta);
-	addOdometry(se2, from, toward);
+	return addOdometry(se2, from, toward);
 }
 
-void AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+g2o::EdgeSE2PointXY* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 	Eigen::Matrix2d covariance_landmark; 
 	covariance_landmark.fill(0.);
 	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
@@ -96,26 +97,28 @@ void AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& p
 	landmarkObservation->setParameterId(0, _sensorOffset->id());
 	_optimizable_graph.addEdge(landmarkObservation);
 	_edge_landmark.push_back(landmarkObservation);
+	
+	return landmarkObservation;
 }
-void AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from, int toward){
+g2o::EdgeSE2PointXY* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from, int toward){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward);
-	addLandmarkObservation(pos, from_ptr, toward_ptr);
+	return addLandmarkObservation(pos, from_ptr, toward_ptr);
 }
 
-void AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 	
 	
 	//Get Eigen vector
-	VertexPrior* v_ptr = dynamic_cast<VertexPrior*>(v1);
-	VertexPrior* v_ptr2 = dynamic_cast<VertexPrior*>(v2);
+	g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
+	g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>(v2);
 	Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
 	Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
 	
 // 			std::cout << "Poses 1 " << std::endl << pose1.format(cleanFmt) << std::endl;
 // 			std::cout << "Poses 2 " << std::endl << pose2.format(cleanFmt) << std::endl;
 	
-	Eigen::Vector2d eigenvec;
+	Eigen::Vector2d eigenvec; 
 	eigenvec << pose1(0) - pose2(0), pose1(1) - pose2(1);
 // 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
 	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
@@ -144,6 +147,7 @@ void AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o::SE2& se2, g2o::HyperG
 	priorObservation->setParameterId(0, _sensorOffset->id());
 	_optimizable_graph.addEdge(priorObservation);
 	_edge_prior.push_back(priorObservation);
+	return priorObservation;
 }
 
 // void AASS::acg::AutoCompleteGraph::addEdgePrior(g2o::SE2 observ, int from, int toward){
@@ -183,14 +187,14 @@ void AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, 
 //FUNCTION TO REMOVE A VERTEX
 void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	//Prior
-	AASS::acg::VertexPrior* ptr = dynamic_cast<AASS::acg::VertexPrior*>(v1);
+	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
 	g2o::VertexSE2* ptr_se2 = dynamic_cast<g2o::VertexSE2*>(v1);
 	g2o::VertexPointXY* ptr_se3 = dynamic_cast<g2o::VertexPointXY*>(v1);
 	
 	if(ptr != NULL){
 		int index = findPriorNode(v1);
 		assert(index != -1);
-		std::vector<AASS::acg::VertexPrior*>::iterator which = _nodes_prior.begin() + index;
+		std::vector<g2o::VertexSE2Prior*>::iterator which = _nodes_prior.begin() + index;
 		_nodes_prior.erase(which);
 	}
 	//Robot node
@@ -254,26 +258,36 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	
 	std::pair< bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator, bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator > vp;
 	std::deque<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vec_deque;
-	std::vector<AASS::acg::VertexPrior*> out_prior;
+	std::vector<g2o::VertexSE2Prior*> out_prior;
+	
+	std::cout << "NOOOOOOW" << std::endl << std::endl; 
 	
 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
-		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+// 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+		auto v = *vp.first;
 		//ATTENTION Magic number
-		AASS::acg::VertexPrior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0);
+		
+		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
+		
+		
+		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0);
 		vec_deque.push_back(v);
 		out_prior.push_back(res);
+// 		_nodes_prior.push_back(res);
 	}
 	
 	int count = 0;
 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
-		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+// 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+		auto v = *vp.first;
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::EdgeIterator out_i, out_end;
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge e;
 		
 		for (boost::tie(out_i, out_end) = boost::out_edges(v, (graph)); 
 			out_i != out_end; ++out_i) {
 			e = *out_i;
-			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex targ = boost::target(e, (graph));
+// 			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex targ = boost::target(e, (graph));
+			auto targ = boost::target(e, (graph));
 		
 			int idx = -1;
 			for(size_t ii = count +1 ; ii < vec_deque.size() ; ++ii){
@@ -285,12 +299,19 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 				//SKIP
 			}
 			else{
-				AASS::acg::VertexPrior* from = out_prior[count];
-				AASS::acg::VertexPrior* toward = out_prior[idx];
-				int x_diff = graph[targ].getX() - graph[v].getX();
-				int y_diff = graph[targ].getY() - graph[v].getY();
+				g2o::VertexSE2Prior* from = out_prior[count]; //<-Base
+				g2o::VertexSE2Prior* toward = out_prior[idx]; //<-Targ
+				
+				double x_diff = graph[targ].getX() - graph[v].getX();
+				double y_diff = graph[targ].getY() - graph[v].getY();
+				
+				std::cout << "Because : " << graph[targ].getX() << " - " << graph[v].getX() << " and " << graph[targ].getY() << " - " << graph[v].getY() << std::endl;
+				
+				std::cout << "diff: " <<x_diff << " " << y_diff << std::endl;
+				
 				g2o::SE2 se2(x_diff, y_diff, 0);
-				addEdgePrior(se2, from, toward);
+				auto edge_out = addEdgePrior(se2, from, toward);
+// 				_edge_prior.push_back(edge_out);
 			}
 		
 		}
@@ -298,7 +319,8 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	}
 	
 	std::cout << _edge_prior.size() << " == " << graph.getNumEdges() << std::endl;
-	assert( _nodes_landmark.size() == graph.getNumVertices() );
+	std::cout << _nodes_prior.size() << " == " << graph.getNumVertices() << std::endl;
+	assert( _nodes_prior.size() == graph.getNumVertices() );
 	assert( _edge_prior.size() == graph.getNumEdges());
 	
 }
@@ -490,11 +512,12 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 
 void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks)
 {
-	std::vector < std::pair < g2o::VertexPointXY*, AASS::acg::VertexPrior*> > links;
+	std::vector < std::pair < g2o::VertexPointXY*, g2o::VertexSE2Prior*> > links;
 	
 	std::cout << "Number new landmarks " << new_landmarks.size() << std::endl;
 	std::cout << "Prior " << _nodes_prior.size() << std::endl;
 	if(_nodes_prior.size() > 0){
+		
 		auto it = new_landmarks.begin();
 		for(it ; it != new_landmarks.end() ; it++){
 			std::cout << "Working on links " << std::endl;
@@ -505,7 +528,7 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 			Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
 			
 			double norm = (pose_prior - pose_landmark).norm();
-			AASS::acg::VertexPrior* ptr_closest = *it_prior;
+			g2o::VertexSE2Prior* ptr_closest = *it_prior;
 			
 			for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
 				pose_tmp = (*it_prior)->estimate().toVector();
@@ -515,17 +538,23 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 				//Update the link
 				if(norm_tmp < norm){
 					ptr_closest = *it_prior;
+					norm = norm_tmp;
 				}			
 			}
 			//Pushing the link
-			links.push_back(std::pair<g2o::VertexPointXY*, AASS::acg::VertexPrior*>(*it, ptr_closest));
+			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+			links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, ptr_closest));
 		}
 		
+		std::cout << "\n";
+		std::cout << "Adding the links" << std::endl;
 		
 		auto it_links = links.begin();
 		for(it_links ; it_links != links.end() ; it_links++){
-			g2o::SE2 se2(0, 0, 0);
-			addEdgePrior(se2, it_links->second, it_links->first);
+			g2o::Vector2D vec;
+			vec << 0, 0;
+			std::cout << "Creating " << it_links->second << " and " << it_links->first << std::endl;
+			addLinkBetweenMaps(vec, it_links->second, it_links->first);
 		}
 	}
 
