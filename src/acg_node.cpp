@@ -66,11 +66,11 @@ int main(int argc, char **argv)
 
 	);
 	acg.addPriorGraph(graph_prior);
-	std::string file_out = "/home/malcolm/ACG_folder/acg_prior.g2o";
+	std::string file_out = "/home/malcolm/ACG_folder/acg_0_prior.g2o";
 	acg.getGraph().save(file_out.c_str());
 	std::cout << "saved to " << file_out << std::endl;
 	
-	exit(0);
+// 	exit(0);
 	
     ros::init(argc, argv, "auto_complete_graph");
 	ros::Subscriber ndt_graph_sub;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg));
     
 	while(ros::ok()){
-		std::cout <<"SPIN auto_complete" << std::endl;
+// 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
 	}
 

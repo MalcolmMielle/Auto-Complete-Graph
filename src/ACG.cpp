@@ -336,31 +336,24 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		
 		std::cout << "Found new nodes" << std::endl;
 		
+		//Doing the registration here myself
 		size_t i;
 		auto links = ndt_graph.getOdometryLinks();
 		ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
 		
-		//Should most of the time be one but just in case it runs slowly I'll let that
-		if(_previous_number_of_node_in_ndtgraph != 0){
-			i = _previous_number_of_node_in_ndtgraph - 1;
-// 			for (size_t i = 0 ; i <links.size() ; ++i) {
-// 				Eigen::IOFormat cleanFmt(4, 0, ", ", "\n", "[", "]");
-// 				std::cout <<"Estimate before anything " << links[i].getRelCov().inverse().format(cleanFmt) << std::endl;
-// 				std::cout << "Adding Edge" << std::endl;
-// // 				NDTFeatureLink link = NDTFeatureLink((const NDTFeatureLink&) graph.getLinkInterface(i));
-// 				g2o::SE2 odometry = ndt_feature::NDTFeatureLink2EdgeSE2(links[i]);
-// 				size_t from = links[i].getRefIdx() ;
-// 				size_t toward = links[i].getMovIdx() ;
-// 				std::cout << "from " << from << " toward " << toward << std::endl;
-// 				addOdometry(odometry, from, toward);
-// 			}
-			
-			
-		}
-		else{
-			i = 0;
-		}
-		for (i; i < ndt_graph.getNbNodes() - 1; ++i) {
+		//Assume that the last mode must not be analysed
+// 		if(_previous_number_of_node_in_ndtgraph != 0){
+// 			i = _previous_number_of_node_in_ndtgraph - 1;			
+// 		}
+// 		else{
+// 			i = 0;
+// 		}
+// 		for (i; i < ndt_graph.getNbNodes() - 1; ++i) {
+		
+		//Assume that all node in the NDT graph must been analysed
+		i = _previous_number_of_node_in_ndtgraph;
+		
+		for (i; i < ndt_graph.getNbNodes(); ++i) {
 			
 			std::cout << "Checking node nb " << i << std::endl;
 			//RObot pose
