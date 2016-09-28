@@ -202,3 +202,5 @@ target_link_libraries(acg_node
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_subdirectory(tests)
