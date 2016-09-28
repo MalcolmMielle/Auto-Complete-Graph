@@ -203,6 +203,11 @@ namespace acg{
 		std::vector<g2o::EdgeSE2*>& getOdometryEdges(){return _edge_odometry;}
 		const std::vector<g2o::EdgeSE2*>& getOdometryEdges() const {return _edge_odometry;}
 		
+		bool save(const std::string& file_outt){
+			_optimizable_graph.save(file_outt.c_str());
+			std::cout << "saved to " << file_outt << "\n";
+		}
+		
 		///@brief the main dish : the graph
 		g2o::OptimizableGraph& getGraph(){return _optimizable_graph;}
 		const g2o::OptimizableGraph& getGraph() const {return _optimizable_graph;}
@@ -223,18 +228,18 @@ namespace acg{
 		/** FUNCTION TO ADD THE EGDES **/
 		
 		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from, int toward);
-		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from, int toward);
+		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
+		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from_id, int toward_id);
 		
 		g2o::EdgeSE2PointXY* addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		g2o::EdgeSE2PointXY* addLandmarkObservation(const g2o::Vector2D& pos, int from, int toward);
+		g2o::EdgeSE2PointXY* addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
 		g2o::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 		
-		void addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		void addLinkBetweenMaps(const g2o::Vector2D& pos, int from, int toward);
+		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
 		
 		//FUNCTION TO REMOVE A VERTEX
