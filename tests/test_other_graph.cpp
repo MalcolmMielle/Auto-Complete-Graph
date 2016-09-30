@@ -12,7 +12,7 @@ void simpleGraph(AASS::acg::AutoCompleteGraph& acg){
 	g2o::Vector2D se22; se22 << 2, 1.1;	
 	g2o::VertexPointXY* out1 = acg.addLandmarkPose(se22);
 	out1->setId(1);
-	g2o::Vector2D se222; se222 << 3, 2;
+	g2o::Vector2D se222; se222 << 5, 2;
 	g2o::VertexPointXY* out2 = acg.addLandmarkPose(se222);
 	out2->setId(2);
 	
@@ -40,7 +40,7 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	g2o::SE2 priorse21(2, 1, 0);
 	g2o::VertexSE2Prior* prior1 = acg.addPriorLandmarkPose(priorse21);
 	prior1->setId(4);
-	g2o::SE2 priorse22(3, 1, 0);
+	g2o::SE2 priorse22(2, 0, 0);
 	g2o::VertexSE2Prior* prior2 = acg.addPriorLandmarkPose(priorse22);
 	prior2->setId(5);
 	
@@ -48,9 +48,10 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	acg.printGraph();
 	
 	g2o::SE2 move(1, 0, 0);
+	g2o::SE2 move2(0, -1, 0);
 	
 	g2o::EdgeSE2Prior_malcolm* wall0 = acg.addEdgePrior(move, prior0, prior1);
-	g2o::EdgeSE2Prior_malcolm* wall1 = acg.addEdgePrior(move, prior1, prior2);
+	g2o::EdgeSE2Prior_malcolm* wall1 = acg.addEdgePrior(move2, prior1, prior2);
 	
 	assert(acg.getGraph().vertices().size() == 6 && "prior crash");
 	
@@ -95,7 +96,7 @@ void robotGraph(AASS::acg::AutoCompleteGraph& acg){
 	auto obs1 = acg.addLandmarkObservation(vec, 6, 0);
 	Eigen::Vector2d vec2; vec2 << 1, -0.9;
 	auto obs2 = acg.addLandmarkObservation(vec2, 7, 1);
-	Eigen::Vector2d vec3; vec3 << 2, -1;
+	Eigen::Vector2d vec3; vec3 << 4, -1;
 	auto obs3 = acg.addLandmarkObservation(vec3, 8, 2);
 	
 }
@@ -104,10 +105,10 @@ void robotGraph(AASS::acg::AutoCompleteGraph& acg){
 int main(){
 	
 	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
-		Eigen::Vector2d(0.00005, 0.00001), //Robot translation noise
+		Eigen::Vector2d(0.05, 0.01), //Robot translation noise
 		DEG2RAD(2.), 				//Rotation noise for robot
-		Eigen::Vector2d(1, 1), //Landmarks noise
-		Eigen::Vector2d(0.00005, 0.00005), //Prior noise
+		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
+		Eigen::Vector2d(1, 0.00005), //Prior noise
 		Eigen::Vector2d(0.00005, 0.00005) //Link noise,
 	);
 	
