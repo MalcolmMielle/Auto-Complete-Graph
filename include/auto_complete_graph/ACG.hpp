@@ -281,6 +281,32 @@ namespace acg{
 		 */
 		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph);
 		
+		
+		
+		
+		/*******************' TESTING FUNCTION ********************/
+		void printGraph(){
+
+			auto idmap = _optimizable_graph.vertices();
+			auto idmapedges = _optimizable_graph.edges();
+			
+			std::cout << std::endl;
+			for ( auto it = idmap.begin(); it != idmap.end(); ++it ){
+				std::cout << "id " << it->first<< std::endl;								
+			}
+			std::cout << std::endl;
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				std::cout << " " << *ite << " connected";
+				for(auto ite2 = (*ite)->vertices().begin(); ite2 != (*ite)->vertices().end() ; ++ite2){
+					std::cout << " " << *ite2;
+				}
+				std::cout << std::endl;
+			}		
+		}
+		
+		
+		
+		
 	private:
 		
 		//TODO

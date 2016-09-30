@@ -23,6 +23,7 @@ g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, d
 g2o::VertexPointXY* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vector2D& pos, int strength){
 	g2o::VertexPointXY* landmark = new g2o::VertexPointXY;
 	landmark->setId(_optimizable_graph.vertices().size());
+	std::cout << "Setting the id " << _optimizable_graph.vertices().size() << std::endl;
 	landmark->setEstimate(pos);
 	_optimizable_graph.addVertex(landmark);
 	_nodes_landmark.push_back(landmark);
@@ -133,7 +134,8 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	covariance_prior(0, 1) = cov(0, 1);
 	covariance_prior(1, 0) = cov(1, 0);
 	covariance_prior(1, 1) = cov(1, 1);
-	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
+// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
+	covariance_prior(2, 2) = DEG2RAD(5);
 	Eigen::Matrix3d information_prior = covariance_prior.inverse();
 // 			std::cout << "Information prior " << std::endl << cov.format(cleanFmt) << std::endl;
 	
@@ -162,13 +164,20 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 
 g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 	
+	std::cout << "Adding link" << std::endl;
 	//Making sure the two node are the good type
+	g2o::HyperGraph::Vertex* from;
+	g2o::HyperGraph::Vertex* toward;
 	g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>(v1);
 	g2o::VertexPointXY* ptr2;
 	if(ptr != NULL){
 		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>(v2);
 		if(ptr2 == NULL){
 			throw std::runtime_error("Pointers are not of compatible type. First pointer is a SE2 while the second is not a PointXY");
+		}
+		else{
+			from = v1;
+			toward = v2;
 		}
 	}
 	else{
@@ -177,6 +186,10 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 			ptr2 = dynamic_cast<g2o::VertexPointXY*>(v1);
 			if(ptr2 == NULL){
 				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
+			}
+			else{
+				from = v2;
+				toward = v1;
 			}
 		}
 		else{
@@ -188,17 +201,25 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 	covariance_link.fill(0.);
 	covariance_link(0, 0) = _linkNoise[0]*_linkNoise[0];
 	covariance_link(1, 1) = _linkNoise[1]*_linkNoise[1];
+	
+	std::cout << "Link cov " << covariance_link << std::endl;
+	
 // 			covariance_link(2, 2) = 13;//<- Rotation covariance link is more than 4PI
 	Eigen::Matrix2d information_link = covariance_link.inverse();
 	
 	g2o::EdgeLinkXY_malcolm* linkObservation = new g2o::EdgeLinkXY_malcolm;
-	linkObservation->vertices()[0] = ptr;
-	linkObservation->vertices()[1] = ptr2;
+	linkObservation->vertices()[0] = from;
+	linkObservation->vertices()[1] = toward;
 	linkObservation->setMeasurement(pos);
 	linkObservation->setInformation(information_link);
 	linkObservation->setParameterId(0, _sensorOffset->id());
+	
+	std::cout << "Adding edge!" <<ptr << ptr2 << std::endl;
+	
 	_optimizable_graph.addEdge(linkObservation);
 	_edge_link.push_back(linkObservation);
+	
+	std::cout << "Done" << std::endl;
 	return linkObservation;
 }
 g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id){
