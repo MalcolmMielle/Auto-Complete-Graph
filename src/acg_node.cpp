@@ -57,11 +57,12 @@ int main(int argc, char **argv)
 	basement.transformOntoSLAM();
 	auto graph_prior = basement.getGraph();
 	
+	
 	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
 		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
 		DEG2RAD(2.), 				//Rotation noise for robot
-		Eigen::Vector2d(0.0005, 0.0005), //Landmarks noise
-		Eigen::Vector2d(1, 0.001), //Prior noise
+		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
+		Eigen::Vector2d(1, 0.01), //Prior noise
 		Eigen::Vector2d(0.2, 0.2) //Link noise,
 
 	);
