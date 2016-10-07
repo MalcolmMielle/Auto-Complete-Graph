@@ -46,6 +46,7 @@ int main(int argc, char **argv)
 		DEG2RAD(2.), 				//Rotation noise for robot
 		Eigen::Vector2d(0.0005, 0.0005), //Landmarks noise
 		Eigen::Vector2d(1, 0.001), //Prior noise
+		DEG2RAD(2.), //Prior rot	
 		Eigen::Vector2d(0.2, 0.2) //Link noise,
 
 	);
@@ -64,6 +65,7 @@ int main(int argc, char **argv)
 		DEG2RAD(2.), 				//Rotation noise for robot
 		Eigen::Vector2d(0.0005, 0.0005), //Landmarks noise
 		Eigen::Vector2d(1, 0.01), //Prior noise
+		DEG2RAD(2.), //Prior rot							 
 		Eigen::Vector2d(0.002, 0.002) //Link noise,
 	);
 	

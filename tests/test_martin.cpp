@@ -34,6 +34,7 @@ int main(){
 		DEG2RAD(2.), 				//Rotation noise for robot
 		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
 		Eigen::Vector2d(1, 0.00005), //Prior noise
+		sqrt( DEG2RAD(2.) ), //Prior rot
 		Eigen::Vector2d(0.00005, 0.00005) //Link noise,
 	);
 	

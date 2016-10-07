@@ -135,7 +135,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	covariance_prior(1, 0) = cov(1, 0);
 	covariance_prior(1, 1) = cov(1, 1);
 // 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
-	covariance_prior(2, 2) = DEG2RAD(5);
+	covariance_prior(2, 2) = _prior_rot * _prior_rot;
 	Eigen::Matrix3d information_prior = covariance_prior.inverse();
 // 			std::cout << "Information prior " << std::endl << cov.format(cleanFmt) << std::endl;
 	

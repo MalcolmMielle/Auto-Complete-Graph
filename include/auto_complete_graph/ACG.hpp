@@ -1,5 +1,5 @@
-#ifndef NDTFEATURE_ACG_15102016
-#define NDTFEATURE_ACG_15102016
+#ifndef NDTFEATURE_ACG_15092016
+#define NDTFEATURE_ACG_15092016
 
 #include <ctime>
 
@@ -12,16 +12,16 @@
 #include "g2o/types/slam2d/edge_se2_link.h"
 #include "g2o/types/slam2d/edge_landmark_se2.h"
 #include "g2o/types/slam2d/edge_link_xy.h"
+#include "g2o/types/slam2d/vertex_se2_prior.h"
 // #include "types_tutorial_slam2d.h"
 
 
-#include "g2o/core/sparse_optimizer.h"
-#include "g2o/core/block_solver.h"
-#include "g2o/core/factory.h"
-#include "g2o/core/optimization_algorithm_factory.h"
-#include "g2o/core/optimization_algorithm_gauss_newton.h"
-#include "g2o/solvers/csparse/linear_solver_csparse.h"
-#include "g2o/types/slam2d/vertex_se2_prior.h"
+// #include "g2o/core/sparse_optimizer.h"
+// #include "g2o/core/block_solver.h"
+// #include "g2o/core/factory.h"
+// #include "g2o/core/optimization_algorithm_factory.h"
+// #include "g2o/core/optimization_algorithm_gauss_newton.h"
+// #include "g2o/solvers/csparse/linear_solver_csparse.h"
 
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/utils.h"
@@ -119,6 +119,7 @@ namespace acg{
 		double _rotNoise;
 		Eigen::Vector2d _landmarkNoise;
 		Eigen::Vector2d _priorNoise;
+		double _prior_rot;
 		Eigen::Vector2d _linkNoise;
 		g2o::ParameterSE2Offset* _sensorOffset;
 		g2o::SE2 _sensorOffsetTransf;
@@ -158,9 +159,10 @@ namespace acg{
 						double rn,
 						const Eigen::Vector2d& ln,
 						const Eigen::Vector2d& pn,
+						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _ndt_graph(ndt_graph){
+  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _ndt_graph(ndt_graph){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -172,8 +174,9 @@ namespace acg{
 						double rn,
 						const Eigen::Vector2d& ln,
 						const Eigen::Vector2d& pn,
+						double rp,
 						const Eigen::Vector2d& linkn
-					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0){
+					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
