@@ -16,6 +16,7 @@
 // #include "types_tutorial_slam2d.h"
 
 
+
 // #include "g2o/core/sparse_optimizer.h"
 // #include "g2o/core/block_solver.h"
 // #include "g2o/core/factory.h"
@@ -35,6 +36,7 @@
 #include "das/NDTCorner.hpp"
 #include "covariance.hpp"
 #include "conversion.hpp"
+#include "OptimizableAutoCompleteGraph.hpp"
 
 namespace AASS {
 
@@ -140,7 +142,8 @@ namespace acg{
 		std::vector<g2o::EdgeSE2*> _edge_odometry;
 		
 		///@brief the main dish : the graph
-		g2o::OptimizableGraph _optimizable_graph;
+// 		g2o::OptimizableGraph _optimizable_graph;
+		AASS::acg::OptimizableAutoCompleteGraph _optimizable_graph;
 		
 		//ATTENTION : I should avoid that if I want to run both thread at the same time since no copy is made. I should instead copy it
 		ndt_feature::NDTFeatureGraph* _ndt_graph;
@@ -150,6 +153,7 @@ namespace acg{
 		
 	private:
 		int _previous_number_of_node_in_ndtgraph;
+
 		
 		
 	public:
@@ -162,7 +166,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _ndt_graph(ndt_graph){
+  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -176,13 +180,19 @@ namespace acg{
 						const Eigen::Vector2d& pn,
 						double rp,
 						const Eigen::Vector2d& linkn
-					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0){
+					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _optimizable_graph(sensoffset){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
 						_sensorOffset->setId(0);
 						_ndt_graph = NULL;
+						
 					}
+		~AutoCompleteGraph(){
+			delete _sensorOffset;
+			//The _optimizable_graph already delete the vertices in the destructor
+			
+		}
 		
 		/** Accessor**/
 		std::vector<g2o::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
@@ -285,6 +295,13 @@ namespace acg{
 		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph);
 		
 		
+		void init(){
+			_optimizable_graph.init();
+		}
+		
+		void optimize(){
+			_optimizable_graph.optimize();
+		}
 		
 		
 		/*******************' TESTING FUNCTION ********************/
@@ -307,10 +324,8 @@ namespace acg{
 			}		
 		}
 		
-		
-		
-		
 	private:
+		
 		
 		//TODO
 		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
