@@ -82,10 +82,10 @@ namespace acg{
 		
 		~OptimizableAutoCompleteGraph(){
 // 			delete _graph;
-			delete _sensorOffset;
-			delete _blockSolver;
-			delete _solver;
-			delete _linearSolver;
+// 			delete _sensorOffset;
+// 			delete _blockSolver;
+// 			delete _solver;
+// 			delete _linearSolver;
 			delete _huber;
 			delete _dcs;
 			
@@ -103,39 +103,78 @@ namespace acg{
 		g2o::OptimizationAlgorithmGaussNewton* getSolver() {return _solver;}
 		const g2o::SE2& getSensorOffsetTransfo(){return _sensorOffsetTransf;}
 		
+		
+		
 		///@brief Init
 		void init(){
+			
+			std::cout << "INIT" << std::endl;
+			//Prepare
+// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// 				v->setMarginalized(false);
+// 			}
+			setFirst();
 			this->initializeOptimization();
 		}
 		
 		//TODO : attention -> make sure that the initializeOptimization does not reinitialize the state of the graph as in g2o_viewer
-		void initSubset(){
-			
+		void initSubset(const g2o::HyperGraph::Edge& egde){
+			this->initializeOptimization();
 		}
 		
 		///@brief Optimization process
 		void optimize(){
-			this->setHuberKernel();
+			
+			std::cout << "Optimizing using Huber" << std::endl;
+// 			this->setHuberKernel();
 			g2o::SparseOptimizer::optimize(40);
-			this->setDCSKernel();
+			std::cout << "Optimizing using DCS" << std::endl;
+// 			this->setDCSKernel();
 			g2o::SparseOptimizer::optimize(5);			
 		}
 		
 		void setHuberKernel(){
-			setRobustKernelAllEdges(_huber);
+// 			setRobustKernelAllEdges(_huber, 1);
 		}
 		void setDCSKernel(){
-			setRobustKernelAllEdges(_dcs);
+// 			setRobustKernelAllEdges(_dcs, 1);
 		}
 		
 	private:
 		
-		void setRobustKernelAllEdges(g2o::RobustKernel* ptr){
+		void setFirst(){
+			auto firstRobotPose = this->vertex(0);
+			firstRobotPose->setFixed(true);
+		}
+		
+		void setRobustKernelAllEdges(g2o::RobustKernel* ptr, double width){
 			g2o::RobustKernelPseudoHuber huber; //Huber
 			auto idmapedges = this->edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-				(dynamic_cast<g2o::OptimizableGraph::Edge*>(*ite))->setRobustKernel(ptr);
+				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
+				e->setRobustKernel(ptr);
+				e->robustKernel()->setDelta(width);
 			}	
+			
+// 			double huberWidth = 1;  
+			//odometry edges are those whose node ids differ by 1
+			
+// 			bool onlyLoop = cbOnlyLoop->isChecked();
+
+			/*for (SparseOptimizer::EdgeSet::const_iterator it = optimizer->edges().begin(); it != optimizer->edges().end(); ++it) {
+				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*it);
+// 				if (onlyLoop) {
+// 					if (e->vertices().size() >= 2 && std::abs(e->vertex(0)->id() - e->vertex(1)->id()) != 1) {
+// 					e->setRobustKernel(creator->construct());
+// 					e->robustKernel()->setDelta(huberWidth);
+// 					}
+// 				} else {
+					e->setRobustKernel(creator->construct());
+					e->robustKernel()->setDelta(huberWidth);
+// 				}
+			}   */ 
+			
 		}
 		
 	};

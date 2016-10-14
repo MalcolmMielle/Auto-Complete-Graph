@@ -305,14 +305,14 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	std::deque<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vec_deque;
 	std::vector<g2o::VertexSE2Prior*> out_prior;
 	
-	std::cout << "NOOOOOOW" << std::endl << std::endl; 
+// 	std::cout << "NOOOOOOW" << std::endl << std::endl; 
 	
 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
 // 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
 		auto v = *vp.first;
 		//ATTENTION Magic number
 		
-		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
+// 		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
 		
 		
 		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0);
@@ -350,9 +350,9 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 				double x_diff = graph[targ].getX() - graph[v].getX();
 				double y_diff = graph[targ].getY() - graph[v].getY();
 				
-				std::cout << "Because : " << graph[targ].getX() << " - " << graph[v].getX() << " and " << graph[targ].getY() << " - " << graph[v].getY() << std::endl;
+// 				std::cout << "Because : " << graph[targ].getX() << " - " << graph[v].getX() << " and " << graph[targ].getY() << " - " << graph[v].getY() << std::endl;
 				
-				std::cout << "diff: " <<x_diff << " " << y_diff << std::endl;
+// 				std::cout << "diff: " <<x_diff << " " << y_diff << std::endl;
 				
 				g2o::SE2 se2(x_diff, y_diff, 0);
 				auto edge_out = addEdgePrior(se2, from, toward);

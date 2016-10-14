@@ -299,6 +299,10 @@ namespace acg{
 			_optimizable_graph.init();
 		}
 		
+		void initialGuess(){
+			_optimizable_graph.computeInitialGuess();
+		}
+		
 		void optimize(){
 			_optimizable_graph.optimize();
 		}

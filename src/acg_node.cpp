@@ -55,6 +55,8 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	
 	std::cout << "saved to " << file_out << std::endl;
 	
+	oacg->init();
+	oacg->initialGuess();
 	oacg->optimize();
 	
 	std::string file_out_after = "/home/malcolm/ACG_folder/oacg_after_";
