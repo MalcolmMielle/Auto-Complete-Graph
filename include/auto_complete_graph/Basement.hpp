@@ -58,7 +58,7 @@ namespace AASS{
 				
 				AASS::das::CornerDetector cornerDetect;
 				cornerDetect.getFeaturesGraph(_file);
-				cornerDetect.removeClosePoints(20);
+// 				cornerDetect.removeClosePoints(20);
 				_corner_prior = cornerDetect.getGraphPoint();
 				_prior_graph = cornerDetect.getGraph(); 
 				

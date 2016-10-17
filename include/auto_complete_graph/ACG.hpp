@@ -239,7 +239,7 @@ namespace acg{
 		
 		
 		/** FUNCTION TO ADD THE EGDES **/
-		
+		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information);
 		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
 		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from_id, int toward_id);

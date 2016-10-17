@@ -107,14 +107,9 @@ namespace acg{
 		
 		///@brief Init
 		void init(){
-			
+			setFirst();
 			std::cout << "INIT" << std::endl;
 			//Prepare
-// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-// 				v->setMarginalized(false);
-// 			}
-			setFirst();
 			this->initializeOptimization();
 		}
 		
@@ -127,18 +122,59 @@ namespace acg{
 		void optimize(){
 			
 			std::cout << "Optimizing using Huber" << std::endl;
-// 			this->setHuberKernel();
+			this->setHuberKernel();
+// 			this->removeRobustKernel();
 			g2o::SparseOptimizer::optimize(40);
 			std::cout << "Optimizing using DCS" << std::endl;
-// 			this->setDCSKernel();
+			this->setDCSKernel();
 			g2o::SparseOptimizer::optimize(5);			
 		}
 		
+		
+		//TODO better this
 		void setHuberKernel(){
-// 			setRobustKernelAllEdges(_huber, 1);
+			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+				v->setMarginalized(false);
+			}		
+			
+			auto idmapedges = this->edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				std::cout << "Robust Kern" << std::endl;
+				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
+				auto huber = new g2o::RobustKernelHuber();
+				e->setRobustKernel(huber);
+				e->robustKernel()->setDelta(1);
+			}
 		}
 		void setDCSKernel(){
-// 			setRobustKernelAllEdges(_dcs, 1);
+			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+				v->setMarginalized(false);
+			}		
+			
+			auto idmapedges = this->edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				std::cout << "Robust Kern" << std::endl;
+				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
+				auto dcs = new g2o::RobustKernelDCS();
+				e->setRobustKernel(dcs);
+				e->robustKernel()->setDelta(1);
+			}
+		}
+		void removeRobustKernel(){
+			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+				v->setMarginalized(false);
+			}		
+			
+			auto idmapedges = this->edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				std::cout << "REMOVE KERNEL" << std::endl;
+				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
+				e->setRobustKernel(0);
+// 				e->robustKernel()->setDelta(1);
+			}
 		}
 		
 	private:
@@ -148,14 +184,31 @@ namespace acg{
 			firstRobotPose->setFixed(true);
 		}
 		
-		void setRobustKernelAllEdges(g2o::RobustKernel* ptr, double width){
-			g2o::RobustKernelPseudoHuber huber; //Huber
+		void setRobustKernelAllEdges(g2o::RobustKernel* ptr = NULL, double width = 1){
+			
+			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+				v->setMarginalized(false);
+			}		
+			
 			auto idmapedges = this->edges();
-			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
-				e->setRobustKernel(ptr);
-				e->robustKernel()->setDelta(width);
-			}	
+			if(ptr != NULL){
+				for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+					std::cout << "Robust Kern" << std::endl;
+					OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
+					e->setRobustKernel(ptr);
+					e->robustKernel()->setDelta(width);
+				}
+			}
+			
+			//Same as ficing it to null to remove kernel
+// 			else{
+// 				for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+// 					std::cout << "Non robust Kern" << std::endl;
+// 					OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
+// 					e->setRobustKernel(0);
+// 				}
+// 			}
 			
 // 			double huberWidth = 1;  
 			//odometry edges are those whose node ids differ by 1
