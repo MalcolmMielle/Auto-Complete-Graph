@@ -54,14 +54,7 @@ g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(double x
 }
 
 
-g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
-			
-	Eigen::Matrix3d covariance;
-	covariance.fill(0.);
-	covariance(0, 0) = _transNoise[0]*_transNoise[0];
-	covariance(1, 1) = _transNoise[1]*_transNoise[1];
-	covariance(2, 2) = _rotNoise*_rotNoise;
-	Eigen::Matrix3d information = covariance.inverse();
+g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information){
 	
 	g2o::EdgeSE2* odometry = new g2o::EdgeSE2;
 	odometry->vertices()[0] = v1 ;
@@ -72,6 +65,21 @@ g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o
 	_edge_odometry.push_back(odometry);
 	return odometry;
 }
+
+g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+			
+	Eigen::Matrix3d covariance;
+	covariance.fill(0.);
+	covariance(0, 0) = _transNoise[0]*_transNoise[0];
+	covariance(1, 1) = _transNoise[1]*_transNoise[1];
+	covariance(2, 2) = _rotNoise*_rotNoise;
+	Eigen::Matrix3d information = covariance.inverse();
+	
+	return addOdometry(se2, v1, v2, information);
+}
+
+
+
 g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
@@ -305,14 +313,14 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	std::deque<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vec_deque;
 	std::vector<g2o::VertexSE2Prior*> out_prior;
 	
-	std::cout << "NOOOOOOW" << std::endl << std::endl; 
+// 	std::cout << "NOOOOOOW" << std::endl << std::endl; 
 	
 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
 // 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
 		auto v = *vp.first;
 		//ATTENTION Magic number
 		
-		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
+// 		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
 		
 		
 		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0);
@@ -344,17 +352,26 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 				//SKIP
 			}
 			else{
+				
+				assert(idx != count);
+				
+				
 				g2o::VertexSE2Prior* from = out_prior[count]; //<-Base
 				g2o::VertexSE2Prior* toward = out_prior[idx]; //<-Targ
 				
 				double x_diff = graph[targ].getX() - graph[v].getX();
 				double y_diff = graph[targ].getY() - graph[v].getY();
 				
+				std::cout << "Index" << idx << " " <<count << std::endl;
+				
 				std::cout << "Because : " << graph[targ].getX() << " - " << graph[v].getX() << " and " << graph[targ].getY() << " - " << graph[v].getY() << std::endl;
 				
-				std::cout << "diff: " <<x_diff << " " << y_diff << std::endl;
+// 				std::cout << "diff: " <<x_diff << " " << y_diff << std::endl;
 				
 				g2o::SE2 se2(x_diff, y_diff, 0);
+				
+				std::cout << "SE2 pushed in edge \n" << se2.toVector() << std::endl;
+				
 				auto edge_out = addEdgePrior(se2, from, toward);
 // 				_edge_prior.push_back(edge_out);
 			}
@@ -381,6 +398,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		
 		std::cout << "Found new nodes" << std::endl;
 		
+		//TODO just get the links that are interesting for you instead of all of them !
 		//Doing the registration here myself
 		size_t i;
 		auto links = ndt_graph.getOdometryLinks();
@@ -422,6 +440,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				assert( links[i-1].getMovIdx() < _nodes_ndt.size() );
 				auto from = _nodes_ndt[ links[i-1].getRefIdx() ] ;
 				auto toward = _nodes_ndt[ links[i-1].getMovIdx() ] ;
+				
+				//TODO : transpose to 3d and use in odometry!
+				Eigen::MatrixXd cov = links[i - 1].cov_3d;
+				
 				addOdometry(odometry, from, toward);
 			}
 			
