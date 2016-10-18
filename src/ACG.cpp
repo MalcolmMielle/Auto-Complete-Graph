@@ -441,10 +441,21 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				auto from = _nodes_ndt[ links[i-1].getRefIdx() ] ;
 				auto toward = _nodes_ndt[ links[i-1].getMovIdx() ] ;
 				
+				std::cout << "Saving cov " << std::endl;
 				//TODO : transpose to 3d and use in odometry!
 				Eigen::MatrixXd cov = links[i - 1].cov_3d;
 				
-				addOdometry(odometry, from, toward);
+				std::cout << "Saving cov to 2d" << std::endl;
+				Eigen::Matrix3d cov_2d;
+				cov_2d << cov(0, 0), cov(0, 1), 0,
+						  cov(1, 0), cov(1, 1), 0,
+						  0, 		 0, 		cov(5, 5);
+						  
+				std::cout << "Saving information " << std::endl;
+				Eigen::Matrix3d information = cov_2d.inverse();
+				
+				std::cout << "Saving odometry " << std::endl;
+				addOdometry(odometry, from, toward, information);
 			}
 			
 			
