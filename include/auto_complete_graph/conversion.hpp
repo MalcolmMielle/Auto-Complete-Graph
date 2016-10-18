@@ -1,5 +1,5 @@
-#ifndef NDTFEATURE_CONVERSION_22072016
-#define NDTFEATURE_CONVERSION_22072016
+#ifndef AUTOCOMPLETEGRAPH_CONVERSION_22072016
+#define AUTOCOMPLETEGRAPH_CONVERSION_22072016
 
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/utils.h"
