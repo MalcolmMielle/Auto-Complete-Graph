@@ -1,23 +1,26 @@
 #include "auto_complete_graph/ACG.hpp"
 
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2){
+g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, lslgeneric::NDTMap* map){
 	
 	std::cout << "Adding the robot pose " << std::endl;
 	g2o::VertexSE2* robot =  new g2o::VertexSE2;
 	robot->setEstimate(se2);
 	robot->setId(_optimizable_graph.vertices().size());
 	_optimizable_graph.addVertex(robot);
-	_nodes_ndt.push_back(robot);
+	
+	NDTNodeAndMap nodeAndMap(robot, map);
+	
+	_nodes_ndt.push_back(nodeAndMap);
 	return robot;
 }
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob){
+g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob, lslgeneric::NDTMap* map){
 	g2o::SE2 se2(rob(0), rob(1), rob(2));
-	return addRobotPose(se2);
+	return addRobotPose(se2, map);
 }
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta){
+g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta, lslgeneric::NDTMap* map){
 	Eigen::Vector3d robot1;
 	robot1 << x, y, theta;
-	return addRobotPose(robot1);
+	return addRobotPose(robot1, map);
 }
 
 g2o::VertexPointXY* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vector2D& pos, int strength){
@@ -64,6 +67,16 @@ g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o
 	_optimizable_graph.addEdge(odometry);
 	_edge_odometry.push_back(odometry);
 	return odometry;
+}
+
+g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information){
+	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
+	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
+	return addOdometry(observ, from_ptr, toward_ptr, information);
+}
+g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information){
+	g2o::SE2 se2(x, y, theta);
+	return addOdometry(se2, from_id, toward_id, information);
 }
 
 g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
@@ -132,7 +145,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 // 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
 	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
 	
-	Eigen::Matrix2d cov = ndt_feature::getCovarianceVec(eigenvec, eigenval);
+	Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
 	
 // 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
 	
@@ -254,7 +267,7 @@ void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	else if( ptr_se2 != NULL){
 		int index = findRobotNode(v1);
 		assert(index != -1);
-		std::vector<g2o::VertexSE2*>::iterator which = _nodes_ndt.begin() + index;
+		auto which = _nodes_ndt.begin() + index;
 		_nodes_ndt.erase(which);
 		
 	}
@@ -275,7 +288,7 @@ int AASS::acg::AutoCompleteGraph::findRobotNode(g2o::HyperGraph::Vertex* v){
 	int pos = 0;
 	auto it = _nodes_ndt.begin();
 	for(it ; it != _nodes_ndt.end() ; ++it){
-		if(*it == v){
+		if(it->getNode() == v){
 			return pos;
 		}
 		++pos;
@@ -424,17 +437,19 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::cout << "Copy feature" << std::endl;
 			feature->copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
 			Eigen::Affine3d affine = Eigen::Affine3d(feature->getPose());
-			Eigen::Isometry2d isometry2d = ndt_feature::Affine3d2Isometry2d(affine);
+			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
 			g2o::SE2 robot_pos(isometry2d);
 			
 // 			Eigen::Vector2d robot_pos; robot_pos << robot_pos_tmp(0), robot_pos_tmp(1);
 // 			robot_pos << ndt_graph.getNode(i).T(0), ndt_graph.getNode(i).T(1);
 			
-			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos);
+			lslgeneric::NDTMap* map = ndt_graph.getMap(i);
+			
+			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, map);
 			//Add Odometry
 			if(i > 0 ){
 				std::cout << "adding the odometry" << std::endl;
-				g2o::SE2 odometry = ndt_feature::NDTFeatureLink2EdgeSE2(links[i - 1]);
+				g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[i - 1]);
 				std::cout << " ref " << links[i-1].getRefIdx() << " and mov " << links[i-1].getMovIdx() << std::endl;
 				assert( links[i-1].getRefIdx() < _nodes_ndt.size() );
 				assert( links[i-1].getMovIdx() < _nodes_ndt.size() );
@@ -455,11 +470,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				Eigen::Matrix3d information = cov_2d.inverse();
 				
 				std::cout << "Saving odometry " << std::endl;
-				addOdometry(odometry, from, toward, information);
+				addOdometry(odometry, from.getNode(), toward.getNode(), information);
 			}
 			
 			
-			lslgeneric::NDTMap* map = ndt_graph.getMap(i);
 			
 			//HACK For now : we translate the Corner extracted and not the ndt-maps
 			auto cells = map->getAllCells();

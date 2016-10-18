@@ -132,6 +132,7 @@ include_directories(
 ## Declare a C++ library
 add_library(auto_complete_graph_lib
   src/ACG.cpp
+  src/VisuACG.cpp
 )
 
 ## Add cmake target dependencies of the library
