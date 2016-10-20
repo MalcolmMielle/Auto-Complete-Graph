@@ -18,6 +18,17 @@ namespace acg{
 		isometry2d.linear() = affine2d.rotation();
 		return isometry2d;
 	}
+	
+// 	inline Eigen::Isometry2d isometry2d2Affine3d(const Eigen::Isometry2d& affine) {
+// 		
+// 		
+// 		
+// 		Eigen::Affine2d affine2d = lslgeneric::eigenAffine3dTo2d(affine);
+// 		Eigen::Isometry2d isometry2d;
+// 		isometry2d.translation() = affine2d.translation();
+// 		isometry2d.linear() = affine2d.rotation();
+// 		return isometry2d;
+// 	}
 
 	inline g2o::SE2 NDTFeatureLink2EdgeSE2(const ndt_feature::NDTFeatureLink& link){
 		Eigen::Affine3d affine = link.getRelPose();		
