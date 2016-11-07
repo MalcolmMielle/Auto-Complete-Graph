@@ -433,16 +433,17 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			
 			std::cout << "Checking node nb " << i << std::endl;
 			//RObot pose
-			ndt_feature::NDTFeatureNode* feature = new ndt_feature::NDTFeatureNode();
-			std::cout << "Copy feature" << std::endl;
-			feature->copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
+				ndt_feature::NDTFeatureNode* feature = new ndt_feature::NDTFeatureNode();
+				std::cout << "Copy feature" << std::endl;
+				feature->copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
 			Eigen::Affine3d affine = Eigen::Affine3d(feature->getPose());
 			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
 			g2o::SE2 robot_pos(isometry2d);
-			
+				delete feature;
 // 			Eigen::Vector2d robot_pos; robot_pos << robot_pos_tmp(0), robot_pos_tmp(1);
 // 			robot_pos << ndt_graph.getNode(i).T(0), ndt_graph.getNode(i).T(1);
 			
+			//ATTENTION THIS GETS FORGOTTEN
 			lslgeneric::NDTMap* map = ndt_graph.getMap(i);
 			
 			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, map);
