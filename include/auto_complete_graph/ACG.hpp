@@ -128,7 +128,9 @@ namespace acg{
 	};
 	
 	
-	
+	/**
+	 * @brief _transNoise is not used anymore when update the NDT-graph for we used the registration. I should remove it but for now I'm leaving it only not to break everything.
+	 */
 	class AutoCompleteGraph{
 	protected:
 		
