@@ -117,13 +117,18 @@ namespace acg{
 	class NDTNodeAndMap{
 		g2o::VertexSE2* _node;
 		lslgeneric::NDTMap* _map;
+		Eigen::Affine3d _T;
 	public:
-		NDTNodeAndMap(g2o::VertexSE2* node, lslgeneric::NDTMap* map) : _node(node), _map(map){};
+		NDTNodeAndMap(g2o::VertexSE2* node, lslgeneric::NDTMap* map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){};
+		
+// 		~NDTNodeAndMap(){delete _map;}
 		
 		g2o::VertexSE2* getNode(){return _node;}
 		void setNode(g2o::VertexSE2* node){_node = node;}
 		lslgeneric::NDTMap* getMap(){return _map;}
 		void setMap(lslgeneric::NDTMap* map){_map = map;}
+		Eigen::Affine3d getPose(){return _T;}
+		const Eigen::Affine3d& getPose() const {return _T;}
 		
 	};
 	
@@ -210,6 +215,12 @@ namespace acg{
 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
 			
+// 			cleanup pointers in NODE
+			
+			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
+				delete _nodes_ndt[i].getMap();
+			}
+			
 		}
 		
 		/** Accessor**/
@@ -244,9 +255,9 @@ namespace acg{
 		const g2o::OptimizableGraph& getGraph() const {return _optimizable_graph;}
 		
 		/***FUNCTIONS TO ADD THE NODES***/
-		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2, lslgeneric::NDTMap* map);
-		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob, lslgeneric::NDTMap* map);
-		g2o::VertexSE2* addRobotPose(double x, double y, double theta, lslgeneric::NDTMap* map);
+		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
+		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
+		g2o::VertexSE2* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
 		
 		g2o::VertexPointXY* addLandmarkPose(const g2o::Vector2D& pos, int strength = 1);
 		g2o::VertexPointXY* addLandmarkPose(double x, double y, int strength = 1);

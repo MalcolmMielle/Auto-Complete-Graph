@@ -1,6 +1,6 @@
 #include "auto_complete_graph/ACG.hpp"
 
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, lslgeneric::NDTMap* map){
+g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map){
 	
 	std::cout << "Adding the robot pose " << std::endl;
 	g2o::VertexSE2* robot =  new g2o::VertexSE2;
@@ -8,19 +8,19 @@ g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, 
 	robot->setId(_optimizable_graph.vertices().size());
 	_optimizable_graph.addVertex(robot);
 	
-	NDTNodeAndMap nodeAndMap(robot, map);
+	NDTNodeAndMap nodeAndMap(robot, map, affine);
 	
 	_nodes_ndt.push_back(nodeAndMap);
 	return robot;
 }
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob, lslgeneric::NDTMap* map){
+g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map){
 	g2o::SE2 se2(rob(0), rob(1), rob(2));
-	return addRobotPose(se2, map);
+	return addRobotPose(se2, affine, map);
 }
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta, lslgeneric::NDTMap* map){
+g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map){
 	Eigen::Vector3d robot1;
 	robot1 << x, y, theta;
-	return addRobotPose(robot1, map);
+	return addRobotPose(robot1, affine, map);
 }
 
 g2o::VertexPointXY* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vector2D& pos, int strength){
@@ -439,6 +439,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			Eigen::Affine3d affine = Eigen::Affine3d(feature->getPose());
 			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
 			g2o::SE2 robot_pos(isometry2d);
+			double resolution = feature->map->params_.resolution;
 				delete feature;
 // 			Eigen::Vector2d robot_pos; robot_pos << robot_pos_tmp(0), robot_pos_tmp(1);
 // 			robot_pos << ndt_graph.getNode(i).T(0), ndt_graph.getNode(i).T(1);
@@ -446,7 +447,17 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			//ATTENTION THIS GETS FORGOTTEN
 			lslgeneric::NDTMap* map = ndt_graph.getMap(i);
 			
-			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, map);
+			//Use a a msg to copy to a new pointer so it doesn't get forgotten :|
+			ndt_map::NDTMapMsg msg;
+			//ATTENTION Frame shouldn't be fixed
+			bool good = lslgeneric::toMessage(map, msg, "/world");
+			lslgeneric::NDTMap* map_copy = new lslgeneric::NDTMap(new lslgeneric::LazyGrid(resolution));
+			lslgeneric::LazyGrid *lz = dynamic_cast<lslgeneric::LazyGrid*>(map_copy->getMyIndex() );
+			std::string frame;
+			bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
+			
+			
+			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, affine, map_copy);
 			//Add Odometry
 			if(i > 0 ){
 				std::cout << "adding the odometry" << std::endl;

@@ -8,6 +8,18 @@
 #include "auto_complete_graph/VisuACG.hpp"
 
 
+ros::Publisher map_pub_;
+
+inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose) {
+
+  Eigen::Affine3d map_origin;
+  tf::poseMsgToEigen(occ_grid.info.origin, map_origin);
+  Eigen::Affine3d new_map_origin = pose*map_origin;
+  tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
+}
+
+
+
 void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg){
 	std::cout << "Got a new graph " << std::endl;
 	
@@ -67,9 +79,19 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	file_out_after = file_out_after + "nodes.g2o";
 	oacg->getGraph().save(file_out_after.c_str());
 	
-	visu.toRviz(*oacg);
+// 	visu.toRviz(*oacg);
 	
-	std::cout << "saved to " << file_out_after << std::endl;
+// 	visu.updateRviz();
+	
+// 	nav_msgs::OccupancyGrid omap; 
+// 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
+// 	moveOccupancyMap(omap, graph.getT());
+// 	
+// 	map_pub_.publish(omap);
+	
+	
+	
+// 	std::cout << "saved to " << file_out_after << std::endl;
 	
 // 	exit(0);
 		
@@ -140,14 +162,17 @@ int main(int argc, char **argv)
 	ros::Subscriber ndt_graph_sub;
     ros::NodeHandle nh;
 	
-	AASS::acg::VisuAutoCompleteGraph visu;
+	AASS::acg::VisuAutoCompleteGraph visu(&oacg);
 	
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg));
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
     
+	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
+	
 	while(ros::ok()){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
+		visu.updateRviz();
 	}
 
     return 0;
