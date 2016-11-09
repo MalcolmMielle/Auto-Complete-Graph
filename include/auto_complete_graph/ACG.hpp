@@ -1,5 +1,5 @@
-#ifndef NDTFEATURE_ACG_15092016
-#define NDTFEATURE_ACG_15092016
+#ifndef AUTOCOMPLETEGRAPH_ACG_15092016
+#define AUTOCOMPLETEGRAPH_ACG_15092016
 
 #include <ctime>
 
@@ -25,7 +25,7 @@
 // #include "g2o/solvers/csparse/linear_solver_csparse.h"
 
 #include "ndt_feature/ndt_feature_graph.h"
-#include "ndt_feature/utils.h"
+// #include "ndt_feature/utils.h"
 
 #include "Eigen/Core"
 
@@ -113,6 +113,29 @@ namespace acg{
 
 	
 	
+	
+	class NDTNodeAndMap{
+		g2o::VertexSE2* _node;
+		lslgeneric::NDTMap* _map;
+		Eigen::Affine3d _T;
+	public:
+		NDTNodeAndMap(g2o::VertexSE2* node, lslgeneric::NDTMap* map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){};
+		
+// 		~NDTNodeAndMap(){delete _map;}
+		
+		g2o::VertexSE2* getNode(){return _node;}
+		void setNode(g2o::VertexSE2* node){_node = node;}
+		lslgeneric::NDTMap* getMap(){return _map;}
+		void setMap(lslgeneric::NDTMap* map){_map = map;}
+		Eigen::Affine3d getPose(){return _T;}
+		const Eigen::Affine3d& getPose() const {return _T;}
+		
+	};
+	
+	
+	/**
+	 * @brief _transNoise is not used anymore when update the NDT-graph for we used the registration. I should remove it but for now I'm leaving it only not to break everything.
+	 */
 	class AutoCompleteGraph{
 	protected:
 		
@@ -131,7 +154,7 @@ namespace acg{
 		///@brief vector storing all node from the landarks 
 		std::vector<g2o::VertexPointXY*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
-		std::vector<g2o::VertexSE2*> _nodes_ndt;
+		std::vector<NDTNodeAndMap> _nodes_ndt;
 		///@brief vector storing all linking edges
 		std::vector<g2o::EdgeLinkXY_malcolm*> _edge_link;
 		///@brief vector storing all edges between a landmark and the robot
@@ -192,6 +215,12 @@ namespace acg{
 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
 			
+// 			cleanup pointers in NODE
+			
+			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
+				delete _nodes_ndt[i].getMap();
+			}
+			
 		}
 		
 		/** Accessor**/
@@ -201,8 +230,8 @@ namespace acg{
 		std::vector<g2o::VertexPointXY*>& getLandmarkNodes(){return _nodes_landmark;}
 		const std::vector<g2o::VertexPointXY*>& getLandmarkNodes() const {return _nodes_landmark;}
 		///@brief vector storing all node from the ndt ndt_feature_graph
-		std::vector<g2o::VertexSE2*>& getRobotNodes(){return _nodes_ndt;}
-		const std::vector<g2o::VertexSE2*>& getRobotNodes() const {return _nodes_ndt;}
+		std::vector<NDTNodeAndMap>& getRobotNodes(){return _nodes_ndt;}
+		const std::vector<NDTNodeAndMap>& getRobotNodes() const {return _nodes_ndt;}
 		///@brief vector storing all linking edges
 		std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges(){return _edge_link;}
 		const std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges() const {return _edge_link;}
@@ -226,9 +255,9 @@ namespace acg{
 		const g2o::OptimizableGraph& getGraph() const {return _optimizable_graph;}
 		
 		/***FUNCTIONS TO ADD THE NODES***/
-		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2);
-		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob);
-		g2o::VertexSE2* addRobotPose(double x, double y, double theta);
+		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
+		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
+		g2o::VertexSE2* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
 		
 		g2o::VertexPointXY* addLandmarkPose(const g2o::Vector2D& pos, int strength = 1);
 		g2o::VertexPointXY* addLandmarkPose(double x, double y, int strength = 1);
@@ -240,6 +269,8 @@ namespace acg{
 		
 		/** FUNCTION TO ADD THE EGDES **/
 		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information);
+		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information);
+		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information);
 		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
 		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from_id, int toward_id);

@@ -76,15 +76,17 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 
 void robotGraph(AASS::acg::AutoCompleteGraph& acg){
 	
+	lslgeneric::NDTMap map;
+	
 	std::cout << "Making the robot" << std::endl;
 	g2o::SE2 rpose(1, 1, 0);
-	auto robot0 = acg.addRobotPose(rpose);
+	auto robot0 = acg.addRobotPose(rpose, &map);
 	robot0->setId(6);
 	g2o::SE2 rpose2(1, 2, 0);
-	auto robot1 = acg.addRobotPose(rpose2);
+	auto robot1 = acg.addRobotPose(rpose2, &map);
 	robot1->setId(7);
 	g2o::SE2 rpose3(1, 3, 0);
-	auto robot2 = acg.addRobotPose(rpose3);
+	auto robot2 = acg.addRobotPose(rpose3, &map);
 	robot2->setId(8);
 	
 	g2o::SE2 move(0, 1, 0);

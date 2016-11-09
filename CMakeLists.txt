@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
-
+  occupancy_grid_utils
 )
 
 set(CMAKE_CXX_STANDARD 11)
@@ -113,7 +113,7 @@ catkin_package(
 
  INCLUDE_DIRS include
 #  LIBRARIES auto_complete_graph
- CATKIN_DEPENDS message_runtime das ndt_feature ndt_map roscpp rospy std_msgs
+ CATKIN_DEPENDS message_runtime das ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils
  DEPENDS system_lib eigen
 )
 
@@ -132,6 +132,7 @@ include_directories(
 ## Declare a C++ library
 add_library(auto_complete_graph_lib
   src/ACG.cpp
+#   src/VisuACG.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -152,6 +153,17 @@ add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+)
+
+add_executable(acg_node_rviz src/acg_node_rviz.cpp)
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(acg_node_rviz
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
 )
 
