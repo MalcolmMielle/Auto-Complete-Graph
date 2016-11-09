@@ -26,9 +26,9 @@ namespace acg{
 			_last_ndtmap = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg", 10);
 			_last_ndtmap2 = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2", 10);
 			_acg = acg;
-			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
+// 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
-		void toRviz(const AutoCompleteGraph& acg);
+// 		void toRviz(const AutoCompleteGraph& acg);
 		
 		void updateRviz(){
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
@@ -39,8 +39,8 @@ namespace acg{
 // 				for(size_t i = 0 ; i < 1 ; ++i){
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
-					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, 0.4, "/world");
+// 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
+					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, 0.4, "/world");
 					auto pose = _acg->getRobotNodes()[i].getPose();
 // 					auto vertex = node->estimate().toVector();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
@@ -63,8 +63,8 @@ namespace acg{
 				
 			}
 			_nb_of_zone = _acg->getRobotNodes().size();
-			omap.header.frame_id = "/world";
-			omap.header.stamp = ros::Time::now();
+// 			omap.header.frame_id = "/world";
+// 			omap.header.stamp = ros::Time::now();
 			nav_msgs::OccupancyGrid::Ptr final;
 			if(grids.size() > 0){
 				final = occupancy_grid_utils::combineGrids(grids);
@@ -80,9 +80,9 @@ namespace acg{
 		
 	private:
 		
-		bool fuseNDTMap(const AutoCompleteGraph& acg, nav_msgs::OccupancyGridPtr& final);
-		bool printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
-		void printPrior(const std::vector<g2o::VertexSE2Prior*>& prior_corners);
+// 		bool fuseNDTMap(const AutoCompleteGraph& acg, nav_msgs::OccupancyGridPtr& final);
+// 		bool printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
+// 		void printPrior(const std::vector<g2o::VertexSE2Prior*>& prior_corners);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec);
 		
 		//TO TEST
@@ -91,36 +91,36 @@ namespace acg{
 			return t;
 		}
 		
-		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
-		bool toOccupancyGrid(lslgeneric::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
+// 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
+// 		bool toOccupancyGrid(lslgeneric::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
 		
-		void fuseOcc(nav_msgs::OccupancyGrid& source, nav_msgs::OccupancyGrid& dest);
+// 		void fuseOcc(nav_msgs::OccupancyGrid& source, nav_msgs::OccupancyGrid& dest);
 		
 	};
 	
 
-	inline bool AASS::acg::VisuAutoCompleteGraph::printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg)
-	{
-		return lslgeneric::toMessage(map, mapmsg, frame_name);
-	}
-
-
-	inline void AASS::acg::VisuAutoCompleteGraph::printPrior(const std::vector< g2o::VertexSE2Prior* >& prior_corners)
-	{
-
-	}
-
-	inline void AASS::acg::VisuAutoCompleteGraph::toRviz(const AASS::acg::AutoCompleteGraph& acg)
-	{
-		nav_msgs::OccupancyGrid::Ptr final;
-		fuseNDTMap(acg, final);
-		final->header.frame_id = "/world";
-		final->header.stamp = ros::Time::now();
-		std::cout << "Ref frame " << final->header.frame_id << std::endl; 
-		_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*final);
-		
-		
-	}
+// 	inline bool AASS::acg::VisuAutoCompleteGraph::printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg)
+// 	{
+// 		return lslgeneric::toMessage(map, mapmsg, frame_name);
+// 	}
+// 
+// 
+// 	inline void AASS::acg::VisuAutoCompleteGraph::printPrior(const std::vector< g2o::VertexSE2Prior* >& prior_corners)
+// 	{
+// 
+// 	}
+// 
+// 	inline void AASS::acg::VisuAutoCompleteGraph::toRviz(const AASS::acg::AutoCompleteGraph& acg)
+// 	{
+// 		nav_msgs::OccupancyGrid::Ptr final;
+// 		fuseNDTMap(acg, final);
+// 		final->header.frame_id = "/world";
+// 		final->header.stamp = ros::Time::now();
+// 		std::cout << "Ref frame " << final->header.frame_id << std::endl; 
+// 		_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*final);
+// 		
+// 		
+// 	}
 
 // 	inline void AASS::acg::VisuAutoCompleteGraph::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Vector3d &pose_vec) {
 // 
@@ -139,60 +139,60 @@ namespace acg{
 		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 	}
 
-	inline bool AASS::acg::VisuAutoCompleteGraph::fuseNDTMap(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& final)
-	{
-		
-		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
-		
-		auto nodeMap = acg.getRobotNodes();
-		auto it = nodeMap.begin();
-		int i = 0 ;
-		for(it ; it != nodeMap.end() ; ++it){
-			
-			auto map = it->getMap();
-			auto node = it->getNode();
-			auto pos = node->estimate();
-						
-			std::cout << "First : " << i << std::endl;
-			++i;
-			nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
-			std::cout << "Bad map ? " << std::endl;
-			std::cout << "To occupancy grid. net map with cell num : " << map->numberOfActiveCells() << std::endl;
-			lslgeneric::toOccupancyGrid(map, *omap_tmp, 1.0, "/world");
-			std::cout << "To move grid" << std::endl;
-// 			moveOccupancyMap(*omap_tmp, pos.toVector());
-			nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
-			grids.push_back(ptr);
-			
-		}
-		
-			std::cout << "To combine grid" << std::endl;
-		final = occupancy_grid_utils::combineGrids(grids);
-		
-		
-	}
+// 	inline bool AASS::acg::VisuAutoCompleteGraph::fuseNDTMap(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& final)
+// 	{
+// 		
+// 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+// 		
+// 		auto nodeMap = acg.getRobotNodes();
+// 		auto it = nodeMap.begin();
+// 		int i = 0 ;
+// 		for(it ; it != nodeMap.end() ; ++it){
+// 			
+// 			auto map = it->getMap();
+// 			auto node = it->getNode();
+// 			auto pos = node->estimate();
+// 						
+// 			std::cout << "First : " << i << std::endl;
+// 			++i;
+// 			nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+// 			std::cout << "Bad map ? " << std::endl;
+// 			std::cout << "To occupancy grid. net map with cell num : " << map->numberOfActiveCells() << std::endl;
+// 			lslgeneric::toOccupancyGrid(map, *omap_tmp, 1.0, "/world");
+// 			std::cout << "To move grid" << std::endl;
+// // 			moveOccupancyMap(*omap_tmp, pos.toVector());
+// 			nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
+// 			grids.push_back(ptr);
+// 			
+// 		}
+// 		
+// 			std::cout << "To combine grid" << std::endl;
+// 		final = occupancy_grid_utils::combineGrids(grids);
+// 		
+// 		
+// 	}
+// 
+// 	
+// 	inline bool VisuAutoCompleteGraph::initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id)
+// 	{
+// 		occ_grid.info.width=width;
+// 		occ_grid.info.height=height;
+// 		occ_grid.info.resolution=res;
+// 		occ_grid.info.map_load_time=ros::Time::now();
+// 		occ_grid.info.origin.position.x=-50;
+// 		occ_grid.info.origin.position.y=-50;
+// 		occ_grid.header.stamp=ros::Time::now();
+// 		occ_grid.header.frame_id=frame_id;
+// 		
+// 		for(int iy = 0; iy < width; iy++) {
+// 			for(int ix = 0; ix < height; ix++) {
+// 				occ_grid.data.push_back(-1);
+// 			}
+// 		}
+// 	}
 
 	
-	inline bool VisuAutoCompleteGraph::initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id)
-	{
-		occ_grid.info.width=width;
-		occ_grid.info.height=height;
-		occ_grid.info.resolution=res;
-		occ_grid.info.map_load_time=ros::Time::now();
-		occ_grid.info.origin.position.x=-50;
-		occ_grid.info.origin.position.y=-50;
-		occ_grid.header.stamp=ros::Time::now();
-		occ_grid.header.frame_id=frame_id;
-		
-		for(int iy = 0; iy < width; iy++) {
-			for(int ix = 0; ix < height; ix++) {
-				occ_grid.data.push_back(-1);
-			}
-		}
-	}
-
-	
-	
+/*	
 	inline bool AASS::acg::VisuAutoCompleteGraph::toOccupancyGrid(lslgeneric::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id)
 	{
 		//works only for 2D case
@@ -274,53 +274,53 @@ namespace acg{
     }    
 //     exit(0);
     return true;
-  } 
+  } */
   
   
   
 	 //BUG
-	void VisuAutoCompleteGraph::fuseOcc(nav_msgs::OccupancyGrid& source, nav_msgs::OccupancyGrid& dest)
-	{
-		
-		double topleft_x = dest.info.origin.position.x + dest.info.resolution*0.5;
-		double topleft_y = dest.info.origin.position.y + dest.info.resolution*0.5;
-		
-// 		double topright_x = dest.info.origin.position.x + dest.info.resolution * 0 + dest.info.resolution*0.5;
-		double topright_y = dest.info.origin.position.y + dest.info.resolution * dest.info.width + dest.info.resolution*0.5;
-		
-		double bottomleft_x = dest.info.origin.position.x + dest.info.resolution * dest.info.height + dest.info.resolution*0.5;
-// 		double bottomleft_y = dest.info.origin.position.y + dest.info.resolution * 0 + dest.info.resolution*0.5;
-		
-// 		double bottomright_x = dest.info.origin.position.x + dest.info.resolution* dest.info.height + dest.info.resolution*0.5;
-// 		double bottomright_y = dest.info.origin.position.y + dest.info.resolution* dest.info.width + dest.info.resolution*0.5;
-		
-// 		assert(source.info.width == dest.info.width);
-// 		assert(source.info.height == dest.info.height);
-		for(int iy = 0; iy < source.info.width; iy++) {
-			for(int ix = 0; ix < source.info.height; ix++) {
-				
-				double px = source.info.origin.position.x + source.info.resolution*ix + source.info.resolution*0.5;
-				double py = source.info.origin.position.y + source.info.resolution*iy + source.info.resolution*0.5;
-
-				//Check if the point is in the dest image or not.
-// 				if(px >= topleft_x && px <= bottomleft_x){
-// 					if(py >= topleft_y && py <= topright_y){
-						if(source.data.at( (iy * source.info.width) + ix) >= 0){
-							
-							int place_x = (px - dest.info.resolution*0.5 - dest.info.origin.position.x) / dest.info.resolution;
-							int place_y = (py - dest.info.resolution*0.5 - dest.info.origin.position.x) / dest.info.resolution;
-							
-							dest.data.at( (place_y * dest.info.width) + place_x) = source.data.at( (iy * source.info.width) + ix);
-						}
-// 					}
-// 				}
-// 				else{
-// 					throw std::runtime_error("OUTSIDE OF THE MAP!");
-// 				}
-			}
-		}
-
-	}
+// 	void VisuAutoCompleteGraph::fuseOcc(nav_msgs::OccupancyGrid& source, nav_msgs::OccupancyGrid& dest)
+// 	{
+// 		
+// 		double topleft_x = dest.info.origin.position.x + dest.info.resolution*0.5;
+// 		double topleft_y = dest.info.origin.position.y + dest.info.resolution*0.5;
+// 		
+// // 		double topright_x = dest.info.origin.position.x + dest.info.resolution * 0 + dest.info.resolution*0.5;
+// 		double topright_y = dest.info.origin.position.y + dest.info.resolution * dest.info.width + dest.info.resolution*0.5;
+// 		
+// 		double bottomleft_x = dest.info.origin.position.x + dest.info.resolution * dest.info.height + dest.info.resolution*0.5;
+// // 		double bottomleft_y = dest.info.origin.position.y + dest.info.resolution * 0 + dest.info.resolution*0.5;
+// 		
+// // 		double bottomright_x = dest.info.origin.position.x + dest.info.resolution* dest.info.height + dest.info.resolution*0.5;
+// // 		double bottomright_y = dest.info.origin.position.y + dest.info.resolution* dest.info.width + dest.info.resolution*0.5;
+// 		
+// // 		assert(source.info.width == dest.info.width);
+// // 		assert(source.info.height == dest.info.height);
+// 		for(int iy = 0; iy < source.info.width; iy++) {
+// 			for(int ix = 0; ix < source.info.height; ix++) {
+// 				
+// 				double px = source.info.origin.position.x + source.info.resolution*ix + source.info.resolution*0.5;
+// 				double py = source.info.origin.position.y + source.info.resolution*iy + source.info.resolution*0.5;
+// 
+// 				//Check if the point is in the dest image or not.
+// // 				if(px >= topleft_x && px <= bottomleft_x){
+// // 					if(py >= topleft_y && py <= topright_y){
+// 						if(source.data.at( (iy * source.info.width) + ix) >= 0){
+// 							
+// 							int place_x = (px - dest.info.resolution*0.5 - dest.info.origin.position.x) / dest.info.resolution;
+// 							int place_y = (py - dest.info.resolution*0.5 - dest.info.origin.position.x) / dest.info.resolution;
+// 							
+// 							dest.data.at( (place_y * dest.info.width) + place_x) = source.data.at( (iy * source.info.width) + ix);
+// 						}
+// // 					}
+// // 				}
+// // 				else{
+// // 					throw std::runtime_error("OUTSIDE OF THE MAP!");
+// // 				}
+// 			}
+// 		}
+// 
+// 	}
 
 	
 	
