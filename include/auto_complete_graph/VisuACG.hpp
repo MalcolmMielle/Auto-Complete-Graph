@@ -16,21 +16,37 @@ namespace acg{
 		ros::NodeHandle _nh;
 		ros::Publisher _last_ndtmap;
 		ros::Publisher _last_ndtmap2;
-		nav_msgs::OccupancyGrid omap;
+		ros::Publisher _marker_pub;
+// 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 		AutoCompleteGraph* _acg;
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+		visualization_msgs::Marker _prior_edge_markers;
 		
 	public:
 		VisuAutoCompleteGraph(AutoCompleteGraph* acg) : _nb_of_zone(0){
 			_last_ndtmap = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg", 10);
 			_last_ndtmap2 = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2", 10);
+			_marker_pub = _nh.advertise<visualization_msgs::Marker>("visualization_marker_graph", 10);
+			
 			_acg = acg;
+			
+			_prior_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
+			_prior_edge_markers.header.frame_id = "/world";
+			_prior_edge_markers.ns = "acg";
+			_prior_edge_markers.id = 0;
+			_prior_edge_markers.scale.x = 0.2;
+			_prior_edge_markers.scale.y = 0.2;
+			_prior_edge_markers.color.b = 1.0f;
+			_prior_edge_markers.color.a = 1.0;
 // 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
 // 		void toRviz(const AutoCompleteGraph& acg);
 		
 		void updateRviz(){
+			
+			drawPrior();
+			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
 				
 				std::cout <<"update the zones" << std::endl;
@@ -90,6 +106,8 @@ namespace acg{
 			Eigen::Affine3d t(Eigen::Translation3d(Eigen::Vector3d(1,1,2)));
 			return t;
 		}
+		
+		void drawPrior();
 		
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
 // 		bool toOccupancyGrid(lslgeneric::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
@@ -321,6 +339,30 @@ namespace acg{
 // 		}
 // 
 // 	}
+
+
+	inline void VisuAutoCompleteGraph::drawPrior()
+	{
+		_prior_edge_markers.header.stamp = ros::Time::now();
+		auto edges = _acg->getPriorEdges();
+		if(edges.size() != _prior_edge_markers.points.size()){
+			_prior_edge_markers.points.clear();
+			auto it = edges.begin();
+			for(it ; it != edges.end() ; ++it){
+				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+					geometry_msgs::Point p;
+					g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+					auto vertex = ptr->estimate().toVector();
+					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+					p.x = vertex(0);
+					p.y = vertex(1);
+					p.z = 0;
+					_prior_edge_markers.points.push_back(p);
+				}
+			}
+		}
+		_marker_pub.publish(_prior_edge_markers);
+	}
 
 	
 	
