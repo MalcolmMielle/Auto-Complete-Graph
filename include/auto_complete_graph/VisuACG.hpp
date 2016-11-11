@@ -516,7 +516,7 @@ namespace acg{
 			for(it ; it != edges.end() ; ++it){
 				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
 					geometry_msgs::Point p;
-					g2o::EdgeLinkXY_malcolm* ptr = dynamic_cast<g2o::EdgeLinkXY_malcolm*>((*ite2));
+					g2o::VertexPointXY* ptr = dynamic_cast<g2o::VertexPointXY*>((*ite2));
 					auto vertex = ptr->estimate();
 					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 					p.x = vertex(0);
