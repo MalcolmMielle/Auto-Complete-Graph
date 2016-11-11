@@ -17,17 +17,27 @@ namespace acg{
 		ros::Publisher _last_ndtmap;
 		ros::Publisher _last_ndtmap2;
 		ros::Publisher _marker_pub;
+		ros::Publisher _ndt_node_pub;
+		ros::Publisher _corner_ndt_node_pub;
+		ros::Publisher _link_pub;
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 		AutoCompleteGraph* _acg;
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids_original;
 		visualization_msgs::Marker _prior_edge_markers;
+		visualization_msgs::Marker _ndt_node_markers;
+		visualization_msgs::Marker _corner_ndt_node_markers;
+		visualization_msgs::Marker _link_markers;
 		
 	public:
 		VisuAutoCompleteGraph(AutoCompleteGraph* acg) : _nb_of_zone(0){
 			_last_ndtmap = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg", 10);
 			_last_ndtmap2 = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2", 10);
 			_marker_pub = _nh.advertise<visualization_msgs::Marker>("visualization_marker_graph", 10);
+			_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("ndt_marker_graph", 10);
+			_corner_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("corner_ndt_marker_graph", 10);
+			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_graph", 10);
 			
 			_acg = acg;
 			
@@ -39,6 +49,33 @@ namespace acg{
 			_prior_edge_markers.scale.y = 0.2;
 			_prior_edge_markers.color.b = 1.0f;
 			_prior_edge_markers.color.a = 1.0;
+			
+			_ndt_node_markers.type = visualization_msgs::Marker::POINTS;
+			_ndt_node_markers.header.frame_id = "/world";
+			_ndt_node_markers.ns = "acg";
+			_ndt_node_markers.id = 1;
+			_ndt_node_markers.scale.x = 0.2;
+			_ndt_node_markers.scale.y = 0.2;
+			_ndt_node_markers.color.r = 1.0f;
+			_ndt_node_markers.color.a = 1.0;
+			
+			_corner_ndt_node_markers.type = visualization_msgs::Marker::POINTS;
+			_corner_ndt_node_markers.header.frame_id = "/world";
+			_corner_ndt_node_markers.ns = "acg";
+			_corner_ndt_node_markers.id = 2;
+			_corner_ndt_node_markers.scale.x = 0.2;
+			_corner_ndt_node_markers.scale.y = 0.2;
+			_corner_ndt_node_markers.color.g = 1.0f;
+			_corner_ndt_node_markers.color.a = 1.0;
+			
+			_link_markers.type = visualization_msgs::Marker::LINE_LIST;
+			_link_markers.header.frame_id = "/world";
+			_link_markers.ns = "acg";
+			_link_markers.id = 3;
+			_link_markers.scale.x = 0.2;
+			_link_markers.scale.y = 0.2;
+			_link_markers.color.g = 1.0f;
+			_link_markers.color.a = 1.0;
 // 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
 // 		void toRviz(const AutoCompleteGraph& acg);
@@ -46,6 +83,80 @@ namespace acg{
 		void updateRviz(){
 			
 			drawPrior();
+			
+			drawCornersNdt();
+			
+			drawLinks();
+			
+// 			_ndt_node_markers.points.clear();
+			
+			if(_nb_of_zone != _acg->getRobotNodes().size()){
+				
+				std::cout <<"update the zones" << std::endl;
+				
+				for(size_t i = _nb_of_zone ; i < _acg->getRobotNodes().size() ; ++i){
+// 				for(size_t i = 0 ; i < 1 ; ++i){
+					
+					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
+// 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
+					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, 0.4, "/world");
+// 					auto pose = _acg->getRobotNodes()[i].getPose();
+					auto node = _acg->getRobotNodes()[i].getNode();
+					auto vertex = node->estimate().toIsometry();
+// 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
+// 					std::cout << "Move : " << node.matrix() << std::endl;
+// 					if(i == 2) exit(0);
+					moveOccupancyMap(*omap_tmp, vertex);
+					omap_tmp->header.frame_id = "/world";
+					omap_tmp->header.stamp = ros::Time::now();
+					//TODO
+// 					fuseOcc(omap_tmp, omap);
+// 					if(i == 0){
+// 						_last_ndtmap.publish<nav_msgs::OccupancyGrid>(omap_tmp);
+// 					}
+// 					if(i == 2 ){
+// 						_last_ndtmap2.publish<nav_msgs::OccupancyGrid>(omap_tmp);
+// 					}
+					nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
+					grids.push_back(ptr);
+					
+					
+					geometry_msgs::Point p;
+					auto vertex2 = node->estimate().toVector();
+					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+					p.x = vertex2(0);
+					p.y = vertex2(1);
+					p.z = 0;
+					
+					_ndt_node_markers.points.push_back(p);
+					
+				}
+				
+			}
+			
+			
+			_nb_of_zone = _acg->getRobotNodes().size();
+// 			omap.header.frame_id = "/world";
+// 			omap.header.stamp = ros::Time::now();
+			nav_msgs::OccupancyGrid::Ptr final;
+			if(grids.size() > 0){
+				final = occupancy_grid_utils::combineGrids(grids);
+// 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
+				final->header.frame_id = "/world";
+				final->header.stamp = ros::Time::now();
+				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*final);
+				
+				_ndt_node_pub.publish(_ndt_node_markers);
+			}
+			
+			
+			
+		}
+		
+		void updateRvizOriginalSLAM(){
+			
+			drawPrior();
+			drawLinks();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
 				
@@ -78,6 +189,7 @@ namespace acg{
 				}
 				
 			}
+			
 			_nb_of_zone = _acg->getRobotNodes().size();
 // 			omap.header.frame_id = "/world";
 // 			omap.header.stamp = ros::Time::now();
@@ -100,6 +212,8 @@ namespace acg{
 // 		bool printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
 // 		void printPrior(const std::vector<g2o::VertexSE2Prior*>& prior_corners);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec);
+		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &pose_vec);
+// 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Vector3d &pose_vec);
 		
 		//TO TEST
 		Eigen::Affine3d vector3dToAffine3d(const Eigen::Vector3d& vec){
@@ -108,7 +222,8 @@ namespace acg{
 		}
 		
 		void drawPrior();
-		
+		void drawLinks();
+		void drawCornersNdt();
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
 // 		bool toOccupancyGrid(lslgeneric::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
 		
@@ -156,6 +271,33 @@ namespace acg{
 		Eigen::Affine3d new_map_origin = pose_vec*map_origin;
 		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 	}
+	
+	inline void AASS::acg::VisuAutoCompleteGraph::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &a2d) {
+
+		//Affine 2d to 3d
+		//  Eigen::Rotation2D<double> rot = Eigen::Rotation2D<double>::fromRotationMatrix(a2d.rotation());//Eigen::fromRotationMatrix(a2d.translation());
+		double angle = atan2(a2d.rotation()(1,0), a2d.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
+		Eigen::Affine3d pose_effi = Eigen::Translation3d(a2d.translation()(0), a2d.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+		
+// 		Eigen::Affine3d pose_effi;
+// 		pose_effi.matrix() << a2d(0, 0), a2d(0, 1), 0, a2d(0, 2),
+// 					 a2d(1, 0), a2d(1, 1), 0, a2d(1, 2),
+// 					 a2d(2, 0), a2d(2, 1), 0, a2d(2, 2),
+// 					         0,         0, 0,         0;
+
+		Eigen::Affine3d map_origin;
+		tf::poseMsgToEigen(occ_grid.info.origin, map_origin);
+		Eigen::Affine3d new_map_origin = pose_effi*map_origin;
+		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
+	}
+	
+// 	inline void AASS::acg::VisuAutoCompleteGraph::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Vector3d &pose_vec) {
+// 
+// 		Eigen::Affine3d map_origin;
+// 		tf::poseMsgToEigen(occ_grid.info.origin, map_origin);
+// 		Eigen::Affine3d new_map_origin = pose_vec + map_origin;
+// 		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
+// 	}
 
 // 	inline bool AASS::acg::VisuAutoCompleteGraph::fuseNDTMap(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& final)
 // 	{
@@ -362,6 +504,54 @@ namespace acg{
 			}
 		}
 		_marker_pub.publish(_prior_edge_markers);
+	}
+	
+	inline void VisuAutoCompleteGraph::drawLinks()
+	{
+		_link_markers.header.stamp = ros::Time::now();
+		auto edges = _acg->getLinkEdges();
+		if(edges.size() != _link_markers.points.size()){
+			_link_markers.points.clear();
+			auto it = edges.begin();
+			for(it ; it != edges.end() ; ++it){
+				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+					geometry_msgs::Point p;
+					g2o::EdgeLinkXY_malcolm* ptr = dynamic_cast<g2o::EdgeLinkXY_malcolm*>((*ite2));
+					auto vertex = ptr->estimate();
+					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+					p.x = vertex(0);
+					p.y = vertex(1);
+					p.z = 0;
+					_link_markers.points.push_back(p);
+				}
+			}
+		}
+		_link_pub.publish(_prior_edge_markers);
+	}
+	
+	inline void VisuAutoCompleteGraph::drawCornersNdt()
+	{
+// 		std::cout << "Getting the corners" << std::endl;
+		_corner_ndt_node_markers.header.stamp = ros::Time::now();
+		auto edges = _acg->getLandmarkNodes();
+		std::cout << "Getting the corners " << edges.size() << std::endl;
+		if(edges.size() != _corner_ndt_node_markers.points.size()){
+			_corner_ndt_node_markers.points.clear();
+			auto it = edges.begin();
+			for(it ; it != edges.end() ; ++it){
+				
+				geometry_msgs::Point p;
+				g2o::VertexPointXY* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
+				auto vertex = ptr->estimate();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+				p.x = vertex(0);
+				p.y = vertex(1);
+				p.z = 0;
+				_corner_ndt_node_markers.points.push_back(p);
+				
+			}
+		}
+		_corner_ndt_node_pub.publish(_corner_ndt_node_markers);
 	}
 
 	

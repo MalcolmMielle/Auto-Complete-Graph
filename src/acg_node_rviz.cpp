@@ -173,6 +173,7 @@ int main(int argc, char **argv)
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
 		visu.updateRviz();
+		std::cout << oacg.getLinkEdges().size()<< std::endl;
 	}
 
     return 0;

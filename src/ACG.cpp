@@ -425,6 +425,53 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 // 			i = 0;
 // 		}
 // 		for (i; i < ndt_graph.getNbNodes() - 1; ++i) {
+// 		Eigen::Isometry2d last_iso;
+// 		if(_nodes_ndt.size() != 0){
+// 			auto node = _nodes_ndt[_nodes_ndt.size() - 1].getNode();
+// 			last_iso = node->estimate().toIsometry();
+// 		}
+// 		else{
+// 			last_iso << 0, 0, 0, 
+// 						0, 0, 0, 
+// 						0, 0, 0;
+// 		}
+		Eigen::Isometry2d diff;
+		diff.matrix() << 1, 0, 0, 
+				0, 1, 0, 
+				0, 0, 0;
+		if(_previous_number_of_node_in_ndtgraph != 0){
+			auto node = _nodes_ndt[_nodes_ndt.size() - 1].getNode();
+			auto shift = node->estimate().toIsometry();
+			
+	// 		double angle = atan2(shift.rotation()(1,0), shift.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
+	// 		auto shift3d = Eigen::Translation3d(shift.translation()(0), shift.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
+				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
+				Eigen::Vector3d v1(1,0,0);
+				Eigen::Vector3d v2 = a.rotation()*v1;
+				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
+				double angle = acos(dot);
+				// Need to find the sign
+				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
+					return angle;
+				return -angle;
+			};
+			
+			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1].getPose();
+			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
+			
+// 			Eigen::Affine2d original2d;
+// 			original2d.matrix() << original3d(0, 0), original3d(0, 1), original3d(0, 3),
+// 								   original3d(1, 0), original3d(1, 1), original3d(1, 3),
+// 												  0,                0, original3d(2, 3);
+
+
+			
+			auto diff_affine = original2d.inverse() * shift;
+			diff.translation() = diff_affine.translation();
+			diff.linear() = diff_affine.rotation();
+		}
+		//Calculate the original transformation of all 
 		
 		//Assume that all node in the NDT graph must been analysed
 		i = _previous_number_of_node_in_ndtgraph;
@@ -438,6 +485,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				feature->copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
 			Eigen::Affine3d affine = Eigen::Affine3d(feature->getPose());
 			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
+			
+			//TODO make this work
+			isometry2d =  diff * isometry2d;
+			
 			g2o::SE2 robot_pos(isometry2d);
 			double resolution = feature->map->params_.resolution;
 				delete feature;
