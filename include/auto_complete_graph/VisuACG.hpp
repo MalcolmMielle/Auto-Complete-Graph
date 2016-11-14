@@ -34,10 +34,11 @@ namespace acg{
 		VisuAutoCompleteGraph(AutoCompleteGraph* acg) : _nb_of_zone(0){
 			_last_ndtmap = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg", 10);
 			_last_ndtmap2 = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2", 10);
-			_marker_pub = _nh.advertise<visualization_msgs::Marker>("visualization_marker_graph", 10);
-			_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("ndt_marker_graph", 10);
-			_corner_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("corner_ndt_marker_graph", 10);
-			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_graph", 10);
+			
+			_marker_pub = _nh.advertise<visualization_msgs::Marker>("prior_marker", 10);
+			_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("ndt_nodes_marker", 10);
+			_corner_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("corner_ndt_marker", 10);
+			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
 			
 			_acg = acg;
 			
@@ -75,6 +76,7 @@ namespace acg{
 			_link_markers.scale.x = 0.2;
 			_link_markers.scale.y = 0.2;
 			_link_markers.color.g = 1.0f;
+			_link_markers.color.r = 1.0f;
 			_link_markers.color.a = 1.0;
 // 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
@@ -515,18 +517,35 @@ namespace acg{
 			auto it = edges.begin();
 			for(it ; it != edges.end() ; ++it){
 				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+					
 					geometry_msgs::Point p;
-					g2o::VertexPointXY* ptr = dynamic_cast<g2o::VertexPointXY*>((*ite2));
-					auto vertex = ptr->estimate();
-					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-					p.x = vertex(0);
-					p.y = vertex(1);
-					p.z = 0;
+				
+					g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+					g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+					
+					if(ptr != NULL){
+						std::cout << "Got a VertexSE2" << std::endl;
+						auto vertex = ptr->estimate().toVector();
+						p.x = vertex(0);
+						p.y = vertex(1);
+						p.z = 0;
+					}
+					else if(ptr2 != NULL){
+						std::cout << "Got a VertexPOINTXY" << std::endl;
+						auto vertex = ptr2->estimate();
+						p.x = vertex(0);
+						p.y = vertex(1);
+						p.z = 0;
+					}
+					else{
+						throw std::runtime_error("Links do not have the good vertex type");
+					}			
+					
 					_link_markers.points.push_back(p);
 				}
 			}
 		}
-		_link_pub.publish(_prior_edge_markers);
+		_link_pub.publish(_link_markers);
 	}
 	
 	inline void VisuAutoCompleteGraph::drawCornersNdt()
