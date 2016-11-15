@@ -23,7 +23,7 @@ namespace AASS{
 			std::string _file;
 			
 		public: 
-			Basement() : _file("/home/malcolm/Documents/map.jpg"){
+			Basement() : _file("/home/malcolm/ros_catkin_ws/indigo_ws/src/auto_complete_graph/tests/map.jpg"){
 				
 				_same_point_prior.push_back(cv::Point2f(287,99));
 				_same_point_slam.push_back(cv::Point2f(19.36, 6.25));

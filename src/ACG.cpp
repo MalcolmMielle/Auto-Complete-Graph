@@ -328,6 +328,8 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	
 // 	std::cout << "NOOOOOOW" << std::endl << std::endl; 
 	
+	assert( _nodes_prior.size() == 0 );
+	
 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
 // 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
 		auto v = *vp.first;
@@ -342,7 +344,10 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 // 		_nodes_prior.push_back(res);
 	}
 	
+	assert( _edge_prior.size() == 0);
+	
 	int count = 0;
+	int self_link = 0 ;
 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
 // 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
 		auto v = *vp.first;
@@ -356,18 +361,21 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 			auto targ = boost::target(e, (graph));
 		
 			int idx = -1;
-			for(size_t ii = count +1 ; ii < vec_deque.size() ; ++ii){
+			for(size_t ii = count ; ii < vec_deque.size() ; ++ii){
 				if(targ == vec_deque[ii]){
 					idx = ii;
 				}
 			}
 			if(idx == -1){
 				//SKIP
+// 				throw std::runtime_error("Didn't find the vertex target :(");
+			}
+			else if(idx == count){
+				self_link = self_link + 1 ;
 			}
 			else{
 				
 				assert(idx != count);
-				
 				
 				g2o::VertexSE2Prior* from = out_prior[count]; //<-Base
 				g2o::VertexSE2Prior* toward = out_prior[idx]; //<-Targ
@@ -393,10 +401,12 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 		++count;
 	}
 	
-	std::cout << _edge_prior.size() << " == " << graph.getNumEdges() << std::endl;
+	std::cout << _edge_prior.size() << " == " << graph.getNumEdges() << " - " << self_link / 2 << std::endl;
 	std::cout << _nodes_prior.size() << " == " << graph.getNumVertices() << std::endl;
+	
 	assert( _nodes_prior.size() == graph.getNumVertices() );
-	assert( _edge_prior.size() == graph.getNumEdges());
+	//Self link / 2 because they are seen twice
+	assert( _edge_prior.size() == graph.getNumEdges() - (self_link / 2) );
 	
 }
 

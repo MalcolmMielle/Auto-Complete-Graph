@@ -5,6 +5,7 @@
 #include "auto_complete_graph/ACG.hpp"
 #include "auto_complete_graph/OptimizableAutoCompleteGraph.hpp"
 #include "auto_complete_graph/Basement.hpp"
+#include "auto_complete_graph/BasementFull.hpp"
 #include "auto_complete_graph/VisuACG.hpp"
 
 
