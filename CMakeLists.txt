@@ -180,6 +180,17 @@ target_link_libraries(acg_node_rviz_full
 )
 
 
+add_executable(test_affine_transfo tests/test_affine_transfo.cpp)
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(test_affine_transfo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(test_affine_transfo
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib -lboost_unit_test_framework
+)
+
 #############
 ## Install ##
 #############
