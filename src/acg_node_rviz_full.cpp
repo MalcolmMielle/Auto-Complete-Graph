@@ -126,13 +126,13 @@ int main(int argc, char **argv)
 	basement.transformOntoSLAM();
 	auto graph_prior = basement.getGraph();
 	
-	cv::Mat maa_3 = cv::Mat::zeros(1000, 2000, CV_8UC1);
-	maa_3.setTo(cv::Scalar(0));
-	AASS::vodigrex::draw<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>(graph_prior, maa_3);
+// 	cv::Mat maa_3 = cv::Mat::zeros(1000, 2000, CV_8UC1);
+// 	maa_3.setTo(cv::Scalar(0));
+// 	AASS::vodigrex::draw<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>(graph_prior, maa_3);
 	
-	std::cout << "Number of nodes " << graph_prior.getNumVertices() << std::endl;
-	cv::imshow("graph", maa_3);
-	cv::waitKey(0);
+// 	std::cout << "Number of nodes " << graph_prior.getNumVertices() << std::endl;
+// 	cv::imshow("graph", maa_3);
+// 	cv::waitKey(0);
 	
 	
 	//TODO : test no sensor offset
