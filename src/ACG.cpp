@@ -250,6 +250,21 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 }
 
 
+void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
+{
+	_optimizable_graph.removeEdge(v1);
+	auto it = _edge_link.begin();
+	for(it; it != _edge_link.end() ;){
+		if(*it == v1){
+			_edge_link.erase(it);
+			break;
+		}
+	}
+	
+}
+
+
+
 //FUNCTION TO REMOVE A VERTEX
 void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	//Prior
@@ -412,10 +427,12 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 
 void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph){
 	
-	std::vector<NDTCornerGraphElement> corners_end;
+	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
 	double cell_size = 0;
 	
 	std::cout << "Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph << std::endl;
+	
+	//************* Add and create all new nodes, and extract the corners from the new NDT maps *********//
 	
 	if(ndt_graph.getNbNodes() > _previous_number_of_node_in_ndtgraph){
 		
@@ -427,28 +444,13 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		auto links = ndt_graph.getOdometryLinks();
 		ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
 		
-		//Assume that the last mode must not be analysed
-// 		if(_previous_number_of_node_in_ndtgraph != 0){
-// 			i = _previous_number_of_node_in_ndtgraph - 1;			
-// 		}
-// 		else{
-// 			i = 0;
-// 		}
-// 		for (i; i < ndt_graph.getNbNodes() - 1; ++i) {
-// 		Eigen::Isometry2d last_iso;
-// 		if(_nodes_ndt.size() != 0){
-// 			auto node = _nodes_ndt[_nodes_ndt.size() - 1].getNode();
-// 			last_iso = node->estimate().toIsometry();
-// 		}
-// 		else{
-// 			last_iso << 0, 0, 0, 
-// 						0, 0, 0, 
-// 						0, 0, 0;
-// 		}
 		Eigen::Isometry2d diff;
 		diff.matrix() << 1, 0, 0, 
 				0, 1, 0, 
 				0, 0, 0;
+				
+		//**************** Calculate the previous transformations if there as already been something added *** //
+				
 		if(_previous_number_of_node_in_ndtgraph != 0){
 			auto node = _nodes_ndt[_nodes_ndt.size() - 1].getNode();
 			auto shift = node->estimate().toIsometry();
@@ -519,7 +521,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			
 			
 			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, affine, map_copy);
-			//Add Odometry
+			//Add Odometry if there is more than one node
 			if(i > 0 ){
 				std::cout << "adding the odometry" << std::endl;
 				g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[i - 1]);
@@ -547,6 +549,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			}
 			
 			
+			//********************** Extract the corners *****************//
 			
 			//HACK For now : we translate the Corner extracted and not the ndt-maps
 			auto cells = map->getAllCells();
@@ -555,18 +558,17 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			cell_size = x2;
 			
 			AASS::das::NDTCorner cornersExtractor;
-// 					std::cout << "Searching for corners in map with " << cells.size() << " initialized cells, and celle size is " << x2 << " " << y2 << " " << z2 << std::endl;
 			auto ret_export = cornersExtractor.getAllCorners(*map);
-			auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();			
-// 					std::cout << "Corner extracted. Nb of them " << ret_opencv_point_corner.size() << std::endl;
+			auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();		
 			
-			//HACK: translate the corners now :
+			
+			
 			auto it = ret_opencv_point_corner.begin();
 			
 			std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;
 			
 			//Find all the observations :
-
+			//**************** HACK: translate the corners now : **************//
 			for(it ; it != ret_opencv_point_corner.end() ; ++it){
 // 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
 				Eigen::Vector3d vec;
@@ -617,6 +619,8 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 	
 	std::vector<g2o::VertexPointXY*> all_new_landmarks;
 	
+	// ************ Add the landmarks that were added the corners_end ************************************//
+	
 	//Add stuff directly in the optimization graph : 
 	for(size_t i = 0 ; i < corners_end.size() ; ++i){
 		std::cout << "checking corner : " ;  corners_end[i].print() ; std::cout << std::endl;	
@@ -629,7 +633,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			
 			double res = cv::norm(point_land - corners_end[i].point);
 			
-			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
+// 			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
 			
 			//If we found the landmark, we save the data
 			if( res < cell_size){
@@ -660,7 +664,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 	_previous_number_of_node_in_ndtgraph = ndt_graph.getNbNodes();
 	
 	
-	//TODO, update links using the newly found landmarks. No need to update the rest obviously
+	//TODO, update links using the newly found landmarks. No need to update the rest obviously (<-HAHA that was so wrrrrongggg need to update it since they moved :P!)
 	
 	updateLinksAfterNDTGraph(all_new_landmarks);
 
@@ -672,48 +676,94 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 {
 	std::vector < std::pair < g2o::VertexPointXY*, g2o::VertexSE2Prior*> > links;
 	
-	std::cout << "Number new landmarks " << new_landmarks.size() << std::endl;
+	std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
 	std::cout << "Prior " << _nodes_prior.size() << std::endl;
-	if(_nodes_prior.size() > 0){
+// 	if(_nodes_prior.size() > 0){
 		
-		auto it = new_landmarks.begin();
-		for(it ; it != new_landmarks.end() ; it++){
-			std::cout << "Working on links " << std::endl;
-			Eigen::Vector2d pose_landmark = (*it)->estimate();
-			auto it_prior = _nodes_prior.begin();
+	//Update ALL links
+	auto it = _nodes_landmark.begin();
+	for(it ; it != _nodes_landmark.end() ; it++){
+		std::cout << "Working on links " << std::endl;
+		Eigen::Vector2d pose_landmark = (*it)->estimate();
+		auto it_prior = _nodes_prior.begin();
+		
+		Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+		Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+		
+		double norm = (pose_prior - pose_landmark).norm();
+		g2o::VertexSE2Prior* ptr_closest = *it_prior;
+		
+		for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+			pose_tmp = (*it_prior)->estimate().toVector();
+			pose_prior << pose_tmp(0), pose_tmp(1);
+			double norm_tmp = (pose_prior - pose_landmark).norm();
 			
-			Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
-			Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+			std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << std::endl;
 			
-			double norm = (pose_prior - pose_landmark).norm();
-			g2o::VertexSE2Prior* ptr_closest = *it_prior;
-			
-			for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
-				pose_tmp = (*it_prior)->estimate().toVector();
-				pose_prior << pose_tmp(0), pose_tmp(1);
-				double norm_tmp = (pose_prior - pose_landmark).norm();
-				
-				//Update the link
-				if(norm_tmp < norm){
-					ptr_closest = *it_prior;
-					norm = norm_tmp;
-				}			
+			//Update the link
+			if(norm_tmp < _min_distance_for_link_in_meter){
+				ptr_closest = *it_prior;
+				norm = norm_tmp;
+				//Pushing the link
+				std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+				links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, ptr_closest));
+			}					
+		}
+		//Pushing the link
+// 			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+// 			links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, ptr_closest));
+	}
+	
+	std::cout << "\n";
+	std::cout << "Adding the links" << std::endl;
+	
+	auto it_links = links.begin();
+	for(it_links ; it_links != links.end() ; it_links++){
+		g2o::Vector2D vec;
+		vec << 0, 0;
+		std::cout << "Creating " << it_links->second << " and " << it_links->first << std::endl;
+		addLinkBetweenMaps(vec, it_links->second, it_links->first);
+	}
+// 	}
+	
+	
+	//Remove links that went too far away from the points :
+	
+	auto it_old_links = _edge_link.begin();
+	for(it_old_links; it_old_links != _edge_link.end() ;){
+		
+		std::vector<Eigen::Vector3d> vertex_out;
+		
+		for(auto ite2 = (*it_old_links)->vertices().begin(); ite2 != (*it_old_links)->vertices().end() ; ++ite2){
+			g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+			g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+
+			if(ptr != NULL){
+				std::cout << "Got a VertexSE2" << std::endl;
+				auto vertex = ptr->estimate().toVector();
+				vertex_out.push_back(vertex);
 			}
-			//Pushing the link
-			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-			links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, ptr_closest));
+			else if(ptr2 != NULL){
+				std::cout << "Got a VertexPOINTXY" << std::endl;
+				auto vertex = ptr2->estimate();
+				Eigen::Vector3d pose_prior; pose_prior << vertex(0), vertex(1), 0;
+				vertex_out.push_back(pose_prior);
+			}
+			else{
+				throw std::runtime_error("Links do not have the good vertex type");
+			}		
+			
 		}
 		
-		std::cout << "\n";
-		std::cout << "Adding the links" << std::endl;
-		
-		auto it_links = links.begin();
-		for(it_links ; it_links != links.end() ; it_links++){
-			g2o::Vector2D vec;
-			vec << 0, 0;
-			std::cout << "Creating " << it_links->second << " and " << it_links->first << std::endl;
-			addLinkBetweenMaps(vec, it_links->second, it_links->first);
+		assert(vertex_out.size() == 2);
+		double norm = (vertex_out[0] - vertex_out[1]).norm();
+		if(norm >= _min_distance_for_link_in_meter * 2 ){
+			it_old_links ++;
+			removeLinkBetweenMaps(*it_old_links);
+		}
+		else{
+			it_old_links++;
 		}
 	}
-
+	
 }

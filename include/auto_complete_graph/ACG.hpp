@@ -42,101 +42,105 @@ namespace AASS {
 
 namespace acg{	
 	
-	
-	//ATTENTION : if I use this class without not from g2o package then it can't be saved cause it has no tag :/
-// 	class g2o::VertexPrior : public g2o::VertexSE2{
-// 	public:
-// //       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-// 		g2o::VertexPrior(){};
-// 	};
-	
-	
-	class NDTCornerGraphElement{
-	public:
-		cv::Point2f point;
-	protected:
-		//TODO : change it to a set
-		std::vector<int> nodes_linked;
-		std::vector<g2o::VertexSE2*> nodes_linked_ptr;
-		std::vector<g2o::Vector2D> observations;
-		
-	public:
-		NDTCornerGraphElement(float x, float y) : point(x, y){};
-		NDTCornerGraphElement(const cv::Point2f& p) : point(p){};
-		
-		void addAllObserv(int i, g2o::VertexSE2* ptr, g2o::Vector2D obs){
-			nodes_linked.push_back(i);
-			observations.push_back(obs);
-			nodes_linked_ptr.push_back(ptr);
-		}
-		
-		size_t size(){
-			assert(nodes_linked.size() == nodes_linked_ptr.size());
-			assert(nodes_linked.size() == observations.size());
-			return nodes_linked.size();
-		}
-		
-// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
-		const std::vector<int>& getNodeLinked() const {return nodes_linked;}
-		const std::vector<g2o::VertexSE2*>& getNodeLinkedPtr() const {return nodes_linked_ptr;}
-		const std::vector<g2o::Vector2D>& getObservations() const {return observations;}
-		
-// 		void push_back(int i){nodes_linked.push_back(i);}
-		
-// 		void addNode(int i){nodes_linked.push_back(i);}
-// 		void addObservation(const g2o::Vector2D& obs){ observations.push_back(obs);}
-		
-		void fuse(const NDTCornerGraphElement& cor){
-			for(size_t i = 0 ; i < cor.getNodeLinked().size() ; ++i){
-				bool seen = false;
-				for(size_t j = 0 ; j < nodes_linked.size() ; ++j){
-					if(cor.getNodeLinked()[i] == nodes_linked[j]){
-						seen = true;
-					}
-				}
-				if(seen == false){
-					nodes_linked.push_back(cor.getNodeLinked()[i]);
-					observations.push_back(cor.getObservations()[i]);
-					nodes_linked_ptr.push_back(cor.getNodeLinkedPtr()[i]);
-				}
-			}
-		}
-		void print() const {std::cout << point << " nodes : ";
-			
-			for(size_t i = 0 ; i < nodes_linked.size()  ; ++i){
-				std::cout << nodes_linked[i] << " " ;
-			}
-			
-		}
-		
-	};
-
-	
-	
-	
-	class NDTNodeAndMap{
-		g2o::VertexSE2* _node;
-		lslgeneric::NDTMap* _map;
-		Eigen::Affine3d _T;
-	public:
-		NDTNodeAndMap(g2o::VertexSE2* node, lslgeneric::NDTMap* map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){};
-		
-// 		~NDTNodeAndMap(){delete _map;}
-		
-		g2o::VertexSE2* getNode(){return _node;}
-		void setNode(g2o::VertexSE2* node){_node = node;}
-		lslgeneric::NDTMap* getMap(){return _map;}
-		void setMap(lslgeneric::NDTMap* map){_map = map;}
-		Eigen::Affine3d getPose(){return _T;}
-		const Eigen::Affine3d& getPose() const {return _T;}
-		
-	};
-	
-	
 	/**
-	 * @brief _transNoise is not used anymore when update the NDT-graph for we used the registration. I should remove it but for now I'm leaving it only not to break everything.
+	 * @brief The graph class containing all elemnts from each map and the graph used in the g2o optimisation.
+	 * ATTENTION : _transNoise is not used anymore when update the NDT-graph for we used the registration. I should remove it but for now I'm leaving it only not to break everything.
 	 */
 	class AutoCompleteGraph{
+		
+		
+private:
+		int _previous_number_of_node_in_ndtgraph;
+		
+		//Minimum distance from a prior corner to a NDT corner. THe distance is given in meter and is fixed at 2m in the constuctor
+		double _min_distance_for_link_in_meter;
+		
+		/**
+		 * @brief : used in a function to update the NDTGraph
+		 * */
+		class NDTCornerGraphElement{
+			public:
+				cv::Point2f point;
+			protected:
+				//TODO : change it to a set
+				std::vector<int> nodes_linked;
+				std::vector<g2o::VertexSE2*> nodes_linked_ptr;
+				std::vector<g2o::Vector2D> observations;
+				
+			public:
+				NDTCornerGraphElement(float x, float y) : point(x, y){};
+				NDTCornerGraphElement(const cv::Point2f& p) : point(p){};
+				
+				void addAllObserv(int i, g2o::VertexSE2* ptr, g2o::Vector2D obs){
+					nodes_linked.push_back(i);
+					observations.push_back(obs);
+					nodes_linked_ptr.push_back(ptr);
+				}
+				
+				size_t size(){
+					assert(nodes_linked.size() == nodes_linked_ptr.size());
+					assert(nodes_linked.size() == observations.size());
+					return nodes_linked.size();
+				}
+				
+		// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
+				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
+				const std::vector<g2o::VertexSE2*>& getNodeLinkedPtr() const {return nodes_linked_ptr;}
+				const std::vector<g2o::Vector2D>& getObservations() const {return observations;}
+				
+		// 		void push_back(int i){nodes_linked.push_back(i);}
+				
+		// 		void addNode(int i){nodes_linked.push_back(i);}
+		// 		void addObservation(const g2o::Vector2D& obs){ observations.push_back(obs);}
+				
+				void fuse(const NDTCornerGraphElement& cor){
+					for(size_t i = 0 ; i < cor.getNodeLinked().size() ; ++i){
+						bool seen = false;
+						for(size_t j = 0 ; j < nodes_linked.size() ; ++j){
+							if(cor.getNodeLinked()[i] == nodes_linked[j]){
+								seen = true;
+							}
+						}
+						if(seen == false){
+							nodes_linked.push_back(cor.getNodeLinked()[i]);
+							observations.push_back(cor.getObservations()[i]);
+							nodes_linked_ptr.push_back(cor.getNodeLinkedPtr()[i]);
+						}
+					}
+				}
+				void print() const {std::cout << point << " nodes : ";
+					
+					for(size_t i = 0 ; i < nodes_linked.size()  ; ++i){
+						std::cout << nodes_linked[i] << " " ;
+					}
+					
+				}
+				
+			};
+
+		/**
+		* @brief A class that old a NDT node pointer for the g2o graph, the associated NDTMap and the original affine transform (the one received when the NDTGraph was received)
+		*/
+		class NDTNodeAndMap{
+			g2o::VertexSE2* _node;
+			lslgeneric::NDTMap* _map;
+			Eigen::Affine3d _T;
+		public:
+			NDTNodeAndMap(g2o::VertexSE2* node, lslgeneric::NDTMap* map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){};
+			
+	// 		~NDTNodeAndMap(){delete _map;}
+			
+			g2o::VertexSE2* getNode(){return _node;}
+			void setNode(g2o::VertexSE2* node){_node = node;}
+			lslgeneric::NDTMap* getMap(){return _map;}
+			void setMap(lslgeneric::NDTMap* map){_map = map;}
+			Eigen::Affine3d getPose(){return _T;}
+			const Eigen::Affine3d& getPose() const {return _T;}
+			
+		};
+		
+		
+		
 	protected:
 		
 		//Needed system values
@@ -174,11 +178,7 @@ namespace acg{
 // 		std::vector < NDTCornerGraphElement > _ndt_corners;
 		
 		
-	private:
-		int _previous_number_of_node_in_ndtgraph;
-
-		
-		
+	
 	public:
 		
 		AutoCompleteGraph(const g2o::SE2& sensoffset, 
@@ -189,7 +189,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph){
+  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -203,7 +203,7 @@ namespace acg{
 						const Eigen::Vector2d& pn,
 						double rp,
 						const Eigen::Vector2d& linkn
-					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _optimizable_graph(sensoffset){
+					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -245,6 +245,9 @@ namespace acg{
 		std::vector<g2o::EdgeSE2*>& getOdometryEdges(){return _edge_odometry;}
 		const std::vector<g2o::EdgeSE2*>& getOdometryEdges() const {return _edge_odometry;}
 		
+		void setMinDistanceForLinksInMeters(double inpu){_min_distance_for_link_in_meter = inpu;}
+		double getMinDistanceForLinksInMeters(){return _min_distance_for_link_in_meter;}
+		
 		bool save(const std::string& file_outt){
 			_optimizable_graph.save(file_outt.c_str());
 			std::cout << "saved to " << file_outt << "\n";
@@ -285,6 +288,7 @@ namespace acg{
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
+		void removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1);
 		
 		//FUNCTION TO REMOVE A VERTEX
 		void removeVertex(g2o::HyperGraph::Vertex* v1);
