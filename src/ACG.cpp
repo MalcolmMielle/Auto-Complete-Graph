@@ -168,6 +168,8 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	priorObservation->setMeasurement(se2);
 	priorObservation->setInformation(information_prior);
 	priorObservation->setParameterId(0, _sensorOffset->id());
+	priorObservation->setOriginalValue(se2);
+	
 	_optimizable_graph.addEdge(priorObservation);
 	
 	EdgePriorAndInitialValue epiv(priorObservation, se2);
@@ -254,6 +256,25 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 
 void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
 {
+	//Getting the two vertices
+	g2o::VertexSE2* ptr;
+	g2o::VertexPointXY* ptr2;
+	for(auto ite2 = v1->vertices().begin(); ite2 != v1->vertices().end() ; ++ite2){
+		g2o::VertexSE2* ptr_tmp = dynamic_cast<g2o::VertexSE2*>((*ite2));
+		g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+		if(ptr_tmp != NULL){
+			std::cout << "Got a VertexSE2" << std::endl;
+			ptr = ptr_tmp;
+		}
+		else if(ptr2_tmp != NULL){
+			std::cout << "Got a VertexPOINTXY" << std::endl;
+			ptr2 = ptr2_tmp;
+		}
+		else{
+			throw std::runtime_error("Links do not have the good vertex type");
+		}		
+	}
+	
 	_optimizable_graph.removeEdge(v1);
 	auto it = _edge_link.begin();
 	for(it; it != _edge_link.end() ;){
@@ -262,6 +283,36 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 			break;
 		}
 	}
+	
+	//TODO :need to do the same for the SLAM
+	
+	//Get all edges from each vertex
+// 	std::vector<g2o::EdgeSE2Prior_malcolm*> all_other_prior_edge;
+// 	std::vector<g2o::EdgeLinkXY_malcolm*> all_other_links;
+// 	for(auto ite = ptr->edges().begin(); ite != ptr->edges().end() ; ++ite){
+// 		
+// 		g2o::EdgeSE2Prior_malcolm* ptr_tmp = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>((*ite));
+// 		g2o::EdgeLinkXY_malcolm* ptr2_tmp = dynamic_cast<g2o::EdgeLinkXY_malcolm*>((*ite));
+// 		if(ptr_tmp != NULL){
+// 			all_other_prior_edge.push_back(ptr_tmp);
+// 		}
+// 		else if(ptr2_tmp != NULL){
+// 			std::cout << "Got a VertexPOINTXY" << std::endl;
+// 			all_other_links.push_back(ptr2_tmp);
+// 		}
+// 		else{
+// 			throw std::runtime_error("vertex do not have the good edge type");
+// 		}		
+// 	}
+// 	
+// 	
+// 	//Reinitiallise if no more links
+// 	if(all_other_links.size() == 0){
+// 		for(auto ite = all_other_prior_edge.begin(); ite != all_other_prior_edge.end() ; ++ite){
+// 			auto se2 = (*ite)->getOriginalValue();
+// 			(*ite)->setMeasurement(se2);
+// 		}
+// 	}
 	
 }
 
@@ -729,7 +780,7 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 // 	}
 	
 	
-	//Remove links that went too far away from the points :
+	//Remove links that went too far away from the points and restor the edges to original state when possible:
 	
 	auto it_old_links = _edge_link.begin();
 	for(it_old_links; it_old_links != _edge_link.end() ;){

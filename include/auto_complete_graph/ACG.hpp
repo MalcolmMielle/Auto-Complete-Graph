@@ -139,6 +139,7 @@ private:
 			
 		};
 		
+		//ATTENTION Already useless
 		class EdgePriorAndInitialValue{
 		protected:
 			g2o::EdgeSE2Prior_malcolm* _edge;
