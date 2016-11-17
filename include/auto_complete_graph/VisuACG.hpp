@@ -495,7 +495,7 @@ namespace acg{
 			_prior_edge_markers.points.clear();
 			auto it = edges.begin();
 			for(it ; it != edges.end() ; ++it){
-				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+				for(auto ite2 = (*it).getEdge()->vertices().begin(); ite2 != (*it).getEdge()->vertices().end() ; ++ite2){
 					geometry_msgs::Point p;
 					g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
 					auto vertex = ptr->estimate().toVector();

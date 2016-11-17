@@ -126,7 +126,7 @@ namespace acg{
 // 			this->removeRobustKernel();
 			g2o::SparseOptimizer::optimize(40);
 			std::cout << "Optimizing using DCS" << std::endl;
-			this->setDCSKernel();
+// 			this->setDCSKernel();
 			g2o::SparseOptimizer::optimize(5);			
 		}
 		

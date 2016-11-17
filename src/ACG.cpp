@@ -169,7 +169,9 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	priorObservation->setInformation(information_prior);
 	priorObservation->setParameterId(0, _sensorOffset->id());
 	_optimizable_graph.addEdge(priorObservation);
-	_edge_prior.push_back(priorObservation);
+	
+	EdgePriorAndInitialValue epiv(priorObservation, se2);
+	_edge_prior.push_back(epiv);
 	return priorObservation;
 }
 
@@ -765,5 +767,6 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 			it_old_links++;
 		}
 	}
+	
 	
 }

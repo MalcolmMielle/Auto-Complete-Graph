@@ -139,6 +139,18 @@ private:
 			
 		};
 		
+		class EdgePriorAndInitialValue{
+		protected:
+			g2o::EdgeSE2Prior_malcolm* _edge;
+			g2o::SE2 _original_value;
+			
+		public:
+			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
+			
+			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
+			g2o::SE2 getOriginalValue(){return _original_value;}
+		};
+		
 		
 		
 	protected:
@@ -164,7 +176,7 @@ private:
 		///@brief vector storing all edges between a landmark and the robot
 		std::vector<g2o::EdgeSE2PointXY*> _edge_landmark;
 		///@brief vector storing all edge between the prior nodes
-		std::vector<g2o::EdgeSE2Prior_malcolm*> _edge_prior;
+		std::vector<EdgePriorAndInitialValue> _edge_prior;
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeSE2*> _edge_odometry;
 		
@@ -239,8 +251,8 @@ private:
 		std::vector<g2o::EdgeSE2PointXY*>& getLandmarkEdges(){return _edge_landmark;}
 		const std::vector<g2o::EdgeSE2PointXY*>& getLandmarkEdges() const {return _edge_landmark;}
 		///@brief vector storing all edge between the prior nodes
-		std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
-		const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
+		std::vector<EdgePriorAndInitialValue>& getPriorEdges(){ return _edge_prior;}
+		const std::vector<EdgePriorAndInitialValue>& getPriorEdges() const { return _edge_prior;}
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeSE2*>& getOdometryEdges(){return _edge_odometry;}
 		const std::vector<g2o::EdgeSE2*>& getOdometryEdges() const {return _edge_odometry;}
