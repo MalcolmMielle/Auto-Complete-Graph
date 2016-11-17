@@ -95,10 +95,10 @@ namespace acg{
 // 			_ndt_node_markers.points.clear();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
-				
+				grids.clear();
 				std::cout <<"update the zones" << std::endl;
 				
-				for(size_t i = _nb_of_zone ; i < _acg->getRobotNodes().size() ; ++i){
+				for(size_t i = 0 ; i < _acg->getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
