@@ -35,6 +35,8 @@ namespace acg{
 		g2o::RobustKernelPseudoHuber* _huber; //Huber
 		g2o::RobustKernelDCS* _dcs; //DCS
 		
+		bool _first;
+		
 	public:
 		
 		OptimizableAutoCompleteGraph(const g2o::SE2& sensoffset
@@ -44,7 +46,7 @@ namespace acg{
 // 				const Eigen::Vector2d& pn,
 // 				double rp,
 // 				const Eigen::Vector2d& linkn
-									) : _sensorOffsetTransf(sensoffset){
+									) : _sensorOffsetTransf(sensoffset), _first(true){
 			
 			_linearSolver = new SlamLinearSolver();
 			_linearSolver->setBlockOrdering(false);
@@ -106,37 +108,87 @@ namespace acg{
 		
 		
 		///@brief Init
-		void init(){
-			setFirst();
-			std::cout << "INIT" << std::endl;
-			//Prepare
-			this->initializeOptimization();
-		}
+// 		void init(){
+// // 			setFirst();
+// 			std::cout << "INIT" << std::endl;
+// 			//Prepare
+// // 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// // 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// // 				v->setMarginalized(false);
+// // 			}
+// 			if (this->activeEdges().size() == 0)
+// 				this->initializeOptimization();
+// 			computeInitialGuess();
+// 		}
 		
 		//TODO : attention -> make sure that the initializeOptimization does not reinitialize the state of the graph as in g2o_viewer
 		void initSubset(const g2o::HyperGraph::Edge& egde){
 			this->initializeOptimization();
 		}
 		
-		///@brief Optimization process
-		void optimize(){
-			
-			std::cout << "Optimizing using Huber" << std::endl;
-			this->setHuberKernel();
-// 			this->removeRobustKernel();
-			g2o::SparseOptimizer::optimize(40);
-			std::cout << "Optimizing using DCS" << std::endl;
-// 			this->setDCSKernel();
-			g2o::SparseOptimizer::optimize(5);			
+		//Set Marginalized to false and do initializeOptimization
+		void prepare(){
+			//Prepare when changing kernels
+			for (SparseOptimizer::VertexIDMap::const_iterator it = vertices().begin(); it != vertices().end(); ++it) {
+				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+				v->setMarginalized(false);
+			}
+			initializeOptimization();
 		}
 		
+		void optimize(int iter_in = 10){
+			
+			setHuberKernel();
+			
+			int iter = g2o::SparseOptimizer::optimize(iter_in);
+			if (iter > 0 && !iter){
+				std::cerr << "Optimization failed, result might be invalid" << std::endl;
+			}
+			
+		}
+		
+// 		///@brief Optimization process
+// 		void optimize(){
+// 			
+// 			
+// 			g2o::SparseOptimizer::initializeOptimization();
+// 			g2o::SparseOptimizer::optimize(1);
+// 			
+// 			
+// 			/*if(_first == true){
+// 				std::cerr << "Preparing (no marginalization of Landmarks)" << std::endl;
+// 				for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// 					OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// 					v->setMarginalized(false);
+// 				}
+// 				_first = false;
+// 			}
+// 			this->initializeOptimization();
+// 			//Setting no robust kernel
+// 			for (SparseOptimizer::EdgeSet::const_iterator it = this->edges().begin(); it != this->edges().end(); ++it) {
+// 				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*it);
+// 				e->setRobustKernel(0);
+// 			}
+// 			std::cout << "Optimizing using Huber" << std::endl;
+// 			//ATTENTION : Doesn't work without a kernel the pointer get lost nan with test_links. Why ?
+// // 			this->setHuberKernel();
+// // 			this->removeRobustKernel();
+// 			int iter = g2o::SparseOptimizer::optimize(1);
+// 			if (1 > 0 && !iter){
+// 				std::cerr << "Optimization failed, result might be invalid" << std::endl;
+// 			}
+// 			std::cout << "Optimizing using DCS" << std::endl;
+// // 			this->setDCSKernel();
+// // 			g2o::SparseOptimizer::optimize(5);	*/		
+// 		}
+// 		
 		
 		//TODO better this
 		void setHuberKernel(){
-			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-				v->setMarginalized(false);
-			}		
+// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// 				v->setMarginalized(false);
+// 			}		
 			
 			auto idmapedges = this->edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
@@ -148,10 +200,10 @@ namespace acg{
 			}
 		}
 		void setDCSKernel(){
-			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+			/*for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
 				v->setMarginalized(false);
-			}		
+			}*/		
 			
 			auto idmapedges = this->edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
@@ -163,26 +215,40 @@ namespace acg{
 			}
 		}
 		void removeRobustKernel(){
-			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-				v->setMarginalized(false);
-			}		
+// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// 				v->setMarginalized(false);
+// 			}		
 			
-			auto idmapedges = this->edges();
-			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-				std::cout << "REMOVE KERNEL" << std::endl;
-				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
+			//Setting robust kernel
+			for (SparseOptimizer::EdgeSet::const_iterator it = edges().begin(); it != edges().end(); ++it) {
+				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*it);
 				e->setRobustKernel(0);
-// 				e->robustKernel()->setDelta(1);
+			}
+			
+		}
+		
+	
+		
+		void setFirst(){
+// 			auto firstRobotPose = this->vertex(0);
+// 			firstRobotPose->setFixed(true);
+			bool gaugeFreedo = gaugeFreedom();
+			g2o::OptimizableGraph::Vertex* gauge = findGauge();
+			if (gaugeFreedo) {
+				if (! gauge) {
+				std::cerr <<  "cannot find a vertex to fix in this thing" << std::endl;
+				return;
+				} else {
+				std::cerr << "graph is fixed by node " << gauge->id() << std::endl;
+				gauge->setFixed(true);
+				}
+			} else {
+				std::cerr << "graph is fixed by priors or nodes are already fixed" << std::endl;
 			}
 		}
 		
-	private:
-		
-		void setFirst(){
-			auto firstRobotPose = this->vertex(0);
-			firstRobotPose->setFixed(true);
-		}
+		private:
 		
 		void setRobustKernelAllEdges(g2o::RobustKernel* ptr = NULL, double width = 1){
 			

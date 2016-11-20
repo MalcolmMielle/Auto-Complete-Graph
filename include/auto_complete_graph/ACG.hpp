@@ -2,6 +2,7 @@
 #define AUTOCOMPLETEGRAPH_ACG_15092016
 
 #include <ctime>
+#include <fstream>
 
 #include "g2o/types/slam2d/vertex_se2.h"
 #include "g2o/types/slam2d/vertex_point_xy.h"
@@ -10,9 +11,11 @@
 #include "g2o/types/slam2d/parameter_se2_offset.h"
 #include "g2o/types/slam2d/edge_se2_prior.h"
 #include "g2o/types/slam2d/edge_se2_link.h"
-#include "g2o/types/slam2d/edge_landmark_se2.h"
+// #include "g2o/types/slam2d/edge_landmark_se2.h"
 #include "g2o/types/slam2d/edge_link_xy.h"
 #include "g2o/types/slam2d/vertex_se2_prior.h"
+#include "g2o/types/slam2d/edge_landmark_malcolm.h"
+#include "g2o/types/slam2d/edge_odometry_malcolm.h"
 // #include "types_tutorial_slam2d.h"
 
 
@@ -175,11 +178,11 @@ private:
 		///@brief vector storing all linking edges
 		std::vector<g2o::EdgeLinkXY_malcolm*> _edge_link;
 		///@brief vector storing all edges between a landmark and the robot
-		std::vector<g2o::EdgeSE2PointXY*> _edge_landmark;
+		std::vector<g2o::EdgeLandmark_malcolm*> _edge_landmark;
 		///@brief vector storing all edge between the prior nodes
-		std::vector<EdgePriorAndInitialValue> _edge_prior;
+		std::vector<g2o::EdgeSE2Prior_malcolm*> _edge_prior;
 		///@brief vector storing the odometry
-		std::vector<g2o::EdgeSE2*> _edge_odometry;
+		std::vector<g2o::EdgeOdometry_malcolm*> _edge_odometry;
 		
 		///@brief the main dish : the graph
 // 		g2o::OptimizableGraph _optimizable_graph;
@@ -249,14 +252,14 @@ private:
 		std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges(){return _edge_link;}
 		const std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges() const {return _edge_link;}
 		///@brief vector storing all edges between a landmark and the robot
-		std::vector<g2o::EdgeSE2PointXY*>& getLandmarkEdges(){return _edge_landmark;}
-		const std::vector<g2o::EdgeSE2PointXY*>& getLandmarkEdges() const {return _edge_landmark;}
+		std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges(){return _edge_landmark;}
+		const std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges() const {return _edge_landmark;}
 		///@brief vector storing all edge between the prior nodes
-		std::vector<EdgePriorAndInitialValue>& getPriorEdges(){ return _edge_prior;}
-		const std::vector<EdgePriorAndInitialValue>& getPriorEdges() const { return _edge_prior;}
+		std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
+		const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
 		///@brief vector storing the odometry
-		std::vector<g2o::EdgeSE2*>& getOdometryEdges(){return _edge_odometry;}
-		const std::vector<g2o::EdgeSE2*>& getOdometryEdges() const {return _edge_odometry;}
+		std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges(){return _edge_odometry;}
+		const std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges() const {return _edge_odometry;}
 		
 		void setMinDistanceForLinksInMeters(double inpu){_min_distance_for_link_in_meter = inpu;}
 		double getMinDistanceForLinksInMeters(){return _min_distance_for_link_in_meter;}
@@ -266,9 +269,38 @@ private:
 			std::cout << "saved to " << file_outt << "\n";
 		}
 		
+		
+// 		void read(const std::string& file){
+// 			
+// 			AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
+// 				Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
+// 				DEG2RAD(2.), 				//Rotation noise for robot
+// 				Eigen::Vector2d(0.05, 0.05), //Landmarks noise
+// 				Eigen::Vector2d(1, 0.01), //Prior noise
+// 				DEG2RAD(2.), //Prior rot							 
+// 				Eigen::Vector2d(0.2, 0.2) //Link noise,
+// 			);
+// 			std::ifstream infile("thefile.txt");
+// 			double a, b, c;
+// 			infile >> a >> b >> c;
+// 			g2o::SE2 sensornoise(a, b, c);
+// 			infile >> a >> b;
+// 			Eigen::Vector2d robottrans(a, b);
+// 			double robotrotnoise;
+// 			infile >> robotrotnoise;
+// 			
+// 			infile >> a >> b;
+// 			Eigen::Vector2d landmarknoise(a, b);
+// 			infile >> a >> b;
+// 			Eigen::Vector2d priornoise(a, b);
+// 			infile >> a >> b;
+// 			Eigen::Vector2d linknoise(a, b);
+// 			
+// 		}
+		
 		///@brief the main dish : the graph
-		g2o::OptimizableGraph& getGraph(){return _optimizable_graph;}
-		const g2o::OptimizableGraph& getGraph() const {return _optimizable_graph;}
+		AASS::acg::OptimizableAutoCompleteGraph& getGraph(){return _optimizable_graph;}
+		const AASS::acg::OptimizableAutoCompleteGraph& getGraph() const {return _optimizable_graph;}
 		
 		/***FUNCTIONS TO ADD THE NODES***/
 		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
@@ -284,15 +316,15 @@ private:
 		
 		
 		/** FUNCTION TO ADD THE EGDES **/
-		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information);
-		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information);
-		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information);
-		g2o::EdgeSE2* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		g2o::EdgeSE2* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
-		g2o::EdgeSE2* addOdometry(double x, double y, double theta, int from_id, int toward_id);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information);
+		g2o::EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
+		g2o::EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id);
 		
-		g2o::EdgeSE2PointXY* addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		g2o::EdgeSE2PointXY* addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id);
+		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
 		g2o::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
@@ -343,16 +375,26 @@ private:
 		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph);
 		
 		
-		void init(){
-			_optimizable_graph.init();
+		void initializeOptimization(){
+			_optimizable_graph.initializeOptimization();
 		}
 		
-		void initialGuess(){
+		void computeInitialGuess(){
 			_optimizable_graph.computeInitialGuess();
 		}
 		
-		void optimize(){
-			_optimizable_graph.optimize();
+		void optimize(int iter = 10){
+			_optimizable_graph.optimize(iter);
+			
+			//Update prior edge covariance
+			
+			updatePriorEdgeCovariance();
+			
+		}
+		
+		//Set Marginalized to false and do initializeOptimization
+		void prepare(){
+			_optimizable_graph.prepare();
 		}
 		
 		
@@ -381,7 +423,7 @@ private:
 		
 		//TODO
 		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
-		
+		void updatePriorEdgeCovariance();
 		
 	
 	};

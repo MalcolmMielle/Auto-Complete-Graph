@@ -21,7 +21,7 @@ inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Aff
 
 
 
-void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg){
+void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraph& visu){
 	std::cout << "Got a new graph " << std::endl;
 	
 	ndt_feature::NDTFeatureGraph graph;
@@ -33,7 +33,7 @@ void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompl
 	acg->updateNDTGraph(graph);
 	
 	
-	std::string file_out = "/home/malcolm/ACG_folder/acg_";
+	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_";
 	std::ostringstream convert;   // stream used for the conversion
 	convert << graph.getNbNodes(); 
 	file_out = file_out + convert.str();
@@ -60,7 +60,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	oacg->updateNDTGraph(graph);
 	
 	
-	std::string file_out = "/home/malcolm/ACG_folder/oacg_before_";
+	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
 	std::ostringstream convert;   // stream used for the conversion
 	convert << graph.getNbNodes(); 
 	file_out = file_out + convert.str();
@@ -69,11 +69,14 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	
 	std::cout << "saved to " << file_out << std::endl;
 	
-	oacg->init();
-	oacg->initialGuess();
+// 	oacg->initializeOptimization();
+// 	oacg->initialGuess();
+	//Prepare the graph : marginalize + initializeOpti
+	oacg->getGraph().setFirst();
+	oacg->prepare();
 	oacg->optimize();
 	
-	std::string file_out_after = "/home/malcolm/ACG_folder/oacg_after_";
+	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
 	std::ostringstream convert_after;   // stream used for the conversion
 	convert_after << graph.getNbNodes(); 
 	file_out_after = file_out_after + convert.str();
@@ -90,7 +93,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	
 // 	map_pub_.publish(omap);
 	
-	
+	visu.updateRviz();
 	
 // 	std::cout << "saved to " << file_out_after << std::endl;
 	
@@ -138,7 +141,7 @@ int main(int argc, char **argv)
 	);
 	
 	acg.addPriorGraph(graph_prior);
-	std::string file_out = "/home/malcolm/ACG_folder/acg_0_prior.g2o";
+	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_0_prior.g2o";
 	acg.getGraph().save(file_out.c_str());
 	std::cout << "saved to " << file_out << std::endl;
 	
@@ -159,14 +162,16 @@ int main(int argc, char **argv)
 	
 // 	exit(0);
 	
-    ros::init(argc, argv, "auto_complete_graph");
+    ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
 	
-	AASS::acg::VisuAutoCompleteGraph visu(&oacg);
+// 	AASS::acg::VisuAutoCompleteGraph visu(&oacg);
+	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
+	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
-// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg));
-	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg, visu));
+	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	

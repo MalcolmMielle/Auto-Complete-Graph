@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include "std_msgs/Bool.h"
 #include "ndt_feature/NDTGraphMsg.h"
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/ndtgraph_conversion.h"
@@ -19,9 +20,36 @@ inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Aff
   tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 }
 
+// void opti(std_msgs::Bool b, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraph& visu){
+// 	std::cout << "Got a new graph " << std::endl;
+// 	
+// // 	ndt_feature::NDTFeatureGraph graph;
+// 	
+// // 	std::string frame;
+// // 	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
+// 	
+// 
+// // 	acg->updateNDTGraph(graph);
+// 	acg->init();
+// 	acg->initialGuess();
+// 	acg->optimize();
+// 	
+// 	std::string file_out = "/home/malcolm/ACG_folder/acg_opti";
+// 	std::ostringstream convert;   // stream used for the conversion
+// // 	convert << graph.getNbNodes(); 
+// 	file_out = file_out + convert.str();
+// 	file_out = file_out + "nodes.g2o";
+// 	acg->getGraph().save(file_out.c_str());
+// 	
+// 	std::cout << "saved to " << file_out << std::endl;
+// 	
+// // 	exit(0);
+// 		
+// }
 
 
-void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg){
+
+void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraph& visu){
 	std::cout << "Got a new graph " << std::endl;
 	
 	ndt_feature::NDTFeatureGraph graph;
@@ -104,7 +132,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 int main(int argc, char **argv)
 {
 	
-	AASS::acg::BasementFull basement;
+	AASS::acg::Basement basement;
 	basement.extractCornerPrior();
 // 	basement.transformOntoSLAM();
 // 	auto graph_priortmp = basement.getGraph();
@@ -126,23 +154,15 @@ int main(int argc, char **argv)
 	basement.transformOntoSLAM();
 	auto graph_prior = basement.getGraph();
 	
-// 	cv::Mat maa_3 = cv::Mat::zeros(1000, 2000, CV_8UC1);
-// 	maa_3.setTo(cv::Scalar(0));
-// 	AASS::vodigrex::draw<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>(graph_prior, maa_3);
-	
-// 	std::cout << "Number of nodes " << graph_prior.getNumVertices() << std::endl;
-// 	cv::imshow("graph", maa_3);
-// 	cv::waitKey(0);
-	
 	
 	//TODO : test no sensor offset
 	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
 		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
 		DEG2RAD(2.), 				//Rotation noise for robot
 		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
-		Eigen::Vector2d(1, 0.01), //Prior noise
+		Eigen::Vector2d(1, 0.00001), //Prior noise
 		DEG2RAD(2.), //Prior rot							 
-		Eigen::Vector2d(0.002, 0.002) //Link noise,
+		Eigen::Vector2d(0.2, 0.2) //Link noise,
 	);
 	
 	acg.addPriorGraph(graph_prior);
@@ -167,21 +187,26 @@ int main(int argc, char **argv)
 	
 // 	exit(0);
 	
-    ros::init(argc, argv, "auto_complete_graph");
+    ros::init(argc, argv, "auto_complete_graph_rviz_small_noopti");
 	ros::Subscriber ndt_graph_sub;
-    ros::NodeHandle nh;
+	ros::Subscriber optimi_sub;
+    ros::NodeHandle nh("~");
 	
-	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
+	AASS::acg::VisuAutoCompleteGraph visu_noOpti(&acg, nh);
+	visu_noOpti.setImageFileNameOut("/home/malcolm/Noopitimization_rviz_small");
+// 	AASS::acg::VisuAutoCompleteGraph visu(&acg);
 	
-// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg));
-	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 10, boost::bind(&gotGraph, _1, &acg, visu_noOpti));
+// 	optimi_sub = nh.subscribe<std_msgs::Bool>("/optimize", 10, boost::bind(&opti, _1, &acg, visu_noOpti));
+// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	
 	while(ros::ok()){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
-		visu.updateRviz();
+// 		visu.updateRviz();
+		visu_noOpti.updateRviz();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 	}
 

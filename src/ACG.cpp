@@ -57,9 +57,9 @@ g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(double x
 }
 
 
-g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information){
+g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information){
 	
-	g2o::EdgeSE2* odometry = new g2o::EdgeSE2;
+	g2o::EdgeOdometry_malcolm* odometry = new g2o::EdgeOdometry_malcolm;
 	odometry->vertices()[0] = v1 ;
 	odometry->vertices()[1] = v2 ;
 	odometry->setMeasurement(se2);
@@ -69,17 +69,17 @@ g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o
 	return odometry;
 }
 
-g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information){
+g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addOdometry(observ, from_ptr, toward_ptr, information);
 }
-g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information){
+g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information){
 	g2o::SE2 se2(x, y, theta);
 	return addOdometry(se2, from_id, toward_id, information);
 }
 
-g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 			
 	Eigen::Matrix3d covariance;
 	covariance.fill(0.);
@@ -93,17 +93,17 @@ g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o
 
 
 
-g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id){
+g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addOdometry(observ, from_ptr, toward_ptr);
 }
-g2o::EdgeSE2* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id){
+g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id){
 	g2o::SE2 se2(x, y, theta);
 	return addOdometry(se2, from_id, toward_id);
 }
 
-g2o::EdgeSE2PointXY* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 	Eigen::Matrix2d covariance_landmark; 
 	covariance_landmark.fill(0.);
 	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
@@ -111,7 +111,7 @@ g2o::EdgeSE2PointXY* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const 
 // 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
 	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 	
-	g2o::EdgeSE2PointXY* landmarkObservation =  new g2o::EdgeSE2PointXY;
+	g2o::EdgeLandmark_malcolm* landmarkObservation =  new g2o::EdgeLandmark_malcolm;
 	landmarkObservation->vertices()[0] = v1;
 	landmarkObservation->vertices()[1] = v2;
 	landmarkObservation->setMeasurement(pos);
@@ -122,7 +122,7 @@ g2o::EdgeSE2PointXY* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const 
 	
 	return landmarkObservation;
 }
-g2o::EdgeSE2PointXY* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id){
+g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addLandmarkObservation(pos, from_ptr, toward_ptr);
@@ -172,8 +172,8 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	
 	_optimizable_graph.addEdge(priorObservation);
 	
-	EdgePriorAndInitialValue epiv(priorObservation, se2);
-	_edge_prior.push_back(epiv);
+// 	EdgePriorAndInitialValue epiv(priorObservation, se2);
+	_edge_prior.push_back(priorObservation);
 	return priorObservation;
 }
 
@@ -193,7 +193,7 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 	//Making sure the two node are the good type
 	g2o::HyperGraph::Vertex* from;
 	g2o::HyperGraph::Vertex* toward;
-	g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>(v1);
+	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
 	g2o::VertexPointXY* ptr2;
 	if(ptr != NULL){
 		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>(v2);
@@ -206,7 +206,7 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 		}
 	}
 	else{
-		ptr = dynamic_cast<g2o::VertexSE2*>(v2);
+		ptr = dynamic_cast<g2o::VertexSE2Prior*>(v2);
 		if(ptr != NULL){
 			ptr2 = dynamic_cast<g2o::VertexPointXY*>(v1);
 			if(ptr2 == NULL){
@@ -218,7 +218,7 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 			}
 		}
 		else{
-			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2");
+			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
 		}
 	}
 	
@@ -256,24 +256,24 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 
 void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
 {
-	//Getting the two vertices
-	g2o::VertexSE2* ptr;
-	g2o::VertexPointXY* ptr2;
-	for(auto ite2 = v1->vertices().begin(); ite2 != v1->vertices().end() ; ++ite2){
-		g2o::VertexSE2* ptr_tmp = dynamic_cast<g2o::VertexSE2*>((*ite2));
-		g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
-		if(ptr_tmp != NULL){
-			std::cout << "Got a VertexSE2" << std::endl;
-			ptr = ptr_tmp;
-		}
-		else if(ptr2_tmp != NULL){
-			std::cout << "Got a VertexPOINTXY" << std::endl;
-			ptr2 = ptr2_tmp;
-		}
-		else{
-			throw std::runtime_error("Links do not have the good vertex type");
-		}		
-	}
+// 	//Getting the two vertices
+// 	g2o::VertexSE2* ptr;
+// 	g2o::VertexPointXY* ptr2;
+// 	for(auto ite2 = v1->vertices().begin(); ite2 != v1->vertices().end() ; ++ite2){
+// 		g2o::VertexSE2* ptr_tmp = dynamic_cast<g2o::VertexSE2*>((*ite2));
+// 		g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+// 		if(ptr_tmp != NULL){
+// 			std::cout << "Got a VertexSE2" << std::endl;
+// 			ptr = ptr_tmp;
+// 		}
+// 		else if(ptr2_tmp != NULL){
+// 			std::cout << "Got a VertexPOINTXY" << std::endl;
+// 			ptr2 = ptr2_tmp;
+// 		}
+// 		else{
+// 			throw std::runtime_error("Links do not have the good vertex type");
+// 		}		
+// 	}
 	
 	_optimizable_graph.removeEdge(v1);
 	auto it = _edge_link.begin();
@@ -821,3 +821,77 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 	
 	
 }
+
+
+void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
+{
+	auto edges = _edge_prior;	
+	auto it = edges.begin();
+	for(it ; it != edges.end() ; ++it){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[0]);
+		if(v_ptr == NULL){
+			std::runtime_error("no");
+		}
+		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[1]);
+		if(v_ptr2 == NULL){
+			std::runtime_error("no2");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+			
+		// 			std::cout << "Poses 1 " << std::endl << pose1.format(cleanFmt) << std::endl;
+		// 			std::cout << "Poses 2 " << std::endl << pose2.format(cleanFmt) << std::endl;
+			
+		Eigen::Vector2d eigenvec; 
+		eigenvec << pose1(0) - pose2(0), pose1(1) - pose2(1);
+		
+		double newnorm = (pose1 - pose2).norm();
+		std::cout << "new norm " << newnorm << " because " << pose1 << " " << pose2 << std::endl;
+		g2o::SE2 oldnormse2 = (*it)->getOriginalValue();
+		Eigen::Vector3d vecold = oldnormse2.toVector();
+		double oldnorm = (vecold).norm();
+		std::cout << "oldnorm" << newnorm << std::endl;
+		assert(oldnorm >= 0);
+		
+		double diff_norm = std::abs(oldnorm - newnorm);
+		std::cout << "Diff norm " << diff_norm << std::endl;
+		assert(diff_norm >= 0);
+		if(diff_norm > oldnorm){
+			diff_norm = oldnorm;
+		}
+		diff_norm = std::abs(diff_norm);
+		std::cout << "Diff norm " << diff_norm << std::endl;
+		assert(diff_norm >= 0);
+		assert(diff_norm <= oldnorm);
+		double normalizer_own = 1 / oldnorm;
+		double diff_norm_normalized = 1 - (diff_norm * normalizer_own);
+		
+		double new_cov = diff_norm_normalized;
+		
+		assert(new_cov <= _priorNoise(0));
+		assert(new_cov >= 0);
+	// 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
+		std::pair<double, double> eigenval(new_cov, _priorNoise(1));
+		
+		Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
+		
+	// 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
+		
+		Eigen::Matrix3d covariance_prior;
+		covariance_prior.fill(0.);
+		covariance_prior(0, 0) = cov(0, 0);
+		covariance_prior(0, 1) = cov(0, 1);
+		covariance_prior(1, 0) = cov(1, 0);
+		covariance_prior(1, 1) = cov(1, 1);
+	// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
+		covariance_prior(2, 2) = _prior_rot * _prior_rot;
+		Eigen::Matrix3d information_prior = covariance_prior.inverse();
+		(*it)->setInformation(information_prior);
+		
+	}
+	
+	
+	
+	
+}
+
