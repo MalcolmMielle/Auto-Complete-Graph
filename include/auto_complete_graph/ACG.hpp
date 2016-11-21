@@ -385,7 +385,8 @@ private:
 		
 		void optimize(int iter = 10){
 			
-			_optimizable_graph.setHuberKernel();
+// 			_optimizable_graph.setHuberKernel();
+			setAgeingHuberKernel();
 			_optimizable_graph.optimize(iter);
 			
 			//Update prior edge covariance
@@ -406,7 +407,7 @@ private:
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto huber = new g2o::RobustKernelHuber();
 				e->setRobustKernel(huber);
-				e->robustKernel()->setDelta(1);
+				setKernelSizeDependingOnAge(e);
 			}
 		}
 		
@@ -443,6 +444,39 @@ private:
 		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
 		void updatePriorEdgeCovariance();
 		
+		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e){
+			
+			g2o::EdgeLinkXY_malcolm* v_linkxy = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(e);
+			g2o::EdgeLandmark_malcolm* v_land = dynamic_cast<g2o::EdgeLandmark_malcolm*>(e);
+			g2o::EdgeSE2Prior_malcolm* v_prior = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(e);
+			g2o::EdgeOdometry_malcolm* v_odom = dynamic_cast<g2o::EdgeOdometry_malcolm*>(e);
+			double age = -1;
+			if(v_linkxy != NULL){
+				age = v_linkxy->interface.getAge();
+				v_linkxy->interface.setAge(age + 1);
+			}
+			else if(v_land != NULL){
+				age = v_land->interface.getAge();
+				v_land->interface.setAge(age + 1);
+			}
+			else if(v_prior != NULL){
+				age = v_prior->interface.getAge();
+				v_prior->interface.setAge(age + 1);
+			}
+			else if(v_odom != NULL){
+				age = v_odom->interface.getAge();
+				v_odom->interface.setAge(age + 1);
+			}
+			else{
+				std::runtime_error("didn't find edge type");
+			}
+			
+			std::cout << "AGE : " << age << std::endl;
+			
+			age = 1 / age;
+			std::cout << "kernel size : " << age << std::endl;
+			e->robustKernel()->setDelta(age);
+		}
 	
 	};
 }
