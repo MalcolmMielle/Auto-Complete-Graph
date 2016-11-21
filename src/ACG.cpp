@@ -168,7 +168,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	priorObservation->setMeasurement(se2);
 	priorObservation->setInformation(information_prior);
 	priorObservation->setParameterId(0, _sensorOffset->id());
-	priorObservation->setOriginalValue(se2);
+	priorObservation->interface.setOriginalValue(se2);
 	
 	_optimizable_graph.addEdge(priorObservation);
 	
@@ -847,7 +847,7 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		
 		double newnorm = (pose1 - pose2).norm();
 		std::cout << "new norm " << newnorm << " because " << pose1 << " " << pose2 << std::endl;
-		g2o::SE2 oldnormse2 = (*it)->getOriginalValue();
+		g2o::SE2 oldnormse2 = (*it)->interface.getOriginalValue();
 		Eigen::Vector3d vecold = oldnormse2.toVector();
 		double oldnorm = (vecold).norm();
 		std::cout << "oldnorm" << newnorm << std::endl;

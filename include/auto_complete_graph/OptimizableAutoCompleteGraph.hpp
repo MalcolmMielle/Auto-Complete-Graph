@@ -15,7 +15,9 @@ namespace AASS {
 
 namespace acg{	
 	
-	
+	/*
+	 * Working directly on g2o graph
+	 */
 	class OptimizableAutoCompleteGraph : public g2o::SparseOptimizer{
 		
 	public :
@@ -136,9 +138,10 @@ namespace acg{
 			initializeOptimization();
 		}
 		
+		///ATTENTION Call setHuberKernel are other Kernel first ! It's not in the function here just so that I can use a different kernel function in class that inherite this one. I know that design suck. I should inherite from this. But they some stuff are broken :(
 		void optimize(int iter_in = 10){
 			
-			setHuberKernel();
+// 			setHuberKernel();
 			
 			int iter = g2o::SparseOptimizer::optimize(iter_in);
 			if (iter > 0 && !iter){

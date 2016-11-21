@@ -106,15 +106,19 @@ int main(){
 // 	acg.prepare();
 	
 	acg.save("/home/malcolm/ACG_folder/initguess.g2o");
+	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_0after.g2o");
 
+	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_1after.g2o");
 
+	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_2after.g2o");
 
+	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_3after.g2o");
 	
@@ -124,6 +128,7 @@ int main(){
 	acg.prepare();
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_poseNodeinitOpti.g2o");
 	
+	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_poseNodeopti1.g2o");
 	

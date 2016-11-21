@@ -192,7 +192,7 @@ private:
 		ndt_feature::NDTFeatureGraph* _ndt_graph;
 		
 // 		std::vector < NDTCornerGraphElement > _ndt_corners;
-		
+		double _first_Kernel_size;
 		
 	
 	public:
@@ -205,7 +205,7 @@ private:
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph){
+  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -219,7 +219,7 @@ private:
 						const Eigen::Vector2d& pn,
 						double rp,
 						const Eigen::Vector2d& linkn
-					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset){
+					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _first_Kernel_size(1){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -384,12 +384,30 @@ private:
 		}
 		
 		void optimize(int iter = 10){
+			
+			_optimizable_graph.setHuberKernel();
 			_optimizable_graph.optimize(iter);
 			
 			//Update prior edge covariance
 			
 			updatePriorEdgeCovariance();
 			
+		}
+		
+		void setAgeingHuberKernel(){
+// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// 				v->setMarginalized(false);
+// 			}		
+			
+			auto idmapedges = _optimizable_graph.edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				std::cout << "Robust Kern" << std::endl;
+				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
+				auto huber = new g2o::RobustKernelHuber();
+				e->setRobustKernel(huber);
+				e->robustKernel()->setDelta(1);
+			}
 		}
 		
 		//Set Marginalized to false and do initializeOptimization
