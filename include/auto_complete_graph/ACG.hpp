@@ -228,7 +228,7 @@ private:
 						
 					}
 		~AutoCompleteGraph(){
-			delete _sensorOffset;
+// 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
 			
 // 			cleanup pointers in NODE
@@ -387,6 +387,9 @@ private:
 			
 // 			_optimizable_graph.setHuberKernel();
 			setAgeingHuberKernel();
+			
+			updatePriorEdgeCovariance();
+			
 			_optimizable_graph.optimize(iter);
 			
 			//Update prior edge covariance
@@ -437,10 +440,19 @@ private:
 			}		
 		}
 		
+		
+		
+		//Todo move in private
+		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
+		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior);
+		bool noDoubleLinks();
+		
 	private:
 		
 		
-		//TODO
+		
+		
+		
 		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
 		void updatePriorEdgeCovariance();
 		
@@ -473,7 +485,8 @@ private:
 			
 			std::cout << "AGE : " << age << std::endl;
 			
-			age = 1 / age;
+// 			age = 1 / age;
+			
 			std::cout << "kernel size : " << age << std::endl;
 			e->robustKernel()->setDelta(age);
 		}

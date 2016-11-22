@@ -53,10 +53,50 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	g2o::EdgeLinkXY_malcolm* link0 = acg.addLinkBetweenMaps(link, prior0, land0);
 	g2o::EdgeLinkXY_malcolm* link1 = acg.addLinkBetweenMaps(link, prior1, land0);
 	
+	assert(acg.linkAlreadyExist(land0, prior1));
+	assert(acg.linkAlreadyExist(land0, prior0));
+	
 	std::cout << "Done adding the links" << std::endl;
 	
 }
 
+
+void AddDouble(AASS::acg::AutoCompleteGraph& acg){
+	
+	std::cout << "Making the prior" << std::endl;
+	
+	acg.printGraph();
+	
+	g2o::SE2 priorse20(2, 0, 0);
+	prior0 = acg.addPriorLandmarkPose(priorse20);
+	prior0->setId(1);
+	g2o::SE2 priorse21(2, 10, 0);
+	g2o::VertexSE2Prior* prior1 = acg.addPriorLandmarkPose(priorse21);
+	prior1->setId(2);
+	
+	acg.printGraph();
+	
+	g2o::SE2 move(0, 10, 0);
+	
+	g2o::EdgeSE2Prior_malcolm* wall0 = acg.addEdgePrior(move, prior0, prior1);
+	
+// 	assert(acg.getGraph().vertices().size() == 3 && "prior crash");
+	
+	auto land0 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(0));
+	
+	assert(land0 != NULL);
+	
+	g2o::Vector2D link; link << 0, 0;
+// 	g2o::EdgeLinkXY_malcolm* link0 = acg.addLinkBetweenMaps(link, prior0, land0);
+	g2o::EdgeLinkXY_malcolm* link1 = acg.addLinkBetweenMaps(link, prior1, land0);
+	g2o::EdgeLinkXY_malcolm* link2 = acg.addLinkBetweenMaps(link, prior1, land0);
+	
+// 	assert(acg.linkAlreadyExist(land0, prior1));
+// 	assert(acg.linkAlreadyExist(land0, prior0));
+	
+	std::cout << "Done adding the links" << std::endl;
+	
+}
 
 
 void addPostNodes(AASS::acg::AutoCompleteGraph& acg){
@@ -131,6 +171,13 @@ int main(){
 	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_poseNodeopti1.g2o");
+	
+	
+	assert(acg.noDoubleLinks() == true);
+	AddDouble(acg);
+	
+	std::cout << std::endl << "TEST" << std::endl;
+	assert(acg.noDoubleLinks() == false);
 	
 	
 }

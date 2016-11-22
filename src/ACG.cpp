@@ -721,7 +721,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 	
 	updateLinksAfterNDTGraph(all_new_landmarks);
 
-	
+	noDoubleLinks();
 }
 
 
@@ -747,20 +747,25 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 		g2o::VertexSE2Prior* ptr_closest = *it_prior;
 		
 		for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
-			pose_tmp = (*it_prior)->estimate().toVector();
-			pose_prior << pose_tmp(0), pose_tmp(1);
-			double norm_tmp = (pose_prior - pose_landmark).norm();
 			
-			std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << std::endl;
+			//Don't add the same link twice
+			if(linkAlreadyExist(*it, *it_prior) == false){
 			
-			//Update the link
-			if(norm_tmp < _min_distance_for_link_in_meter){
-				ptr_closest = *it_prior;
-				norm = norm_tmp;
-				//Pushing the link
-				std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-				links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, ptr_closest));
-			}					
+				pose_tmp = (*it_prior)->estimate().toVector();
+				pose_prior << pose_tmp(0), pose_tmp(1);
+				double norm_tmp = (pose_prior - pose_landmark).norm();
+				
+				std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << std::endl;
+				
+				//Update the link
+				if(norm_tmp < _min_distance_for_link_in_meter){
+					ptr_closest = *it_prior;
+					norm = norm_tmp;
+					//Pushing the link
+					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+					links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, ptr_closest));
+				}	
+			}
 		}
 		//Pushing the link
 // 			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
@@ -863,10 +868,15 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		std::cout << "Diff norm " << diff_norm << std::endl;
 		assert(diff_norm >= 0);
 		assert(diff_norm <= oldnorm);
+		
+		//Normalize it but why ?
 		double normalizer_own = 1 / oldnorm;
 		double diff_norm_normalized = 1 - (diff_norm * normalizer_own);
 		
 		double new_cov = diff_norm_normalized;
+		
+		//Scale it again
+		new_cov = new_cov * _priorNoise(0);
 		
 		assert(new_cov <= _priorNoise(0));
 		assert(new_cov >= 0);
@@ -893,5 +903,98 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 	
 	
 	
+}
+
+
+bool AASS::acg::AutoCompleteGraph::linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior)
+{
+	auto it = _edge_link.begin();
+	linkAlreadyExist(v_pt, v_prior, it);
+}
+
+
+
+bool AASS::acg::AutoCompleteGraph::linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior, std::vector <g2o::EdgeLinkXY_malcolm* >::iterator& it)
+{
+// 	std::cout << "Testing links" << std::endl;
+	for (it ; it != _edge_link.end() ; ++it){
+		
+		g2o::VertexSE2Prior* ptr;
+		g2o::VertexPointXY* ptr2;
+		
+		int count = 0 ;
+		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+			count ++;
+			g2o::VertexSE2Prior* ptr_tmp = dynamic_cast<g2o::VertexSE2Prior*>((*ite2));
+			g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+			
+			if(ptr_tmp != NULL){
+// 				std::cout << "Got a VertexSE2" << std::endl;
+				ptr = ptr_tmp;
+			}
+			else if(ptr2_tmp != NULL){
+// 				std::cout << "Got a VertexPOINTXY" << std::endl;
+				ptr2 = ptr2_tmp;
+			}
+			else{
+				throw std::runtime_error("Links do not have the good vertex type");
+			}
+		}
+		assert(count == 2);
+		
+		
+// 		std::cout << "if Testing links" << std::endl;
+		if(v_pt == ptr2 && v_prior == ptr){
+			return true;
+		}
+		
+// 		std::cout << "after Testing links" << std::endl;
+		
+	}
+	return false;
+
+}
+
+
+bool AASS::acg::AutoCompleteGraph::noDoubleLinks()
+{
+	auto it = _edge_link.begin();
+	for (it ; it != _edge_link.end() ; ){
+		
+// 		std::cout << " LINK " << _edge_link.size() << std::endl;
+		g2o::VertexSE2Prior* ptr;
+		g2o::VertexPointXY* ptr2;
+		
+		int count = 0 ;
+		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+			count ++;
+			g2o::VertexSE2Prior* ptr_tmp = dynamic_cast<g2o::VertexSE2Prior*>((*ite2));
+			g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+			
+			if(ptr_tmp != NULL){
+// 				std::cout << "Got a VertexSE2" << std::endl;
+				ptr = ptr_tmp;
+			}
+			else if(ptr2_tmp != NULL){
+// 				std::cout << "Got a VertexPOINTXY" << std::endl;
+				ptr2 = ptr2_tmp;
+			}
+			else{
+				throw std::runtime_error("Links do not have the good vertex type");
+			}
+		}
+		assert(count == 2);
+		
+		++it;
+		if( it != _edge_link.end()){
+			auto it_tmp = it;
+			if(linkAlreadyExist(ptr2, ptr, it_tmp) == true){
+				return false;
+			}
+		}
+		
+	}
+	return true;
+
 }
 
