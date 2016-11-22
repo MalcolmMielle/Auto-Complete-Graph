@@ -740,30 +740,30 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 		Eigen::Vector2d pose_landmark = (*it)->estimate();
 		auto it_prior = _nodes_prior.begin();
 		
-		Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
-		Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
-		
-		double norm = (pose_prior - pose_landmark).norm();
-		g2o::VertexSE2Prior* ptr_closest = *it_prior;
+// 		Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+// 		Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+// 		
+// 		double norm = (pose_prior - pose_landmark).norm();
+// 		g2o::VertexSE2Prior* ptr_closest = *it_prior;
 		
 		for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
 			
 			//Don't add the same link twice
 			if(linkAlreadyExist(*it, *it_prior) == false){
 			
-				pose_tmp = (*it_prior)->estimate().toVector();
-				pose_prior << pose_tmp(0), pose_tmp(1);
+				Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+				Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
 				double norm_tmp = (pose_prior - pose_landmark).norm();
 				
 				std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << std::endl;
 				
 				//Update the link
-				if(norm_tmp < _min_distance_for_link_in_meter){
-					ptr_closest = *it_prior;
-					norm = norm_tmp;
+				if(norm_tmp <= _min_distance_for_link_in_meter){
+// 					ptr_closest = *it_prior;
+// 					norm = norm_tmp;
 					//Pushing the link
-					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-					links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, ptr_closest));
+// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+					links.push_back(std::pair<g2o::VertexPointXY*, g2o::VertexSE2Prior*>(*it, *it_prior));
 				}	
 			}
 		}
@@ -813,9 +813,10 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 			
 		}
 		
+		std::cout << "bottom of ACG.cpp" << std::endl;
 		assert(vertex_out.size() == 2);
 		double norm = (vertex_out[0] - vertex_out[1]).norm();
-		if(norm >= _min_distance_for_link_in_meter * 2 ){
+		if(norm > _min_distance_for_link_in_meter * 2 ){
 			it_old_links ++;
 			removeLinkBetweenMaps(*it_old_links);
 		}

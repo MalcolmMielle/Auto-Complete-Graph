@@ -180,4 +180,11 @@ int main(){
 	assert(acg.noDoubleLinks() == false);
 	
 	
+	Eigen::Vector2d pose_prior; pose_prior << -10, 2;
+	Eigen::Vector2d pose_landmark; pose_landmark << -5, 2;
+	double norm_tmp = (pose_prior - pose_landmark).norm();
+	
+	std::cout << "Norm : "<< norm_tmp << std::endl;
+	
+	
 }

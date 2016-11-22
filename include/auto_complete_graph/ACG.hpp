@@ -213,13 +213,14 @@ private:
 					}
 		
 		AutoCompleteGraph(const g2o::SE2& sensoffset, 
-						const Eigen::Vector2d& tn, 
-						double rn,
-						const Eigen::Vector2d& ln,
-						const Eigen::Vector2d& pn,
-						double rp,
-						const Eigen::Vector2d& linkn
-					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+						  const Eigen::Vector2d& tn, 
+						  double rn,
+						  const Eigen::Vector2d& ln,
+						  const Eigen::Vector2d& pn,
+						  double rp,
+						  const Eigen::Vector2d& linkn
+					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -227,6 +228,54 @@ private:
 						_ndt_graph = NULL;
 						
 					}
+					
+					
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+			
+		
+			std::ifstream infile(load_file);
+			
+			double a, b, c;
+// 			infile >> a >> b >> c;
+// 			const g2o::SE2 sensoffset(a, b, c);
+// 			_sensorOffsetTransf = sensoffset;
+			infile >> a >> b;
+			_transNoise << a, b;
+// 			assert(a == 0.0005);
+// 			assert(b == 0.0001);
+			std::cout << _transNoise << std::endl;
+			infile >> a;
+			_rotNoise = DEG2RAD(a);
+			std::cout << "Rot" << _rotNoise << std::endl;
+// 			assert(_rotNoise == 2);
+			infile >> a >> b;
+			_landmarkNoise << a, b;
+			std::cout << _landmarkNoise << std::endl;
+// 			assert(a == 0.05);
+// 			assert(b == 0.05);
+			infile >> a >> b;
+			_priorNoise << a, b;
+			std::cout << _priorNoise << std::endl;
+// 			assert(a == 1);
+// 			assert(b == 0.01);
+			infile >> a;
+			_prior_rot = DEG2RAD(a);
+			infile >> a >> b;
+			_linkNoise << a, b;
+			std::cout << _linkNoise << std::endl;
+// 			assert(a == 0.2);
+// 			assert(b == 0.2);
+			
+// 			exit(0);
+			
+			_sensorOffset = new g2o::ParameterSE2Offset;
+			_sensorOffset->setOffset(_sensorOffsetTransf);
+			_sensorOffset->setId(0);
+			_ndt_graph = NULL;
+			
+			
+		}			
+		
 		~AutoCompleteGraph(){
 // 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor

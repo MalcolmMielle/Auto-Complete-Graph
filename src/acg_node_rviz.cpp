@@ -11,6 +11,9 @@
 
 ros::Publisher map_pub_;
 
+
+
+
 inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose) {
 
   Eigen::Affine3d map_origin;
@@ -107,7 +110,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 int main(int argc, char **argv)
 {
 	
-	AASS::acg::Basement basement;
+	AASS::acg::BasementFull basement;
 	basement.extractCornerPrior();
 // 	basement.transformOntoSLAM();
 // 	auto graph_priortmp = basement.getGraph();
@@ -146,14 +149,45 @@ int main(int argc, char **argv)
 	std::cout << "saved to " << file_out << std::endl;
 	
 	//TODO : test no sensor offset
-	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
-		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
-		DEG2RAD(2.), 				//Rotation noise for robot
-		Eigen::Vector2d(0.05, 0.05), //Landmarks noise
-		Eigen::Vector2d(1, 0.01), //Prior noise
-		DEG2RAD(2.), //Prior rot							 
-		Eigen::Vector2d(0.2, 0.2) //Link noise,
-	);
+// 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
+// 		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
+// 		DEG2RAD(2.), 				//Rotation noise for robot
+// 		Eigen::Vector2d(0.05, 0.05), //Landmarks noise
+// 		Eigen::Vector2d(1, 0.01), //Prior noise
+// 		DEG2RAD(2.), //Prior rot							 
+// 		Eigen::Vector2d(0.2, 0.2) //Link noise,
+// 	);
+	
+	
+	std::ifstream infile("/home/malcolm/ACG_folder/param.txt");
+			
+	double a, b, c;
+	infile >> a >> b;
+	Eigen::Vector2d tn; tn << a, b;
+
+	infile >> a;
+	double rn = a;
+	
+	infile >> a >> b;
+	Eigen::Vector2d ln; ln << a, b;
+
+	infile >> a >> b;
+	Eigen::Vector2d pn; pn << a, b;
+
+	infile >> a;
+	double pr = a;
+	infile >> a >> b;
+	Eigen::Vector2d lin; lin << a, b;
+
+	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+// 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
+// 		tn, //Robot translation noise
+// 		rn, 				//Rotation noise for robot
+// 		ln, //Landmarks noise
+// 		pn, //Prior noise
+// 		DEG2RAD(2.), //Prior rot							 
+// 		Eigen::Vector2d(0.2, 0.2) //Link noise,
+// 	);
 	oacg.addPriorGraph(graph_prior);
 
 	// 	std::string file_out = "/home/malcolm/ACG_folder/acg_0_prior.g2o";
