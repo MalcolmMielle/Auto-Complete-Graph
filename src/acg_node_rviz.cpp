@@ -110,7 +110,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 int main(int argc, char **argv)
 {
 	
-	AASS::acg::BasementFull basement;
+	AASS::acg::Basement basement;
 	basement.extractCornerPrior();
 // 	basement.transformOntoSLAM();
 // 	auto graph_priortmp = basement.getGraph();

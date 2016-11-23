@@ -77,7 +77,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	//Prepare the graph : marginalize + initializeOpti
 	oacg->getGraph().setFirst();
 	oacg->prepare();
-	oacg->optimize();
+// 	oacg->optimize();
 	
 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
 	std::ostringstream convert_after;   // stream used for the conversion
@@ -195,14 +195,14 @@ int main(int argc, char **argv)
 // 	std::cout << "saved to " << file_out << std::endl;
 	
 // 	exit(0);
-	
-    ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
+	ros::init(argc, argv, "auto_complete_graph_rviz_small_noopti");
 	ros::Subscriber ndt_graph_sub;
+	ros::Subscriber optimi_sub;
     ros::NodeHandle nh("~");
 	
-// 	AASS::acg::VisuAutoCompleteGraph visu(&oacg);
-	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
-	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
+	AASS::acg::VisuAutoCompleteGraph visu(&acg, nh);
+	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/Noopitimization_rviz_small");
+    
 	
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg, visu));
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
