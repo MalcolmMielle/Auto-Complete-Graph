@@ -22,7 +22,17 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package( Boost REQUIRED )
+find_package(Boost REQUIRED )
+
+add_subdirectory(cmake_modules)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
+
+find_package(G2O REQUIRED)
+find_package(SUITESPARSE REQUIRED)
+INCLUDE_DIRECTORIES(${CSPARSE_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${G2O_INCLUDE_DIR})
+
+set(G2O_LIBS ${G2O_CORE_LIBRARY} ${G2O_SOLVER_CSPARSE}  ${CSPARSE_LIBRARY} ${G2O_STUFF_LIBRARY} ${CHOLMOD_LIBRARY}  ${G2O_SOLVER_CSPARSE_EXTENSION} ${G2O_SOLVER_SLAM2D_LINEAR} ${G2O_TYPES_SLAM2D})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -112,7 +122,7 @@ find_package( Boost REQUIRED )
 catkin_package(
 
  INCLUDE_DIRS include
-#  LIBRARIES auto_complete_graph
+ LIBRARIES ${G2O_LIBS}
  CATKIN_DEPENDS message_runtime das ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils
  DEPENDS system_lib eigen
 )
@@ -149,11 +159,11 @@ add_executable(acg_node src/acg_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 add_executable(acg_node_rviz src/acg_node_rviz.cpp)
@@ -164,7 +174,7 @@ add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPO
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 
@@ -176,7 +186,7 @@ add_dependencies(acg_node_rviz_full ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_full
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 
@@ -188,7 +198,7 @@ add_dependencies(test_affine_transfo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(test_affine_transfo
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib -lboost_unit_test_framework
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib -lboost_unit_test_framework ${G2O_LIBS}
 )
 
 #############
