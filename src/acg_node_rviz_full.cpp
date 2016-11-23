@@ -190,6 +190,8 @@ int main(int argc, char **argv)
 // 	);
 	oacg.addPriorGraph(graph_prior);
 
+	oacg.useUserCovForPrior(false);
+	oacg.useUserCovForRobotPose(true);
 	// 	std::string file_out = "/home/malcolm/ACG_folder/acg_0_prior.g2o";
 // 	oacg.getGraph().save(file_out.c_str());
 // 	std::cout << "saved to " << file_out << std::endl;

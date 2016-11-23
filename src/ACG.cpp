@@ -57,7 +57,21 @@ g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(double x
 }
 
 
-g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information){
+g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp){
+	
+	Eigen::Matrix3d information;
+	if(_use_user_robot_pose_cov == true){
+		Eigen::Matrix3d covariance_robot;
+		covariance_robot.fill(0.);
+		covariance_robot(0, 0) = _transNoise[0]*_transNoise[0];
+		covariance_robot(1, 1) = _transNoise[1]*_transNoise[1];
+	// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
+		covariance_robot(2, 2) = _rotNoise * _rotNoise;
+		information = covariance_robot.inverse();
+	}
+	else{
+		 information = information_tmp;
+	}
 	
 	g2o::EdgeOdometry_malcolm* odometry = new g2o::EdgeOdometry_malcolm;
 	odometry->vertices()[0] = v1 ;
@@ -277,12 +291,19 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 	
 	_optimizable_graph.removeEdge(v1);
 	auto it = _edge_link.begin();
+	int size = _edge_link.size();
 	for(it; it != _edge_link.end() ;){
 		if(*it == v1){
 			_edge_link.erase(it);
 			break;
 		}
+		else{
+			it++;
+		}
 	}
+	assert(_edge_link.size() == size - 1);
+	
+	std::cout << "Out of remove edge" << std::endl;
 	
 	//TODO :need to do the same for the SLAM
 	
@@ -876,10 +897,15 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		
 		double new_cov = diff_norm_normalized;
 		
-		//Scale it again
-		new_cov = new_cov * _priorNoise(0);
-		
-		assert(new_cov <= _priorNoise(0));
+		//Scale it again.depending on user inputed value
+		if(_use_user_prior_cov == true){
+			new_cov = new_cov * _priorNoise(0);
+		}
+		else{
+		//Scale it again. depending on oldnorm/10
+			new_cov = new_cov * (oldnorm / 10);
+		}
+		assert(new_cov <= (oldnorm / 10));
 		assert(new_cov >= 0);
 	// 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
 		std::pair<double, double> eigenval(new_cov, _priorNoise(1));

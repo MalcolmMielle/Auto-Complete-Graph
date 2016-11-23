@@ -55,8 +55,14 @@ namespace acg{
 private:
 		int _previous_number_of_node_in_ndtgraph;
 		
-		//Minimum distance from a prior corner to a NDT corner. THe distance is given in meter and is fixed at 2m in the constuctor
+		///@brief Minimum distance from a prior corner to a NDT corner. THe distance is given in meter and is fixed at 2m in the constuctor
 		double _min_distance_for_link_in_meter;
+		
+		///@brief use the user inputted cov for the prior. Use the length of the edge if false
+		bool _use_user_prior_cov;
+		
+		///@brief user user inputted cov for robot pos. Uses registration otherwise
+		bool _use_user_robot_pose_cov;
 		
 		/**
 		 * @brief : used in a function to update the NDTGraph
@@ -205,7 +211,7 @@ private:
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1){
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -219,7 +225,7 @@ private:
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -230,7 +236,7 @@ private:
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
 			
 		
 			std::ifstream infile(load_file);
@@ -313,6 +319,12 @@ private:
 		void setMinDistanceForLinksInMeters(double inpu){_min_distance_for_link_in_meter = inpu;}
 		double getMinDistanceForLinksInMeters(){return _min_distance_for_link_in_meter;}
 		
+		void useUserCovForPrior(bool u){_use_user_prior_cov = u;}
+		bool isUsingUserCovForPrior(){return _use_user_prior_cov;}
+		
+		void useUserCovForRobotPose(bool u){_use_user_robot_pose_cov = u;}
+		bool isUsingUserCovForRobotPose(){return _use_user_robot_pose_cov;}
+		
 		bool save(const std::string& file_outt){
 			_optimizable_graph.save(file_outt.c_str());
 			std::cout << "saved to " << file_outt << "\n";
@@ -365,7 +377,7 @@ private:
 		
 		
 		/** FUNCTION TO ADD THE EGDES **/
-		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp);
 		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information);
 		g2o::EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information);
 		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
