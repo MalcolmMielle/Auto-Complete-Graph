@@ -185,7 +185,7 @@ add_dependencies(acg_node_rviz_noptimi ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_noptimi
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 add_executable(acg_node_rviz_noptimi_full src/acg_node_rviz_nooptimi_full.cpp)
@@ -196,7 +196,7 @@ add_dependencies(acg_node_rviz_noptimi_full ${${PROJECT_NAME}_EXPORTED_TARGETS} 
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_noptimi_full
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 
