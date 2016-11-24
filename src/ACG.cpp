@@ -880,6 +880,7 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		std::cout << "oldnorm" << newnorm << std::endl;
 		assert(oldnorm >= 0);
 		
+		//Using the diff so we cannot shrink it or stretch it easily.
 		double diff_norm = std::abs(oldnorm - newnorm);
 		std::cout << "Diff norm " << diff_norm << std::endl;
 		assert(diff_norm >= 0);
@@ -891,22 +892,45 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		assert(diff_norm >= 0);
 		assert(diff_norm <= oldnorm);
 		
-		//Normalize it but why ?
+		//Normalizes it
 		double normalizer_own = 1 / oldnorm;
-		double diff_norm_normalized = 1 - (diff_norm * normalizer_own);
+		
+		//Between 0 and 1 between 0 and oldnorm
+// 		double diff_norm_normalized = 1 - (diff_norm * normalizer_own);
+// 		double min = 0;
+// 		double max = oldnorm;
+// 		double max_range = 1;
+// 		double min_range = 0;
+		
+		//Between 0 and 1 between oldnorm / 2 and oldnorm
+		//This is between 0 and oldnorm/2 because we work on the diff and not on the length ==> best length is 0 diff and worse will be half of oldnorm
+		double min = 0;
+		double max = (oldnorm / 2);
+		double max_range = 1;
+		double min_range = 0;
+		
+		double diff_norm_normalized = 1 - ( ( ( (max_range - min_range) * (diff_norm - min ) ) / (max - min) ) + min_range );
 		
 		double new_cov = diff_norm_normalized;
+		
+		std::cout << "min " << min << " max " << max << " max_range " << max_range << " min_range " << min_range << " diff norm mornal " << diff_norm_normalized << std::endl;
+		
+		assert(new_cov >= 0);
+		assert(new_cov <= 1);
 		
 		//Scale it again.depending on user inputed value
 		if(_use_user_prior_cov == true){
 			new_cov = new_cov * _priorNoise(0);
+			assert(new_cov <= _priorNoise(0));
+			assert(new_cov >= 0);
 		}
 		else{
 		//Scale it again. depending on oldnorm/10
 			new_cov = new_cov * (oldnorm / 10);
+			assert(new_cov <= (oldnorm / 10));
+			assert(new_cov >= 0);
 		}
-		assert(new_cov <= (oldnorm / 10));
-		assert(new_cov >= 0);
+		
 	// 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
 		std::pair<double, double> eigenval(new_cov, _priorNoise(1));
 		

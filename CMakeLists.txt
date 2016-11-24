@@ -213,6 +213,17 @@ target_link_libraries(test_affine_transfo
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib -lboost_unit_test_framework
 )
 
+add_executable(test_covvalue tests/test_covvalue.cpp)
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(test_covvalue ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(test_covvalue
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} -lboost_unit_test_framework
+)
+
 #############
 ## Install ##
 #############

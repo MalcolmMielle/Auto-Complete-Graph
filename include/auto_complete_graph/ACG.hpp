@@ -527,29 +527,42 @@ private:
 			if(v_linkxy != NULL){
 				age = v_linkxy->interface.getAge();
 				v_linkxy->interface.setAge(age + 1);
+				
+				std::cout << "kernel size : " << age << std::endl;
+				e->robustKernel()->setDelta(age);
 			}
 			else if(v_land != NULL){
 				age = v_land->interface.getAge();
 				v_land->interface.setAge(age + 1);
+				
+// 				std::cout << "kernel size : " << age << std::endl;
+				e->robustKernel()->setDelta(100);
 			}
 			else if(v_prior != NULL){
 				age = v_prior->interface.getAge();
 				v_prior->interface.setAge(age + 1);
+				
+// 				std::cout << "kernel size : " << age << std::endl;
+				e->robustKernel()->setDelta(100);
+				
 			}
 			else if(v_odom != NULL){
 				age = v_odom->interface.getAge();
 				v_odom->interface.setAge(age + 1);
+				
+// 				std::cout << "kernel size : " << age << std::endl;
+				e->robustKernel()->setDelta(100);
+				
 			}
 			else{
 				std::runtime_error("didn't find edge type");
 			}
 			
-			std::cout << "AGE : " << age << std::endl;
+// 			std::cout << "AGE : " << age << std::endl;
 			
 // 			age = 1 / age;
 			
-			std::cout << "kernel size : " << age << std::endl;
-			e->robustKernel()->setDelta(age);
+			
 		}
 	
 	};
