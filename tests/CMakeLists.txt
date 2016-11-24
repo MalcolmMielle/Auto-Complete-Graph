@@ -30,3 +30,14 @@
 # target_link_libraries(test_martin
 #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
 # )
+
+add_executable(test_links test_links.cpp)
+
+# Add cmake target dependencies of the executable
+# same as for the library above
+add_dependencies(test_links ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+# Specify libraries to link a library or executable target against
+target_link_libraries(test_links
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+)

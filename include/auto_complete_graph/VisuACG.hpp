@@ -30,8 +30,13 @@ namespace acg{
 		visualization_msgs::Marker _corner_ndt_node_markers;
 		visualization_msgs::Marker _link_markers;
 		
+		double _resolution;
+		
+		std::string _image_file;
+		
 	public:
-		VisuAutoCompleteGraph(AutoCompleteGraph* acg) : _nb_of_zone(0){
+		VisuAutoCompleteGraph(AutoCompleteGraph* acg, ros::NodeHandle nh) : _nb_of_zone(0), _resolution(0.1){
+			_nh = nh;
 			_last_ndtmap = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg", 10);
 			_last_ndtmap2 = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2", 10);
 			
@@ -82,6 +87,8 @@ namespace acg{
 		}
 // 		void toRviz(const AutoCompleteGraph& acg);
 		
+		void setImageFileNameOut(const std::string& f){_image_file = f;}
+		
 		void updateRviz(){
 			
 			drawPrior();
@@ -93,15 +100,15 @@ namespace acg{
 // 			_ndt_node_markers.points.clear();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
-				
+				grids.clear();
 				std::cout <<"update the zones" << std::endl;
 				
-				for(size_t i = _nb_of_zone ; i < _acg->getRobotNodes().size() ; ++i){
+				for(size_t i = 0 ; i < _acg->getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, 0.4, "/world");
+					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, _resolution, "/world");
 // 					auto pose = _acg->getRobotNodes()[i].getPose();
 					auto node = _acg->getRobotNodes()[i].getNode();
 					auto vertex = node->estimate().toIsometry();
@@ -136,8 +143,6 @@ namespace acg{
 				
 			}
 			
-			
-			_nb_of_zone = _acg->getRobotNodes().size();
 // 			omap.header.frame_id = "/world";
 // 			omap.header.stamp = ros::Time::now();
 			nav_msgs::OccupancyGrid::Ptr final;
@@ -149,8 +154,12 @@ namespace acg{
 				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*final);
 				
 				_ndt_node_pub.publish(_ndt_node_markers);
+				if(_nb_of_zone != _acg->getRobotNodes().size()){
+					saveImage(final);
+				}
 			}
 			
+			_nb_of_zone = _acg->getRobotNodes().size();
 			
 			
 		}
@@ -169,7 +178,7 @@ namespace acg{
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, 0.4, "/world");
+					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, _resolution, "/world");
 					auto pose = _acg->getRobotNodes()[i].getPose();
 // 					auto vertex = node->estimate().toVector();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
@@ -226,6 +235,8 @@ namespace acg{
 		void drawPrior();
 		void drawLinks();
 		void drawCornersNdt();
+		
+		void saveImage(nav_msgs::OccupancyGrid::Ptr& msg);
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
 // 		bool toOccupancyGrid(lslgeneric::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
 		
@@ -524,14 +535,14 @@ namespace acg{
 					g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
 					
 					if(ptr != NULL){
-						std::cout << "Got a VertexSE2" << std::endl;
+// 						std::cout << "Got a VertexSE2" << std::endl;
 						auto vertex = ptr->estimate().toVector();
 						p.x = vertex(0);
 						p.y = vertex(1);
 						p.z = 0;
 					}
 					else if(ptr2 != NULL){
-						std::cout << "Got a VertexPOINTXY" << std::endl;
+// 						std::cout << "Got a VertexPOINTXY" << std::endl;
 						auto vertex = ptr2->estimate();
 						p.x = vertex(0);
 						p.y = vertex(1);
@@ -553,7 +564,7 @@ namespace acg{
 // 		std::cout << "Getting the corners" << std::endl;
 		_corner_ndt_node_markers.header.stamp = ros::Time::now();
 		auto edges = _acg->getLandmarkNodes();
-		std::cout << "Getting the corners " << edges.size() << std::endl;
+// 		std::cout << "Getting the corners " << edges.size() << std::endl;
 		if(edges.size() != _corner_ndt_node_markers.points.size()){
 			_corner_ndt_node_markers.points.clear();
 			auto it = edges.begin();
@@ -572,6 +583,34 @@ namespace acg{
 		}
 		_corner_ndt_node_pub.publish(_corner_ndt_node_markers);
 	}
+	
+	
+	inline void VisuAutoCompleteGraph::saveImage(nav_msgs::OccupancyGrid::Ptr& msg)
+	{
+// 		const unsigned char* databeg = &(msg->data.front());
+		
+		assert(msg->info.height*msg->info.width == msg->data.size());
+		
+		std::cout << "Creating the mat" << std::endl;
+// 		cv::Mat img = cv::Mat(msg->info.height, msg->info.width, CV_32SC1, &(msg->data[0])) ;
+		cv::Mat img = cv::Mat(msg->data, true) ;
+		img.rows = msg->info.height;
+		img.cols = msg->info.width;
+		
+		std::string file_out = _image_file;
+		std::ostringstream convert;   // stream used for the conversion
+		convert << _acg->getGraph().vertices().size(); 
+		file_out = file_out + convert.str();
+		file_out = file_out + "nodes.png";
+		
+// 		cv::imshow("Show", img);
+// 		cv::waitKey(0);
+		
+		std::cout << "IMwrite to " << file_out << std::endl;
+		cv::imwrite(file_out, img);
+
+	}
+
 
 	
 	
