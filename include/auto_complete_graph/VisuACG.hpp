@@ -4,6 +4,8 @@
 #include "auto_complete_graph/ACG.hpp"
 #include "occupancy_grid_utils/combine_grids.h"
 
+#include "acg_conversion.hpp"
+
 
 namespace AASS {
 
@@ -105,6 +107,39 @@ namespace acg{
 				
 				for(size_t i = 0 ; i < _acg->getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
+					
+//Grid map test
+					grid_map::GridMap gridMap({"elevation"});
+					std::cout << "Converting" << std::endl;
+					toGridMap(_acg->getRobotNodes()[i].getMap(), gridMap, 0.4, "/world", "elevation");
+					cv_bridge::CvImage cvImage;
+					grid_map::GridMapRosConverter converter;
+					
+					std::cout << "To openCV" << std::endl;
+					cv::Mat originalImage;
+					grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "elevation", CV_16UC1, 0.0, 0.3, originalImage);
+// 					bool res = converter.toCvImage(gridMap, "elevation", CV_8U, cvImage);
+// 					if(res == true){
+						cv::imwrite("/home/malcolm/tmp.png", originalImage);
+// 						std::cout << "Image written" << std::endl;
+// 					}
+// 					else{
+// 						std::runtime_error("FUCK");
+// 					}
+					std::cout << "Prior" << std::endl;
+						
+// 					grid_map::GridMap gridPrior({"prior"});
+					grid_map::GridMap gridPrior = ACGPriortoGridMap(*_acg, 0.4);
+					
+					cv::Mat originalImageP;
+					grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridPrior, "prior", CV_16UC1, 0.0, 0.3, originalImageP);
+// 					bool res = converter.toCvImage(gridMap, "elevation", CV_8U, cvImage);
+// 					if(res == true){
+						cv::imwrite("/home/malcolm/tmp_prior.png", originalImageP);
+						
+					exit(0);
+					
+					/*************************/
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");

@@ -1049,3 +1049,50 @@ bool AASS::acg::AutoCompleteGraph::noDoubleLinks()
 
 }
 
+void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e){
+			
+	g2o::EdgeLinkXY_malcolm* v_linkxy = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(e);
+	g2o::EdgeLandmark_malcolm* v_land = dynamic_cast<g2o::EdgeLandmark_malcolm*>(e);
+	g2o::EdgeSE2Prior_malcolm* v_prior = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(e);
+	g2o::EdgeOdometry_malcolm* v_odom = dynamic_cast<g2o::EdgeOdometry_malcolm*>(e);
+	double age = -1;
+	if(v_linkxy != NULL){
+		age = v_linkxy->interface.getAge();
+		v_linkxy->interface.setAge(age + 1);
+		
+		std::cout << "kernel size : " << age << std::endl;
+		e->robustKernel()->setDelta(age);
+	}
+	else if(v_land != NULL){
+		age = v_land->interface.getAge();
+		v_land->interface.setAge(age + 1);
+		
+// 				std::cout << "kernel size : " << age << std::endl;
+		e->robustKernel()->setDelta(100);
+	}
+	else if(v_prior != NULL){
+		age = v_prior->interface.getAge();
+		v_prior->interface.setAge(age + 1);
+		
+// 				std::cout << "kernel size : " << age << std::endl;
+		e->robustKernel()->setDelta(100);
+		
+	}
+	else if(v_odom != NULL){
+		age = v_odom->interface.getAge();
+		v_odom->interface.setAge(age + 1);
+		
+// 				std::cout << "kernel size : " << age << std::endl;
+		e->robustKernel()->setDelta(100);
+		
+	}
+	else{
+		std::runtime_error("didn't find edge type");
+	}
+	
+// 			std::cout << "AGE : " << age << std::endl;
+	
+// 			age = 1 / age;
+	
+	
+}

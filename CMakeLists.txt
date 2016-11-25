@@ -13,6 +13,10 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   occupancy_grid_utils
+  grid_map_core
+  grid_map_ros
+  grid_map_msgs
+  grid_map_cv
 )
 
 set(CMAKE_CXX_STANDARD 11)
@@ -113,7 +117,7 @@ catkin_package(
 
  INCLUDE_DIRS include
 #  LIBRARIES auto_complete_graph
- CATKIN_DEPENDS message_runtime das ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils
+ CATKIN_DEPENDS message_runtime das ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv
  DEPENDS system_lib eigen
 )
 
