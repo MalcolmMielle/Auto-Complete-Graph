@@ -129,13 +129,27 @@ namespace acg{
 					std::cout << "Prior" << std::endl;
 						
 // 					grid_map::GridMap gridPrior({"prior"});
-					grid_map::GridMap gridPrior = ACGPriortoGridMap(*_acg, 0.4);
+					grid_map::GridMap gridPrior;
+					ACGToGridMap(*_acg, gridPrior);
+// 					ACGPriortoGridMap(*_acg, 0.4);
 					
 					cv::Mat originalImageP;
-					grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridPrior, "prior", CV_16UC1, 0.0, 0.3, originalImageP);
+					grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridPrior, "all", CV_16UC1, 0.0, 1, originalImageP);
 // 					bool res = converter.toCvImage(gridMap, "elevation", CV_8U, cvImage);
 // 					if(res == true){
-						cv::imwrite("/home/malcolm/tmp_prior.png", originalImageP);
+					cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
+					
+					cv::Mat originalImagePp;
+					grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridPrior, "prior", CV_16UC1, 0.0, 1, originalImagePp);
+// 					bool res = converter.toCvImage(gridMap, "elevation", CV_8U, cvImage);
+// 					if(res == true){
+					cv::imwrite("/home/malcolm/tmp_prior.png", originalImagePp);
+					
+					cv::Mat originalImagePn;
+					grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridPrior, "ndt", CV_16UC1, 0.0, 1, originalImagePn);
+// 					bool res = converter.toCvImage(gridMap, "elevation", CV_8U, cvImage);
+// 					if(res == true){
+					cv::imwrite("/home/malcolm/tmp_ndt.png", originalImagePn);
 						
 					exit(0);
 					

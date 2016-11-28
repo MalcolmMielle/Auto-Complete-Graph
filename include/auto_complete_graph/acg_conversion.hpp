@@ -23,12 +23,118 @@ namespace acg{
 	}
 	
 	
-	inline grid_map::GridMap ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, double resolution){
+	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution){
 		auto edges = acg.getPriorEdges();
+		
+		
+// 		//************* TODO : shorten this code !
+// 		//Get max sinze of prior
+// 		double max_x, min_x, max_y, min_y;
+// 		bool flag_init = false;
+// 		auto it = edges.begin();
+// 		for(it ; it != edges.end() ; ++it){
+// 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+// 				geometry_msgs::Point p;
+// 				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+// 				auto vertex = ptr->estimate().toVector();
+// 				if(flag_init == false){
+// 					flag_init = true;
+// 					max_x = vertex(0);
+// 					max_y = vertex(1);
+// 					min_x = vertex(0);
+// 					min_y = vertex(1);
+// 				}
+// 				else{
+// 					if(max_x < vertex(0)){
+// 						max_x = vertex(0);
+// 					}
+// 					if(max_y < vertex(1)){
+// 						max_y = vertex(1);
+// 					}
+// 					if(min_x > vertex(0)){
+// 						min_x = vertex(0);
+// 					}
+// 					if(min_y > vertex(1)){
+// 						min_y = vertex(1);
+// 					}
+// 				}
+// 				
+// 			}
+// 			
+// 		}
+// 		
+// 		max_x = std::abs(max_x);
+// 		max_y = std::abs(max_y);
+// 		min_x = std::abs(min_x);
+// 		min_y = std::abs(min_y);
+// 		
+// 		double size_x, size_y;
+// 		if(max_x > min_x){
+// 			size_x = max_x + 10;
+// 		}
+// 		else{
+// 			size_x = min_x + 10;
+// 		}
+// 		if(max_y > min_y){
+// 			size_y = max_y + 10;
+// 		}
+// 		else{
+// 			size_y = min_y + 10;
+// 		}
+// 
+// 		/***********************************/
+		
+		
+// 		grid_map::GridMap gridMap({"prior"});
+
+// 		gridMap.add("prior");
+// 		gridMap.setGeometry(grid_map::Length(2 * size_x, 2 * size_y), resolution, grid_map::Position(0.0, 0.0));
+// 		gridMap.setFrameId("map");
+		
+		gridMap.add("prior");
+		gridMap["prior"].setZero();
+		
+		auto it = edges.begin();
+		for(it ; it != edges.end() ; ++it){
+			
+			
+			std::vector<Eigen::Vector2d> points;
+			
+			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+				geometry_msgs::Point p;
+				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+				auto vertex = ptr->estimate().toVector();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
+				points.push_back(veve);
+			}
+			
+			assert(points.size() == 2);
+			
+			for (grid_map::LineIterator iterator(gridMap, points[0], points[1]);
+				!iterator.isPastEnd(); ++iterator) {
+				gridMap.at("prior", *iterator) = 1;
+	// 			publish();
+	// 			ros::Duration duration(0.02);
+	// 			duration.sleep();
+			}
+			
+		}
+
+// 		return gridMap;
+		
+	}
+	
+	
+	//TODO
+	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& map){
 		
 		
 		//************* TODO : shorten this code !
 		//Get max sinze of prior
+		
+		auto edges = acg.getPriorEdges();
+		
 		double max_x, min_x, max_y, min_y;
 		bool flag_init = false;
 		auto it = edges.begin();
@@ -84,58 +190,25 @@ namespace acg{
 
 		/***********************************/
 		
-		
-		grid_map::GridMap gridMap({"prior"});
-		gridMap.setGeometry(grid_map::Length(size_x, size_y), resolution, grid_map::Position(0.0, 0.0));
-		gridMap.setFrameId("map");
-		
-		it = edges.begin();
-		for(it ; it != edges.end() ; ++it){
-			
-			
-			std::vector<Eigen::Vector2d> points;
-			
-			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-				geometry_msgs::Point p;
-				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
-				auto vertex = ptr->estimate().toVector();
-				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
-				points.push_back(veve);
-			}
-			
-			assert(points.size() == 2);
-			
-			for (grid_map::LineIterator iterator(gridMap, points[0], points[1]);
-				!iterator.isPastEnd(); ++iterator) {
-				gridMap.at("prior", *iterator) = 1.0;
-	// 			publish();
-	// 			ros::Duration duration(0.02);
-	// 			duration.sleep();
-			}
-			
-		}
-
-		return gridMap;
-		
-	}
-	
-	
-	//TODO
-	inline grid_map::GridMap ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg){
-		
-		grid_map::GridMap map({"elevation"});
 		map.setFrameId("/world");
+		map.setGeometry(grid_map::Length(2 * size_x, 2 * size_y), 0.4, grid_map::Position(0.0, 0.0));
 // 		map.setGeometry(grid_map::Length(1.2, 2.0), 0.4);
+		
+		map.add("prior"); map.add("ndt"); map.add("all");
+		map["prior"].setZero();
+		map["ndt"].setZero();
+		map["all"].setZero();
   
-  
-		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+// 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
 		std::cout <<"update the zones" << std::endl;
+// 		
+		ACGPriortoGridMap(acg, map, 0.4);
 		
 		for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
 			
-			toGridMap(acg.getRobotNodes()[i].getMap(), map, 0.4, "/world", "elevation");
+			toGridMap(acg.getRobotNodes()[i].getMap(), map, 0.4, "/world", "ndt");
 			
+			//TODO move the occupancy grid
 			
 			
 // 				for(size_t i = 0 ; i < 1 ; ++i){
@@ -176,7 +249,7 @@ namespace acg{
 			
 		}
 // 		
-// 	
+		map["all"] = map["prior"] + map["ndt"];
 // 		
 // 	// 			omap.header.frame_id = "/world";
 // 	// 			omap.header.stamp = ros::Time::now();
@@ -235,10 +308,11 @@ namespace acg{
 // 		occ_grid.info.origin.position.y=orig_y;
 // 		occ_grid.header.stamp=ros::Time::now();
 // 		occ_grid.header.frame_id=frame_id;
-		
 		map.setFrameId(frame_id);
-		map.setGeometry(grid_map::Length(size_x_cell_count, size_y_cell_count), resolution, grid_map::Position(orig_x, orig_y));
-		
+		if(map.getSize()(0) == 0  && map.getSize()(1) == 0){
+			std::cerr << "Init the grid map" << std::endl;
+			map.setGeometry(grid_map::Length(size_x_cell_count, size_y_cell_count), resolution, grid_map::Position(orig_x, orig_y));
+		}
 		for (grid_map::GridMapIterator it(map); !it.isPastEnd(); ++it) {
 			grid_map::Position position;
 			map.getPosition(*it, position);
@@ -248,11 +322,11 @@ namespace acg{
 			lslgeneric::NDTCell *cell;
 			if(!ndt_map->getCellAtPoint(pt, cell)){
 // 				occ_grid.data.push_back(-1);
-				map.at(layer_name, *it) = -1;
+				map.at(layer_name, *it) = 0;
 			}
 			else if(cell == NULL){
 // 				occ_grid.data.push_back(-1);
-				map.at(layer_name, *it) = -1;
+				map.at(layer_name, *it) = 0;
 			}
 			else{
 				Eigen::Vector3d vec (pt.x,pt.y,pt.z);
@@ -261,7 +335,8 @@ namespace acg{
 				char s_likelihood;
 				if(cell->getOccupancy()!=0.0){
 					if(cell->getOccupancy()>0.0){
-						if(std::isnan(likelihood)) s_likelihood = -1;
+// 						if(std::isnan(likelihood)) s_likelihood = -1;
+						if(std::isnan(likelihood)) s_likelihood = 0;
 						likelihood = exp(-likelihood/2.0) + 0.1;
 						likelihood = (0.5+0.5*likelihood);
 						s_likelihood=char(likelihood*100.0);
@@ -276,7 +351,7 @@ namespace acg{
 				}
 				else{
 // 					occ_grid.data.push_back(-1);
-					map.at(layer_name, *it) = -1;
+					map.at(layer_name, *it) = 0;
 				}
 			}
 			
@@ -324,6 +399,112 @@ namespace acg{
 // 		}    
 // 		return true;
 	} 
+	
+	/**
+	 * @brief fuse src in target
+	 * For now only the best value of of both map is kept in the final map.
+	 */
+	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, const std::string& layer = "combined", const std::string& layer2 = "combined"){
+		
+		assert(target.exists(layer2) == true);
+		assert(src.exists(layer) == true);
+		
+// 		std::cout << "Fusing " << std::endl;
+		grid_map::GridMap modifiedMap;
+		grid_map::GridMapCvProcessing::changeResolution(src, modifiedMap, target.getResolution());
+		
+		if(target.getSize()(0) == modifiedMap.getSize()(0) && target.getSize()(1) == modifiedMap.getSize()(1)){
+			target[layer2] = src[layer] + target[layer2];
+		}
+		else{
+			grid_map::Matrix& data_targ = target[layer2];
+			grid_map::Matrix& data_src = modifiedMap[layer2];
+			auto t_size = target.getSize();
+			auto s_size = modifiedMap.getSize();
+			
+			int max_x, max_y;
+			max_x = std::max(t_size(0), s_size(0));
+			max_y = std::max(t_size(1), s_size(1));
+			
+			Eigen::MatrixXf out(max_x, max_y);
+			out.setZero();
+			
+			int t1 = t_size(0);
+			int t2 = t_size(1);
+			int s1 = s_size(0);
+			int s2 = s_size(1);
+			
+// 			std::cout << "targ" << (max_x - t_size(0))/2 << " "<< (max_y - t_size(1))/2 << " " << t1 << " " << s1 <<std::endl;
+			out.block( (max_x - t_size(0))/2, (max_y - t_size(1))/2, t1, t2) = data_targ;
+			
+// 			std::cout << "src" << (max_x - s_size(0))/2 << " "<< (max_y - s_size(1))/2 << " " << t2 << " " << s2 <<std::endl;
+			out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2) = out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2) + data_src;
+			
+// 			std::cout << "assigning target" << std::endl;
+			target[layer2].resize(max_x, max_y);
+			target[layer2] = out;
+			
+		}
+		
+		
+		
+// 		grid_map::Matrix& data = target[layer2];
+// 		
+// 		for (grid_map::GridMapIterator it(target); !it.isPastEnd(); ++it) {
+// 			grid_map::Position position;
+// 			target.getPosition(*it, position);
+// 			try{
+// 				double val = modifiedMap.atPosition(layer, position);
+// // 				std::cout << "val norm " << val << " " << target.at(layer2, *it) << std::endl;
+// 				
+// 				if(target.at(layer2, *it) < val || std::isnan(target.at(layer2, *it)) ){
+// // 					std::cout << "Tru" << std::endl;
+// 					target.at(layer2, *it) = val;
+// 				}
+// // 				std::cout << "val norm " << val << " " << target.at(layer2, *it) << std::endl;
+// 			}
+// 			catch (const std::out_of_range& e) {
+// 				std::cout << "Out of Range but it should be fine. \n";
+// 			}
+// 			
+// 		}
+		
+	}
+	
+	inline void fuseGridMap(std::vector<grid_map::GridMap>& maps, std::vector<std::string>& layers,  grid_map::GridMap& combinedGrid, const std::string& frame_id, double resolution){
+// 		grid_map::GridMap combinedGrid({"combined"});
+		
+		double size_x = -1, size_y = -1;
+		for(auto it = maps.begin(); it != maps.end() ; ++it){
+// 			std::cout << "Size other " << it->getLength() << std::endl;
+			if(size_x < it->getLength()(0)) size_x = it->getLength()(0);
+			if(size_y < it->getLength()(1)) size_y = it->getLength()(1);
+		}
+		
+		combinedGrid.setFrameId(frame_id);
+		combinedGrid.setGeometry(grid_map::Length(size_x, size_y), resolution);
+		combinedGrid.add("combined");
+		grid_map::Matrix& data_targ = combinedGrid["combined"];
+		data_targ.setZero();
+		
+// 		std::cout << "Sizes" << size_x << " " << size_y << std::endl;
+		
+		int i = 0;
+		for(auto it = maps.begin(); it != maps.end() ; ++it){
+			fuseGridMap(*it, combinedGrid, layers[i]);
+			++i;
+// 			cv::Mat originalImageP2fu;
+// 			grid_map::GridMapCvConverter::toImage<unsigned short, 1>(combinedGrid, "combined", CV_16UC1, 0.0, 1, originalImageP2fu);
+// 			cv::imwrite("/home/malcolm/grid2fusedtemp.png", originalImageP2fu);
+// 			exit(0);
+		}
+		assert(combinedGrid.getSize()(0) == combinedGrid["combined"].rows());
+		assert(combinedGrid.getSize()(1) == combinedGrid["combined"].cols());
+	}
+	
+	
+	
+	
 	
 }
 }
