@@ -105,26 +105,40 @@ namespace acg{
 // 			_ndt_node_markers.points.clear();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
-				nav_msgs::OccupancyGrid::Ptr occ_out;
-				ACGtoOccupancyGrid(*_acg, occ_out);
+				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
+// 				ACGtoOccupancyGrid(*_acg, occ_out);
 				
-// 				grid_map::GridMap gridMap;
-// 				ACGToGridMap(*_acg, gridMap);
+				grid_map::GridMap gridMap;
+				ACGToGridMap(*_acg, gridMap);
 				
 				std::cout << "Going to publish" << std::endl;
 				
 // 				Eigen::Affine2d aff; aff.matrix() << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 // 				moveOccupancyMap(*occ_out, aff);
 // 				
-				grid_map::GridMap gridMap({"all"});
-				grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
+// 				grid_map::GridMap gridMap({"all"});
+// 				grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
+				
+// 				std::cout << "To occ" << std::endl;
+				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+// 				auto node = _acg->getRobotNodes()[0].getNode();
+// 				auto vertex = node->estimate().toIsometry();
+// 				moveOccupancyMap(*occ_out, vertex);
+				
+				
 				cv::Mat originalImageP;
 				grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
 				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
 				
+				std::cout << "Pub" << std::endl;
 				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_out);
 				saveImage(occ_out);
 				std::cout << "Image saved" << std::endl;
+				
+				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_out);
+				
+// 				exit(0);
 				
 			}
 		}
@@ -240,6 +254,8 @@ namespace acg{
 // 			omap.header.stamp = ros::Time::now();
 			nav_msgs::OccupancyGrid::Ptr final;
 			if(grids.size() > 0){
+				
+				std::cout << "Combining " << grids.size() << std::endl;
 				final = occupancy_grid_utils::combineGrids(grids);
 // 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
 				final->header.frame_id = "/world";

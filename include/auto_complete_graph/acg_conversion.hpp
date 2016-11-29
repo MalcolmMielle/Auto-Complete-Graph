@@ -14,6 +14,8 @@ namespace acg{
 
 	inline bool toGridMap(lslgeneric::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::__cxx11::string frame_id, std::string layer_name);
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution);
+	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, const std::string& layer = "combined", const std::string& layer2 = "combined");
+	
 	
 	inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec) {
 
@@ -118,6 +120,10 @@ namespace acg{
 		std::cout <<"update the zones again" << std::endl;
 		ACGPriortoGridMap(acg, map, 0.1);
 		
+// 		grid_map::GridMap map_base;
+// 		map.setFrameId("/world");
+// 		map.setGeometry(grid_map::Length(10, 10), 0.4, grid_map::Position(0.0, 0.0));
+		
 		nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
 		nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
 		grid_map::GridMapRosConverter::toOccupancyGrid(map, "prior", 0, 1., *prior_occ);
@@ -186,71 +192,6 @@ namespace acg{
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution){
 		auto edges = acg.getPriorEdges();
 		
-		
-// 		//************* TODO : shorten this code !
-// 		//Get max sinze of prior
-// 		double max_x, min_x, max_y, min_y;
-// 		bool flag_init = false;
-// 		auto it = edges.begin();
-// 		for(it ; it != edges.end() ; ++it){
-// 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-// 				geometry_msgs::Point p;
-// 				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
-// 				auto vertex = ptr->estimate().toVector();
-// 				if(flag_init == false){
-// 					flag_init = true;
-// 					max_x = vertex(0);
-// 					max_y = vertex(1);
-// 					min_x = vertex(0);
-// 					min_y = vertex(1);
-// 				}
-// 				else{
-// 					if(max_x < vertex(0)){
-// 						max_x = vertex(0);
-// 					}
-// 					if(max_y < vertex(1)){
-// 						max_y = vertex(1);
-// 					}
-// 					if(min_x > vertex(0)){
-// 						min_x = vertex(0);
-// 					}
-// 					if(min_y > vertex(1)){
-// 						min_y = vertex(1);
-// 					}
-// 				}
-// 				
-// 			}
-// 			
-// 		}
-// 		
-// 		max_x = std::abs(max_x);
-// 		max_y = std::abs(max_y);
-// 		min_x = std::abs(min_x);
-// 		min_y = std::abs(min_y);
-// 		
-// 		double size_x, size_y;
-// 		if(max_x > min_x){
-// 			size_x = max_x + 10;
-// 		}
-// 		else{
-// 			size_x = min_x + 10;
-// 		}
-// 		if(max_y > min_y){
-// 			size_y = max_y + 10;
-// 		}
-// 		else{
-// 			size_y = min_y + 10;
-// 		}
-// 
-// 		/***********************************/
-		
-		
-// 		grid_map::GridMap gridMap({"prior"});
-
-// 		gridMap.add("prior");
-// 		gridMap.setGeometry(grid_map::Length(2 * size_x, 2 * size_y), resolution, grid_map::Position(0.0, 0.0));
-// 		gridMap.setFrameId("map");
-		
 		gridMap.add("prior");
 		gridMap["prior"].setZero();
 		
@@ -289,6 +230,7 @@ namespace acg{
 	//TODO
 	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& map){
 		
+		double resol = 0.1;
 		
 		//************* TODO : shorten this code !
 		//Get max sinze of prior
@@ -351,7 +293,7 @@ namespace acg{
 		/***********************************/
 		
 		map.setFrameId("/world");
-		map.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.4, grid_map::Position(0.0, 0.0));
+		map.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(0.0, 0.0));
 // 		map.setGeometry(grid_map::Length(1.2, 2.0), 0.4);
 		
 		map.add("prior"); map.add("ndt"); map.add("all");
@@ -362,17 +304,32 @@ namespace acg{
 // 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
 		std::cout <<"update the zones" << std::endl;
 // 		
-		ACGPriortoGridMap(acg, map, 0.4);
+		ACGPriortoGridMap(acg, map, resol);
+		
+		grid_map::Matrix& data3 = map["prior"];
+		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+			const grid_map::Index index(*iterator);
+			if(std::isnan(data3(index(0), index(1)))){
+				throw std::runtime_error("FUCK 1 already");
+			}
+		}
 		
 		
+		grid_map::GridMap gridMaptmp({"all"});
+		gridMaptmp["all"].setZero();
+		gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(0.0, 0.0));
+// 				
 		nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
 		nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
+		
+		grid_map::GridMapRosConverter::toOccupancyGrid(gridMaptmp, "all", 0 ,1, *prior_occ);
+		
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
 		grids.push_back(ptr_prior_occ);
 		
 		if(acg.getRobotNodes().size() != 0){
 				
-			std::cout <<"update the zones" << std::endl;
+			std::cout <<"update the zones" << acg.getRobotNodes().size() << std::endl;
 			
 			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
@@ -381,7 +338,7 @@ namespace acg{
 				std::cout << "Node" << std::endl;
 				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap_tmp, 0.1, "/world");
+				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap_tmp, resol, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
 				auto node = acg.getRobotNodes()[i].getNode();
 				auto vertex = node->estimate().toIsometry();
@@ -404,6 +361,7 @@ namespace acg{
 		nav_msgs::OccupancyGrid::Ptr occ_out;
 		std::cout << "Building the final thingy " << grids.size() << std::endl;
 		if(grids.size() > 0){
+			std::cout << "Combine " << grids.size() << std::endl;
 			occ_out = occupancy_grid_utils::combineGrids(grids);
 // 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
 			occ_out->header.frame_id = "/world";
@@ -412,37 +370,62 @@ namespace acg{
 		}
 		std::cout << "Out" << std::endl;
 		
-// 		grid_map::GridMap gridMap({"all"});
-		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", map);
-// 		
-		map["all"] = map["prior"] + map["ndt"];
-// 		
-// 	// 			omap.header.frame_id = "/world";
-// 	// 			omap.header.stamp = ros::Time::now();
-// 		nav_msgs::OccupancyGrid::Ptr final;
-// 		if(grids.size() > 0){
-// 			final = occupancy_grid_utils::combineGrids(grids);
-// 	// 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
-// 			final->header.frame_id = "/world";
-// 			final->header.stamp = ros::Time::now();
-// 			
-// 		}
-// 		
-// 		grid_map::GridMapRosConverter converter;
-// 		converter.fromOccupancyGrid(*final, "elevation", map);
-// 		
-// 		return map;
-	
-	}
-	
-	
-	
-	
-	void toOccupancyGrid(){
+		grid_map::Matrix& data4 = map["prior"];
+		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+			const grid_map::Index index(*iterator);
+			if(std::isnan(data4(index(0), index(1)))){
+				throw std::runtime_error("FUCK before");
+// 				data2(index(0), index(1)) = -1;
+			}
+		}
 		
+		grid_map::GridMap mapNDT;
+		//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
+		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", mapNDT);
+		
+		grid_map::Matrix& data = mapNDT["ndt"];
+		for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
+			const grid_map::Index index(*iterator);
+			if(std::isnan(data(index(0), index(1)))){
+				data(index(0), index(1)) = -1;
+			}
+		}
+		
+		grid_map::Matrix& data2 = map["prior"];
+		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+			const grid_map::Index index(*iterator);
+			if(std::isnan(data2(index(0), index(1)))){
+				throw std::runtime_error("FUCK");
+// 				data2(index(0), index(1)) = -1;
+			}
+		}
+// 		
+// 		std::cout << map["prior"] << std::endl;
+		
+		map["all"] = map["prior"];
+		
+// 		auto diff = map.getPosition() - mapNDT.getPosition();
+		
+		//Ugliest hack ever ! HACK
+		//HACK
+// 		map.move(mapNDT.getPosition());
+		
+// 		assert(map.getPosition()(0) == mapNDT.getPosition()(0) && map.getPosition()(1) == mapNDT.getPosition()(1));
+		
+// 		grid_map::Index
+// 		grid_map::GridMap mapNDT_tmp;
+// 		mapNDT_tmp.setGeometry(grid_map::Length(map["prior"].getSize()(0), map["prior"].getSize()(1)), mapNDT.getResolution(), grid_map::Position(mapNDT.getPosition()(0), mapNDT.getPosition()(1)));
+		
+// 		map["all"] = map["prior"].cwiseMax(map["ndt"]);
+		fuseGridMap(mapNDT, map, "ndt", "all");
+		
+		//HACK ???
+// 		mapNDT.move(map.getPosition());
+		
+
+	
 	}
-	
-	
+
 	
 	/**
 	*
@@ -569,9 +552,11 @@ namespace acg{
 	/**
 	 * @brief fuse src in target
 	 * For now only the best value of of both map is kept in the final map.
+	 * TODO : The grid map need their centers to be at the exact same physical spot. As trump would say : _BAD_
 	 */
-	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, const std::string& layer = "combined", const std::string& layer2 = "combined"){
+	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, const std::string& layer, const std::string& layer2){
 		
+		std::cout << "FUSING " << std::endl;
 		assert(target.exists(layer2) == true);
 		assert(src.exists(layer) == true);
 		
@@ -584,9 +569,13 @@ namespace acg{
 		}
 		else{
 			grid_map::Matrix& data_targ = target[layer2];
-			grid_map::Matrix& data_src = modifiedMap[layer2];
+			grid_map::Matrix& data_src = modifiedMap[layer];
 			auto t_size = target.getSize();
 			auto s_size = modifiedMap.getSize();
+			
+			auto pos_targ = target.getPosition();
+			auto pos_src = src.getPosition();
+// 			assert(pos_targ(0) == pos_src(0) && pos_targ(1) == pos_src(1));
 			
 			int max_x, max_y;
 			max_x = std::max(t_size(0), s_size(0));
@@ -600,13 +589,15 @@ namespace acg{
 			int s1 = s_size(0);
 			int s2 = s_size(1);
 			
-// 			std::cout << "targ" << (max_x - t_size(0))/2 << " "<< (max_y - t_size(1))/2 << " " << t1 << " " << s1 <<std::endl;
+			std::cout << "targ" << (max_x - t_size(0))/2 << " "<< (max_y - t_size(1))/2 << " " << t1 << " " << s1 <<std::endl;
+			
 			out.block( (max_x - t_size(0))/2, (max_y - t_size(1))/2, t1, t2) = data_targ;
 			
-// 			std::cout << "src" << (max_x - s_size(0))/2 << " "<< (max_y - s_size(1))/2 << " " << t2 << " " << s2 <<std::endl;
-			out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2) = out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2) + data_src;
+			std::cout << "src" << (max_x - s_size(0))/2 << " "<< (max_y - s_size(1))/2 << " " << t2 << " " << s2 <<std::endl;
 			
-// 			std::cout << "assigning target" << std::endl;
+			out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2) = out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2).cwiseMax(data_src);
+			
+			std::cout << "assigning target" << std::endl;
 			target[layer2].resize(max_x, max_y);
 			target[layer2] = out;
 			
