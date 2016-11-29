@@ -13,6 +13,7 @@ namespace AASS{
 namespace acg{
 
 	inline bool toGridMap(lslgeneric::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::__cxx11::string frame_id, std::string layer_name);
+	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution);
 	
 	inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec) {
 
@@ -21,6 +22,165 @@ namespace acg{
 		Eigen::Affine3d new_map_origin = pose_vec*map_origin;
 		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 	}
+	
+	inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &a2d) {
+
+		//Affine 2d to 3d
+		//  Eigen::Rotation2D<double> rot = Eigen::Rotation2D<double>::fromRotationMatrix(a2d.rotation());//Eigen::fromRotationMatrix(a2d.translation());
+		double angle = atan2(a2d.rotation()(1,0), a2d.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
+		Eigen::Affine3d pose_effi = Eigen::Translation3d(a2d.translation()(0), a2d.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+		
+// 		Eigen::Affine3d pose_effi;
+// 		pose_effi.matrix() << a2d(0, 0), a2d(0, 1), 0, a2d(0, 2),
+// 					 a2d(1, 0), a2d(1, 1), 0, a2d(1, 2),
+// 					 a2d(2, 0), a2d(2, 1), 0, a2d(2, 2),
+// 					         0,         0, 0,         0;
+
+		Eigen::Affine3d map_origin;
+		tf::poseMsgToEigen(occ_grid.info.origin, map_origin);
+		Eigen::Affine3d new_map_origin = pose_effi*map_origin;
+		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
+	}
+	
+	
+	
+	inline void ACGtoOccupancyGrid(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& occ_out){
+		//************* TODO : shorten this code !
+		//Get max sinze of prior
+		grid_map::GridMap map;
+		auto edges = acg.getPriorEdges();
+		
+		double max_x, min_x, max_y, min_y;
+		bool flag_init = false;
+		auto it = edges.begin();
+		for(it ; it != edges.end() ; ++it){
+			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+				geometry_msgs::Point p;
+				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+				auto vertex = ptr->estimate().toVector();
+				if(flag_init == false){
+					flag_init = true;
+					max_x = vertex(0);
+					max_y = vertex(1);
+					min_x = vertex(0);
+					min_y = vertex(1);
+				}
+				else{
+					if(max_x < vertex(0)){
+						max_x = vertex(0);
+					}
+					if(max_y < vertex(1)){
+						max_y = vertex(1);
+					}
+					if(min_x > vertex(0)){
+						min_x = vertex(0);
+					}
+					if(min_y > vertex(1)){
+						min_y = vertex(1);
+					}
+				}
+				
+			}
+			
+		}
+		
+		max_x = std::abs(max_x);
+		max_y = std::abs(max_y);
+		min_x = std::abs(min_x);
+		min_y = std::abs(min_y);
+		
+		double size_x, size_y;
+		if(max_x > min_x){
+			size_x = max_x + 10;
+		}
+		else{
+			size_x = min_x + 10;
+		}
+		if(max_y > min_y){
+			size_y = max_y + 10;
+		}
+		else{
+			size_y = min_y + 10;
+		}
+
+		/***********************************/
+		
+		map.setFrameId("/world");
+		map.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));
+// 		map.setGeometry(grid_map::Length(1.2, 2.0), 0.4);
+		
+		map.add("prior"); map.add("ndt"); map.add("all");
+		map["prior"].setZero();
+		map["ndt"].setZero();
+		map["all"].setZero();
+  
+// 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+		std::cout <<"update the zones again" << std::endl;
+		ACGPriortoGridMap(acg, map, 0.1);
+		
+		nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
+		nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
+		grid_map::GridMapRosConverter::toOccupancyGrid(map, "prior", 0, 1., *prior_occ);
+		
+		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+		
+		
+		if(acg.getRobotNodes().size() != 0){
+			grids.push_back(ptr_prior_occ);
+				
+			std::cout <<"update the zones" << std::endl;
+			
+			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
+// 				for(size_t i = 0 ; i < 1 ; ++i){
+				
+//Grid map test
+				std::cout << "Node" << std::endl;
+				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
+// 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
+				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap_tmp, 0.1, "/world");
+// 					auto pose = acg.getRobotNodes()[i].getPose();
+				auto node = acg.getRobotNodes()[i].getNode();
+				auto vertex = node->estimate().toIsometry();
+// 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
+// 					std::cout << "Move : " << node.matrix() << std::endl;
+// 					if(i == 2) exit(0);
+				
+				std::cout << "Move" << std::endl;
+				moveOccupancyMap(*omap_tmp, vertex);
+				omap_tmp->header.frame_id = "/world";
+				omap_tmp->header.stamp = ros::Time::now();
+
+				nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
+				grids.push_back(ptr);
+				
+			}
+			
+		}
+
+		std::cout << "Building the final thingy " << grids.size() << std::endl;
+		if(grids.size() > 0){
+			occ_out = occupancy_grid_utils::combineGrids(grids);
+// 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
+			occ_out->header.frame_id = "/world";
+			occ_out->header.stamp = ros::Time::now();
+			
+		}
+		std::cout << "Out" << std::endl;
+		
+		grid_map::GridMap gridMap({"all"});
+		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
+		cv::Mat originalImageP;
+		grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
+		cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
+		
+		
+		
+		
+
+	}
+	
+	
+	
 	
 	
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution){
@@ -191,7 +351,7 @@ namespace acg{
 		/***********************************/
 		
 		map.setFrameId("/world");
-		map.setGeometry(grid_map::Length(2 * size_x, 2 * size_y), 0.4, grid_map::Position(0.0, 0.0));
+		map.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.4, grid_map::Position(0.0, 0.0));
 // 		map.setGeometry(grid_map::Length(1.2, 2.0), 0.4);
 		
 		map.add("prior"); map.add("ndt"); map.add("all");
@@ -204,50 +364,56 @@ namespace acg{
 // 		
 		ACGPriortoGridMap(acg, map, 0.4);
 		
-		for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
+		
+		nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
+		nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
+		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+		grids.push_back(ptr_prior_occ);
+		
+		if(acg.getRobotNodes().size() != 0){
+				
+			std::cout <<"update the zones" << std::endl;
 			
-			toGridMap(acg.getRobotNodes()[i].getMap(), map, 0.4, "/world", "ndt");
-			
-			//TODO move the occupancy grid
-			
-			
+			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
-			
-// 			nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
+				
+//Grid map test
+				std::cout << "Node" << std::endl;
+				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-// 			lslgeneric::toOccupancyGrid(acg->getRobotNodes()[i].getMap(), *omap_tmp, 0.4, "/world");
-// // 					auto pose = _acg->getRobotNodes()[i].getPose();
-// 			auto node = acg->getRobotNodes()[i].getNode();
-// 			auto vertex = node->estimate().toIsometry();
-// // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
-// // 					std::cout << "Move : " << node.matrix() << std::endl;
-// // 					if(i == 2) exit(0);
-// 			
-// 			moveOccupancyMap(*omap_tmp, vertex);
-// 			
-// 			omap_tmp->header.frame_id = "/world";
-// 			omap_tmp->header.stamp = ros::Time::now();
-// 			//TODO
-// // 					fuseOcc(omap_tmp, omap);
-// // 					if(i == 0){
-// // 						_last_ndtmap.publish<nav_msgs::OccupancyGrid>(omap_tmp);
-// // 					}
-// // 					if(i == 2 ){
-// // 						_last_ndtmap2.publish<nav_msgs::OccupancyGrid>(omap_tmp);
-// // 					}
-// 			nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
-// 			grids.push_back(ptr);
-			
-			
-// 			geometry_msgs::Point p;
-// 			auto vertex2 = node->estimate().toVector();
-// 			//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-// 			p.x = vertex2(0);
-// 			p.y = vertex2(1);
-// 			p.z = 0;
-			
+				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap_tmp, 0.1, "/world");
+// 					auto pose = acg.getRobotNodes()[i].getPose();
+				auto node = acg.getRobotNodes()[i].getNode();
+				auto vertex = node->estimate().toIsometry();
+// 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
+// 					std::cout << "Move : " << node.matrix() << std::endl;
+// 					if(i == 2) exit(0);
+				
+				std::cout << "Move" << std::endl;
+				moveOccupancyMap(*omap_tmp, vertex);
+				omap_tmp->header.frame_id = "/world";
+				omap_tmp->header.stamp = ros::Time::now();
+
+				nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
+				grids.push_back(ptr);
+				
+			}
 			
 		}
+
+		nav_msgs::OccupancyGrid::Ptr occ_out;
+		std::cout << "Building the final thingy " << grids.size() << std::endl;
+		if(grids.size() > 0){
+			occ_out = occupancy_grid_utils::combineGrids(grids);
+// 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
+			occ_out->header.frame_id = "/world";
+			occ_out->header.stamp = ros::Time::now();
+			
+		}
+		std::cout << "Out" << std::endl;
+		
+// 		grid_map::GridMap gridMap({"all"});
+		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", map);
 // 		
 		map["all"] = map["prior"] + map["ndt"];
 // 		
