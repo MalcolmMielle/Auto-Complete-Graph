@@ -212,7 +212,7 @@ int main(int argc, char **argv)
 	while(ros::ok()){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
-// 		visu.updateRviz();
+		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 	}
 

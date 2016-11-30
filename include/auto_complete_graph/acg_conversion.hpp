@@ -14,7 +14,7 @@ namespace acg{
 
 	inline bool toGridMap(lslgeneric::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::__cxx11::string frame_id, std::string layer_name);
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution);
-	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, const std::string& layer = "combined", const std::string& layer2 = "combined");
+	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer = "combined", const std::string& layer2 = "combined", const std::string& final_layer = "combined");
 	
 	
 	inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec) {
@@ -112,13 +112,18 @@ namespace acg{
 // 		map.setGeometry(grid_map::Length(1.2, 2.0), 0.4);
 		
 		map.add("prior"); map.add("ndt"); map.add("all");
-		map["prior"].setZero();
+// 		map["prior"].setZero();
 		map["ndt"].setZero();
 		map["all"].setZero();
+		
+		std::cout << "Pos again1" << map.getPosition() << std::endl;
   
 // 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
 		std::cout <<"update the zones again" << std::endl;
 		ACGPriortoGridMap(acg, map, 0.1);
+		
+		std::cout << "Pos again" << map.getPosition() << std::endl;
+		
 		
 // 		grid_map::GridMap map_base;
 // 		map.setFrameId("/world");
@@ -127,6 +132,10 @@ namespace acg{
 		nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
 		nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
 		grid_map::GridMapRosConverter::toOccupancyGrid(map, "prior", 0, 1., *prior_occ);
+		
+		std::cout << "POsition " << prior_occ->info.origin.position << std::endl;
+		std::cout << "ORientation " << prior_occ->info.origin.orientation << std::endl;
+// 		exit(0);
 		
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
 		
@@ -141,9 +150,9 @@ namespace acg{
 				
 //Grid map test
 				std::cout << "Node" << std::endl;
-				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
-// 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap_tmp, 0.1, "/world");
+				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
+// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap, 0.1, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
 				auto node = acg.getRobotNodes()[i].getNode();
 				auto vertex = node->estimate().toIsometry();
@@ -152,11 +161,11 @@ namespace acg{
 // 					if(i == 2) exit(0);
 				
 				std::cout << "Move" << std::endl;
-				moveOccupancyMap(*omap_tmp, vertex);
-				omap_tmp->header.frame_id = "/world";
-				omap_tmp->header.stamp = ros::Time::now();
+				moveOccupancyMap(*omap, vertex);
+				omap->header.frame_id = "/world";
+				omap->header.stamp = ros::Time::now();
 
-				nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
+				nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
 				grids.push_back(ptr);
 				
 			}
@@ -193,7 +202,7 @@ namespace acg{
 		auto edges = acg.getPriorEdges();
 		
 		gridMap.add("prior");
-		gridMap["prior"].setZero();
+// 		gridMap["prior"].setZero();
 		
 		auto it = edges.begin();
 		for(it ; it != edges.end() ; ++it){
@@ -227,7 +236,7 @@ namespace acg{
 	}
 	
 	
-	//TODO
+	//TODO : BROKEN FUNCTION FOR NOW
 	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& map){
 		
 		double resol = 0.1;
@@ -292,6 +301,7 @@ namespace acg{
 
 		/***********************************/
 		
+// 		grid_map::GridMap map;
 		map.setFrameId("/world");
 		map.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(0.0, 0.0));
 // 		map.setGeometry(grid_map::Length(1.2, 2.0), 0.4);
@@ -306,28 +316,39 @@ namespace acg{
 // 		
 		ACGPriortoGridMap(acg, map, resol);
 		
-		grid_map::Matrix& data3 = map["prior"];
-		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
-			const grid_map::Index index(*iterator);
-			if(std::isnan(data3(index(0), index(1)))){
-				throw std::runtime_error("FUCK 1 already");
-			}
-		}
-		
+// 		grid_map::Matrix& data3 = map["prior"];
+// 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+// 			const grid_map::Index index(*iterator);
+// 			if(std::isnan(data3(index(0), index(1)))){
+// 				throw std::runtime_error("FUCK 1 already");
+// 			}
+// 		}
+// 		
 		
 		grid_map::GridMap gridMaptmp({"all"});
 		gridMaptmp["all"].setZero();
+		
+		auto node = acg.getRobotNodes()[0].getNode();
+		auto vertex = node->estimate().toVector();
+		
+		gridMaptmp.setFrameId("/world");
 		gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(0.0, 0.0));
+// 		gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(vertex(0), vertex(1)));
 // 				
 		nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
 		nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
 		
-		grid_map::GridMapRosConverter::toOccupancyGrid(gridMaptmp, "all", 0 ,1, *prior_occ);
+		grid_map::GridMapRosConverter::toOccupancyGrid(gridMaptmp, "all", 0 ,1., *prior_occ);
+		
+		std::cout << "POsition " << prior_occ->info.origin.position << std::endl;
+		std::cout << "ORientation " << prior_occ->info.origin.orientation << std::endl;
+// 		exit(0);
 		
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
-		grids.push_back(ptr_prior_occ);
+		
 		
 		if(acg.getRobotNodes().size() != 0){
+			grids.push_back(ptr_prior_occ);
 				
 			std::cout <<"update the zones" << acg.getRobotNodes().size() << std::endl;
 			
@@ -336,9 +357,9 @@ namespace acg{
 				
 //Grid map test
 				std::cout << "Node" << std::endl;
-				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
-// 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap_tmp, resol, "/world");
+				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
+// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap, resol, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
 				auto node = acg.getRobotNodes()[i].getNode();
 				auto vertex = node->estimate().toIsometry();
@@ -347,11 +368,11 @@ namespace acg{
 // 					if(i == 2) exit(0);
 				
 				std::cout << "Move" << std::endl;
-				moveOccupancyMap(*omap_tmp, vertex);
-				omap_tmp->header.frame_id = "/world";
-				omap_tmp->header.stamp = ros::Time::now();
+				moveOccupancyMap(*omap, vertex);
+				omap->header.frame_id = "/world";
+				omap->header.stamp = ros::Time::now();
 
-				nav_msgs::OccupancyGrid::ConstPtr ptr(omap_tmp);
+				nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
 				grids.push_back(ptr);
 				
 			}
@@ -370,54 +391,97 @@ namespace acg{
 		}
 		std::cout << "Out" << std::endl;
 		
-		grid_map::Matrix& data4 = map["prior"];
-		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
-			const grid_map::Index index(*iterator);
-			if(std::isnan(data4(index(0), index(1)))){
-				throw std::runtime_error("FUCK before");
-// 				data2(index(0), index(1)) = -1;
-			}
-		}
+// 		grid_map::Matrix& data4 = map["prior"];
+// 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+// 			const grid_map::Index index(*iterator);
+// 			if(std::isnan(data4(index(0), index(1)))){
+// 				throw std::runtime_error("FUCK before");
+// // 				data2(index(0), index(1)) = -1;
+// 			}
+// 		}
 		
 		grid_map::GridMap mapNDT;
 		//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
 		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", mapNDT);
 		
-		grid_map::Matrix& data = mapNDT["ndt"];
-		for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
-			const grid_map::Index index(*iterator);
-			if(std::isnan(data(index(0), index(1)))){
-				data(index(0), index(1)) = -1;
-			}
-		}
-		
-		grid_map::Matrix& data2 = map["prior"];
-		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
-			const grid_map::Index index(*iterator);
-			if(std::isnan(data2(index(0), index(1)))){
-				throw std::runtime_error("FUCK");
-// 				data2(index(0), index(1)) = -1;
-			}
-		}
+// 		grid_map::Matrix& data = mapNDT["ndt"];
+// 		for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
+// 			const grid_map::Index index(*iterator);
+// 			if(std::isnan(data(index(0), index(1)))){
+// 				data(index(0), index(1)) = -1;
+// 			}
+// 		}
+// 		
+// 		grid_map::Matrix& data2 = map["prior"];
+// 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+// 			const grid_map::Index index(*iterator);
+// 			if(std::isnan(data2(index(0), index(1)))){
+// 				throw std::runtime_error("FUCK");
+// // 				data2(index(0), index(1)) = -1;
+// 			}
+// 		}
 // 		
 // 		std::cout << map["prior"] << std::endl;
 		
-		map["all"] = map["prior"];
+// 		assert(map.getSize()(0) == mapNDT.getSize()(0) && map.getSize()(1) == mapNDT.getSize()(1));
 		
+// 		map["all"] = map["prior"] + mapNDT["ndt"];
+		
+		std::cout << map.getSize()(0) << " " << mapNDT.getSize()(0) << " and " << map.getSize()(1) << " " << mapNDT.getSize()(1) << std::endl;
+		std::cout << map.getPosition()(0) << " " << mapNDT.getPosition()(0) << " and " << map.getPosition()(1) << " " << mapNDT.getPosition()(1) << std::endl;
+		//Moved because here it's not the same :S ?
+		
+		
+		//Does not work ! None should be moved but should be fused depending on where they are... As in if I was superpositing them
+// 		map.move(mapNDT.getPosition());
+		
+		std::cout << map.getPosition()(0) << " " << mapNDT.getPosition()(0) << " and " << map.getPosition()(1) << " " << mapNDT.getPosition()(1) << std::endl;
+		
+// 		map["all"] = map["ndt"];
+		
+// 		map = mapNDT;
+// 		map.add("all");
+// 		map["all"] = map["ndt"];
+		
+// 		exit(0);
 // 		auto diff = map.getPosition() - mapNDT.getPosition();
 		
 		//Ugliest hack ever ! HACK
 		//HACK
 // 		map.move(mapNDT.getPosition());
 		
-// 		assert(map.getPosition()(0) == mapNDT.getPosition()(0) && map.getPosition()(1) == mapNDT.getPosition()(1));
+// 		auto node = acg.getRobotNodes()[0].getNode();
+// 		auto vertex = node->estimate().toVector();
+// 		mapNDT.move(grid_map::Position(- vertex(0),  - vertex(1)));
+		
+
 		
 // 		grid_map::Index
 // 		grid_map::GridMap mapNDT_tmp;
 // 		mapNDT_tmp.setGeometry(grid_map::Length(map["prior"].getSize()(0), map["prior"].getSize()(1)), mapNDT.getResolution(), grid_map::Position(mapNDT.getPosition()(0), mapNDT.getPosition()(1)));
 		
 // 		map["all"] = map["prior"].cwiseMax(map["ndt"]);
-		fuseGridMap(mapNDT, map, "ndt", "all");
+		grid_map::GridMap gridtmptmp;
+// 		mapNDT.setPosition(map.getPosition());
+		
+// 		assert(map.getPosition()(0) == mapNDT.getPosition()(0) && map.getPosition()(1) == mapNDT.getPosition()(1));
+		fuseGridMap(mapNDT, map, gridtmptmp, "ndt", "prior");
+		
+		map = gridtmptmp;
+		map.add("all");
+		map["all"] = map["combined"];
+		
+		
+// 		
+// 		
+// // 		map.add("all");
+// // 		map["all"] = map["combined"];
+// 		
+// 		cv::Mat originalImageP;
+// 		grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridtmptmp, "combined", CV_16UC1, 0.0, 1, originalImageP);
+// 		cv::imwrite("/home/malcolm/gridtmptmp_all.png", originalImageP);
+// 		exit(0);
+// 		map.setPosition(grid_map::Position(vertex(0), vertex(1)));
 		
 		//HACK ???
 // 		mapNDT.move(map.getPosition());
@@ -554,7 +618,7 @@ namespace acg{
 	 * For now only the best value of of both map is kept in the final map.
 	 * TODO : The grid map need their centers to be at the exact same physical spot. As trump would say : _BAD_
 	 */
-	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, const std::string& layer, const std::string& layer2){
+	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer, const std::string& layer2, const std::string& final_layer){
 		
 		std::cout << "FUSING " << std::endl;
 		assert(target.exists(layer2) == true);
@@ -562,12 +626,18 @@ namespace acg{
 		
 // 		std::cout << "Fusing " << std::endl;
 		grid_map::GridMap modifiedMap;
-		grid_map::GridMapCvProcessing::changeResolution(src, modifiedMap, target.getResolution());
-		
-		if(target.getSize()(0) == modifiedMap.getSize()(0) && target.getSize()(1) == modifiedMap.getSize()(1)){
-			target[layer2] = src[layer] + target[layer2];
+		if(src.getResolution() != target.getResolution()){
+			std::cout << "Change res" << std::endl;
+			grid_map::GridMapCvProcessing::changeResolution(src, modifiedMap, target.getResolution());
+			std::cout << "Done" << std::endl;
 		}
 		else{
+			modifiedMap = src;
+		}
+// 		if(target.getSize()(0) == modifiedMap.getSize()(0) && target.getSize()(1) == modifiedMap.getSize()(1)){
+// 			target[layer2] = src[layer] + target[layer2];
+// 		}
+// 		else{
 			grid_map::Matrix& data_targ = target[layer2];
 			grid_map::Matrix& data_src = modifiedMap[layer];
 			auto t_size = target.getSize();
@@ -581,7 +651,24 @@ namespace acg{
 			max_x = std::max(t_size(0), s_size(0));
 			max_y = std::max(t_size(1), s_size(1));
 			
-			Eigen::MatrixXf out(max_x, max_y);
+			std::cout << "MAX : "<< max_x << " " << max_y << std::endl;
+			
+			out_grid.setFrameId(target.getFrameId());
+			// +1 because of non even numbers.
+			double res = target.getResolution();
+			out_grid.setGeometry(grid_map::Length((max_x * res) + 1, (max_y * res) + 1), target.getResolution(), target.getPosition());
+			out_grid.add(final_layer);
+			out_grid[final_layer].setZero();
+			
+			std::cout << "SIZE : " << out_grid.getSize() << " " << grid_map::Length((max_x * res) + 1, (max_y * res) + 1) << std::endl;
+			
+			
+			cv::Mat originalImageP;
+			grid_map::GridMapCvConverter::toImage<unsigned short, 1>(out_grid, final_layer, CV_16UC1, 0.0, 1, originalImageP);
+			cv::imwrite("/home/malcolm/outgrid_tmp.png", originalImageP);
+			
+			
+			grid_map::Matrix& out = out_grid[final_layer];
 			out.setZero();
 			
 			int t1 = t_size(0);
@@ -589,19 +676,20 @@ namespace acg{
 			int s1 = s_size(0);
 			int s2 = s_size(1);
 			
-			std::cout << "targ" << (max_x - t_size(0))/2 << " "<< (max_y - t_size(1))/2 << " " << t1 << " " << s1 <<std::endl;
+			std::cout << "targ" << (max_x - t_size(0))/2 << " "<< (max_y - t_size(1))/2 << " " << t1 << " " << t2 <<std::endl;
+			std::cout << "targ size " << target.getSize() << " compared with " << t1 - ((max_x - t_size(0))/2) << " and " << t2 - ((max_y - t_size(1))/2) << std::endl;
 			
 			out.block( (max_x - t_size(0))/2, (max_y - t_size(1))/2, t1, t2) = data_targ;
 			
-			std::cout << "src" << (max_x - s_size(0))/2 << " "<< (max_y - s_size(1))/2 << " " << t2 << " " << s2 <<std::endl;
+			std::cout << "src" << (max_x - s_size(0))/2 << " "<< (max_y - s_size(1))/2 << " " << s2 << " " << s2 <<std::endl;
 			
 			out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2) = out.block( (max_x - s_size(0))/2, (max_y - s_size(1))/2, s1, s2).cwiseMax(data_src);
 			
 			std::cout << "assigning target" << std::endl;
-			target[layer2].resize(max_x, max_y);
-			target[layer2] = out;
-			
-		}
+// 			target[layer2].resize(max_x, max_y);
+// 			target[layer2] = out;
+						
+// 		}
 		
 		
 		
@@ -648,7 +736,7 @@ namespace acg{
 		
 		int i = 0;
 		for(auto it = maps.begin(); it != maps.end() ; ++it){
-			fuseGridMap(*it, combinedGrid, layers[i]);
+			fuseGridMap(*it, combinedGrid, combinedGrid, layers[i]);
 			++i;
 // 			cv::Mat originalImageP2fu;
 // 			grid_map::GridMapCvConverter::toImage<unsigned short, 1>(combinedGrid, "combined", CV_16UC1, 0.0, 1, originalImageP2fu);

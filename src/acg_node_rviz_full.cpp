@@ -89,6 +89,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	visu.toRviz(*oacg);
 	
 // 	visu.updateRviz();
+	visu.updateRviz();
 	
 // 	nav_msgs::OccupancyGrid omap; 
 // 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
@@ -96,7 +97,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	
 // 	map_pub_.publish(omap);
 	
-	visu.updateRviz();
+// 	visu.updateRviz();
 	
 // 	std::cout << "saved to " << file_out_after << std::endl;
 	
@@ -214,7 +215,7 @@ int main(int argc, char **argv)
 	while(ros::ok()){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
-		visu.updateRviz();
+		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 	}
 

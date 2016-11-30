@@ -105,9 +105,9 @@ namespace acg{
 // 			_ndt_node_markers.points.clear();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
-				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
-				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
-// 				ACGtoOccupancyGrid(*_acg, occ_out);
+				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
+				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
+				ACGtoOccupancyGrid(*_acg, occ_outt);
 				
 				grid_map::GridMap gridMap;
 				ACGToGridMap(*_acg, gridMap);
@@ -121,7 +121,15 @@ namespace acg{
 // 				grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
 				
 // 				std::cout << "To occ" << std::endl;
+				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
 				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+				
+				std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
+				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
+				
+// 				exit(0);
+				
 // 				auto node = _acg->getRobotNodes()[0].getNode();
 // 				auto vertex = node->estimate().toIsometry();
 // 				moveOccupancyMap(*occ_out, vertex);
@@ -132,11 +140,11 @@ namespace acg{
 				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
 				
 				std::cout << "Pub" << std::endl;
-				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_out);
+				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
 				saveImage(occ_out);
 				std::cout << "Image saved" << std::endl;
 				
-				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_out);
+				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*occ_out);
 				
 // 				exit(0);
 				

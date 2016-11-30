@@ -79,9 +79,20 @@ BOOST_AUTO_TEST_CASE(trying)
 	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(map2, "combined", CV_16UC1, 0.0, 1, originalImageP2);
 	cv::imwrite("/home/malcolm/grid2.png", originalImageP2);
 	
-	
-// 	AASS::acg::fuseGridMap(map2, map4, "combined");
+	std::cout << "FUSING!!!!" << std::endl;
+	grid_map::GridMap map_tmp;
+	AASS::acg::fuseGridMap(map2, map4, map_tmp, "combined");
 // 	AASS::acg::fuseGridMap(map, map2, "combined");
+	
+	std::cout << "DONE FUSING!!!!" << std::endl;
+	
+	cv::Mat originalImageP2f_tmp;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(map_tmp, "combined", CV_16UC1, 0.0, 1, originalImageP2f_tmp);
+	cv::imwrite("/home/malcolm/grid2f_tmp.png", originalImageP2f_tmp);
+	
+	
+	exit(0);
+	
 	
 	cv::Mat originalImageP2f;
 	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(map2, "combined", CV_16UC1, 0.0, 1, originalImageP2f);
