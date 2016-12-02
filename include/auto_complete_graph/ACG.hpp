@@ -453,11 +453,12 @@ private:
 			
 			updatePriorEdgeCovariance();
 			
-			_optimizable_graph.optimize(iter);
-			
-			//Update prior edge covariance
-			
-			updatePriorEdgeCovariance();
+			//Avoid overshoot of the cov
+			for(size_t i = 0 ; i < iter ; ++i){
+				_optimizable_graph.optimize(1);
+				//Update prior edge covariance
+				updatePriorEdgeCovariance();
+			}
 			
 		}
 		
@@ -509,6 +510,8 @@ private:
 		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
 		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior);
 		bool noDoubleLinks();
+		
+// 		getGridMap();
 		
 	private:
 		

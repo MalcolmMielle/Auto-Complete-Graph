@@ -516,7 +516,18 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		//Doing the registration here myself
 		size_t i;
 		auto links = ndt_graph.getOdometryLinks();
-		ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
+		
+		
+// 		ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
+		if(_previous_number_of_node_in_ndtgraph >= 1){
+			for (size_t i = _previous_number_of_node_in_ndtgraph - 1; i < links.size(); i++) {
+		//       std::cout << "updating link : " << i << " (size of links :" << links.size() << ")" << std::endl;
+				ndt_graph.updateLinkUsingNDTRegistration(links[i], 10, true);
+			}
+		}
+		else{
+			ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
+		}
 		
 		Eigen::Isometry2d diff;
 		diff.matrix() << 1, 0, 0, 
@@ -869,15 +880,21 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		// 			std::cout << "Poses 1 " << std::endl << pose1.format(cleanFmt) << std::endl;
 		// 			std::cout << "Poses 2 " << std::endl << pose2.format(cleanFmt) << std::endl;
 			
+		double tre[3];
+		(*it)->getMeasurementData(tre);
+		
+		Eigen::Vector2d length; length << tre[0], tre[1] ;
+		
 		Eigen::Vector2d eigenvec; 
 		eigenvec << pose1(0) - pose2(0), pose1(1) - pose2(1);
 		
 		double newnorm = (pose1 - pose2).norm();
-		std::cout << "new norm " << newnorm << " because " << pose1 << " " << pose2 << std::endl;
+		double len_norm = length.norm();
+		std::cout << "new norm " << newnorm << " because " << pose1 << " " << pose2 << " and lennorm " << len_norm << "because  " <<length << std::endl;
 		g2o::SE2 oldnormse2 = (*it)->interface.getOriginalValue();
 		Eigen::Vector3d vecold = oldnormse2.toVector();
 		double oldnorm = (vecold).norm();
-		std::cout << "oldnorm" << newnorm << std::endl;
+		std::cout << "oldnorm" << oldnorm << std::endl;
 		assert(oldnorm >= 0);
 		
 		//Using the diff so we cannot shrink it or stretch it easily.
@@ -913,10 +930,23 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		
 		double new_cov = diff_norm_normalized;
 		
-		std::cout << "min " << min << " max " << max << " max_range " << max_range << " min_range " << min_range << " diff norm mornal " << diff_norm_normalized << std::endl;
+		std::cout << "min " << min << " max " << max << " max_range " << max_range << " min_range " << min_range << " diff norm  " << diff_norm << " cov " << new_cov << std::endl;
 		
-		assert(new_cov >= 0);
 		assert(new_cov <= 1);
+		
+		//Sometime the optimization in one turn goes under the limit so need to correct those cases ;)
+// 		assert(new_cov >= 0);
+		
+		if(new_cov <= 0){
+			//Apparently the vaqlue in the edge does not get changed so it's useless modifying it ?
+			//See :
+// 			double tre[3];
+// 			(*it)->getMeasurementData(tre);
+// 			Eigen::Vector2d length; length << tre[0], tre[1] ;
+			
+			
+			new_cov = 0.001;
+		}
 		
 		//Scale it again.depending on user inputed value
 		if(_use_user_prior_cov == true){
