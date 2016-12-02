@@ -109,8 +109,8 @@ namespace acg{
 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
 				ACGtoOccupancyGrid(*_acg, occ_outt);
 				
-				grid_map::GridMap gridMap;
-				ACGToGridMap(*_acg, gridMap);
+// 				grid_map::GridMap gridMap;
+// 				ACGToGridMap(*_acg, gridMap);
 				
 				std::cout << "Going to publish" << std::endl;
 				
@@ -121,12 +121,12 @@ namespace acg{
 // 				grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
 				
 // 				std::cout << "To occ" << std::endl;
-				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
-				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
-				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+// 				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+// 				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
+// 				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
 				
 				std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
-				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
+// 				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
 				
 // 				exit(0);
 				
@@ -135,16 +135,16 @@ namespace acg{
 // 				moveOccupancyMap(*occ_out, vertex);
 				
 				
-				cv::Mat originalImageP;
-				grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
-				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
+// 				cv::Mat originalImageP;
+// 				grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
+// 				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
 				
 				std::cout << "Pub" << std::endl;
 				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
-				saveImage(occ_out);
-				std::cout << "Image saved" << std::endl;
+// 				saveImage(occ_out);
+// 				std::cout << "Image saved" << std::endl;
 				
-				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*occ_out);
+// 				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*occ_out);
 				
 // 				exit(0);
 				

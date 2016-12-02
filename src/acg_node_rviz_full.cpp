@@ -91,6 +91,31 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	visu.updateRviz();
 	visu.updateRviz();
 	
+	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
+	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt);
+	grid_map::GridMap gridMap({"all"});
+	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt, "all", gridMap);
+
+	
+	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
+	
+	cv::Mat originalImageP;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
+	std::string file_outg = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_";
+	std::ostringstream convertg;   // stream used for the conversion
+	convertg << oacg->getRobotNodes().size(); 
+	file_outg = file_outg + convert.str();
+	file_outg = file_outg + "nodes.png";
+
+	cv::imwrite(file_outg, originalImageP);
+	
+	
+	
+	
+	
+	
+	
 // 	nav_msgs::OccupancyGrid omap; 
 // 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
 // 	moveOccupancyMap(omap, graph.getT());
