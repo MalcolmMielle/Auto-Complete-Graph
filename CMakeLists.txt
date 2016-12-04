@@ -157,7 +157,9 @@ add_library(auto_complete_graph_lib
 
 ## TODO : find a way to remove this by linking it where it should be in ndt_feature
 include_directories(/usr/local/include/flirtlib)
-set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry -lgui -lsensors -lsensorstream -lutils_flirt -lutils)
+set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry 
+#-lgui 
+-lsensors -lsensorstream -lutils_flirt -lutils)
 
 ## Declare a C++ executable
 add_executable(acg_node src/acg_node.cpp)
