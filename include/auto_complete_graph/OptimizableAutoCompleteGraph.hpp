@@ -27,6 +27,7 @@ namespace acg{
 // 		g2o::SparseOptimizer _optimizer;
 		SlamLinearSolver* _linearSolver;
 		SlamBlockSolver* _blockSolver;
+		//TODO : test with LevenbergMarquard instead (maybe doesn't scale as aggressively)
 		g2o::OptimizationAlgorithmGaussNewton* _solver;
 		g2o::SE2 _sensorOffsetTransf;
 		g2o::ParameterSE2Offset* _sensorOffset;
