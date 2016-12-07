@@ -426,14 +426,26 @@ private:
 			
 		}
 		
+		/**
+		 * @brief update the NDTGraph from 0 and add noise to the edges depending and noise_percentage
+		 * ATTENTION not needed! Just as to create a clear() function and add noise_percentage as an optionnal argument (default is 0)
+		 */
+// 		void updateFullNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, double noise_percentage){};
 		
-		
+		/**
+		 * @brief Incrementally update the NDTGraph
+		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
+		 * Add NDT-corners and Robot poses.
+		 */
 		void updateNDTGraph(){
 			updateNDTGraph(*_ndt_graph);
 		}
 		
+		
 		/**
-		 * @brief : take the NDT graph and update the NDT corners by adding every new node since last time and all new observations.
+		 * @brief Incrementally update the NDTGraph
+		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
+		 * Add NDT-corners and Robot poses.
 		 */
 		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph);
 		
@@ -448,6 +460,8 @@ private:
 		
 		void optimize(int iter = 10){
 			
+			/********** HUBER kernel ***********/
+			
 // 			_optimizable_graph.setHuberKernel();
 			setAgeingHuberKernel();
 			
@@ -459,6 +473,17 @@ private:
 				//Update prior edge covariance
 				updatePriorEdgeCovariance();
 			}
+			
+			/********** DCS kernel ***********/
+			
+			setAgeingDCSKernel();
+			
+			for(size_t i = 0 ; i < iter/2 ; ++i){
+				_optimizable_graph.optimize(1);
+				//Update prior edge covariance
+				updatePriorEdgeCovariance();
+			}
+			
 			
 		}
 		
@@ -474,6 +499,22 @@ private:
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto huber = new g2o::RobustKernelHuber();
 				e->setRobustKernel(huber);
+				setKernelSizeDependingOnAge(e);
+			}
+		}
+		
+		void setAgeingDCSKernel(){
+// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// 				v->setMarginalized(false);
+// 			}		
+			
+			auto idmapedges = _optimizable_graph.edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				std::cout << "Robust Kern" << std::endl;
+				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
+				auto dcs = new g2o::RobustKernelDCS();
+				e->setRobustKernel(dcs);
 				setKernelSizeDependingOnAge(e);
 			}
 		}
