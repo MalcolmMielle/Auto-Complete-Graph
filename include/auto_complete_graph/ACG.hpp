@@ -426,6 +426,11 @@ private:
 			
 		}
 		
+		
+// 		void clear(){
+// 			
+// 		}
+		
 		/**
 		 * @brief update the NDTGraph from 0 and add noise to the edges depending and noise_percentage
 		 * ATTENTION not needed! Just as to create a clear() function and add noise_percentage as an optionnal argument (default is 0)
@@ -447,7 +452,7 @@ private:
 		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
 		 * Add NDT-corners and Robot poses.
 		 */
-		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph);
+		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag = false, double deviation = 0.5);
 		
 		
 		void initializeOptimization(){

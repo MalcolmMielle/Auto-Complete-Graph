@@ -499,7 +499,16 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	
 }
 
-void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph){
+void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
+	
+	
+	//Return Gaussian white noise
+	auto randomNoise = [](double mean, double deviationt) -> double {
+		std::default_random_engine engine{std::random_device()() };
+		std::normal_distribution<double> dist(mean, deviationt);
+		return dist(engine);
+	};
+	
 	
 	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
 	double cell_size = 0;
@@ -575,6 +584,13 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		
 		for (i; i < ndt_graph.getNbNodes(); ++i) {
 			
+			//Calculate noise
+			auto noise_x = randomNoise(0, deviation);
+			auto noise_y = randomNoise(0, deviation);
+			auto noise_t = randomNoise(0, deviation);
+			g2o::SE2 noise_se2(noise_x, noise_y, noise_t);
+		
+			
 			std::cout << "Checking node nb " << i << std::endl;
 			//RObot pose
 				ndt_feature::NDTFeatureNode* feature = new ndt_feature::NDTFeatureNode();
@@ -604,6 +620,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::string frame;
 			bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
 			
+			if(noise_flag = true){
+				robot_pos = robot_pos * noise_se2;
+			}
 			
 			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, affine, map_copy);
 			//Add Odometry if there is more than one node
@@ -628,6 +647,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 						  
 				std::cout << "Saving information " << std::endl;
 				Eigen::Matrix3d information = cov_2d.inverse();
+				
+				if(noise_flag = true){
+					odometry = odometry * noise_se2;
+				}
 				
 				std::cout << "Saving odometry " << std::endl;
 				addOdometry(odometry, from.getNode(), toward.getNode(), information);

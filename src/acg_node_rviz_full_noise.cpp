@@ -77,7 +77,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	//Prepare the graph : marginalize + initializeOpti
 	oacg->getGraph().setFirst();
 	oacg->prepare();
-// 	oacg->optimize();
+	oacg->optimize();
 	
 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
 	std::ostringstream convert_after;   // stream used for the conversion
@@ -89,6 +89,32 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	visu.toRviz(*oacg);
 	
 // 	visu.updateRviz();
+	visu.updateRviz();
+	
+	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
+	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt);
+	grid_map::GridMap gridMap({"all"});
+	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt, "all", gridMap);
+
+	
+	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
+	
+	cv::Mat originalImageP;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
+	std::string file_outg = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_";
+	std::ostringstream convertg;   // stream used for the conversion
+	convertg << oacg->getRobotNodes().size(); 
+	file_outg = file_outg + convert.str();
+	file_outg = file_outg + "nodes.png";
+
+	cv::imwrite(file_outg, originalImageP);
+	
+	
+	
+	
+	
+	
 	
 // 	nav_msgs::OccupancyGrid omap; 
 // 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
@@ -96,7 +122,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	
 // 	map_pub_.publish(omap);
 	
-	visu.updateRviz();
+// 	visu.updateRviz();
 	
 // 	std::cout << "saved to " << file_out_after << std::endl;
 	
@@ -110,7 +136,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 int main(int argc, char **argv)
 {
 	
-	AASS::acg::Basement basement;
+	AASS::acg::BasementFull basement;
 	basement.extractCornerPrior();
 // 	basement.transformOntoSLAM();
 // 	auto graph_priortmp = basement.getGraph();
@@ -190,19 +216,21 @@ int main(int argc, char **argv)
 // 	);
 	oacg.addPriorGraph(graph_prior);
 
+	oacg.useUserCovForPrior(false);
+	oacg.useUserCovForRobotPose(true);
 	// 	std::string file_out = "/home/malcolm/ACG_folder/acg_0_prior.g2o";
 // 	oacg.getGraph().save(file_out.c_str());
 // 	std::cout << "saved to " << file_out << std::endl;
 	
 // 	exit(0);
-	ros::init(argc, argv, "auto_complete_graph_rviz_small_noopti");
+	
+    ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
-	ros::Subscriber optimi_sub;
     ros::NodeHandle nh("~");
 	
+// 	AASS::acg::VisuAutoCompleteGraph visu(&oacg);
 	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
-	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/Noopitimization_rviz_small");
-    
+	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg, visu));
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));

@@ -1,10 +1,10 @@
 # add_executable(test_graph test_graph.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
+# 
+# # Add cmake target dependencies of the executable
+# # same as for the library above
 # add_dependencies(test_graph ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
+# 
+# # Specify libraries to link a library or executable target against
 # target_link_libraries(test_graph
 #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
 # )
@@ -30,6 +30,17 @@
 # target_link_libraries(test_martin
 #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
 # )
+
+add_executable(test_graph_noise test_graph_noise.cpp)
+
+# Add cmake target dependencies of the executable
+# same as for the library above
+add_dependencies(test_graph_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+# Specify libraries to link a library or executable target against
+target_link_libraries(test_graph_noise
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+)
 
 add_executable(test_links test_links.cpp)
 
