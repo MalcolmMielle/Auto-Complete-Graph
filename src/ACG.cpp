@@ -674,6 +674,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			auto it = ret_opencv_point_corner.begin();
 			
 			std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;
+
 			
 			//Find all the observations :
 			//**************** HACK: translate the corners now : **************//
@@ -686,8 +687,16 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 // 				Eigen::Vector3d vec;
 // 				vec << it->x, it->y, 0;
 				
+				auto vec_out_se2 = _nodes_ndt[i].getNode()->estimate();
+
+				//Uses just added modified node
+// 				Eigen::Vector3d vec_out; vec_out << vec_out_2d(0), vec_out_2d(1), 0;
+				g2o::SE2 se2_tmp(vec);
+				vec_out_se2 = vec_out_se2 * se2_tmp;
+				Eigen::Vector3d vec_out = vec_out_se2.toVector();
+				//Uses ndt_graph
+// 				Eigen::Vector3d vec_out = ndt_graph.getNode(i).T * vec;
 				
-				Eigen::Vector3d vec_out = ndt_graph.getNode(i).T * vec;
 				cv::Point2f p_out(vec_out(0), vec_out(1));
 				
 // 				g2o::Vector2D observation;
