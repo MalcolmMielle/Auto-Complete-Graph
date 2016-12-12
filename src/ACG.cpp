@@ -620,9 +620,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::string frame;
 			bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
 			
-			if(noise_flag = true){
-				robot_pos = robot_pos * noise_se2;
-			}
+// 			if(noise_flag = true && i != 0){
+// 				robot_pos = robot_pos * noise_se2;
+// 			}
 			
 			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, affine, map_copy);
 			//Add Odometry if there is more than one node
@@ -648,9 +648,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				std::cout << "Saving information " << std::endl;
 				Eigen::Matrix3d information = cov_2d.inverse();
 				
-				if(noise_flag = true){
-					odometry = odometry * noise_se2;
-				}
+// 				if(noise_flag = true && i != 0){
+// 					odometry = odometry * noise_se2;
+// 				}
 				
 				std::cout << "Saving odometry " << std::endl;
 				addOdometry(odometry, from.getNode(), toward.getNode(), information);

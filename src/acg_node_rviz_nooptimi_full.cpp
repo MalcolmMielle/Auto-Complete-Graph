@@ -96,12 +96,35 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	
 // 	map_pub_.publish(omap);
 	
-	visu.updateRviz();
+// 	visu.updateRviz();
 	
 // 	std::cout << "saved to " << file_out_after << std::endl;
 	
 // 	exit(0);
-		
+	
+	visu.updateRvizStepByStep();
+	
+	nav_msgs::OccupancyGrid* omap_tmpt_partial = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_outt_partial(omap_tmpt_partial);
+	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt_partial, oacg->getRobotNodes().size() - 1);
+	grid_map::GridMap gridMap_partial({"all"});
+	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt_partial, "all", gridMap_partial);
+
+	
+	std::cout << "WELLL HERE IT IS : " << occ_outt_partial->info.origin.position << " ori " << occ_outt_partial->info.origin.orientation << std::endl << std::endl;	
+	
+	cv::Mat originalImageP_partial;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap_partial, "all", CV_16UC1, 0.0, 1, originalImageP_partial);
+	std::string file_outg_partial = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_partial_nooptimi_";
+	std::ostringstream convertg_partial;   // stream used for the conversion
+	convertg_partial << oacg->getRobotNodes().size(); 
+	file_outg_partial = file_outg_partial + convert.str();
+	file_outg_partial = file_outg_partial + "nodes.png";
+
+	cv::imwrite(file_outg_partial, originalImageP_partial);
+
+
+	
 }
 
 

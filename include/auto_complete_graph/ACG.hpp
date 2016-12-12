@@ -126,7 +126,22 @@ private:
 				}
 				
 			};
-
+		
+		//ATTENTION Already useless
+		class EdgePriorAndInitialValue{
+		protected:
+			g2o::EdgeSE2Prior_malcolm* _edge;
+			g2o::SE2 _original_value;
+			
+		public:
+			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
+			
+			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
+			g2o::SE2 getOriginalValue(){return _original_value;}
+		};
+		
+		
+	public:
 		/**
 		* @brief A class that old a NDT node pointer for the g2o graph, the associated NDTMap and the original affine transform (the one received when the NDTGraph was received)
 		*/
@@ -150,18 +165,6 @@ private:
 			
 		};
 		
-		//ATTENTION Already useless
-		class EdgePriorAndInitialValue{
-		protected:
-			g2o::EdgeSE2Prior_malcolm* _edge;
-			g2o::SE2 _original_value;
-			
-		public:
-			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
-			
-			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
-			g2o::SE2 getOriginalValue(){return _original_value;}
-		};
 		
 		
 		

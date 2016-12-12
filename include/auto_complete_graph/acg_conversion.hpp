@@ -16,6 +16,14 @@ namespace acg{
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution);
 	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer = "combined", const std::string& layer2 = "combined", const std::string& final_layer = "combined");
 	
+	inline void ACGNdtNodetoVecGrids(
+		const AASS::acg::AutoCompleteGraph& acg, 
+		std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_start,
+		std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_end,
+		std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out
+	);
+	
+	
 	
 	inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec) {
 
@@ -46,7 +54,7 @@ namespace acg{
 	
 	
 	
-	inline void ACGtoOccupancyGrid(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& occ_out){
+	inline void ACGtoOccupancyGrid(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& occ_out, int start = 0, int end = -1){
 		//************* TODO : shorten this code !
 		//Get max sinze of prior
 		grid_map::GridMap map;
@@ -143,32 +151,54 @@ namespace acg{
 		if(acg.getRobotNodes().size() != 0){
 			grids.push_back(ptr_prior_occ);
 				
+			std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator it;
+			std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator it_end;
 			std::cout <<"update the zones" << std::endl;
-			
-			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
-// 				for(size_t i = 0 ; i < 1 ; ++i){
-				
-//Grid map test
-				std::cout << "Node" << std::endl;
-				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
-// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap, 0.1, "/world");
-// 					auto pose = acg.getRobotNodes()[i].getPose();
-				auto node = acg.getRobotNodes()[i].getNode();
-				auto vertex = node->estimate().toIsometry();
-// 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
-// 					std::cout << "Move : " << node.matrix() << std::endl;
-// 					if(i == 2) exit(0);
-				
-				std::cout << "Move" << std::endl;
-				moveOccupancyMap(*omap, vertex);
-				omap->header.frame_id = "/world";
-				omap->header.stamp = ros::Time::now();
-
-				nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
-				grids.push_back(ptr);
-				
+			if(start < acg.getRobotNodes().size() && start >= 0){
+				it = acg.getRobotNodes().begin() + start;
 			}
+			else{
+				it = acg.getRobotNodes().begin();
+			}
+			
+			if(end < start && end != -1){
+				throw std::runtime_error("End pointer is before the start. Can draw zones backward in ACG_CONVERSION.hpp");
+			}
+			
+			if(end < acg.getRobotNodes().size() && end >= 0 && end >= start){
+				it_end = acg.getRobotNodes().begin() + end;
+			}
+			else{
+				it_end = acg.getRobotNodes().end();
+			}
+			
+			ACGNdtNodetoVecGrids(acg, it, it_end, grids);
+			
+// 			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
+// 			for(it ; it != acg.getRobotNodes().end() ; ++it){
+// // 				for(size_t i = 0 ; i < 1 ; ++i){
+// 				
+// //Grid map test
+// 				std::cout << "Node" << std::endl;
+// 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
+// // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+// 				lslgeneric::toOccupancyGrid(it->getMap(), *omap, 0.1, "/world");
+// // 					auto pose = acg.getRobotNodes()[i].getPose();
+// 				auto node = it->getNode();
+// 				auto vertex = node->estimate().toIsometry();
+// // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
+// // 					std::cout << "Move : " << node.matrix() << std::endl;
+// // 					if(i == 2) exit(0);
+// 				
+// 				std::cout << "Move" << std::endl;
+// 				moveOccupancyMap(*omap, vertex);
+// 				omap->header.frame_id = "/world";
+// 				omap->header.stamp = ros::Time::now();
+// 
+// 				nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
+// 				grids.push_back(ptr);
+// 				
+// 			}
 			
 		}
 
@@ -195,7 +225,36 @@ namespace acg{
 	}
 	
 	
-	
+	inline void ACGNdtNodetoVecGrids(const AASS::acg::AutoCompleteGraph& acg, std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_start, std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_end, std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out){
+		
+		for(it_start ; it_start != it_end ; ++it_start){
+// 				for(size_t i = 0 ; i < 1 ; ++i){
+			
+//Grid map test
+			std::cout << "Node" << std::endl;
+			nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
+// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+			lslgeneric::toOccupancyGrid(it_start->getMap(), *omap, 0.1, "/world");
+// 					auto pose = acg.getRobotNodes()[i].getPose();
+			auto node = it_start->getNode();
+			auto vertex = node->estimate().toIsometry();
+// 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
+// 					std::cout << "Move : " << node.matrix() << std::endl;
+// 					if(i == 2) exit(0);
+			
+			std::cout << "Move" << std::endl;
+			moveOccupancyMap(*omap, vertex);
+			omap->header.frame_id = "/world";
+			omap->header.stamp = ros::Time::now();
+
+			nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
+			grids_out.push_back(ptr);
+			
+		}
+		
+		
+		
+	}
 	
 	
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution){
