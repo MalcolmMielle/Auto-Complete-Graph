@@ -107,7 +107,7 @@ namespace acg{
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
 				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
-				ACGtoOccupancyGrid(*_acg, occ_outt, _acg->getRobotNodes().size() - 1);
+				ACGtoOccupancyGrid(*_acg, occ_outt, _acg->getRobotNodes().size() - 2);
 				
 // 				grid_map::GridMap gridMap;
 // 				ACGToGridMap(*_acg, gridMap);
