@@ -538,33 +538,49 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
 		}
 		
-		Eigen::Isometry2d diff;
-		diff.matrix() << 1, 0, 0, 
-				0, 1, 0, 
-				0, 0, 0;
+// 		Eigen::Isometry2d diff;
+// 		diff.matrix() << 1, 0, 0, 
+// 				0, 1, 0, 
+// 				0, 0, 0;
+				
+				
+		Eigen::Vector3d diff_vec;
 				
 		//**************** Calculate the previous transformations if there as already been something added *** //
 				
 		if(_previous_number_of_node_in_ndtgraph != 0){
 			auto node = _nodes_ndt[_nodes_ndt.size() - 1].getNode();
-			auto shift = node->estimate().toIsometry();
+			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1].getPose();
+			
+			/*******' Using Vec********/
+			Eigen::Isometry2d original2d_aff = Affine3d2Isometry2d(original3d);
+			auto shift_vec = node->estimate().toVector();
+			g2o::SE2 se2_tmptmp(original2d_aff);
+			auto original3d_vec = se2_tmptmp.toVector();
+			diff_vec = original3d_vec - shift_vec;
+			
+			/*****************************/
+			
+// 			auto shift = node->estimate().toIsometry();
+			
 			
 	// 		double angle = atan2(shift.rotation()(1,0), shift.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
 	// 		auto shift3d = Eigen::Translation3d(shift.translation()(0), shift.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
-			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
-				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
-				Eigen::Vector3d v1(1,0,0);
-				Eigen::Vector3d v2 = a.rotation()*v1;
-				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
-				double angle = acos(dot);
-				// Need to find the sign
-				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
-					return angle;
-				return -angle;
-			};
+// 			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
+// 				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
+// 				Eigen::Vector3d v1(1,0,0);
+// 				Eigen::Vector3d v2 = a.rotation()*v1;
+// 				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
+// 				double angle = acos(dot);
+// 				// Need to find the sign
+// 				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
+// 					return angle;
+// 				return -angle;
+// 			};
+// 			
 			
-			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1].getPose();
-			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
+			
+// 			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
 			
 // 			Eigen::Affine2d original2d;
 // 			original2d.matrix() << original3d(0, 0), original3d(0, 1), original3d(0, 3),
@@ -573,9 +589,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 
 
 			
-			auto diff_affine = original2d.inverse() * shift;
-			diff.translation() = diff_affine.translation();
-			diff.linear() = diff_affine.rotation();
+// 			auto diff_affine = original2d.inverse() * shift;
+// 			diff.translation() = diff_affine.translation();
+// 			diff.linear() = diff_affine.rotation();
 		}
 		//Calculate the original transformation of all 
 		
@@ -600,9 +616,12 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
 			
 			//TODO make this work
-			isometry2d =  diff * isometry2d;
+// 			isometry2d =  diff * isometry2d;
 			
 			g2o::SE2 robot_pos(isometry2d);
+			g2o::SE2 diff_vec_se2(diff_vec);
+			robot_pos = robot_pos * diff_vec_se2;
+			
 			double resolution = feature->map->params_.resolution;
 				delete feature;
 // 			Eigen::Vector2d robot_pos; robot_pos << robot_pos_tmp(0), robot_pos_tmp(1);
