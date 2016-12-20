@@ -499,7 +499,16 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	
 }
 
-void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph){
+void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
+	
+	
+	//Return Gaussian white noise
+	auto randomNoise = [](double mean, double deviationt) -> double {
+		std::default_random_engine engine{std::random_device()() };
+		std::normal_distribution<double> dist(mean, deviationt);
+		return dist(engine);
+	};
+	
 	
 	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
 	double cell_size = 0;
@@ -516,35 +525,62 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		//Doing the registration here myself
 		size_t i;
 		auto links = ndt_graph.getOdometryLinks();
-		ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
 		
-		Eigen::Isometry2d diff;
-		diff.matrix() << 1, 0, 0, 
-				0, 1, 0, 
-				0, 0, 0;
+		
+// 		ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
+		if(_previous_number_of_node_in_ndtgraph >= 1){
+			for (size_t i = _previous_number_of_node_in_ndtgraph - 1; i < links.size(); i++) {
+		//       std::cout << "updating link : " << i << " (size of links :" << links.size() << ")" << std::endl;
+				ndt_graph.updateLinkUsingNDTRegistration(links[i], 10, true);
+			}
+		}
+		else{
+			ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
+		}
+		
+// 		Eigen::Isometry2d diff;
+// 		diff.matrix() << 1, 0, 0, 
+// 				0, 1, 0, 
+// 				0, 0, 0;
+				
+				
+		Eigen::Vector3d diff_vec;
 				
 		//**************** Calculate the previous transformations if there as already been something added *** //
 				
 		if(_previous_number_of_node_in_ndtgraph != 0){
 			auto node = _nodes_ndt[_nodes_ndt.size() - 1].getNode();
-			auto shift = node->estimate().toIsometry();
+			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1].getPose();
+			
+			/*******' Using Vec********/
+			Eigen::Isometry2d original2d_aff = Affine3d2Isometry2d(original3d);
+			auto shift_vec = node->estimate().toVector();
+			g2o::SE2 se2_tmptmp(original2d_aff);
+			auto original3d_vec = se2_tmptmp.toVector();
+			diff_vec = original3d_vec - shift_vec;
+			
+			/*****************************/
+			
+// 			auto shift = node->estimate().toIsometry();
+			
 			
 	// 		double angle = atan2(shift.rotation()(1,0), shift.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
 	// 		auto shift3d = Eigen::Translation3d(shift.translation()(0), shift.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
-			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
-				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
-				Eigen::Vector3d v1(1,0,0);
-				Eigen::Vector3d v2 = a.rotation()*v1;
-				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
-				double angle = acos(dot);
-				// Need to find the sign
-				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
-					return angle;
-				return -angle;
-			};
+// 			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
+// 				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
+// 				Eigen::Vector3d v1(1,0,0);
+// 				Eigen::Vector3d v2 = a.rotation()*v1;
+// 				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
+// 				double angle = acos(dot);
+// 				// Need to find the sign
+// 				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
+// 					return angle;
+// 				return -angle;
+// 			};
+// 			
 			
-			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1].getPose();
-			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
+			
+// 			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
 			
 // 			Eigen::Affine2d original2d;
 // 			original2d.matrix() << original3d(0, 0), original3d(0, 1), original3d(0, 3),
@@ -553,9 +589,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 
 
 			
-			auto diff_affine = original2d.inverse() * shift;
-			diff.translation() = diff_affine.translation();
-			diff.linear() = diff_affine.rotation();
+// 			auto diff_affine = original2d.inverse() * shift;
+// 			diff.translation() = diff_affine.translation();
+// 			diff.linear() = diff_affine.rotation();
 		}
 		//Calculate the original transformation of all 
 		
@@ -563,6 +599,13 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		i = _previous_number_of_node_in_ndtgraph;
 		
 		for (i; i < ndt_graph.getNbNodes(); ++i) {
+			
+			//Calculate noise
+			auto noise_x = randomNoise(0, deviation);
+			auto noise_y = randomNoise(0, deviation);
+			auto noise_t = randomNoise(0, deviation);
+			g2o::SE2 noise_se2(noise_x, noise_y, noise_t);
+		
 			
 			std::cout << "Checking node nb " << i << std::endl;
 			//RObot pose
@@ -573,9 +616,12 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
 			
 			//TODO make this work
-			isometry2d =  diff * isometry2d;
+// 			isometry2d =  diff * isometry2d;
 			
 			g2o::SE2 robot_pos(isometry2d);
+			g2o::SE2 diff_vec_se2(diff_vec);
+			robot_pos = robot_pos * diff_vec_se2;
+			
 			double resolution = feature->map->params_.resolution;
 				delete feature;
 // 			Eigen::Vector2d robot_pos; robot_pos << robot_pos_tmp(0), robot_pos_tmp(1);
@@ -593,6 +639,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::string frame;
 			bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
 			
+// 			if(noise_flag = true && i != 0){
+// 				robot_pos = robot_pos * noise_se2;
+// 			}
 			
 			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, affine, map_copy);
 			//Add Odometry if there is more than one node
@@ -618,6 +667,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				std::cout << "Saving information " << std::endl;
 				Eigen::Matrix3d information = cov_2d.inverse();
 				
+// 				if(noise_flag = true && i != 0){
+// 					odometry = odometry * noise_se2;
+// 				}
+				
 				std::cout << "Saving odometry " << std::endl;
 				addOdometry(odometry, from.getNode(), toward.getNode(), information);
 			}
@@ -640,6 +693,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			auto it = ret_opencv_point_corner.begin();
 			
 			std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;
+
 			
 			//Find all the observations :
 			//**************** HACK: translate the corners now : **************//
@@ -652,8 +706,16 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 // 				Eigen::Vector3d vec;
 // 				vec << it->x, it->y, 0;
 				
+				auto vec_out_se2 = _nodes_ndt[i].getNode()->estimate();
+
+				//Uses just added modified node
+// 				Eigen::Vector3d vec_out; vec_out << vec_out_2d(0), vec_out_2d(1), 0;
+				g2o::SE2 se2_tmp(vec);
+				vec_out_se2 = vec_out_se2 * se2_tmp;
+				Eigen::Vector3d vec_out = vec_out_se2.toVector();
+				//Uses ndt_graph
+// 				Eigen::Vector3d vec_out = ndt_graph.getNode(i).T * vec;
 				
-				Eigen::Vector3d vec_out = ndt_graph.getNode(i).T * vec;
 				cv::Point2f p_out(vec_out(0), vec_out(1));
 				
 // 				g2o::Vector2D observation;
@@ -869,15 +931,21 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		// 			std::cout << "Poses 1 " << std::endl << pose1.format(cleanFmt) << std::endl;
 		// 			std::cout << "Poses 2 " << std::endl << pose2.format(cleanFmt) << std::endl;
 			
+		double tre[3];
+		(*it)->getMeasurementData(tre);
+		
+		Eigen::Vector2d length; length << tre[0], tre[1] ;
+		
 		Eigen::Vector2d eigenvec; 
 		eigenvec << pose1(0) - pose2(0), pose1(1) - pose2(1);
 		
 		double newnorm = (pose1 - pose2).norm();
-		std::cout << "new norm " << newnorm << " because " << pose1 << " " << pose2 << std::endl;
+		double len_norm = length.norm();
+		std::cout << "new norm " << newnorm << " because " << pose1 << " " << pose2 << " and lennorm " << len_norm << "because  " <<length << std::endl;
 		g2o::SE2 oldnormse2 = (*it)->interface.getOriginalValue();
 		Eigen::Vector3d vecold = oldnormse2.toVector();
 		double oldnorm = (vecold).norm();
-		std::cout << "oldnorm" << newnorm << std::endl;
+		std::cout << "oldnorm" << oldnorm << std::endl;
 		assert(oldnorm >= 0);
 		
 		//Using the diff so we cannot shrink it or stretch it easily.
@@ -913,10 +981,23 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		
 		double new_cov = diff_norm_normalized;
 		
-		std::cout << "min " << min << " max " << max << " max_range " << max_range << " min_range " << min_range << " diff norm mornal " << diff_norm_normalized << std::endl;
+		std::cout << "min " << min << " max " << max << " max_range " << max_range << " min_range " << min_range << " diff norm  " << diff_norm << " cov " << new_cov << std::endl;
 		
-		assert(new_cov >= 0);
 		assert(new_cov <= 1);
+		
+		//Sometime the optimization in one turn goes under the limit so need to correct those cases ;)
+// 		assert(new_cov >= 0);
+		
+		if(new_cov <= 0){
+			//Apparently the vaqlue in the edge does not get changed so it's useless modifying it ?
+			//See :
+// 			double tre[3];
+// 			(*it)->getMeasurementData(tre);
+// 			Eigen::Vector2d length; length << tre[0], tre[1] ;
+			
+			
+			new_cov = 0.001;
+		}
 		
 		//Scale it again.depending on user inputed value
 		if(_use_user_prior_cov == true){

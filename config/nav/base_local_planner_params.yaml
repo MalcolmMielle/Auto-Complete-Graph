@@ -1,0 +1,38 @@
+controller_frequency: 0.1
+recovery_behavior_enabled: true
+clearing_rotation_allowed: true
+
+TrajectoryPlannerROS:
+   max_vel_x: 0
+   min_vel_x: 0
+   max_rotational_vel: 0
+   min_rotational_vel: 0
+   min_in_place_rotational_vel: 0
+   escape_vel: -0.10
+   acc_lim_x: 0
+   acc_lim_y: 0
+   acc_lim_theta: 0
+
+   holonomic_robot: false
+   yaw_goal_tolerance: 6 # 0.1 is about 6 degrees
+   xy_goal_tolerance: 5  # 5 cm
+   latch_xy_goal_tolerance: false
+   pdist_scale: 0.8
+   gdist_scale: 0.4
+   meter_scoring: true
+
+   heading_lookahead: 0.325
+   heading_scoring: false
+   heading_scoring_timestep: 0.8
+   occdist_scale: 0.1
+   oscillation_reset_dist: 0.05
+   publish_cost_grid_pc: false
+   prune_plan: true
+
+   sim_time: 1.0
+   sim_granularity: 0.025
+   angular_sim_granularity: 0.025
+   vx_samples: 50
+   vtheta_samples: 200
+   dwa: true
+   simple_attractor: false

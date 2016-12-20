@@ -126,7 +126,22 @@ private:
 				}
 				
 			};
-
+		
+		//ATTENTION Already useless
+		class EdgePriorAndInitialValue{
+		protected:
+			g2o::EdgeSE2Prior_malcolm* _edge;
+			g2o::SE2 _original_value;
+			
+		public:
+			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
+			
+			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
+			g2o::SE2 getOriginalValue(){return _original_value;}
+		};
+		
+		
+	public:
 		/**
 		* @brief A class that old a NDT node pointer for the g2o graph, the associated NDTMap and the original affine transform (the one received when the NDTGraph was received)
 		*/
@@ -150,18 +165,6 @@ private:
 			
 		};
 		
-		//ATTENTION Already useless
-		class EdgePriorAndInitialValue{
-		protected:
-			g2o::EdgeSE2Prior_malcolm* _edge;
-			g2o::SE2 _original_value;
-			
-		public:
-			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
-			
-			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
-			g2o::SE2 getOriginalValue(){return _original_value;}
-		};
 		
 		
 		
@@ -427,15 +430,32 @@ private:
 		}
 		
 		
+// 		void clear(){
+// 			
+// 		}
 		
+		/**
+		 * @brief update the NDTGraph from 0 and add noise to the edges depending and noise_percentage
+		 * ATTENTION not needed! Just as to create a clear() function and add noise_percentage as an optionnal argument (default is 0)
+		 */
+// 		void updateFullNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, double noise_percentage){};
+		
+		/**
+		 * @brief Incrementally update the NDTGraph
+		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
+		 * Add NDT-corners and Robot poses.
+		 */
 		void updateNDTGraph(){
 			updateNDTGraph(*_ndt_graph);
 		}
 		
+		
 		/**
-		 * @brief : take the NDT graph and update the NDT corners by adding every new node since last time and all new observations.
+		 * @brief Incrementally update the NDTGraph
+		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
+		 * Add NDT-corners and Robot poses.
 		 */
-		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph);
+		void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag = false, double deviation = 0.5);
 		
 		
 		void initializeOptimization(){
@@ -448,16 +468,30 @@ private:
 		
 		void optimize(int iter = 10){
 			
+			/********** HUBER kernel ***********/
+			
 // 			_optimizable_graph.setHuberKernel();
 			setAgeingHuberKernel();
 			
 			updatePriorEdgeCovariance();
 			
-			_optimizable_graph.optimize(iter);
+			//Avoid overshoot of the cov
+			for(size_t i = 0 ; i < iter ; ++i){
+				_optimizable_graph.optimize(1);
+				//Update prior edge covariance
+				updatePriorEdgeCovariance();
+			}
 			
-			//Update prior edge covariance
+			/********** DCS kernel ***********/
 			
-			updatePriorEdgeCovariance();
+			setAgeingDCSKernel();
+			
+			for(size_t i = 0 ; i < iter/2 ; ++i){
+				_optimizable_graph.optimize(1);
+				//Update prior edge covariance
+				updatePriorEdgeCovariance();
+			}
+			
 			
 		}
 		
@@ -473,6 +507,22 @@ private:
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto huber = new g2o::RobustKernelHuber();
 				e->setRobustKernel(huber);
+				setKernelSizeDependingOnAge(e);
+			}
+		}
+		
+		void setAgeingDCSKernel(){
+// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
+// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
+// 				v->setMarginalized(false);
+// 			}		
+			
+			auto idmapedges = _optimizable_graph.edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				std::cout << "Robust Kern" << std::endl;
+				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
+				auto dcs = new g2o::RobustKernelDCS();
+				e->setRobustKernel(dcs);
 				setKernelSizeDependingOnAge(e);
 			}
 		}
@@ -509,6 +559,8 @@ private:
 		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
 		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior);
 		bool noDoubleLinks();
+		
+// 		getGridMap();
 		
 	private:
 		
