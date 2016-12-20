@@ -177,7 +177,7 @@ add_executable(acg_node_rviz src/acg_node_rviz.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${G2O_LIBS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz
@@ -192,7 +192,7 @@ add_dependencies(acg_node_rviz_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catki
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_noise
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 add_executable(acg_node_rviz_noptimi src/acg_node_rviz_noptimi.cpp)
@@ -238,7 +238,7 @@ add_dependencies(acg_node_rviz_full_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_full_noise
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 add_executable(test_affine_transfo tests/test_affine_transfo.cpp)
