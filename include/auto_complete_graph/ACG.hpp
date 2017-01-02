@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <random>
 
 #include "g2o/types/slam2d/vertex_se2.h"
 #include "g2o/types/slam2d/vertex_point_xy.h"
@@ -472,30 +473,38 @@ private:
 			
 // 			_optimizable_graph.setHuberKernel();
 			setAgeingHuberKernel();
+			testNoNanInPrior("set age in huber kernel");
 			
 			updatePriorEdgeCovariance();
+			testNoNanInPrior("update prior edge cov");
 			
 			//Avoid overshoot of the cov
 			for(size_t i = 0 ; i < iter ; ++i){
 				_optimizable_graph.optimize(1);
+				testNoNanInPrior("optimized with huber");
 				//Update prior edge covariance
 				updatePriorEdgeCovariance();
+				testNoNanInPrior("update prior edge cov after opti huber");
 			}
 			
 			/********** DCS kernel ***********/
 			
 			setAgeingDCSKernel();
+			testNoNanInPrior("set age in DCS kernel");
 			
 			for(size_t i = 0 ; i < iter/2 ; ++i){
 				_optimizable_graph.optimize(1);
+				testNoNanInPrior("optimized with dcs");
 				//Update prior edge covariance
 				updatePriorEdgeCovariance();
+				testNoNanInPrior("update prior edge cov after opti dcs");
 			}
 			
 			
 		}
 		
 		void setAgeingHuberKernel(){
+			
 // 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
 // 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
 // 				v->setMarginalized(false);
@@ -567,6 +576,8 @@ private:
 		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
 		void updatePriorEdgeCovariance();
 		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e);
+		
+		void testNoNanInPrior(const std::string& before = "no data");
 	
 	};
 }

@@ -912,18 +912,66 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 }
 
 
+
+
+
+
+void AASS::acg::AutoCompleteGraph::testNoNanInPrior(const std::string& before){
+	
+	std::cout << "Test No nan in prior after " << before << std::endl;
+	auto it = _nodes_prior.begin();
+	for(it ; it != _nodes_prior.end() ; ++it){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it));
+		if(v_ptr == NULL){
+			throw std::runtime_error("not good vertex type");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		assert(!std::isnan(pose1[0]));
+		assert(!std::isnan(pose1[1]));
+		assert(!std::isnan(pose1[2]));
+	
+	}
+	
+	std::cout << "Testing the edges now" << std::endl;
+	
+	auto edges = _edge_prior;	
+	auto it_edge = edges.begin();
+	for(it_edge ; it_edge != edges.end() ; ++it_edge){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[0]);
+		if(v_ptr == NULL){
+			throw std::runtime_error("no");
+		}
+		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[1]);
+		if(v_ptr2 == NULL){
+			throw std::runtime_error("no2");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+		
+		assert(!std::isnan(pose1[0]));
+		assert(!std::isnan(pose1[1]));
+		assert(!std::isnan(pose1[2]));
+		
+		assert(!std::isnan(pose2[0]));
+		assert(!std::isnan(pose2[1]));
+		assert(!std::isnan(pose2[2]));
+	}
+	
+}
+
 void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 {
+	
 	auto edges = _edge_prior;	
 	auto it = edges.begin();
 	for(it ; it != edges.end() ; ++it){
 		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[0]);
 		if(v_ptr == NULL){
-			std::runtime_error("no");
+			throw std::runtime_error("no");
 		}
 		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[1]);
 		if(v_ptr2 == NULL){
-			std::runtime_error("no2");
+			throw std::runtime_error("no2");
 		}
 		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
 		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
