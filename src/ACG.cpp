@@ -810,6 +810,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 
 void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks)
 {
+	
+// 	std::cout << "DO NOT USE" << std::endl;
+// 	assert(false);
+	
 	std::vector < std::pair < g2o::VertexPointXY*, g2o::VertexSE2Prior*> > links;
 	
 	std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
@@ -912,18 +916,63 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 }
 
 
+void AASS::acg::AutoCompleteGraph::testNoNanInPrior(){
+	
+	auto it = _nodes_prior.begin();
+	for(it ; it != _nodes_prior.end() ; ++it){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it));
+		if(v_ptr == NULL){
+			throw std::runtime_error("not good vertex type");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		assert(!std::isnan(pose1[0]));
+		assert(!std::isnan(pose1[1]));
+		assert(!std::isnan(pose1[2]));
+	
+	}
+	
+	std::cout << "Testing the edges now" << std::endl;
+	
+	auto edges = _edge_prior;	
+	auto it_edge = edges.begin();
+	for(it_edge ; it_edge != edges.end() ; ++it_edge){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[0]);
+		if(v_ptr == NULL){
+			throw std::runtime_error("no");
+		}
+		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[1]);
+		if(v_ptr2 == NULL){
+			throw std::runtime_error("no2");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+		
+		assert(!std::isnan(pose1[0]));
+		assert(!std::isnan(pose1[1]));
+		assert(!std::isnan(pose1[2]));
+		
+		assert(!std::isnan(pose2[0]));
+		assert(!std::isnan(pose2[1]));
+		assert(!std::isnan(pose2[2]));
+	}
+	
+}
+
 void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 {
+	
+	testNoNanInPrior();
+	
 	auto edges = _edge_prior;	
 	auto it = edges.begin();
 	for(it ; it != edges.end() ; ++it){
 		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[0]);
 		if(v_ptr == NULL){
-			std::runtime_error("no");
+			throw std::runtime_error("no");
 		}
 		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[1]);
 		if(v_ptr2 == NULL){
-			std::runtime_error("no2");
+			throw std::runtime_error("no2");
 		}
 		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
 		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
@@ -988,7 +1037,7 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		//Sometime the optimization in one turn goes under the limit so need to correct those cases ;)
 // 		assert(new_cov >= 0);
 		
-		if(new_cov <= 0){
+		if(new_cov <= 0.001){
 			//Apparently the vaqlue in the edge does not get changed so it's useless modifying it ?
 			//See :
 // 			double tre[3];
@@ -1012,8 +1061,11 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 			assert(new_cov >= 0);
 		}
 		
+		
 	// 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
 		std::pair<double, double> eigenval(new_cov, _priorNoise(1));
+		
+		std::cout << "Eigen vec " << eigenvec << " egenval " << eigenval.first << " " << eigenval.second << std::endl;
 		
 		Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
 		
@@ -1028,6 +1080,9 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 	// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
 		covariance_prior(2, 2) = _prior_rot * _prior_rot;
 		Eigen::Matrix3d information_prior = covariance_prior.inverse();
+		
+		std::cout << "ALL INFO \n" << information_prior << "\n new cov " << new_cov << " cov mat " << cov << std::endl; 
+		
 		(*it)->setInformation(information_prior);
 		
 	}

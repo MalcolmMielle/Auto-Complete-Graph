@@ -24,7 +24,7 @@ namespace AASS{
 // 			std::string _file;
 			
 		public: 
-			BasementFull() : PriorLoaderInterface("/home/malcolm/ros_catkin_ws/indigo_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png"){
+			BasementFull() : PriorLoaderInterface("/home/malcolm/ros_catkin_ws/kinetic_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png"){
 				
 				_same_point_prior.push_back(cv::Point2f(786, 373));
 				_same_point_slam.push_back(cv::Point2f(19.36, 6.25));

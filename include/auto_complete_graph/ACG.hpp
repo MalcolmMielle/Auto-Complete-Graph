@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <fstream>
+#include <random>
 
 #include "g2o/types/slam2d/vertex_se2.h"
 #include "g2o/types/slam2d/vertex_point_xy.h"
@@ -471,28 +472,41 @@ private:
 			/********** HUBER kernel ***********/
 			
 // 			_optimizable_graph.setHuberKernel();
-			setAgeingHuberKernel();
+// 			setAgeingHuberKernel();
 			
-			updatePriorEdgeCovariance();
+// 			updatePriorEdgeCovariance();
 			
 			//Avoid overshoot of the cov
 			for(size_t i = 0 ; i < iter ; ++i){
 				_optimizable_graph.optimize(1);
+				std::cout << "After HUBER n" << i << std::endl;
+				testNoNanInPrior();
 				//Update prior edge covariance
-				updatePriorEdgeCovariance();
+// 				updatePriorEdgeCovariance();
+				std::cout << "After HUBER+cov n" << i << std::endl;
+				testNoNanInPrior();
 			}
+			
+			std::cout << "After HUBER and all" << std::endl;
+			testNoNanInPrior();
 			
 			/********** DCS kernel ***********/
 			
-			setAgeingDCSKernel();
-			
-			for(size_t i = 0 ; i < iter/2 ; ++i){
-				_optimizable_graph.optimize(1);
-				//Update prior edge covariance
-				updatePriorEdgeCovariance();
-			}
-			
-			
+// 			setAgeingDCSKernel();
+// 			
+// 			for(size_t i = 0 ; i < iter/2 ; ++i){
+// 				_optimizable_graph.optimize(1);
+// 				std::cout << "After DCSn" << i << std::endl;
+// 				testNoNanInPrior();
+// 				//Update prior edge covariance
+// 				updatePriorEdgeCovariance();
+// 				std::cout << "After DCS+covn" << i << std::endl;
+// 				testNoNanInPrior();
+// 			}
+// 			
+// 			std::cout << "After DCS" << std::endl;
+// 			testNoNanInPrior();
+// 			
 		}
 		
 		void setAgeingHuberKernel(){
@@ -562,12 +576,16 @@ private:
 		
 // 		getGridMap();
 		
-	private:
+	public:
 		
+		/**BUG: the bug on the covariance is because changing the cov doesn't block the edge where it is 	 * but it blocks it around the initial value inputed
+		 */
 		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
 		void updatePriorEdgeCovariance();
 		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e);
 	
+		void testNoNanInPrior();
+		
 	};
 }
 

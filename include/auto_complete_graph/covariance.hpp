@@ -18,6 +18,9 @@ namespace acg{
 	}
 	
 	inline Eigen::Matrix2d getCovariance(const Eigen::Matrix2d& eigenvec, const std::pair<double, double>& eigenval){
+		
+		std::cout << "eigenvec after " << eigenvec << std::endl;
+		
 		Eigen::Matrix2d eigenval_mat;
 		eigenval_mat << eigenval.first, 0,
 						0, eigenval.second;
@@ -27,6 +30,20 @@ namespace acg{
 // 		std::cout << "Eigan Vec inv " << std::endl << eigenvec_inv.format(cleanFmt) << std::endl;
 		Eigen::Matrix2d covariance = eigenvec * eigenval_mat * eigenvec_inv;
 // 		std::cout << "Cov " << std::endl << covariance.format(cleanFmt) << std::endl;
+		
+		if(covariance(0, 0) < 0.00001){
+			covariance(0, 0) = 0.;
+		}
+		if(covariance(1, 0) < 0.00001){
+			covariance(1, 0) = 0.;
+		}
+		if(covariance(0, 1) < 0.00001){
+			covariance(0, 1) = 0.;
+		}
+		if(covariance(1, 1) < 0.00001){
+			covariance(1, 1) = 0.;
+		}
+		
 		return covariance;
 		
 	}
