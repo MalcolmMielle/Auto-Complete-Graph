@@ -206,6 +206,13 @@ private:
 // 		std::vector < NDTCornerGraphElement > _ndt_corners;
 		double _first_Kernel_size;
 		
+		double _age_step;
+		double _age_start_value;
+		
+		
+	private:
+		bool _flag_optimize;
+		
 	
 	public:
 		
@@ -217,7 +224,7 @@ private:
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1){
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -231,7 +238,7 @@ private:
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -242,7 +249,7 @@ private:
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false){
 			
 		
 			std::ifstream infile(load_file);
@@ -330,6 +337,12 @@ private:
 		
 		void useUserCovForRobotPose(bool u){_use_user_robot_pose_cov = u;}
 		bool isUsingUserCovForRobotPose(){return _use_user_robot_pose_cov;}
+		
+		double getStepAge(){return _age_step;}
+		void setStepAge(double ss){_age_step = ss;}
+		
+		double getStartAge(){return _age_start_value;}
+		void setAgeStartValue(double ss){ _age_start_value = ss;}
 		
 		bool save(const std::string& file_outt){
 			_optimizable_graph.save(file_outt.c_str());
@@ -471,36 +484,42 @@ private:
 			
 			/********** HUBER kernel ***********/
 			
-// 			_optimizable_graph.setHuberKernel();
-			setAgeingHuberKernel();
-			testNoNanInPrior("set age in huber kernel");
+// 			_optimizable_graph.setHuberKernel();			
 			
-			updatePriorEdgeCovariance();
-			testNoNanInPrior("update prior edge cov");
+			_flag_optimize = checkAbleToOptimize();
 			
-			//Avoid overshoot of the cov
-			for(size_t i = 0 ; i < iter ; ++i){
-				_optimizable_graph.optimize(1);
-				testNoNanInPrior("optimized with huber");
-				//Update prior edge covariance
+			if(_flag_optimize == true){
+
+				setAgeingHuberKernel();
+				testNoNanInPrior("set age in huber kernel");
+				
 				updatePriorEdgeCovariance();
-				testNoNanInPrior("update prior edge cov after opti huber");
+				testNoNanInPrior("update prior edge cov");
+				
+				//Avoid overshoot of the cov
+				for(size_t i = 0 ; i < iter ; ++i){
+					_optimizable_graph.optimize(1);
+					testNoNanInPrior("optimized with huber");
+					//Update prior edge covariance
+					updatePriorEdgeCovariance();
+					testNoNanInPrior("update prior edge cov after opti huber");
+				}
+				
+				/********** DCS kernel ***********/
+				
+				setAgeingDCSKernel();
+				testNoNanInPrior("set age in DCS kernel");
+				
+				for(size_t i = 0 ; i < iter/2 ; ++i){
+					_optimizable_graph.optimize(1);
+					testNoNanInPrior("optimized with dcs");
+					//Update prior edge covariance
+					updatePriorEdgeCovariance();
+					testNoNanInPrior("update prior edge cov after opti dcs");
+				}
+				
+			
 			}
-			
-			/********** DCS kernel ***********/
-			
-			setAgeingDCSKernel();
-			testNoNanInPrior("set age in DCS kernel");
-			
-			for(size_t i = 0 ; i < iter/2 ; ++i){
-				_optimizable_graph.optimize(1);
-				testNoNanInPrior("optimized with dcs");
-				//Update prior edge covariance
-				updatePriorEdgeCovariance();
-				testNoNanInPrior("update prior edge cov after opti dcs");
-			}
-			
-			
 		}
 		
 		void setAgeingHuberKernel(){
@@ -578,6 +597,14 @@ private:
 		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e);
 		
 		void testNoNanInPrior(const std::string& before = "no data");
+		
+		///@brief return true if ACG got more than or equal to 5 links. Make this better.
+		bool checkAbleToOptimize(){
+			if(_edge_link.size() >= 5){
+				return true;
+			}
+			return false;
+		}
 	
 	};
 }

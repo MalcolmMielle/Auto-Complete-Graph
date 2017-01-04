@@ -157,6 +157,10 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	Eigen::Vector2d eigenvec; 
 	eigenvec << pose1(0) - pose2(0), pose1(1) - pose2(1);
 // 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
+	double newnorm = (pose1 - pose2).norm();
+	//ATTENTION MAGIC NUMBER
+	newnorm = newnorm / 2;
+	
 	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
 	
 	Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
@@ -182,6 +186,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	priorObservation->setMeasurement(se2);
 	priorObservation->setInformation(information_prior);
 	priorObservation->setParameterId(0, _sensorOffset->id());
+	priorObservation->interface.setAge(_age_start_value);
 	priorObservation->interface.setOriginalValue(se2);
 	
 	_optimizable_graph.addEdge(priorObservation);
@@ -1187,7 +1192,7 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 	double age = -1;
 	if(v_linkxy != NULL){
 		age = v_linkxy->interface.getAge();
-		v_linkxy->interface.setAge(age + 1);
+		v_linkxy->interface.setAge(age + _age_step);
 		
 		std::cout << "kernel size : " << age << std::endl;
 		e->robustKernel()->setDelta(age);

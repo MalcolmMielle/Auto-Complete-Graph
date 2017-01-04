@@ -63,14 +63,14 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	oacg->updateNDTGraph(graph);
 	
 	
-	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
+// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
 	std::ostringstream convert;   // stream used for the conversion
 	convert << graph.getNbNodes(); 
-	file_out = file_out + convert.str();
-	file_out = file_out + "nodes.g2o";
-	oacg->getGraph().save(file_out.c_str());
+// 	file_out = file_out + convert.str();
+// 	file_out = file_out + "nodes.g2o";
+// 	oacg->getGraph().save(file_out.c_str());
 	
-	std::cout << "saved to " << file_out << std::endl;
+// 	std::cout << "saved to " << file_out << std::endl;
 	
 // 	oacg->initializeOptimization();
 // 	oacg->initialGuess();
@@ -79,12 +79,12 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	oacg->prepare();
 // 	oacg->optimize();
 	
-	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
+// 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
 	std::ostringstream convert_after;   // stream used for the conversion
 	convert_after << graph.getNbNodes(); 
-	file_out_after = file_out_after + convert.str();
-	file_out_after = file_out_after + "nodes.g2o";
-	oacg->getGraph().save(file_out_after.c_str());
+// 	file_out_after = file_out_after + convert.str();
+// 	file_out_after = file_out_after + "nodes.g2o";
+// 	oacg->getGraph().save(file_out_after.c_str());
 	
 // 	visu.toRviz(*oacg);
 	
@@ -102,6 +102,26 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	
 // 	exit(0);
 	
+	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
+	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt);
+	grid_map::GridMap gridMap({"all"});
+	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt, "all", gridMap);
+// 
+// 	
+// 	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
+// 	
+	cv::Mat originalImageP;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
+	std::string file_outg = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL_NOOPTIMI/occupancygrid_full_nooptimi_";
+	std::ostringstream convertg;   // stream used for the conversion
+	convertg << oacg->getRobotNodes().size(); 
+	file_outg = file_outg + convert.str();
+	file_outg = file_outg + "nodes.png";
+
+	cv::imwrite(file_outg, originalImageP);
+	
+	
 	visu.updateRvizStepByStep();
 	
 	nav_msgs::OccupancyGrid* omap_tmpt_partial = new nav_msgs::OccupancyGrid();
@@ -115,7 +135,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	
 	cv::Mat originalImageP_partial;
 	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap_partial, "all", CV_16UC1, 0.0, 1, originalImageP_partial);
-	std::string file_outg_partial = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_partial_nooptimi_";
+	std::string file_outg_partial = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL_NOOPTIMI/occupancygrid_full_partial_nooptimi_";
 	std::ostringstream convertg_partial;   // stream used for the conversion
 	convertg_partial << oacg->getRobotNodes().size(); 
 	file_outg_partial = file_outg_partial + convert.str();
@@ -201,8 +221,13 @@ int main(int argc, char **argv)
 	double pr = a;
 	infile >> a >> b;
 	Eigen::Vector2d lin; lin << a, b;
+	
+	double agestart; infile >> agestart;
+	double step; infile >> step;
 
 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	oacg.setAgeStartValue(agestart);
+	oacg.setStepAge(step);
 // 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
 // 		tn, //Robot translation noise
 // 		rn, 				//Rotation noise for robot
@@ -228,7 +253,7 @@ int main(int argc, char **argv)
     
 	
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg, visu));
-	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 100, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	
