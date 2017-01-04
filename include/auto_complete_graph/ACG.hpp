@@ -493,7 +493,7 @@ private:
 				setAgeingHuberKernel();
 				testNoNanInPrior("set age in huber kernel");
 				
-				updatePriorEdgeCovariance();
+// 				updatePriorEdgeCovariance();
 				testNoNanInPrior("update prior edge cov");
 				
 				//Avoid overshoot of the cov
@@ -501,7 +501,7 @@ private:
 					_optimizable_graph.optimize(1);
 					testNoNanInPrior("optimized with huber");
 					//Update prior edge covariance
-					updatePriorEdgeCovariance();
+// 					updatePriorEdgeCovariance();
 					testNoNanInPrior("update prior edge cov after opti huber");
 				}
 				
@@ -514,7 +514,7 @@ private:
 					_optimizable_graph.optimize(1);
 					testNoNanInPrior("optimized with dcs");
 					//Update prior edge covariance
-					updatePriorEdgeCovariance();
+// 					updatePriorEdgeCovariance();
 					testNoNanInPrior("update prior edge cov after opti dcs");
 				}
 				

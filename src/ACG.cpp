@@ -160,8 +160,8 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	double newnorm = (pose1 - pose2).norm();
 	//ATTENTION MAGIC NUMBER
 	newnorm = newnorm / 2;
-	
-	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
+	std::pair<double, double> eigenval(newnorm, _priorNoise(1));
+// 	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
 	
 	Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
 	
@@ -966,6 +966,9 @@ void AASS::acg::AutoCompleteGraph::testNoNanInPrior(const std::string& before){
 
 void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 {
+	
+	std::cout << "DO NOT USE " << std::endl;
+	assert(false);
 	
 	auto edges = _edge_prior;	
 	auto it = edges.begin();
