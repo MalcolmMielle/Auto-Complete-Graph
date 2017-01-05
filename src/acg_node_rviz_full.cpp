@@ -188,19 +188,19 @@ int main(int argc, char **argv)
 	
 	
 	//TODO : test no sensor offset
-	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
-		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
-		DEG2RAD(2.), 				//Rotation noise for robot
-		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
-		Eigen::Vector2d(1, 0.01), //Prior noise
-		DEG2RAD(2.), //Prior rot							 
-		Eigen::Vector2d(0.002, 0.002) //Link noise,
-	);
-	
-	acg.addPriorGraph(graph_prior);
-	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_0_prior.g2o";
-	acg.getGraph().save(file_out.c_str());
-	std::cout << "saved to " << file_out << std::endl;
+// 	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
+// 		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
+// 		DEG2RAD(2.), 				//Rotation noise for robot
+// 		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
+// 		Eigen::Vector2d(1, 0.01), //Prior noise
+// 		DEG2RAD(2.), //Prior rot							 
+// 		Eigen::Vector2d(0.002, 0.002) //Link noise,
+// 	);
+// 	
+// 	acg.addPriorGraph(graph_prior);
+// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_0_prior.g2o";
+// 	acg.getGraph().save(file_out.c_str());
+// 	std::cout << "saved to " << file_out << std::endl;
 	
 	//TODO : test no sensor offset
 // 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
@@ -233,12 +233,17 @@ int main(int argc, char **argv)
 	infile >> a >> b;
 	Eigen::Vector2d lin; lin << a, b;
 
-	double agestart; infile >> agestart;
-	double step; infile >> step;
+// 	double agestart; infile >> agestart;
+// 	double step; infile >> step;
+// 	double min_link; infile >> min_link;
+// 	double max_link; infile >> max_link;
 	
 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
-	oacg.setAgeStartValue(agestart);
-	oacg.setStepAge(step);
+	oacg.useRobustKernel(true);
+// 	oacg.setAgeStartValue(agestart);
+// 	oacg.setStepAge(step);
+// 	oacg.setMinDistanceForLinksInMeters(min_link);
+// 	oacg.setMaxDistanceForLinksInMeters(max_link);
 // 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
 // 		tn, //Robot translation noise
 // 		rn, 				//Rotation noise for robot

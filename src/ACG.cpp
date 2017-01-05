@@ -157,10 +157,27 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	Eigen::Vector2d eigenvec; 
 	eigenvec << pose1(0) - pose2(0), pose1(1) - pose2(1);
 // 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
-	double newnorm = (pose1 - pose2).norm();
-	//ATTENTION MAGIC NUMBER
-	newnorm = newnorm / 2;
-	std::pair<double, double> eigenval(newnorm, _priorNoise(1));
+	double newnorm_old = (pose1 - pose2).norm();
+	
+	double test_newnorm = newnorm_old / 2;
+	//ATTENTION NOT A MAGIC NUMBER
+// 	double newnorm = (newnorm_old *  _priorNoise(0)) / 100;
+	
+// 	std::cout << newnorm << " " << newnorm_old << " test " << test_newnorm << " base " << _priorNoise(0) << " "<< _priorNoise(1) << std::endl;
+	
+// 	double tt = newnorm * 1000;
+// 	tt = std::round(tt);
+// 	tt = tt / 1000;
+// 	double ttt = test_newnorm * 1000;
+// 	ttt = std::round(ttt);
+// 	ttt = ttt / 1000;
+// 	std::cout << tt << " " << ttt  <<std::endl;
+// 	assert(tt == ttt);
+	
+// 	assert(newnorm <= newnorm_old);
+// 	assert(newnorm >= 0);
+	
+	std::pair<double, double> eigenval(test_newnorm, _priorNoise(1));
 // 	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
 	
 	Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
@@ -275,25 +292,6 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 
 void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
 {
-// 	//Getting the two vertices
-// 	g2o::VertexSE2* ptr;
-// 	g2o::VertexPointXY* ptr2;
-// 	for(auto ite2 = v1->vertices().begin(); ite2 != v1->vertices().end() ; ++ite2){
-// 		g2o::VertexSE2* ptr_tmp = dynamic_cast<g2o::VertexSE2*>((*ite2));
-// 		g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
-// 		if(ptr_tmp != NULL){
-// 			std::cout << "Got a VertexSE2" << std::endl;
-// 			ptr = ptr_tmp;
-// 		}
-// 		else if(ptr2_tmp != NULL){
-// 			std::cout << "Got a VertexPOINTXY" << std::endl;
-// 			ptr2 = ptr2_tmp;
-// 		}
-// 		else{
-// 			throw std::runtime_error("Links do not have the good vertex type");
-// 		}		
-// 	}
-	
 	_optimizable_graph.removeEdge(v1);
 	auto it = _edge_link.begin();
 	int size = _edge_link.size();
@@ -309,36 +307,6 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 	assert(_edge_link.size() == size - 1);
 	
 	std::cout << "Out of remove edge" << std::endl;
-	
-	//TODO :need to do the same for the SLAM
-	
-	//Get all edges from each vertex
-// 	std::vector<g2o::EdgeSE2Prior_malcolm*> all_other_prior_edge;
-// 	std::vector<g2o::EdgeLinkXY_malcolm*> all_other_links;
-// 	for(auto ite = ptr->edges().begin(); ite != ptr->edges().end() ; ++ite){
-// 		
-// 		g2o::EdgeSE2Prior_malcolm* ptr_tmp = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>((*ite));
-// 		g2o::EdgeLinkXY_malcolm* ptr2_tmp = dynamic_cast<g2o::EdgeLinkXY_malcolm*>((*ite));
-// 		if(ptr_tmp != NULL){
-// 			all_other_prior_edge.push_back(ptr_tmp);
-// 		}
-// 		else if(ptr2_tmp != NULL){
-// 			std::cout << "Got a VertexPOINTXY" << std::endl;
-// 			all_other_links.push_back(ptr2_tmp);
-// 		}
-// 		else{
-// 			throw std::runtime_error("vertex do not have the good edge type");
-// 		}		
-// 	}
-// 	
-// 	
-// 	//Reinitiallise if no more links
-// 	if(all_other_links.size() == 0){
-// 		for(auto ite = all_other_prior_edge.begin(); ite != all_other_prior_edge.end() ; ++ite){
-// 			auto se2 = (*ite)->getOriginalValue();
-// 			(*ite)->setMeasurement(se2);
-// 		}
-// 	}
 	
 }
 
@@ -809,6 +777,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 	
 	updateLinksAfterNDTGraph(all_new_landmarks);
 
+	std::cout << "Test no double links" << std::endl;
 	noDoubleLinks();
 }
 
@@ -878,9 +847,11 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 	auto it_old_links = _edge_link.begin();
 	for(it_old_links; it_old_links != _edge_link.end() ;){
 		
+		std::cout << "Studying links "<< std::endl;
 		std::vector<Eigen::Vector3d> vertex_out;
 		
 		for(auto ite2 = (*it_old_links)->vertices().begin(); ite2 != (*it_old_links)->vertices().end() ; ++ite2){
+			std::cout << "Accessed links "<< std::endl;
 			g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
 			g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
 
@@ -904,15 +875,21 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 		std::cout << "bottom of ACG.cpp" << std::endl;
 		assert(vertex_out.size() == 2);
 		double norm = (vertex_out[0] - vertex_out[1]).norm();
-		if(norm > _min_distance_for_link_in_meter * 2 ){
+		//Attention magic number
+		if(norm > _max_distance_for_link_in_meter ){
+			std::cout << "Removing a link" << std::endl;
 			it_old_links ++;
+			exit(0);
 			removeLinkBetweenMaps(*it_old_links);
 		}
 		else{
 			it_old_links++;
 		}
+		
+		std::cout << "Studying links end"<< std::endl;
 	}
 	
+		std::cout << "Studying links out "<< std::endl;
 	
 }
 
