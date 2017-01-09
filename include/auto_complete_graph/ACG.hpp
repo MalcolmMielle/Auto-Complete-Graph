@@ -302,15 +302,19 @@ private:
 			
 		}			
 		
-		~AutoCompleteGraph(){
+		virtual ~AutoCompleteGraph(){
+			
+			std::cout << "Calling ACG dest with size" << _nodes_ndt.size() << std::endl ;
 // 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
 			
 // 			cleanup pointers in NODE
 			
 			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
+				std::cout << "Deleting the NDT maps" << std::endl;
 				delete _nodes_ndt[i].getMap();
 			}
+			std::cout << "OUT ACG dest " << std::endl ;
 			
 		}
 		
@@ -421,7 +425,8 @@ private:
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 		
-		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::VertexSE2Prior* v2, g2o::VertexPointXY* v1);
+		
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
 		void removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1);

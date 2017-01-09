@@ -203,6 +203,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	priorObservation->setMeasurement(se2);
 	priorObservation->setInformation(information_prior);
 	priorObservation->setParameterId(0, _sensorOffset->id());
+
 	priorObservation->interface.setAge(_age_start_value);
 	priorObservation->interface.setOriginalValue(se2);
 	
@@ -223,40 +224,39 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 // 	
 // }
 
-g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
-	
+g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::VertexSE2Prior* v2, g2o::VertexPointXY* v1){
 	std::cout << "Adding link" << std::endl;
 	//Making sure the two node are the good type
-	g2o::HyperGraph::Vertex* from;
-	g2o::HyperGraph::Vertex* toward;
-	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
-	g2o::VertexPointXY* ptr2;
-	if(ptr != NULL){
-		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>(v2);
-		if(ptr2 == NULL){
-			throw std::runtime_error("Pointers are not of compatible type. First pointer is a SE2 while the second is not a PointXY");
-		}
-		else{
-			from = v1;
-			toward = v2;
-		}
-	}
-	else{
-		ptr = dynamic_cast<g2o::VertexSE2Prior*>(v2);
-		if(ptr != NULL){
-			ptr2 = dynamic_cast<g2o::VertexPointXY*>(v1);
-			if(ptr2 == NULL){
-				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
-			}
-			else{
-				from = v2;
-				toward = v1;
-			}
-		}
-		else{
-			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
-		}
-	}
+// 	g2o::HyperGraph::Vertex* from;
+// 	g2o::HyperGraph::Vertex* toward;
+// 	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
+// 	g2o::VertexPointXY* ptr2;
+// 	if(ptr != NULL){
+// 		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>(v2);
+// 		if(ptr2 == NULL){
+// 			throw std::runtime_error("Pointers are not of compatible type. First pointer is a SE2 while the second is not a PointXY");
+// 		}
+// 		else{
+// 			from = v1;
+// 			toward = v2;
+// 		}
+// 	}
+// 	else{
+// 		ptr = dynamic_cast<g2o::VertexSE2Prior*>(v2);
+// 		if(ptr != NULL){
+// 			ptr2 = dynamic_cast<g2o::VertexPointXY*>(v1);
+// 			if(ptr2 == NULL){
+// 				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
+// 			}
+// 			else{
+// 				from = v2;
+// 				toward = v1;
+// 			}
+// 		}
+// 		else{
+// 			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
+// 		}
+// 	}
 	
 	Eigen::Matrix2d covariance_link; 
 	covariance_link.fill(0.);
@@ -267,15 +267,32 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 	
 // 			covariance_link(2, 2) = 13;//<- Rotation covariance link is more than 4PI
 	Eigen::Matrix2d information_link = covariance_link.inverse();
+	std::cout << "Link cov2 " << covariance_link << std::endl;
 	
 	g2o::EdgeLinkXY_malcolm* linkObservation = new g2o::EdgeLinkXY_malcolm;
-	linkObservation->vertices()[0] = from;
-	linkObservation->vertices()[1] = toward;
+	std::cout << "Link cov3 " << covariance_link << std::endl;
+// 	g2o::HyperGraph::Vertex* from = dynamic_cast<g2o::HyperGraph::Vertex*>(v2);
+	assert(v2 != NULL);
+	linkObservation->vertices()[0] = v2;
+	std::cout << "Link cov4 " << covariance_link << std::endl;
+// 	g2o::HyperGraph::Vertex* toward = dynamic_cast<g2o::HyperGraph::Vertex*>(v1);
+	assert(v1 != NULL);
+	linkObservation->vertices()[1] = v1;
+	std::cout << "Link cov5 " << covariance_link << std::endl;
 	linkObservation->setMeasurement(pos);
+	std::cout << "Link cov6 " << covariance_link << std::endl;
 	linkObservation->setInformation(information_link);
+	std::cout << "Link cov7 " << _sensorOffset->id() << std::endl;
 	linkObservation->setParameterId(0, _sensorOffset->id());
 	
-	std::cout << "Adding edge!" <<ptr << ptr2 << std::endl;
+// 	g2o::EdgeSE2Prior_malcolm* priorObservation =  new g2o::EdgeSE2Prior_malcolm;
+// 	priorObservation->vertices()[0] = v1;
+// 	priorObservation->vertices()[1] = v2;
+// 	priorObservation->setMeasurement(se2);
+// 	priorObservation->setInformation(information_prior);
+// 	priorObservation->setParameterId(0, _sensorOffset->id());
+	
+	std::cout << "Adding edge!" << v2 << v1 << std::endl;
 	
 	_optimizable_graph.addEdge(linkObservation);
 	_edge_link.push_back(linkObservation);
@@ -286,13 +303,33 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
-	return addLinkBetweenMaps(pos, from_ptr, toward_ptr);
+	
+	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(from_ptr);
+	g2o::VertexPointXY* ptr2;
+	if(ptr != NULL){
+		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>(toward_ptr);
+		if(ptr2 == NULL){
+			throw std::runtime_error("Pointers are not of compatible type. First pointer should be prior while the second is not a PointXY while it should");
+		}
+	}
+// 	else{
+// 		ptr = dynamic_cast<g2o::VertexSE2Prior*>(toward_ptr);
+// 		if(ptr != NULL){
+// 			ptr2 = dynamic_cast<g2o::VertexPointXY*>(from_ptr);
+// 			if(ptr2 == NULL){
+// 				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
+// 			}
+// 		}
+// 		else{
+// 			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
+// 		}
+// 	}
+	return addLinkBetweenMaps(pos, ptr, ptr2);
 }
 
 
 void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
 {
-	_optimizable_graph.removeEdge(v1);
 	auto it = _edge_link.begin();
 	int size = _edge_link.size();
 	for(it; it != _edge_link.end() ;){
@@ -304,6 +341,7 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 			it++;
 		}
 	}
+	_optimizable_graph.removeEdge(v1);
 	assert(_edge_link.size() == size - 1);
 	
 	std::cout << "Out of remove edge" << std::endl;
@@ -850,27 +888,46 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 		std::cout << "Studying links "<< std::endl;
 		std::vector<Eigen::Vector3d> vertex_out;
 		
-		for(auto ite2 = (*it_old_links)->vertices().begin(); ite2 != (*it_old_links)->vertices().end() ; ++ite2){
-			std::cout << "Accessed links "<< std::endl;
-			g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
-			g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
-
-			if(ptr != NULL){
-				std::cout << "Got a VertexSE2" << std::endl;
-				auto vertex = ptr->estimate().toVector();
-				vertex_out.push_back(vertex);
-			}
-			else if(ptr2 != NULL){
-				std::cout << "Got a VertexPOINTXY" << std::endl;
-				auto vertex = ptr2->estimate();
-				Eigen::Vector3d pose_prior; pose_prior << vertex(0), vertex(1), 0;
-				vertex_out.push_back(pose_prior);
-			}
-			else{
-				throw std::runtime_error("Links do not have the good vertex type");
-			}		
-			
+		assert((*it_old_links)->vertices().size() == 2);
+		
+// 		std::cout << " LINK " << _edge_link.size() << std::endl;
+		g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
+		if(ptr == NULL){
+			std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
+			throw std::runtime_error("Links do not have the good vertex type. Prior");
 		}
+		auto vertex = ptr->estimate().toVector();
+		vertex_out.push_back(vertex);
+		
+		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*it_old_links)->vertices()[1]);
+		if(ptr2 == NULL){
+			throw std::runtime_error("Links do not have the good vertex type. Landmark");
+		}
+		auto vertex2 = ptr2->estimate();
+		Eigen::Vector3d pose_prior; pose_prior << vertex2(0), vertex2(1), 0;
+		vertex_out.push_back(pose_prior);
+		
+// 		for(auto ite2 = (*it_old_links)->vertices().begin(); ite2 != (*it_old_links)->vertices().end() ; ++ite2){
+// 			std::cout << "Accessed links "<< std::endl;
+// 			g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*ite2));
+// 			g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+// 
+// 			if(ptr != NULL){
+// 				std::cout << "Got a VertexSE2Prior" << std::endl;
+// 				auto vertex = ptr->estimate().toVector();
+// 				vertex_out.push_back(vertex);
+// 			}
+// 			else if(ptr2 != NULL){
+// 				std::cout << "Got a VertexPOINTXY" << std::endl;
+// 				auto vertex = ptr2->estimate();
+// 				Eigen::Vector3d pose_prior; pose_prior << vertex(0), vertex(1), 0;
+// 				vertex_out.push_back(pose_prior);
+// 			}
+// 			else{
+// 				throw std::runtime_error("Links do not have the good vertex type");
+// 			}		
+// 			
+// 		}
 		
 		std::cout << "bottom of ACG.cpp" << std::endl;
 		assert(vertex_out.size() == 2);
@@ -879,7 +936,7 @@ void AASS::acg::AutoCompleteGraph::updateLinksAfterNDTGraph(const std::vector<g2
 		if(norm > _max_distance_for_link_in_meter ){
 			std::cout << "Removing a link" << std::endl;
 			it_old_links ++;
-			exit(0);
+// 			exit(0);
 			removeLinkBetweenMaps(*it_old_links);
 		}
 		else{
@@ -1084,28 +1141,41 @@ bool AASS::acg::AutoCompleteGraph::linkAlreadyExist(g2o::VertexPointXY* v_pt, g2
 // 	std::cout << "Testing links" << std::endl;
 	for (it ; it != _edge_link.end() ; ++it){
 		
-		g2o::VertexSE2Prior* ptr;
-		g2o::VertexPointXY* ptr2;
+		assert((*it)->vertices().size() == 2);
 		
-		int count = 0 ;
-		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-			count ++;
-			g2o::VertexSE2Prior* ptr_tmp = dynamic_cast<g2o::VertexSE2Prior*>((*ite2));
-			g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
-			
-			if(ptr_tmp != NULL){
-// 				std::cout << "Got a VertexSE2" << std::endl;
-				ptr = ptr_tmp;
-			}
-			else if(ptr2_tmp != NULL){
-// 				std::cout << "Got a VertexPOINTXY" << std::endl;
-				ptr2 = ptr2_tmp;
-			}
-			else{
-				throw std::runtime_error("Links do not have the good vertex type");
-			}
+// 		std::cout << " LINK " << _edge_link.size() << std::endl;
+		g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[0]);
+		if(ptr == NULL){
+			std::cout << ptr << " and " << (*it)->vertices()[0] << std::endl;
+			throw std::runtime_error("Links do not have the good vertex type. Prior lae");
 		}
-		assert(count == 2);
+		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*it)->vertices()[1]);
+		if(ptr2 == NULL){
+			throw std::runtime_error("Links do not have the good vertex type. Landmark");
+		}
+		
+// 		g2o::VertexSE2Prior* ptr;
+// 		g2o::VertexPointXY* ptr2;
+// 		
+// 		int count = 0 ;
+// 		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+// 			count ++;
+// 			g2o::VertexSE2Prior* ptr_tmp = dynamic_cast<g2o::VertexSE2Prior*>((*ite2));
+// 			g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+// 			
+// 			if(ptr_tmp != NULL){
+// // 				std::cout << "Got a VertexSE2" << std::endl;
+// 				ptr = ptr_tmp;
+// 			}
+// 			else if(ptr2_tmp != NULL){
+// // 				std::cout << "Got a VertexPOINTXY" << std::endl;
+// 				ptr2 = ptr2_tmp;
+// 			}
+// 			else{
+// 				throw std::runtime_error("Links do not have the good vertex type");
+// 			}
+// 		}
+// 		assert(count == 2);
 		
 		
 // 		std::cout << "if Testing links" << std::endl;
@@ -1126,29 +1196,34 @@ bool AASS::acg::AutoCompleteGraph::noDoubleLinks()
 	auto it = _edge_link.begin();
 	for (it ; it != _edge_link.end() ; ){
 		
-// 		std::cout << " LINK " << _edge_link.size() << std::endl;
-		g2o::VertexSE2Prior* ptr;
-		g2o::VertexPointXY* ptr2;
+		assert((*it)->vertices().size() == 2);
 		
-		int count = 0 ;
-		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-			count ++;
-			g2o::VertexSE2Prior* ptr_tmp = dynamic_cast<g2o::VertexSE2Prior*>((*ite2));
-			g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
-			
-			if(ptr_tmp != NULL){
-// 				std::cout << "Got a VertexSE2" << std::endl;
-				ptr = ptr_tmp;
-			}
-			else if(ptr2_tmp != NULL){
-// 				std::cout << "Got a VertexPOINTXY" << std::endl;
-				ptr2 = ptr2_tmp;
-			}
-			else{
-				throw std::runtime_error("Links do not have the good vertex type");
-			}
+// 		std::cout << " LINK " << _edge_link.size() << std::endl;
+		g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[0]);
+		if(ptr == NULL){
+			throw std::runtime_error("Links do not have the good vertex type. Prior ndl");
 		}
-		assert(count == 2);
+		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*it)->vertices()[1]);
+		if(ptr2 == NULL){
+			throw std::runtime_error("Links do not have the good vertex type. Landmark");
+		}
+		
+// 		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+// 			g2o::VertexSE2Prior* ptr_tmp = dynamic_cast<g2o::VertexSE2Prior*>((*ite2));
+// 			g2o::VertexPointXY* ptr2_tmp = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+// 			
+// 			if(ptr_tmp != NULL){
+// 				std::cout << "Got a VertexSE2" << std::endl;
+// 				ptr = ptr_tmp;
+// 			}
+// 			else if(ptr2_tmp != NULL){
+// 				std::cout << "Got a VertexPOINTXY" << std::endl;
+// 				ptr2 = ptr2_tmp;
+// 			}
+// 			else{
+// 				throw std::runtime_error("Links do not have the good vertex type");
+// 			}
+// 		}
 		
 		++it;
 		if( it != _edge_link.end()){
