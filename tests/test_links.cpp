@@ -187,5 +187,11 @@ int main(){
 	
 	std::cout << "Norm : "<< norm_tmp << std::endl;
 	
+// 	g2o::Factory::destroy();
+	std::cout << "OAFactory destroy" << std::endl;
+// 	g2o::OptimizationAlgorithmFactory::destroy();
+	std::cout << "HGFactory destroy" << std::endl;
+// 	g2o::HyperGraphActionLibrary::destroy();
+	
 	
 }

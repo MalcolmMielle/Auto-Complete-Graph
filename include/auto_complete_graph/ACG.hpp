@@ -312,7 +312,7 @@ private:
 			
 			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
 				std::cout << "Deleting the NDT maps" << std::endl;
-				delete _nodes_ndt[i].getMap();
+ 				delete _nodes_ndt[i].getMap();
 			}
 			std::cout << "OUT ACG dest " << std::endl ;
 			
