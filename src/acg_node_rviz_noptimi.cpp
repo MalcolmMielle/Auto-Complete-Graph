@@ -60,7 +60,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
 	
 
-	oacg->updateNDTGraph(graph);
+	oacg->updateNDTGraph(graph, true, 0.5);
 	
 	
 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
 	ros::Subscriber optimi_sub;
     ros::NodeHandle nh("~");
 	
-	AASS::acg::VisuAutoCompleteGraph visu(&acg, nh);
+	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/Noopitimization_rviz_small");
     
 	
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
 	while(ros::ok()){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
-		visu.updateRviz();
+		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 	}
 

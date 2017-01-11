@@ -63,14 +63,18 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	oacg->updateNDTGraph(graph);
 	
 	
-	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
+// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
 	std::ostringstream convert;   // stream used for the conversion
 	convert << graph.getNbNodes(); 
-	file_out = file_out + convert.str();
-	file_out = file_out + "nodes.g2o";
-	oacg->getGraph().save(file_out.c_str());
+// 	file_out = file_out + convert.str();
+// 	file_out = file_out + "nodes.g2o";
+// 	oacg->getGraph().save(file_out.c_str());
+// 	
+// 	std::cout << "saved to " << file_out << std::endl;
 	
-	std::cout << "saved to " << file_out << std::endl;
+	/*** Partial image****/
+	visu.updateRvizStepByStep();
+	
 	
 // 	oacg->initializeOptimization();
 // 	oacg->initialGuess();
@@ -79,27 +83,27 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	oacg->prepare();
 	oacg->optimize();
 	
-	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
-	std::ostringstream convert_after;   // stream used for the conversion
-	convert_after << graph.getNbNodes(); 
-	file_out_after = file_out_after + convert.str();
-	file_out_after = file_out_after + "nodes.g2o";
-	oacg->getGraph().save(file_out_after.c_str());
+// 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
+// 	std::ostringstream convert_after;   // stream used for the conversion
+// 	convert_after << graph.getNbNodes(); 
+// 	file_out_after = file_out_after + convert.str();
+// 	file_out_after = file_out_after + "nodes.g2o";
+// 	oacg->getGraph().save(file_out_after.c_str());
 	
 // 	visu.toRviz(*oacg);
 	
 // 	visu.updateRviz();
-	visu.updateRviz();
-	
+// 	visu.updateRviz();
+// 	
 	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
 	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt);
 	grid_map::GridMap gridMap({"all"});
 	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt, "all", gridMap);
-
-	
-	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
-	
+// 
+// 	
+// 	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
+// 	
 	cv::Mat originalImageP;
 	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
 	std::string file_outg = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_";
@@ -109,6 +113,30 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	file_outg = file_outg + "nodes.png";
 
 	cv::imwrite(file_outg, originalImageP);
+
+
+	
+	
+	nav_msgs::OccupancyGrid* omap_tmpt_partial = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_outt_partial(omap_tmpt_partial);
+	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt_partial, oacg->getRobotNodes().size() - 1);
+	grid_map::GridMap gridMap_partial({"all"});
+	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt_partial, "all", gridMap_partial);
+// 
+// 	
+	std::cout << "WELLL HERE IT IS : " << occ_outt_partial->info.origin.position << " ori " << occ_outt_partial->info.origin.orientation << std::endl << std::endl;	
+// 	
+	cv::Mat originalImageP_partial;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap_partial, "all", CV_16UC1, 0.0, 1, originalImageP_partial);
+	std::string file_outg_partial = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_partial_";
+	std::ostringstream convertg_partial;   // stream used for the conversion
+	convertg_partial << oacg->getRobotNodes().size(); 
+	file_outg_partial = file_outg_partial + convert.str();
+	file_outg_partial = file_outg_partial + "nodes.png";
+// 
+	cv::imwrite(file_outg_partial, originalImageP_partial);
+
+
 	
 	
 	
@@ -160,19 +188,19 @@ int main(int argc, char **argv)
 	
 	
 	//TODO : test no sensor offset
-	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
-		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
-		DEG2RAD(2.), 				//Rotation noise for robot
-		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
-		Eigen::Vector2d(1, 0.01), //Prior noise
-		DEG2RAD(2.), //Prior rot							 
-		Eigen::Vector2d(0.002, 0.002) //Link noise,
-	);
-	
-	acg.addPriorGraph(graph_prior);
-	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_0_prior.g2o";
-	acg.getGraph().save(file_out.c_str());
-	std::cout << "saved to " << file_out << std::endl;
+// 	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
+// 		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
+// 		DEG2RAD(2.), 				//Rotation noise for robot
+// 		Eigen::Vector2d(0.5, 0.5), //Landmarks noise
+// 		Eigen::Vector2d(1, 0.01), //Prior noise
+// 		DEG2RAD(2.), //Prior rot							 
+// 		Eigen::Vector2d(0.002, 0.002) //Link noise,
+// 	);
+// 	
+// 	acg.addPriorGraph(graph_prior);
+// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_0_prior.g2o";
+// 	acg.getGraph().save(file_out.c_str());
+// 	std::cout << "saved to " << file_out << std::endl;
 	
 	//TODO : test no sensor offset
 // 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
@@ -205,7 +233,17 @@ int main(int argc, char **argv)
 	infile >> a >> b;
 	Eigen::Vector2d lin; lin << a, b;
 
+// 	double agestart; infile >> agestart;
+// 	double step; infile >> step;
+// 	double min_link; infile >> min_link;
+// 	double max_link; infile >> max_link;
+	
 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	oacg.useRobustKernel(true);
+// 	oacg.setAgeStartValue(agestart);
+// 	oacg.setStepAge(step);
+// 	oacg.setMinDistanceForLinksInMeters(min_link);
+// 	oacg.setMaxDistanceForLinksInMeters(max_link);
 // 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
 // 		tn, //Robot translation noise
 // 		rn, 				//Rotation noise for robot
@@ -233,7 +271,7 @@ int main(int argc, char **argv)
 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg, visu));
-	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 10, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 100, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	

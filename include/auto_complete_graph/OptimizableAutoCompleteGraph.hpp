@@ -85,19 +85,28 @@ namespace acg{
 // // 			_graph = opt.getGraph();
 // 		}
 		
-		~OptimizableAutoCompleteGraph(){
+		virtual ~OptimizableAutoCompleteGraph(){
+						std::cout << "Calling OACG dest " << std::endl ;
+
 // 			delete _graph;
 // 			delete _sensorOffset;
 // 			delete _blockSolver;
 // 			delete _solver;
 // 			delete _linearSolver;
+			
 			delete _huber;
 			delete _dcs;
 			
+			this->clear();
 			//TODO : not sure about that
+			std::cout << "Factory destroy" << std::endl;
 			g2o::Factory::destroy();
+			std::cout << "OAFactory destroy" << std::endl;
 			g2o::OptimizationAlgorithmFactory::destroy();
-			g2o::HyperGraphActionLibrary::destroy();
+			std::cout << "HGFactory destroy" << std::endl;
+			//ATTENTION: THIS CRASHES I DON'T KNOW WHY YET. CAN'T USE
+// 			g2o::HyperGraphActionLibrary::destroy();
+			std::cout << "OUT" << std::endl;
 		}
 		
 // 		AutoCompleteGraph* getGraph(){return _graph;}

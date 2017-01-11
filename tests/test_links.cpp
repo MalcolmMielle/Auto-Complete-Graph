@@ -30,6 +30,7 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	acg.printGraph();
 	
 	g2o::SE2 priorse20(2, 0, 0);
+	//GLOBAL
 	prior0 = acg.addPriorLandmarkPose(priorse20);
 	prior0->setId(1);
 	g2o::SE2 priorse21(2, 10, 0);
@@ -44,7 +45,7 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	
 	assert(acg.getGraph().vertices().size() == 3 && "prior crash");
 	
-	auto land0 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(0));
+	g2o::VertexPointXY* land0 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(0));
 	
 	// TODO : why is this not working
 	assert(land0 != NULL);
@@ -185,6 +186,12 @@ int main(){
 	double norm_tmp = (pose_prior - pose_landmark).norm();
 	
 	std::cout << "Norm : "<< norm_tmp << std::endl;
+	
+// 	g2o::Factory::destroy();
+	std::cout << "OAFactory destroy" << std::endl;
+// 	g2o::OptimizationAlgorithmFactory::destroy();
+	std::cout << "HGFactory destroy" << std::endl;
+// 	g2o::HyperGraphActionLibrary::destroy();
 	
 	
 }
