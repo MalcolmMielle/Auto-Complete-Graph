@@ -21,6 +21,7 @@ namespace acg{
 		ros::Publisher _last_ndtmap_full;
 		ros::Publisher _marker_pub;
 		ros::Publisher _ndt_node_pub;
+		ros::Publisher _prior_node_pub;
 		ros::Publisher _corner_ndt_node_pub;
 		ros::Publisher _link_pub;
 // 		nav_msgs::OccupancyGrid omap;
@@ -30,6 +31,7 @@ namespace acg{
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids_original;
 		visualization_msgs::Marker _prior_edge_markers;
 		visualization_msgs::Marker _ndt_node_markers;
+		visualization_msgs::Marker _prior_node_markers;
 		visualization_msgs::Marker _corner_ndt_node_markers;
 		visualization_msgs::Marker _link_markers;
 		
@@ -46,6 +48,7 @@ namespace acg{
 			
 			_marker_pub = _nh.advertise<visualization_msgs::Marker>("prior_marker", 10);
 			_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("ndt_nodes_marker", 10);
+			_prior_node_pub = _nh.advertise<visualization_msgs::Marker>("prior_nodes_marker", 10);
 			_corner_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("corner_ndt_marker", 10);
 			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
 			
@@ -68,6 +71,15 @@ namespace acg{
 			_ndt_node_markers.scale.y = 0.2;
 			_ndt_node_markers.color.r = 1.0f;
 			_ndt_node_markers.color.a = 1.0;
+			
+			_prior_node_markers.type = visualization_msgs::Marker::POINTS;
+			_prior_node_markers.header.frame_id = "/world";
+			_prior_node_markers.ns = "acg";
+			_prior_node_markers.id = 1;
+			_prior_node_markers.scale.x = 0.5;
+			_prior_node_markers.scale.y = 0.5;
+			_prior_node_markers.color.r = 0.5f;
+			_prior_node_markers.color.a = 1.0;
 			
 			_corner_ndt_node_markers.type = visualization_msgs::Marker::POINTS;
 			_corner_ndt_node_markers.header.frame_id = "/world";
@@ -505,8 +517,25 @@ namespace acg{
 					_prior_edge_markers.points.push_back(p);
 				}
 			}
+			
+			auto prior_node = _acg->getPriorNodes();
+			_prior_node_markers.points.clear();
+			auto itt = prior_node.begin();
+			for(itt ; itt != prior_node.end() ; ++itt){
+				
+				geometry_msgs::Point p;
+				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*itt));
+				auto vertex = ptr->estimate().toVector();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+				p.x = vertex(0);
+				p.y = vertex(1);
+				p.z = 0;
+				_prior_node_markers.points.push_back(p);
+				
+			}
 		}
 		_marker_pub.publish(_prior_edge_markers);
+		_prior_node_pub.publish(_prior_node_markers);
 	}
 	
 	inline void VisuAutoCompleteGraph::drawLinks()
