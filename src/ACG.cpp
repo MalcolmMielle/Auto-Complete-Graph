@@ -1247,8 +1247,9 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 	double age = -1;
 	if(v_linkxy != NULL){
 		age = v_linkxy->interface.getAge();
-		v_linkxy->interface.setAge(age + _age_step);
-		
+		if(age < _max_age || _max_age == -1){
+			v_linkxy->interface.setAge(age + _age_step);
+		}
 		std::cout << "kernel size : " << age << std::endl;
 		e->robustKernel()->setDelta(age);
 	}
