@@ -149,57 +149,57 @@ include_directories(/usr/local/include/flirtlib)
 set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry -lgui -lsensors -lsensorstream -lutils_flirt -lutils)
 
 ## Declare a C++ executable
-add_executable(acg_node src/acg_node.cpp)
+# # # # # # # # # # # add_executable(acg_node src/acg_node.cpp)
 
-## Add cmake target dependencies of the executable
-## same as for the library above
-add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(acg_node
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-)
-
-add_executable(acg_node_rviz src/acg_node_rviz.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_rviz
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-)
-
-add_executable(acg_node_rviz_noise src/acg_node_rviz_noise.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-add_dependencies(acg_node_rviz_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_rviz_noise
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-)
-
-add_executable(acg_node_rviz_noptimi src/acg_node_rviz_noptimi.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-add_dependencies(acg_node_rviz_noptimi ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_rviz_noptimi
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-)
-
+# # # # # # # # # # ## Add cmake target dependencies of the executable
+# # # # # # # # # # ## same as for the library above
+# # # # # # # # # # # add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # # # # # # target_link_libraries(acg_node
+# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+# # # # # # # # # # # )
+# # # # # # # # # # # 
+# # # # # # # # # # # add_executable(acg_node_rviz src/acg_node_rviz.cpp)
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Add cmake target dependencies of the executable
+# # # # # # # # # # # ## same as for the library above
+# # # # # # # # # # # add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # # # # # # target_link_libraries(acg_node_rviz
+# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+# # # # # # # # # # # )
+# # # # # # # # # # # 
+# # # # # # # # # # # add_executable(acg_node_rviz_noise src/acg_node_rviz_noise.cpp)
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Add cmake target dependencies of the executable
+# # # # # # # # # # # ## same as for the library above
+# # # # # # # # # # # add_dependencies(acg_node_rviz_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # # # # # # target_link_libraries(acg_node_rviz_noise
+# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+# # # # # # # # # # # )
+# # # # # # # # # # # 
+# # # # # # # # # # # add_executable(acg_node_rviz_noptimi src/acg_node_rviz_noptimi.cpp)
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Add cmake target dependencies of the executable
+# # # # # # # # # # # ## same as for the library above
+# # # # # # # # # # # add_dependencies(acg_node_rviz_noptimi ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # # # # # # target_link_libraries(acg_node_rviz_noptimi
+# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+# # # # # # # # # # # )
+# # # # # # # # # # # 
 add_executable(acg_node_rviz_noptimi_full src/acg_node_rviz_nooptimi_full.cpp)
 
-## Add cmake target dependencies of the executable
-## same as for the library above
+# Add cmake target dependencies of the executable
+# same as for the library above
 add_dependencies(acg_node_rviz_noptimi_full ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Specify libraries to link a library or executable target against
+# Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_noptimi_full
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
 )
@@ -215,40 +215,40 @@ add_dependencies(acg_node_rviz_full ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin
 target_link_libraries(acg_node_rviz_full
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
 )
-
-
-add_executable(acg_node_rviz_full_noise src/acg_node_rviz_full_noise.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-add_dependencies(acg_node_rviz_full_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_rviz_full_noise
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-)
-
-add_executable(test_affine_transfo tests/test_affine_transfo.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-add_dependencies(test_affine_transfo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(test_affine_transfo
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib -lboost_unit_test_framework
-)
-
-add_executable(test_covvalue tests/test_covvalue.cpp)
-
-## Add cmake target dependencies of the executable
-## same as for the library above
-add_dependencies(test_covvalue ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(test_covvalue
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} -lboost_unit_test_framework
-)
+# # # # # # # # # # # 
+# # # # # # # # # # # 
+# # # # # # # # # # # add_executable(acg_node_rviz_full_noise src/acg_node_rviz_full_noise.cpp)
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Add cmake target dependencies of the executable
+# # # # # # # # # # # ## same as for the library above
+# # # # # # # # # # # add_dependencies(acg_node_rviz_full_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # # # # # # target_link_libraries(acg_node_rviz_full_noise
+# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+# # # # # # # # # # # )
+# # # # # # # # # # # 
+# # # # # # # # # # # add_executable(test_affine_transfo tests/test_affine_transfo.cpp)
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Add cmake target dependencies of the executable
+# # # # # # # # # # # ## same as for the library above
+# # # # # # # # # # # add_dependencies(test_affine_transfo ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # # # # # # target_link_libraries(test_affine_transfo
+# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib -lboost_unit_test_framework
+# # # # # # # # # # # )
+# # # # # # # # # # # 
+# # # # # # # # # # # add_executable(test_covvalue tests/test_covvalue.cpp)
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Add cmake target dependencies of the executable
+# # # # # # # # # # # ## same as for the library above
+# # # # # # # # # # # add_dependencies(test_covvalue ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # # # # # # 
+# # # # # # # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # # # # # # target_link_libraries(test_covvalue
+# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} -lboost_unit_test_framework
+# # # # # # # # # # # )
 
 #############
 ## Install ##
