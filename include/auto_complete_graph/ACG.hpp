@@ -147,6 +147,32 @@ private:
 			g2o::SE2 getOriginalValue(){return _original_value;}
 		};
 		
+		class EdgeInterface
+		{
+			protected:
+			bool _flag_set_age;
+			public:
+			g2o::SE2 _malcolm_original_value;
+			double _malcolm_age;
+			
+		//       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+			EdgeInterface() : _flag_set_age(false), _malcolm_age(1){};
+			
+			virtual g2o::SE2 getOriginalValue(){return _malcolm_original_value;}
+			virtual void setOriginalValue(const g2o::SE2& orig_val){_malcolm_original_value = orig_val;}
+			virtual bool manuallySetAge(){return _flag_set_age;}
+			virtual double getAge(){return _malcolm_age;}
+			virtual bool setAge(double a){
+				std::cout << "Setting the age" << std::endl;
+				_flag_set_age = true;  
+				assert(_flag_set_age == true); 
+				_malcolm_age = a; 
+				return _flag_set_age;
+			}
+			
+
+		};
+		
 		
 	public:
 		/**
@@ -195,6 +221,10 @@ private:
 		std::vector<NDTNodeAndMap> _nodes_ndt;
 		///@brief vector storing all linking edges
 		std::vector<g2o::EdgeLinkXY_malcolm*> _edge_link;
+		
+		//TODO: hack because fuck g2o node they don't work
+		std::vector<EdgeInterface> _edge_interface_of_links;
+		
 		///@brief vector storing all edges between a landmark and the robot
 		std::vector<g2o::EdgeLandmark_malcolm*> _edge_landmark;
 		///@brief vector storing all edge between the prior nodes
@@ -214,7 +244,10 @@ private:
 		
 		double _age_step;
 		double _age_start_value;
+		///@brief max value of the age of an edge. if -1 age can be infinetly old. Need to be more or equal to 0
 		double _max_age;
+		///@brief min value of the age of an edge. Need to be more or equal to 0
+		double _min_age;
 		
 	
 	public:
@@ -227,7 +260,7 @@ private:
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1){
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -241,7 +274,7 @@ private:
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -252,7 +285,7 @@ private:
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
 			
 		
 			std::ifstream infile(load_file);
@@ -290,11 +323,14 @@ private:
 			
 			infile >> _age_start_value; std::cout << _age_start_value << std::endl;
 			infile >> _age_step; std::cout << _age_step << std::endl;
-			infile >> _max_age;
+			infile >> _max_age; infile >> _min_age;
 			infile >> _min_distance_for_link_in_meter; std::cout << _min_distance_for_link_in_meter << std::endl;
 			infile >> _max_distance_for_link_in_meter; std::cout << _max_distance_for_link_in_meter << std::endl;
 			
 			infile >> _flag_use_robust_kernel;
+			
+			assert(_age_start_value >= 0);
+			assert(_max_age >= 0);
 			
 // 			exit(0);
 			
@@ -305,6 +341,9 @@ private:
 			
 			
 		}			
+		
+		//Forbid copy
+		AutoCompleteGraph(const AutoCompleteGraph& that) = delete;
 		
 		virtual ~AutoCompleteGraph(){
 			
@@ -558,7 +597,7 @@ private:
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto huber = new g2o::RobustKernelHuber();
 				e->setRobustKernel(huber);
-				setKernelSizeDependingOnAge(e);
+				setKernelSizeDependingOnAge(e, true);
 			}
 		}
 		
@@ -574,7 +613,7 @@ private:
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto dcs = new g2o::RobustKernelDCS();
 				e->setRobustKernel(dcs);
-				setKernelSizeDependingOnAge(e);
+				setKernelSizeDependingOnAge(e, false);
 			}
 		}
 		
@@ -617,7 +656,7 @@ private:
 		
 		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
 		void updatePriorEdgeCovariance();
-		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e);
+		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step);
 		
 		void testNoNanInPrior(const std::string& before = "no data");
 		

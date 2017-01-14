@@ -60,4 +60,13 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	BOOST_CHECK_EQUAL(diff_norm_normalized, 0);
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }

@@ -73,6 +73,9 @@ namespace acg{
 			
 		};
 		
+		//Forbid copy
+		OptimizableAutoCompleteGraph(const OptimizableAutoCompleteGraph& that) = delete;
+		
 		//TODO
 		///@brief Does not copy pointer :)!
 // 		OptimizableAutoCompleteGraph(const OptimizableAutoCompleteGraph& opt){

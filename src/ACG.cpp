@@ -78,6 +78,9 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::
 	odometry->vertices()[1] = v2 ;
 	odometry->setMeasurement(se2);
 	odometry->setInformation(information);
+	
+// 	odometry->interface.setAge(_age_start_value);
+	
 	_optimizable_graph.addEdge(odometry);
 	_edge_odometry.push_back(odometry);
 	return odometry;
@@ -131,6 +134,10 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 	landmarkObservation->setMeasurement(pos);
 	landmarkObservation->setInformation(information_landmark);
 	landmarkObservation->setParameterId(0, _sensorOffset->id());
+	
+	
+// 	landmarkObservation->interface.setAge(_age_start_value);
+	
 	_optimizable_graph.addEdge(landmarkObservation);
 	_edge_landmark.push_back(landmarkObservation);
 	
@@ -204,8 +211,8 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	priorObservation->setInformation(information_prior);
 	priorObservation->setParameterId(0, _sensorOffset->id());
 
-	priorObservation->interface.setAge(_age_start_value);
-	priorObservation->interface.setOriginalValue(se2);
+// 	priorObservation->interface.setAge(_age_start_value);
+// 	priorObservation->interface.setOriginalValue(se2);
 	
 	_optimizable_graph.addEdge(priorObservation);
 	
@@ -226,37 +233,6 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 
 g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::VertexSE2Prior* v2, g2o::VertexPointXY* v1){
 	std::cout << "Adding link" << std::endl;
-	//Making sure the two node are the good type
-// 	g2o::HyperGraph::Vertex* from;
-// 	g2o::HyperGraph::Vertex* toward;
-// 	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
-// 	g2o::VertexPointXY* ptr2;
-// 	if(ptr != NULL){
-// 		g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>(v2);
-// 		if(ptr2 == NULL){
-// 			throw std::runtime_error("Pointers are not of compatible type. First pointer is a SE2 while the second is not a PointXY");
-// 		}
-// 		else{
-// 			from = v1;
-// 			toward = v2;
-// 		}
-// 	}
-// 	else{
-// 		ptr = dynamic_cast<g2o::VertexSE2Prior*>(v2);
-// 		if(ptr != NULL){
-// 			ptr2 = dynamic_cast<g2o::VertexPointXY*>(v1);
-// 			if(ptr2 == NULL){
-// 				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
-// 			}
-// 			else{
-// 				from = v2;
-// 				toward = v1;
-// 			}
-// 		}
-// 		else{
-// 			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
-// 		}
-// 	}
 	
 	Eigen::Matrix2d covariance_link; 
 	covariance_link.fill(0.);
@@ -270,14 +246,17 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 	std::cout << "Link cov2 " << covariance_link << std::endl;
 	
 	g2o::EdgeLinkXY_malcolm* linkObservation = new g2o::EdgeLinkXY_malcolm;
+	
 	std::cout << "Link cov3 " << covariance_link << std::endl;
 // 	g2o::HyperGraph::Vertex* from = dynamic_cast<g2o::HyperGraph::Vertex*>(v2);
 	assert(v2 != NULL);
 	linkObservation->vertices()[0] = v2;
+	assert(linkObservation->vertices()[0] == v2);
 	std::cout << "Link cov4 " << covariance_link << std::endl;
 // 	g2o::HyperGraph::Vertex* toward = dynamic_cast<g2o::HyperGraph::Vertex*>(v1);
 	assert(v1 != NULL);
 	linkObservation->vertices()[1] = v1;
+	assert(linkObservation->vertices()[1] == v1);
 	std::cout << "Link cov5 " << covariance_link << std::endl;
 	linkObservation->setMeasurement(pos);
 	std::cout << "Link cov6 " << covariance_link << std::endl;
@@ -285,17 +264,31 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 	std::cout << "Link cov7 " << _sensorOffset->id() << std::endl;
 	linkObservation->setParameterId(0, _sensorOffset->id());
 	
-// 	g2o::EdgeSE2Prior_malcolm* priorObservation =  new g2o::EdgeSE2Prior_malcolm;
-// 	priorObservation->vertices()[0] = v1;
-// 	priorObservation->vertices()[1] = v2;
-// 	priorObservation->setMeasurement(se2);
-// 	priorObservation->setInformation(information_prior);
-// 	priorObservation->setParameterId(0, _sensorOffset->id());
+	std::cout << "Adding edge!" << v2 << " and " << linkObservation->vertices()[0] << " at " << __LINE__ << " " << __FILE__<< "age start " << _age_start_value << " for " << /*linkObservation->interface->getAge() <<*/ std::endl;
+	//Adding the link age
 	
-	std::cout << "Adding edge!" << v2 << v1 << std::endl;
+	//ATTENTION NOT WORKING FOR I DON'T KNOW WHAT REASON
+// 	bool outout = false;   
+// 	std::cout << "Bool" << outout << std::endl;
+// 	outout = linkObservation->interface->setAge(_age_start_value);
+// 	std::cout << "Bool" << outout << std::endl;
+// 	assert(outout == 1);
+// 	std::cout << "Age set" << std::endl;
+// 	assert(linkObservation->interface->manuallySetAge() == true);
+	
+	//HACK REPLACEMENT
+	EdgeInterface edgeinter;
+	std::cout << "Setting age value" << std::endl;
+	std::cout << "Setting age value" << std::endl;
+	edgeinter.setAge(_age_start_value);
+	std::cout << "Manueal" << std::endl;
+	assert(edgeinter.manuallySetAge() == true);
 	
 	_optimizable_graph.addEdge(linkObservation);
 	_edge_link.push_back(linkObservation);
+	_edge_interface_of_links.push_back(edgeinter);
+	
+	assert(_edge_interface_of_links.size() == _edge_link.size());
 	
 	std::cout << "Done" << std::endl;
 	return linkObservation;
@@ -332,17 +325,24 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 {
 	auto it = _edge_link.begin();
 	int size = _edge_link.size();
+	int place = 0;
 	for(it; it != _edge_link.end() ;){
 		if(*it == v1){
 			_edge_link.erase(it);
 			break;
 		}
 		else{
+			place++;
 			it++;
 		}
 	}
+	
+	assert(place != _edge_link.size());
+	_edge_interface_of_links.erase(_edge_interface_of_links.begin() + place);
+	
 	_optimizable_graph.removeEdge(v1);
 	assert(_edge_link.size() == size - 1);
+	assert(_edge_interface_of_links.size() == _edge_link.size());
 	
 	std::cout << "Out of remove edge" << std::endl;
 	
@@ -1238,20 +1238,64 @@ bool AASS::acg::AutoCompleteGraph::noDoubleLinks()
 
 }
 
-void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e){
+void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step){
 			
 	g2o::EdgeLinkXY_malcolm* v_linkxy = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(e);
 	g2o::EdgeLandmark_malcolm* v_land = dynamic_cast<g2o::EdgeLandmark_malcolm*>(e);
 	g2o::EdgeSE2Prior_malcolm* v_prior = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(e);
 	g2o::EdgeOdometry_malcolm* v_odom = dynamic_cast<g2o::EdgeOdometry_malcolm*>(e);
 	double age = -1;
+	
+	assert(_min_age >= 0);
+	assert(_max_age >= 0);
+	assert(_min_age <= _max_age);
+	
 	if(v_linkxy != NULL){
-		age = v_linkxy->interface.getAge();
-		if(age < _max_age || _max_age == -1){
-			v_linkxy->interface.setAge(age + _age_step);
+// 		assert(v_linkxy->interface->manuallySetAge());
+// 		age = v_linkxy->interface->getAge();
+		
+		//Finding age
+		int place = -1;
+		for(int i = 0; i < _edge_link.size() ; ++i){
+			if(_edge_link[i] == v_linkxy){
+				place = i;
+				break;
+			}
 		}
-		std::cout << "kernel size : " << age << std::endl;
+		
+		assert(place != -1);
+		assert(_edge_interface_of_links[place].manuallySetAge());
+		age = _edge_interface_of_links[place].getAge();
+		
+		//Updating age: The step can go up and down it doesn't matter
+		std::cout << "Age at first " << age <<std::endl;
+		if(step == true){
+			if(age + _age_step <= _max_age && age + _age_step >= _min_age || _max_age == -1){
+				_edge_interface_of_links[place].setAge(age + _age_step);
+				double age_tmp = _edge_interface_of_links.at(place).getAge();
+			}
+			else if (age + _age_step > _max_age){
+				_edge_interface_of_links[place].setAge(_max_age);
+				double age_tmp = _edge_interface_of_links.at(place).getAge();
+				assert(age_tmp >= age);
+			}
+			else if (age + _age_step < _min_age){
+				_edge_interface_of_links[place].setAge(_min_age);
+				double age_tmp = _edge_interface_of_links.at(place).getAge();
+				assert(age_tmp <= age);
+			}
+		}
+		
+		assert(_edge_interface_of_links.at(place).getAge() <= _max_age);
+		assert(_edge_interface_of_links.at(place).getAge() >= _min_age);
+		
+		//Keep going
+		std::cout << "kernel size : " << age << " age max " << _max_age << " start " << _age_start_value << std::endl;
 		e->robustKernel()->setDelta(age);
+		if(_max_age != -1){
+			assert(age <= _max_age);
+		}
+		
 	}
 	else if(v_land != NULL){
 		age = v_land->interface.getAge();
