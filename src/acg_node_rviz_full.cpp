@@ -72,8 +72,8 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	
 // 	std::cout << "saved to " << file_out << std::endl;
 	
-	/*** Partial image****/
-	visu.updateRvizStepByStep();
+	/*** image****/
+	visu.updateRviz();
 	
 	
 // 	oacg->initializeOptimization();

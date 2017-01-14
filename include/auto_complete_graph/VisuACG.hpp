@@ -85,8 +85,8 @@ namespace acg{
 			_corner_ndt_node_markers.header.frame_id = "/world";
 			_corner_ndt_node_markers.ns = "acg";
 			_corner_ndt_node_markers.id = 2;
-			_corner_ndt_node_markers.scale.x = 0.2;
-			_corner_ndt_node_markers.scale.y = 0.2;
+			_corner_ndt_node_markers.scale.x = 0.5;
+			_corner_ndt_node_markers.scale.y = 0.5;
 			_corner_ndt_node_markers.color.g = 1.0f;
 			_corner_ndt_node_markers.color.a = 1.0;
 			
