@@ -12,7 +12,57 @@
 ros::Publisher map_pub_;
 
 
+ros::Time timef;
 
+int count = 0;
+
+inline void printImages(AASS::acg::AutoCompleteGraph* oacg){
+	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
+	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt);
+	grid_map::GridMap gridMap({"all"});
+	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt, "all", gridMap);
+// 
+// 	
+// 	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
+// 	
+	cv::Mat originalImageP;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
+	std::string file_outg = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_";
+	std::ostringstream convert;   // stream used for the conversion
+	convert << oacg->getRobotNodes().size(); 
+	
+	std::ostringstream count_str;   // stream used for the conversion
+	count_str << count; 
+	file_outg = file_outg + convert.str();
+	file_outg = file_outg + "nodes_";
+	file_outg = file_outg + count_str.str();
+	file_outg = file_outg + ".png";
+
+	cv::imwrite(file_outg, originalImageP);
+	
+	nav_msgs::OccupancyGrid* omap_tmpt_partial = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_outt_partial(omap_tmpt_partial);
+	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt_partial, oacg->getRobotNodes().size() - 1);
+	grid_map::GridMap gridMap_partial({"all"});
+	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt_partial, "all", gridMap_partial);
+// 
+// 	
+	std::cout << "WELLL HERE IT IS : " << occ_outt_partial->info.origin.position << " ori " << occ_outt_partial->info.origin.orientation << std::endl << std::endl;	
+// 	
+	cv::Mat originalImageP_partial;
+	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap_partial, "all", CV_16UC1, 0.0, 1, originalImageP_partial);
+	std::string file_outg_partial = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_partial_";
+	std::ostringstream convertg_partial;   // stream used for the conversion
+	convertg_partial << oacg->getRobotNodes().size(); 
+	file_outg_partial = file_outg_partial + convert.str();
+	file_outg_partial = file_outg_partial + "nodes_";
+	file_outg_partial = file_outg_partial + count_str.str();
+	file_outg_partial = file_outg_partial + ".png";
+	
+// 
+	cv::imwrite(file_outg_partial, originalImageP_partial);
+}
 
 inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose) {
 
@@ -82,7 +132,9 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	oacg->getGraph().setFirst();
 	oacg->prepare();
 	oacg->optimize();
+	count++;
 	
+	printImages(oacg);
 // 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
 // 	std::ostringstream convert_after;   // stream used for the conversion
 // 	convert_after << graph.getNbNodes(); 
@@ -95,46 +147,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	visu.updateRviz();
 // 	visu.updateRviz();
 // 	
-	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
-	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
-	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt);
-	grid_map::GridMap gridMap({"all"});
-	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt, "all", gridMap);
-// 
-// 	
-// 	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
-// 	
-	cv::Mat originalImageP;
-	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
-	std::string file_outg = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_";
-	std::ostringstream convertg;   // stream used for the conversion
-	convertg << oacg->getRobotNodes().size(); 
-	file_outg = file_outg + convert.str();
-	file_outg = file_outg + "nodes.png";
 
-	cv::imwrite(file_outg, originalImageP);
-
-
-	
-	
-	nav_msgs::OccupancyGrid* omap_tmpt_partial = new nav_msgs::OccupancyGrid();
-	nav_msgs::OccupancyGrid::Ptr occ_outt_partial(omap_tmpt_partial);
-	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt_partial, oacg->getRobotNodes().size() - 1);
-	grid_map::GridMap gridMap_partial({"all"});
-	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt_partial, "all", gridMap_partial);
-// 
-// 	
-	std::cout << "WELLL HERE IT IS : " << occ_outt_partial->info.origin.position << " ori " << occ_outt_partial->info.origin.orientation << std::endl << std::endl;	
-// 	
-	cv::Mat originalImageP_partial;
-	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap_partial, "all", CV_16UC1, 0.0, 1, originalImageP_partial);
-	std::string file_outg_partial = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/occupancygrid_full_partial_";
-	std::ostringstream convertg_partial;   // stream used for the conversion
-	convertg_partial << oacg->getRobotNodes().size(); 
-	file_outg_partial = file_outg_partial + convert.str();
-	file_outg_partial = file_outg_partial + "nodes.png";
-// 
-	cv::imwrite(file_outg_partial, originalImageP_partial);
 
 
 	
@@ -275,11 +288,33 @@ int main(int argc, char **argv)
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	
+	
+	timef = ros::Time::now();
+	
 	while(ros::ok()){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
-		visu.updateRvizV2();
+// 		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
+		
+		ros::Time future = ros::Time::now();
+// 		std::cout << "future " << future.toSec() << std::endl;
+// 		exit(0);
+		
+		if( (future - timef).toSec() >= 3 && oacg.getRobotNodes().size() > 5){
+// 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
+// 			exit(0);
+			visu.updateRviz();	
+		// 	oacg->initializeOptimization();
+		// 	oacg->initialGuess();
+			//Prepare the graph : marginalize + initializeOpti
+			oacg.getGraph().setFirst();
+			oacg.prepare();
+			oacg.optimize();
+			count++;
+			printImages(&oacg);
+			
+		}
 	}
 
     return 0;
