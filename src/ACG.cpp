@@ -166,25 +166,16 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 // 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
 	double newnorm_old = (pose1 - pose2).norm();
 	
-	double test_newnorm = newnorm_old / 2;
+// 	double test_newnorm = newnorm_old / 2;
 	//ATTENTION NOT A MAGIC NUMBER
-// 	double newnorm = (newnorm_old *  _priorNoise(0)) / 100;
+	double newnorm = (newnorm_old *  _priorNoise(0)) / 100;
 	
 // 	std::cout << newnorm << " " << newnorm_old << " test " << test_newnorm << " base " << _priorNoise(0) << " "<< _priorNoise(1) << std::endl;
 	
-// 	double tt = newnorm * 1000;
-// 	tt = std::round(tt);
-// 	tt = tt / 1000;
-// 	double ttt = test_newnorm * 1000;
-// 	ttt = std::round(ttt);
-// 	ttt = ttt / 1000;
-// 	std::cout << tt << " " << ttt  <<std::endl;
-// 	assert(tt == ttt);
+	assert(newnorm <= newnorm_old);
+	assert(newnorm >= 0);
 	
-// 	assert(newnorm <= newnorm_old);
-// 	assert(newnorm >= 0);
-	
-	std::pair<double, double> eigenval(test_newnorm, _priorNoise(1));
+	std::pair<double, double> eigenval(newnorm, _priorNoise(1));
 // 	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
 	
 	Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
