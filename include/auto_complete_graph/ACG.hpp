@@ -61,7 +61,7 @@ private:
 		
 		double _max_distance_for_link_in_meter;
 		
-		///@brief use the user inputted cov for the prior. Use the length of the edge if false
+		///@brief USELESS NOW ! use the user inputted cov for the prior. Use the length of the edge if false
 		bool _use_user_prior_cov;
 		
 		///@brief user user inputted cov for robot pos. Uses registration otherwise
@@ -328,6 +328,7 @@ private:
 			infile >> _max_distance_for_link_in_meter; std::cout << _max_distance_for_link_in_meter << std::endl;
 			
 			infile >> _flag_use_robust_kernel;
+			infile >> _use_user_robot_pose_cov;
 			
 			assert(_age_start_value >= 0);
 			assert(_max_age >= 0);
@@ -338,6 +339,10 @@ private:
 			_sensorOffset->setOffset(_sensorOffsetTransf);
 			_sensorOffset->setId(0);
 			_ndt_graph = NULL;
+			
+			if(infile.eof() == true){
+				throw std::runtime_error("NOT ENOUGH PARAMETERS IN FILE");
+			}
 			
 			
 		}			
