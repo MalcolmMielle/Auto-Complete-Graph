@@ -152,8 +152,24 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 
 int main(int argc, char **argv)
 {
-	
-	AASS::acg::BasementFull basement;
+	double deviation = 0;
+	double angle = 0;
+	double scale = 1;
+	if(argc > 1){
+		deviation = strtod(argv[1], NULL);
+		if(argc > 2){
+			angle = strtod(argv[1], NULL);
+			if(argc > 3){
+				scale = strtod(argv[1], NULL);
+			}
+		}
+// 		std::cout << "Deviation " << deviation << std::endl;
+// 		exit(0);
+	}
+// 	std::cout << ":(" << std::endl;
+// 	exit(0);
+		
+	AASS::acg::BasementFull basement(deviation, angle, scale);
 	basement.extractCornerPrior();
 // 	basement.transformOntoSLAM();
 // 	auto graph_priortmp = basement.getGraph();

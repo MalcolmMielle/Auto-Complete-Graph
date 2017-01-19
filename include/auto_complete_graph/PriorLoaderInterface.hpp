@@ -115,7 +115,9 @@ namespace AASS{
 				//TODO Implement myself
 // 				cv::warpAffine( _same_point_prior, warp_dst, warp_mat, warp_dst.size() );
 				AffineTransformGraph(warp_mat);
-// 
+				
+				
+				
 // 				cv::namedWindow( "fuck", CV_WINDOW_AUTOSIZE );
 // 				cv::imshow( "fuck", warp_dst );
 				/** Rotating the image after Warp */
@@ -150,6 +152,54 @@ namespace AASS{
 			
 			
 		protected:
+			
+			void rotateGraph(const cv::Mat& rot_mat ){
+				
+				
+				auto transf = [](const cv::Mat& rot_mat, const cv::Point2d point) -> cv::Point2d {
+					//Matrix multiplication
+					cv::Mat point_m = (cv::Mat_<double>(3,1) << point.x, point.y);
+					cv::Mat mat_out = rot_mat * point_m;
+// 					std::cout << "Mat out " << mat_out << std::endl;
+					cv::Point2d point_out;
+					point_out.x = mat_out.at<double>(0);
+					point_out.y = mat_out.at<double>(1);
+					return point_out;
+				};
+				
+				
+				
+				
+				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
+				//vertices access all the vertix
+				//Classify them in order
+	// 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;
+				int i = 0 ;
+				for (vp = boost::vertices(_prior_graph); vp.first != vp.second; ++vp.first) {
+	// 					std::cout << "going throught grph " << i << std::endl; ++i;
+					AASS::das::CornerDetector::CornerVertex v = *vp.first;
+					//ATTENTION !
+					cv::Point2d point;
+					point.x = _prior_graph[v].getX();
+					point.y = _prior_graph[v].getY();
+					
+					auto point_out = transf(rot_mat, point);
+					
+					//Matrix multiplication
+					
+					std::cout << "Point out " << point_out << std::endl;
+					
+					std::cout << "OLD value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
+					_prior_graph[v].setX(point_out.x);
+					_prior_graph[v].setY(point_out.y);
+					_corner_prior_matched.push_back(point_out);
+					std::cout << "New value " << _corner_prior_matched[i].x << " " << _corner_prior_matched[i].y << std::endl;
+					std::cout << "New value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
+					++i;
+				}
+				
+				
+			}
 			
 			void AffineTransformGraph(const cv::Mat& warp_transfo ){
 				

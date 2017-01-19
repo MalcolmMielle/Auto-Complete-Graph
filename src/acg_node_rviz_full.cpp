@@ -176,8 +176,24 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 
 int main(int argc, char **argv)
 {
-	
-	AASS::acg::BasementFull basement;
+	double deviation = 0;
+	double angle = 0;
+	double scale = 1;
+	if(argc > 1){
+		deviation = strtod(argv[1], NULL);
+		if(argc > 2){
+			angle = strtod(argv[1], NULL);
+			if(argc > 3){
+				scale = strtod(argv[1], NULL);
+			}
+		}
+// 		std::cout << "Deviation " << deviation << std::endl;
+// 		exit(0);
+	}
+// 	std::cout << ":(" << std::endl;
+// 	exit(0);
+		
+	AASS::acg::BasementFull basement(deviation, angle, scale);
 	basement.extractCornerPrior();
 // 	basement.transformOntoSLAM();
 // 	auto graph_priortmp = basement.getGraph();
@@ -252,23 +268,10 @@ int main(int argc, char **argv)
 // 	double max_link; infile >> max_link;
 	
 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
-	oacg.useRobustKernel(true);
-// 	oacg.setAgeStartValue(agestart);
-// 	oacg.setStepAge(step);
-// 	oacg.setMinDistanceForLinksInMeters(min_link);
-// 	oacg.setMaxDistanceForLinksInMeters(max_link);
-// 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
-// 		tn, //Robot translation noise
-// 		rn, 				//Rotation noise for robot
-// 		ln, //Landmarks noise
-// 		pn, //Prior noise
-// 		DEG2RAD(2.), //Prior rot							 
-// 		Eigen::Vector2d(0.2, 0.2) //Link noise,
-// 	);
+// 	oacg.useRobustKernel(true);
 	oacg.addPriorGraph(graph_prior);
-
-	oacg.useUserCovForPrior(false);
-	oacg.useUserCovForRobotPose(true);
+// 	oacg.useUserCovForPrior(false);
+// 	oacg.useUserCovForRobotPose(false);
 	// 	std::string file_out = "/home/malcolm/ACG_folder/acg_0_prior.g2o";
 // 	oacg.getGraph().save(file_out.c_str());
 // 	std::cout << "saved to " << file_out << std::endl;
@@ -288,6 +291,7 @@ int main(int argc, char **argv)
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	
+	visu.updateRviz();
 	
 	timef = ros::Time::now();
 	
