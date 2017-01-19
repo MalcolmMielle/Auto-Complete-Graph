@@ -774,7 +774,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 // 			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
 			
 			//If we found the landmark, we save the data
-			if( res < cell_size){
+			if( res < cell_size * 2){
 				seen = true;
 				ptr_landmark_seen = _nodes_landmark[j];
 			}
