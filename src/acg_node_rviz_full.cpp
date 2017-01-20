@@ -179,7 +179,7 @@ int main(int argc, char **argv)
 	double deviation = 0;
 	double angle = 0;
 	double scale = 1;
-	cv::Point2f center(0, 0);
+	cv::Point2f center(19.5, 4.5);
 	if(argc > 1){
 		deviation = strtod(argv[1], NULL);
 		if(argc > 2){
