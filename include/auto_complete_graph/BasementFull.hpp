@@ -26,7 +26,7 @@ namespace AASS{
 // 			std::string _file;
 			
 		public: 
-			BasementFull(double deviation, double anglet, double scalet) : PriorLoaderInterface("/home/malcolm/ros_catkin_ws/indigo_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png"){
+			BasementFull(double deviation, double anglet, double scalet, cv::Point2f center) : PriorLoaderInterface("/home/malcolm/ros_catkin_ws/indigo_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png"){
 				
 				auto randomNoise = [](double mean, double deviationt) -> double {
 					std::default_random_engine engine{std::random_device()() };
@@ -34,7 +34,7 @@ namespace AASS{
 					return dist(engine);
 				};
 				
-				cv::Point center = cv::Point(0, 0);
+// 				cv::Point center = cv::Point(7, 08);
 				double angle = anglet;
 				double scale = scalet;
 				
