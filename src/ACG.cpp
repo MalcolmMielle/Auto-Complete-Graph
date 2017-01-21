@@ -170,9 +170,11 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	//ATTENTION NOT A MAGIC NUMBER
 	double newnorm = (newnorm_old *  _priorNoise(0)) / 100;
 	
-// 	std::cout << newnorm << " " << newnorm_old << " test " << test_newnorm << " base " << _priorNoise(0) << " "<< _priorNoise(1) << std::endl;
+	int test_tt = newnorm * 100;
+	int test_ttt = newnorm_old * 100;
+	std::cout << newnorm << " " << test_ttt << " test " << test_tt << " base " << _priorNoise(0) << " "<< _priorNoise(1) << std::endl;
 	
-	assert(newnorm <= newnorm_old);
+	assert(test_tt <= test_ttt);
 	assert(newnorm >= 0);
 	
 	std::pair<double, double> eigenval(newnorm, _priorNoise(1));
