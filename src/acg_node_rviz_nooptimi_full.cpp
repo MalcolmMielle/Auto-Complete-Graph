@@ -122,7 +122,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	cv::imwrite(file_outg, originalImageP);
 	
 	
-	visu.updateRvizStepByStep();
+	visu.updateRviz();
 	
 	nav_msgs::OccupancyGrid* omap_tmpt_partial = new nav_msgs::OccupancyGrid();
 	nav_msgs::OccupancyGrid::Ptr occ_outt_partial(omap_tmpt_partial);
@@ -155,12 +155,17 @@ int main(int argc, char **argv)
 	double deviation = 0;
 	double angle = 0;
 	double scale = 1;
+	cv::Point2f center(19.5, 4.5);
 	if(argc > 1){
 		deviation = strtod(argv[1], NULL);
 		if(argc > 2){
-			angle = strtod(argv[1], NULL);
+			angle = strtod(argv[2], NULL);
 			if(argc > 3){
-				scale = strtod(argv[1], NULL);
+				scale = strtod(argv[3], NULL);
+				if(argc > 5){
+					center.x = strtod(argv[4], NULL);
+					center.y = strtod(argv[5], NULL);
+				}
 			}
 		}
 // 		std::cout << "Deviation " << deviation << std::endl;
@@ -169,7 +174,7 @@ int main(int argc, char **argv)
 // 	std::cout << ":(" << std::endl;
 // 	exit(0);
 		
-	AASS::acg::BasementFull basement(deviation, angle, scale);
+	AASS::acg::BasementFull basement(deviation, angle, scale, center);
 	basement.extractCornerPrior();
 // 	basement.transformOntoSLAM();
 // 	auto graph_priortmp = basement.getGraph();
