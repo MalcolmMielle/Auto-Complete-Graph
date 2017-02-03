@@ -7,6 +7,7 @@
 #include "auto_complete_graph/Basement.hpp"
 #include "auto_complete_graph/BasementFull.hpp"
 #include "auto_complete_graph/VisuACG.hpp"
+#include "auto_complete_graph/GoodMatchings.hpp"
 
 
 ros::Publisher map_pub_;
@@ -294,6 +295,8 @@ int main(int argc, char **argv)
 	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
+	AASS::acg::GoodMatchings goodmatchings(nh, &oacg);
+	
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("ndt_graph", 10, boost::bind(&gotGraph, _1, &acg, visu));
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 100, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
     
@@ -312,31 +315,31 @@ int main(int argc, char **argv)
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 		
 		ros::Time future = ros::Time::now();
-		std::cout << "future " << (future - timef).toSec() << " since " << future << " " << timef << std::endl;
+// 		std::cout << "future " << (future - timef).toSec() << " since " << future << " " << timef << std::endl;
 // 		exit(0);
 		
-		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5){
-// 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
-// 			exit(0);
-			visu.updateRvizNoNDT();	
-		// 	oacg->initializeOptimization();
-		// 	oacg->initialGuess();
-			//Prepare the graph : marginalize + initializeOpti
-			oacg.getGraph().setFirst();
-			oacg.prepare();
-			oacg.optimize();
-			count++;
-// 			printImages(&oacg);
-			
-			std::cout << "********************************************************" << std::endl << std::endl;
-			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
-			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
-			std::cout << "********************************************************" << std::endl << std::endl;
-			flag = false;
-			
-			visu.updateRviz();	
-			
-		}	
+// 		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5){
+// // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
+// // 			exit(0);
+// 			visu.updateRvizNoNDT();	
+// 		// 	oacg->initializeOptimization();
+// 		// 	oacg->initialGuess();
+// 			//Prepare the graph : marginalize + initializeOpti
+// 			oacg.getGraph().setFirst();
+// 			oacg.prepare();
+// 			oacg.optimize();
+// 			count++;
+// // 			printImages(&oacg);
+// 			
+// 			std::cout << "********************************************************" << std::endl << std::endl;
+// 			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
+// 			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
+// 			std::cout << "********************************************************" << std::endl << std::endl;
+// 			flag = false;
+// 			
+// 			visu.updateRviz();	
+// 			
+// 		}	
 		
 		
 		

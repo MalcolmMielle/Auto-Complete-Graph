@@ -14,6 +14,10 @@ ros::Publisher map_pub_;
 
 ros::Time timef;
 
+std::vector<double> all_node_times;
+double node_process_time = 0;
+int cycles = 0;
+
 int count = 0;
 
 inline void printImages(AASS::acg::AutoCompleteGraph* oacg){
@@ -104,6 +108,8 @@ void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompl
 void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
 	std::cout << "Got a new graph " << std::endl;
 	
+	ros::Time start = ros::Time::now();
+	
 	ndt_feature::NDTFeatureGraph graph;
 	
 	std::string frame;
@@ -123,7 +129,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	std::cout << "saved to " << file_out << std::endl;
 	
 	/*** image****/
-	visu.updateRviz();
+	visu.updateRvizNoNDT();
 	
 	
 // 	oacg->initializeOptimization();
@@ -134,7 +140,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	oacg->optimize();
 	count++;
 	
-	printImages(oacg);
+// 	printImages(oacg);
 // 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
 // 	std::ostringstream convert_after;   // stream used for the conversion
 // 	convert_after << graph.getNbNodes(); 
@@ -148,14 +154,11 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	visu.updateRviz();
 // 	
 
-
-
+	timef = ros::Time::now();
 	
-	
-	
-	
-	
-	
+	node_process_time = node_process_time + (timef - start).toSec();
+	all_node_times.push_back((timef - start).toSec());
+	cycles++;
 	
 // 	nav_msgs::OccupancyGrid omap; 
 // 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
@@ -296,24 +299,26 @@ int main(int argc, char **argv)
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	
-	visu.updateRviz();
+	visu.updateRvizNoNDT();
 	
 	timef = ros::Time::now();
+	ros::Time time_begin = ros::Time::now();
 	
-	while(ros::ok()){
+	bool flag = true;
+	while(ros::ok() && flag == true ){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
 // 		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 		
 		ros::Time future = ros::Time::now();
-// 		std::cout << "future " << future.toSec() << std::endl;
+		std::cout << "future " << (future - timef).toSec() << " since " << future << " " << timef << std::endl;
 // 		exit(0);
 		
-		if( (future - timef).toSec() >= 3 && oacg.getRobotNodes().size() > 5){
+		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5){
 // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
 // 			exit(0);
-			visu.updateRviz();	
+			visu.updateRvizNoNDT();	
 		// 	oacg->initializeOptimization();
 		// 	oacg->initialGuess();
 			//Prepare the graph : marginalize + initializeOpti
@@ -321,9 +326,20 @@ int main(int argc, char **argv)
 			oacg.prepare();
 			oacg.optimize();
 			count++;
-			printImages(&oacg);
+// 			printImages(&oacg);
 			
-		}
+			std::cout << "********************************************************" << std::endl << std::endl;
+			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
+			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
+			std::cout << "********************************************************" << std::endl << std::endl;
+			flag = false;
+			
+			visu.updateRviz();	
+			
+		}	
+		
+		
+		
 	}
 
     return 0;
