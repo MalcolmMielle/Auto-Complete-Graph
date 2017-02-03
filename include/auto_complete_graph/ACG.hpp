@@ -352,17 +352,17 @@ private:
 		
 		virtual ~AutoCompleteGraph(){
 			
-			std::cout << "Calling ACG dest with size" << _nodes_ndt.size() << std::endl ;
+// 			std::cout << "Calling ACG dest with size" << _nodes_ndt.size() << std::endl ;
 // 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
 			
 // 			cleanup pointers in NODE
 			
 			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
-				std::cout << "Deleting the NDT maps" << std::endl;
+// 				std::cout << "Deleting the NDT maps" << std::endl;
  				delete _nodes_ndt[i].getMap();
 			}
-			std::cout << "OUT ACG dest " << std::endl ;
+// 			std::cout << "OUT ACG dest " << std::endl ;
 			
 		}
 		
