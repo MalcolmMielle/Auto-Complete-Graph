@@ -205,6 +205,18 @@ target_link_libraries(acg_node_rviz_noptimi_full
 )
 
 
+add_executable(acg_node_rviz_full_fast src/acg_node_rviz_full_fast.cpp)
+
+# Add cmake target dependencies of the executable
+# same as for the library above
+add_dependencies(acg_node_rviz_full_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+# Specify libraries to link a library or executable target against
+target_link_libraries(acg_node_rviz_full_fast
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+)
+
+
 add_executable(acg_node_rviz_full src/acg_node_rviz_full.cpp)
 
 ## Add cmake target dependencies of the executable
