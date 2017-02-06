@@ -344,6 +344,8 @@ int main(int argc, char **argv)
 		
 		
 	}
+	
+	goodmatchings.getOutliers();
 
     return 0;
 }
