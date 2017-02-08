@@ -321,6 +321,7 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 	int place = 0;
 	for(it; it != _edge_link.end() ;){
 		if(*it == v1){
+			std::cout << "Found"<<std::endl;
 			_edge_link.erase(it);
 			break;
 		}
@@ -330,7 +331,7 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 		}
 	}
 	
-	assert(place != _edge_link.size());
+	assert(place != size);
 	_edge_interface_of_links.erase(_edge_interface_of_links.begin() + place);
 	
 	_optimizable_graph.removeEdge(v1);
@@ -899,9 +900,10 @@ return count;
 void AASS::acg::AutoCompleteGraph::removeBadLinks()
 {
 	//Remove links that went too far away from the points and restor the edges to original state when possible:
+	int count = 0 ;
 	
 	auto it_old_links = _edge_link.begin();
-	for(it_old_links; it_old_links != _edge_link.end() ;){
+	for(it_old_links; it_old_links != _edge_link.end();){
 		
 // 		std::cout << "Studying links "<< std::endl;
 		std::vector<Eigen::Vector3d> vertex_out;
@@ -930,23 +932,29 @@ void AASS::acg::AutoCompleteGraph::removeBadLinks()
 		assert(vertex_out.size() == 2);
 		double norm = (vertex_out[0] - vertex_out[1]).norm();
 		//Attention magic number
+		auto it_tmp = it_old_links;
+		
+		auto it_chec = it_old_links + 1;
+		
+		it_old_links++;
+		
+		assert(it_chec == it_old_links);
+		
 		if(norm > _max_distance_for_link_in_meter ){
 			std::cout << "Removing a link" << std::endl;
 			std::cout << "NORM " << norm << "min dist " << _max_distance_for_link_in_meter << std::endl;
-			auto it_tmp = it_old_links;
-			it_old_links++;
-// 			exit(0);
 			removeLinkBetweenMaps(*it_tmp);
 		}
-		else{
-			it_old_links++;
-		}
 		
-// 		std::cout << "Studying links end"<< std::endl;
-	}
-	
-// 		std::cout << "Studying links out "<< std::endl;
-	
+		assert(it_chec == it_old_links);
+		
+		count++;
+		std::cout << "Count " << count << " size " << _edge_link.size() << std::endl;
+		assert(count <= _edge_link.size());
+// 		else{
+// 			it_old_links++;
+// 		}	
+	}	
 }
 
 
