@@ -21,6 +21,8 @@ int cycles = 0;
 
 int count = 0;
 
+bool new_node = false;
+
 inline void printImages(AASS::acg::AutoCompleteGraph* oacg){
 	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
@@ -107,6 +109,7 @@ void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompl
 
 
 void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
+	new_node = true;
 	std::cout << "Got a new graph " << std::endl;
 	
 	ros::Time start = ros::Time::now();
@@ -318,28 +321,32 @@ int main(int argc, char **argv)
 // 		std::cout << "future " << (future - timef).toSec() << " since " << future << " " << timef << std::endl;
 // 		exit(0);
 		
-// 		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5){
-// // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
-// // 			exit(0);
-// 			visu.updateRvizNoNDT();	
-// 		// 	oacg->initializeOptimization();
-// 		// 	oacg->initialGuess();
-// 			//Prepare the graph : marginalize + initializeOpti
-// 			oacg.getGraph().setFirst();
-// 			oacg.prepare();
-// 			oacg.optimize();
-// 			count++;
-// // 			printImages(&oacg);
-// 			
-// 			std::cout << "********************************************************" << std::endl << std::endl;
-// 			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
-// 			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
-// 			std::cout << "********************************************************" << std::endl << std::endl;
+		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true){
+// 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
+// 			exit(0);
+			visu.updateRvizNoNDT();	
+		// 	oacg->initializeOptimization();
+		// 	oacg->initialGuess();
+			//Prepare the graph : marginalize + initializeOpti
+			oacg.getGraph().setFirst();
+			oacg.prepare();
+			oacg.optimize();
+			count++;
+// 			printImages(&oacg);
+			
+			std::cout << "********************************************************" << std::endl << std::endl;
+			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
+			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
+			std::cout << "********************************************************" << std::endl << std::endl;
 // 			flag = false;
-// 			
-// 			visu.updateRviz();	
-// 			
-// 		}	
+			
+			visu.updateRviz();
+			
+			goodmatchings.getOutliers();
+			
+			new_node = false;
+			
+		}	
 		
 		
 		

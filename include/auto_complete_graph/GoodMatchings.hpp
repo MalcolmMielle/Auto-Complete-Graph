@@ -81,7 +81,7 @@ namespace acg{
 		bool which;
 		
 	public:
-		GoodMatchings(ros::NodeHandle nh, AutoCompleteGraph* acg) : _nh(nh), _acg(acg){
+		GoodMatchings(ros::NodeHandle nh, AutoCompleteGraph* acg) : _flag_go(false), _nh(nh), _acg(acg){
 			_point_clicked = _nh.subscribe<geometry_msgs::PointStamped>("/clicked_point", 10, boost::bind(&GoodMatchings::clicked, this, _1));
 			
 			_link_pub = _nh.advertise<visualization_msgs::Marker>("correct_link", 10);

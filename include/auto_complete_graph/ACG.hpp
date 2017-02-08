@@ -546,6 +546,9 @@ private:
 		
 		void optimize(int iter = 10){
 			
+			std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;
+			overCheckLinks();
+			
 			/********** HUBER kernel ***********/
 			
 // 			_optimizable_graph.setHuberKernel();			
@@ -584,9 +587,22 @@ private:
 // 					updatePriorEdgeCovariance();
 					testNoNanInPrior("update prior edge cov after opti dcs");
 				}
-				
 			
+
 			}
+			
+			std::cout << "AFTER THE OPTIMIZATION CREATE" << std::endl;
+			int count = countLinkToMake();
+			int count2 = createNewLinks();
+			if(count != count2){
+				std::cout << "Weird different detection" << std::endl;
+				throw std::runtime_error("ARF NOT GOOD COUNT");
+			}
+			overCheckLinks();
+			
+			removeBadLinks();
+			std::cout << "AFTER THE OPTIMIZATION REMOVE" << std::endl;
+			overCheckLinks();
 		}
 		
 		void setAgeingHuberKernel(){
@@ -659,7 +675,14 @@ private:
 		
 	private:
 		
-		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
+		///@brief do createNewLinks and removeBadLinks
+		void updateLinks();
+		
+		///@brief create links between close by landmark and prior
+		int createNewLinks();
+		///@brief remove links between too far landmarks and prior
+		void removeBadLinks();
+		
 		void updatePriorEdgeCovariance();
 		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step);
 		
@@ -671,6 +694,108 @@ private:
 				return true;
 			}
 			return false;
+		}
+		
+		void overCheckLinks(){
+			checkLinkNotForgotten();
+			checkLinkNotTooBig();
+		}
+		
+		void checkLinkNotForgotten(){
+		
+			std::cout << "check forgotten links" << std::endl;
+			auto it = _nodes_landmark.begin();
+			for(it ; it != _nodes_landmark.end() ; it++){
+				Eigen::Vector2d pose_landmark = (*it)->estimate();
+				auto it_prior = _nodes_prior.begin();				
+				for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+										
+					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+					double norm_tmp = (pose_prior - pose_landmark).norm();
+					
+					//Update the link
+					if(norm_tmp <= _min_distance_for_link_in_meter){
+						if(linkAlreadyExist(*it, *it_prior) == false){
+							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+							throw std::runtime_error("A small link was forgotten");
+						}
+					}	
+					
+				}
+
+			}
+		}
+		
+		int countLinkToMake(){
+		
+			int count = 0;
+			std::cout << "check forgotten links" << std::endl;
+			auto it = _nodes_landmark.begin();
+			for(it ; it != _nodes_landmark.end() ; it++){
+				Eigen::Vector2d pose_landmark = (*it)->estimate();
+				auto it_prior = _nodes_prior.begin();				
+				for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+										
+					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+					double norm_tmp = (pose_prior - pose_landmark).norm();
+					
+					//Update the link
+					if(norm_tmp <= _min_distance_for_link_in_meter){
+						if(linkAlreadyExist(*it, *it_prior) == false){
+							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+							count++;
+						}
+					}	
+					
+				}
+
+			}
+			
+			return count;
+		}
+		
+		void checkLinkNotTooBig(){
+			std::cout << "check no big links" << std::endl;
+			//Check if no small links are ledft out
+			
+			//Check if the link are not too big
+			for(auto it_old_links = _edge_link.begin(); it_old_links != _edge_link.end() ;it_old_links++){
+				
+				std::vector<Eigen::Vector3d> vertex_out;
+				
+				assert((*it_old_links)->vertices().size() == 2);
+				
+				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
+				if(ptr == NULL){
+					std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
+					throw std::runtime_error("Links do not have the good vertex type. Prior");
+				}
+				auto vertex = ptr->estimate().toVector();
+				vertex_out.push_back(vertex);
+				
+				g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*it_old_links)->vertices()[1]);
+				if(ptr2 == NULL){
+					throw std::runtime_error("Links do not have the good vertex type. Landmark");
+				}
+				auto vertex2 = ptr2->estimate();
+				Eigen::Vector3d pose_prior; pose_prior << vertex2(0), vertex2(1), 0;
+				vertex_out.push_back(pose_prior);
+
+				
+				assert(vertex_out.size() == 2);
+				double norm = (vertex_out[0] - vertex_out[1]).norm();
+				//Attention magic number
+				if(norm > _max_distance_for_link_in_meter ){
+					if(linkAlreadyExist(ptr2, ptr) == false){
+						std::cout << "NORM" << norm << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+						throw std::runtime_error("Big link still present :O");
+					}
+				}
+			}
+			
+			
 		}
 	
 	};
