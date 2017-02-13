@@ -323,4 +323,5 @@ target_link_libraries(acg_node_rviz_full
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+#useless commment
 add_subdirectory(tests)
