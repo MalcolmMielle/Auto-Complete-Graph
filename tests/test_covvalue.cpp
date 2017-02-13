@@ -85,6 +85,4 @@ BOOST_AUTO_TEST_CASE(trying)
 	
 	std::cout << "out " << AASS::acg::getCovarianceVec(eigenvec3, eigenval3) << std::endl;
 	std::cout << "inv " << AASS::acg::getCovarianceVec(eigenvec3, eigenval3).inverse() << std::endl;
-	
-	
 }

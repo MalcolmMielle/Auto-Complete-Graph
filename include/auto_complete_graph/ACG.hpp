@@ -59,11 +59,17 @@ private:
 		///@brief Minimum distance from a prior corner to a NDT corner. THe distance is given in meter and is fixed at 2m in the constuctor
 		double _min_distance_for_link_in_meter;
 		
-		///@brief use the user inputted cov for the prior. Use the length of the edge if false
+		double _max_distance_for_link_in_meter;
+		
+		///@brief USELESS NOW ! use the user inputted cov for the prior. Use the length of the edge if false
 		bool _use_user_prior_cov;
 		
 		///@brief user user inputted cov for robot pos. Uses registration otherwise
 		bool _use_user_robot_pose_cov;
+
+		bool _flag_optimize;
+		
+		bool _flag_use_robust_kernel;
 		
 		/**
 		 * @brief : used in a function to update the NDTGraph
@@ -141,6 +147,32 @@ private:
 			g2o::SE2 getOriginalValue(){return _original_value;}
 		};
 		
+		class EdgeInterface
+		{
+			protected:
+			bool _flag_set_age;
+			public:
+			g2o::SE2 _malcolm_original_value;
+			double _malcolm_age;
+			
+		//       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+			EdgeInterface() : _flag_set_age(false), _malcolm_age(1){};
+			
+			virtual g2o::SE2 getOriginalValue(){return _malcolm_original_value;}
+			virtual void setOriginalValue(const g2o::SE2& orig_val){_malcolm_original_value = orig_val;}
+			virtual bool manuallySetAge(){return _flag_set_age;}
+			virtual double getAge(){return _malcolm_age;}
+			virtual bool setAge(double a){
+				std::cout << "Setting the age" << std::endl;
+				_flag_set_age = true;  
+				assert(_flag_set_age == true); 
+				_malcolm_age = a; 
+				return _flag_set_age;
+			}
+			
+
+		};
+		
 		
 	public:
 		/**
@@ -189,6 +221,10 @@ private:
 		std::vector<NDTNodeAndMap> _nodes_ndt;
 		///@brief vector storing all linking edges
 		std::vector<g2o::EdgeLinkXY_malcolm*> _edge_link;
+		
+		//TODO: hack because fuck g2o node they don't work
+		std::vector<EdgeInterface> _edge_interface_of_links;
+		
 		///@brief vector storing all edges between a landmark and the robot
 		std::vector<g2o::EdgeLandmark_malcolm*> _edge_landmark;
 		///@brief vector storing all edge between the prior nodes
@@ -206,6 +242,13 @@ private:
 // 		std::vector < NDTCornerGraphElement > _ndt_corners;
 		double _first_Kernel_size;
 		
+		double _age_step;
+		double _age_start_value;
+		///@brief max value of the age of an edge. if -1 age can be infinetly old. Need to be more or equal to 0
+		double _max_age;
+		///@brief min value of the age of an edge. Need to be more or equal to 0
+		double _min_age;
+		
 	
 	public:
 		
@@ -217,7 +260,7 @@ private:
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(2), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1){
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -231,7 +274,7 @@ private:
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -242,7 +285,7 @@ private:
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _optimizable_graph(sensoffset), _first_Kernel_size(1){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
 			
 		
 			std::ifstream infile(load_file);
@@ -278,6 +321,18 @@ private:
 // 			assert(a == 0.2);
 // 			assert(b == 0.2);
 			
+			infile >> _age_start_value; std::cout << _age_start_value << std::endl;
+			infile >> _age_step; std::cout << _age_step << std::endl;
+			infile >> _max_age; infile >> _min_age;
+			infile >> _min_distance_for_link_in_meter; std::cout << _min_distance_for_link_in_meter << std::endl;
+			infile >> _max_distance_for_link_in_meter; std::cout << _max_distance_for_link_in_meter << std::endl;
+			
+			infile >> _flag_use_robust_kernel;
+			infile >> _use_user_robot_pose_cov;
+			
+			assert(_age_start_value >= 0);
+			assert(_max_age >= 0);
+			
 // 			exit(0);
 			
 			_sensorOffset = new g2o::ParameterSE2Offset;
@@ -285,18 +340,29 @@ private:
 			_sensorOffset->setId(0);
 			_ndt_graph = NULL;
 			
+			if(infile.eof() == true){
+				throw std::runtime_error("NOT ENOUGH PARAMETERS IN FILE");
+			}
+			
 			
 		}			
 		
-		~AutoCompleteGraph(){
+		//Forbid copy
+		AutoCompleteGraph(const AutoCompleteGraph& that) = delete;
+		
+		virtual ~AutoCompleteGraph(){
+			
+// 			std::cout << "Calling ACG dest with size" << _nodes_ndt.size() << std::endl ;
 // 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
 			
 // 			cleanup pointers in NODE
 			
 			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
-				delete _nodes_ndt[i].getMap();
+// 				std::cout << "Deleting the NDT maps" << std::endl;
+ 				delete _nodes_ndt[i].getMap();
 			}
+// 			std::cout << "OUT ACG dest " << std::endl ;
 			
 		}
 		
@@ -325,17 +391,27 @@ private:
 		void setMinDistanceForLinksInMeters(double inpu){_min_distance_for_link_in_meter = inpu;}
 		double getMinDistanceForLinksInMeters(){return _min_distance_for_link_in_meter;}
 		
+		void setMaxDistanceForLinksInMeters(double inpu){_max_distance_for_link_in_meter = inpu;}
+		double getMaxDistanceForLinksInMeters(){return _max_distance_for_link_in_meter;}
+		
 		void useUserCovForPrior(bool u){_use_user_prior_cov = u;}
 		bool isUsingUserCovForPrior(){return _use_user_prior_cov;}
 		
 		void useUserCovForRobotPose(bool u){_use_user_robot_pose_cov = u;}
 		bool isUsingUserCovForRobotPose(){return _use_user_robot_pose_cov;}
 		
+		double getStepAge(){return _age_step;}
+		void setStepAge(double ss){_age_step = ss;}
+		
+		double getStartAge(){return _age_start_value;}
+		void setAgeStartValue(double ss){ _age_start_value = ss;}
+		
 		bool save(const std::string& file_outt){
 			_optimizable_graph.save(file_outt.c_str());
 			std::cout << "saved to " << file_outt << "\n";
 		}
 		
+		void useRobustKernel(bool use){_flag_use_robust_kernel = use;}
 		
 // 		void read(const std::string& file){
 // 			
@@ -397,7 +473,8 @@ private:
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 		
-		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::VertexSE2Prior* v2, g2o::VertexPointXY* v1);
+		
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
 		void removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1);
@@ -469,47 +546,67 @@ private:
 		
 		void optimize(int iter = 10){
 			
+			std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;
+			overCheckLinks();
+			
 			/********** HUBER kernel ***********/
 			
-// 			_optimizable_graph.setHuberKernel();
-// 			setAgeingHuberKernel();
+// 			_optimizable_graph.setHuberKernel();			
 			
-// 			updatePriorEdgeCovariance();
+			_flag_optimize = checkAbleToOptimize();
 			
-			//Avoid overshoot of the cov
-			for(size_t i = 0 ; i < iter ; ++i){
-				_optimizable_graph.optimize(1);
-				std::cout << "After HUBER n" << i << std::endl;
-				testNoNanInPrior();
-				//Update prior edge covariance
+			if(_flag_optimize == true){
+
+				if(_flag_use_robust_kernel){
+					setAgeingHuberKernel();
+				}
+				testNoNanInPrior("set age in huber kernel");
+				
 // 				updatePriorEdgeCovariance();
-				std::cout << "After HUBER+cov n" << i << std::endl;
-				testNoNanInPrior();
+				testNoNanInPrior("update prior edge cov");
+				
+				//Avoid overshoot of the cov
+				for(size_t i = 0 ; i < iter ; ++i){
+					_optimizable_graph.optimize(1);
+					testNoNanInPrior("optimized with huber");
+					//Update prior edge covariance
+// 					updatePriorEdgeCovariance();
+					testNoNanInPrior("update prior edge cov after opti huber");
+				}
+				
+				/********** DCS kernel ***********/
+				if(_flag_use_robust_kernel){
+					setAgeingDCSKernel();
+				}
+				testNoNanInPrior("set age in DCS kernel");
+				
+				for(size_t i = 0 ; i < iter/2 ; ++i){
+					_optimizable_graph.optimize(1);
+					testNoNanInPrior("optimized with dcs");
+					//Update prior edge covariance
+// 					updatePriorEdgeCovariance();
+					testNoNanInPrior("update prior edge cov after opti dcs");
+				}
+			
+
 			}
 			
-			std::cout << "After HUBER and all" << std::endl;
-			testNoNanInPrior();
+			std::cout << "AFTER THE OPTIMIZATION CREATE" << std::endl;
+			int count = countLinkToMake();
+			int count2 = createNewLinks();
+			if(count != count2){
+				std::cout << "Weird different detection" << std::endl;
+				throw std::runtime_error("ARF NOT GOOD COUNT");
+			}
+			overCheckLinks();
 			
-			/********** DCS kernel ***********/
-			
-// 			setAgeingDCSKernel();
-// 			
-// 			for(size_t i = 0 ; i < iter/2 ; ++i){
-// 				_optimizable_graph.optimize(1);
-// 				std::cout << "After DCSn" << i << std::endl;
-// 				testNoNanInPrior();
-// 				//Update prior edge covariance
-// 				updatePriorEdgeCovariance();
-// 				std::cout << "After DCS+covn" << i << std::endl;
-// 				testNoNanInPrior();
-// 			}
-// 			
-// 			std::cout << "After DCS" << std::endl;
-// 			testNoNanInPrior();
-// 			
+			removeBadLinks();
+			std::cout << "AFTER THE OPTIMIZATION REMOVE" << std::endl;
+			overCheckLinks();
 		}
 		
 		void setAgeingHuberKernel(){
+			
 // 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
 // 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
 // 				v->setMarginalized(false);
@@ -521,7 +618,7 @@ private:
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto huber = new g2o::RobustKernelHuber();
 				e->setRobustKernel(huber);
-				setKernelSizeDependingOnAge(e);
+				setKernelSizeDependingOnAge(e, true);
 			}
 		}
 		
@@ -537,7 +634,7 @@ private:
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto dcs = new g2o::RobustKernelDCS();
 				e->setRobustKernel(dcs);
-				setKernelSizeDependingOnAge(e);
+				setKernelSizeDependingOnAge(e, false);
 			}
 		}
 		
@@ -578,11 +675,129 @@ private:
 		
 	public:
 		
-		/**BUG: the bug on the covariance is because changing the cov doesn't block the edge where it is 	 * but it blocks it around the initial value inputed
-		 */
-		void updateLinksAfterNDTGraph(const std::vector<g2o::VertexPointXY*>& new_landmarks); 
+
+		///@brief do createNewLinks and removeBadLinks
+		void updateLinks();
+		
+		///@brief create links between close by landmark and prior
+		int createNewLinks();
+		///@brief remove links between too far landmarks and prior
+		void removeBadLinks();
+		
 		void updatePriorEdgeCovariance();
-		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e);
+		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step);
+		
+		void testNoNanInPrior(const std::string& before = "no data");
+		
+		///@brief return true if ACG got more than or equal to 5 links. Make this better.
+		bool checkAbleToOptimize(){
+			if(_nodes_ndt.size() >= 5){
+				return true;
+			}
+			return false;
+		}
+		
+		void overCheckLinks(){
+			checkLinkNotForgotten();
+			checkLinkNotTooBig();
+		}
+		
+		void checkLinkNotForgotten(){
+		
+			std::cout << "check forgotten links" << std::endl;
+			auto it = _nodes_landmark.begin();
+			for(it ; it != _nodes_landmark.end() ; it++){
+				Eigen::Vector2d pose_landmark = (*it)->estimate();
+				auto it_prior = _nodes_prior.begin();				
+				for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+										
+					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+					double norm_tmp = (pose_prior - pose_landmark).norm();
+					
+					//Update the link
+					if(norm_tmp <= _min_distance_for_link_in_meter){
+						if(linkAlreadyExist(*it, *it_prior) == false){
+							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+							throw std::runtime_error("A small link was forgotten");
+						}
+					}	
+					
+				}
+
+			}
+		}
+		
+		int countLinkToMake(){
+		
+			int count = 0;
+			std::cout << "check forgotten links" << std::endl;
+			auto it = _nodes_landmark.begin();
+			for(it ; it != _nodes_landmark.end() ; it++){
+				Eigen::Vector2d pose_landmark = (*it)->estimate();
+				auto it_prior = _nodes_prior.begin();				
+				for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+										
+					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+					double norm_tmp = (pose_prior - pose_landmark).norm();
+					
+					//Update the link
+					if(norm_tmp <= _min_distance_for_link_in_meter){
+						if(linkAlreadyExist(*it, *it_prior) == false){
+							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+							count++;
+						}
+					}	
+					
+				}
+
+			}
+			
+			return count;
+		}
+		
+		void checkLinkNotTooBig(){
+			std::cout << "check no big links" << std::endl;
+			//Check if no small links are ledft out
+			
+			//Check if the link are not too big
+			for(auto it_old_links = _edge_link.begin(); it_old_links != _edge_link.end() ;it_old_links++){
+				
+				std::vector<Eigen::Vector3d> vertex_out;
+				
+				assert((*it_old_links)->vertices().size() == 2);
+				
+				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
+				if(ptr == NULL){
+					std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
+					throw std::runtime_error("Links do not have the good vertex type. Prior");
+				}
+				auto vertex = ptr->estimate().toVector();
+				vertex_out.push_back(vertex);
+				
+				g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*it_old_links)->vertices()[1]);
+				if(ptr2 == NULL){
+					throw std::runtime_error("Links do not have the good vertex type. Landmark");
+				}
+				auto vertex2 = ptr2->estimate();
+				Eigen::Vector3d pose_prior; pose_prior << vertex2(0), vertex2(1), 0;
+				vertex_out.push_back(pose_prior);
+
+				
+				assert(vertex_out.size() == 2);
+				double norm = (vertex_out[0] - vertex_out[1]).norm();
+				//Attention magic number
+				if(norm > _max_distance_for_link_in_meter ){
+					if(linkAlreadyExist(ptr2, ptr) == false){
+						std::cout << "NORM" << norm << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+						throw std::runtime_error("Big link still present :O");
+					}
+				}
+			}
+			
+			
+		}
 	
 		void testNoNanInPrior();
 		

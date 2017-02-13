@@ -2,6 +2,7 @@
 #include <limits>
 
 g2o::VertexSE2Prior* prior0;
+g2o::EdgeLinkXY_malcolm* link11;
 
 void simpleGraph(AASS::acg::AutoCompleteGraph& acg){
 	
@@ -31,6 +32,7 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	acg.printGraph();
 	
 	g2o::SE2 priorse20(2, 0, 0);
+	//GLOBAL
 	prior0 = acg.addPriorLandmarkPose(priorse20);
 	prior0->setId(1);
 	g2o::SE2 priorse21(2, 10, 0);
@@ -43,16 +45,20 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	
 	g2o::EdgeSE2Prior_malcolm* wall0 = acg.addEdgePrior(move, prior0, prior1);
 	
-	assert(acg.getGraph().vertices().size() == 3 && "prior crash");
+// 	assert(acg.getGraph().vertices().size() == 3 && "prior crash");
 	
-	auto land0 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(0));
+	g2o::VertexPointXY* land0 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(0));
 	
 	// TODO : why is this not working
 	assert(land0 != NULL);
 	
 	g2o::Vector2D link; link << 0, 0;
+	std::cout << "MAKING THE LINK LINKLINK" << std::endl;
 	g2o::EdgeLinkXY_malcolm* link0 = acg.addLinkBetweenMaps(link, prior0, land0);
-	g2o::EdgeLinkXY_malcolm* link1 = acg.addLinkBetweenMaps(link, prior1, land0);
+// 	assert(link11->interface->manuallySetAge() == false);
+	std::cout << "MAKING THE LINK LINKLINK2" << std::endl;
+	link11 = acg.addLinkBetweenMaps(link, prior1, land0);
+	assert(link11->interface->manuallySetAge() == true);
 	
 	assert(acg.linkAlreadyExist(land0, prior1));
 	assert(acg.linkAlreadyExist(land0, prior0));
@@ -126,6 +132,22 @@ void addPostNodes(AASS::acg::AutoCompleteGraph& acg){
 
 int main(){
 	
+	
+	//TEST LINKS
+	
+	//TEST INTERFACE LINK
+	g2o::EdgeLinkXY_malcolm* linkObservation = new g2o::EdgeLinkXY_malcolm;
+	linkObservation->interface->setAge(10);
+	assert(linkObservation->interface->manuallySetAge() == true);
+	double age = linkObservation->interface->getAge();
+	assert(age == 10);
+	linkObservation->interface->setAge(100);
+	age = linkObservation->interface->getAge();
+	assert(age == 100);
+	
+	
+	/****************************************/
+	
 	AASS::acg::AutoCompleteGraph acg(g2o::SE2(0.2, 0.1, -0.1),
 		Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
 		DEG2RAD(2.), 				//Rotation noise for robot
@@ -151,6 +173,15 @@ int main(){
 // 	acg.getGraph().setHuberKernel();
 	acg.getGraph().optimize(10);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_0after.g2o");
+	
+	assert(link11->interface->manuallySetAge() == true);
+	age = link11->interface->getAge();
+	link11->interface->setAge(100);
+	assert(link11->interface->getAge() == 100);
+	assert(link11->interface->manuallySetAge() == true);
+	link11->interface->setAge(age);
+	assert(link11->interface->getAge() == age);
+	assert(link11->interface->manuallySetAge() == true);
 
 	std::cout << "AFTER 0 " << std::endl << std::endl;
 	std::cout << "AFTER 0 " << std::endl << std::endl;
@@ -200,7 +231,24 @@ int main(){
 	Eigen::Vector2d pose_landmark; pose_landmark << -5, 2;
 	double norm_tmp = (pose_prior - pose_landmark).norm();
 	
+	prior(acg);
+	
+	assert(link11->interface->manuallySetAge() == true);
+	age = link11->interface->getAge();
+	link11->interface->setAge(100);
+	assert(link11->interface->getAge() == 100);
+	assert(link11->interface->manuallySetAge() == true);
+	link11->interface->setAge(age);
+	assert(link11->interface->getAge() == age);
+	assert(link11->interface->manuallySetAge() == true);
+	
 	std::cout << "Norm : "<< norm_tmp << std::endl;
+	
+// 	g2o::Factory::destroy();
+	std::cout << "OAFactory destroy" << std::endl;
+// 	g2o::OptimizationAlgorithmFactory::destroy();
+	std::cout << "HGFactory destroy" << std::endl;
+// 	g2o::HyperGraphActionLibrary::destroy();
 	
 	
 }
