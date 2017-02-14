@@ -97,6 +97,13 @@ print(res.pvalue)
 
 ## PRINTING
 
+#font = {'family' : 'normal',
+        #'weight' : 'bold',
+        #'size'   : 22}
+
+#plt.rc('font', **font)
+plt.rcParams.update({'font.size': 30})
+
 plt.figure(1)
 count, bins, ignored = plt.hist(normal, 30, normed=True)
 #plt.clf()
