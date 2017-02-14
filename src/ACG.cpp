@@ -1011,7 +1011,7 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 {
 	
 	std::cout << "DO NOT USE " << std::endl;
-	testNoNanInPrior();
+	testNoNanInPrior("no dtat");
 	assert(false);
 	
 	auto edges = _edge_prior;	

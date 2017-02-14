@@ -95,6 +95,9 @@ res = scipy.stats.ttest_ind(list1, list2, False) #<- since False, no need for ho
 print(res.statistic)
 print(res.pvalue)
 
+if res.pvalue <= 0.05:
+	print("COOL on a un interval de confiance de moins de 5% blabla. Statiquemtne t les deux listes sont differentes dans un interval de 5% (5% derreur accepté :P)")
+
 ## PRINTING
 
 #font = {'family' : 'normal',

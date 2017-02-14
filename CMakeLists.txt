@@ -227,7 +227,7 @@ add_dependencies(acg_node_rviz_full_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_full_fast
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
-))
+)
 
 
 add_executable(acg_node_rviz_full src/acg_node_rviz_full.cpp)
@@ -238,7 +238,7 @@ add_dependencies(acg_node_rviz_full ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin
 
 target_link_libraries(acg_node_rviz_full
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
-
+)
 
 # # # # # # # # # # # 
 # # # # # # # # # # # 
