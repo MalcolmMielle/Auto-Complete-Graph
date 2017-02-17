@@ -71,6 +71,8 @@ private:
 		
 		bool _flag_use_robust_kernel;
 		
+		std::deque<double> _chi2s;
+		
 		/**
 		 * @brief : used in a function to update the NDTGraph
 		 * */
@@ -544,7 +546,37 @@ private:
 			_optimizable_graph.computeInitialGuess();
 		}
 		
+		void saveErrorStep(){
+			
+			std::cout << "Get final score" << std::endl;
+			_optimizable_graph.computeActiveErrors();
+			std::cout << "Score : " << _optimizable_graph.chi2() << std::endl;
+			_chi2s.push_back(_optimizable_graph.chi2());
+			
+		}
+		
+		void exportChi2s(){
+			std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/chi2s_";
+			std::ostringstream convert;   // stream used for the conversion
+			convert << this->getRobotNodes().size(); 
+			file_out = file_out + convert.str();
+			file_out = file_out + ".txt";
+			std::ofstream infile(file_out);
+			int co = 0;
+			for(auto it  = _chi2s.begin() ; it != _chi2s.end() ; ++it){
+				infile << *it; 
+				infile << " : " ;
+				++co;
+				if(co == 10){
+					infile << "\n" ;
+				}
+			}
+			infile.close();
+		}
+		
 		void optimize(int iter = 10){
+			
+			_chi2s.clear();
 			
 			std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;
 			overCheckLinks();
@@ -572,6 +604,7 @@ private:
 					//Update prior edge covariance
 // 					updatePriorEdgeCovariance();
 					testNoNanInPrior("update prior edge cov after opti huber");
+					saveErrorStep();
 				}
 				
 				/********** DCS kernel ***********/
@@ -580,12 +613,13 @@ private:
 				}
 				testNoNanInPrior("set age in DCS kernel");
 				
-				for(size_t i = 0 ; i < iter/2 ; ++i){
+				for(size_t i = 0 ; i < iter*2 ; ++i){
 					_optimizable_graph.optimize(1);
 					testNoNanInPrior("optimized with dcs");
 					//Update prior edge covariance
 // 					updatePriorEdgeCovariance();
 					testNoNanInPrior("update prior edge cov after opti dcs");
+					saveErrorStep();
 				}
 			
 
@@ -603,6 +637,9 @@ private:
 			removeBadLinks();
 			std::cout << "AFTER THE OPTIMIZATION REMOVE" << std::endl;
 			overCheckLinks();
+			
+			exportChi2s();
+			
 		}
 		
 		void setAgeingHuberKernel(){
