@@ -65,16 +65,26 @@ namespace AASS{
 			*/
 			void extractCornerPrior(){
 		// 		AASS::das::BasementPriorLine basement;
-// 				cv::Mat src = cv::imread( _file, CV_LOAD_IMAGE_COLOR ), src_gray;
-// 				cv::cvtColor(src, src_gray, CV_RGB2GRAY );
-// 				
-// 				cv::threshold(src_gray, src_gray, 100, 255, src_gray.type());
+				
 				
 				AASS::das::CornerDetector cornerDetect;
 				cornerDetect.getFeaturesGraph(_file);
 // 				cornerDetect.removeClosePoints(20);
 				_corner_prior = cornerDetect.getGraphPoint();
-				_prior_graph = cornerDetect.getGraph(); 
+				_prior_graph = cornerDetect.getGraph();
+				
+// 				//PRINT
+// 				cv::Mat src = cv::imread( _file, CV_LOAD_IMAGE_COLOR ), src_gray;
+// 				cv::cvtColor(src, src_gray, CV_RGB2GRAY );
+// // 				
+// 				cv::threshold(src_gray, src_gray, 100, 255, src_gray.type());
+// 				cv::Mat maa_3 = src_gray.clone();
+// 				maa_3.setTo(cv::Scalar(0));
+// 				AASS::vodigrex::draw<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>(_prior_graph, maa_3);
+// 				std::cout << "Number of nodes " << _prior_graph.getNumVertices() << std::endl;
+// 				cv::imshow("graph", maa_3);
+// 				cv::imshow("map", src_gray);
+// 				cv::waitKey(0);
 				
 			}
 			
