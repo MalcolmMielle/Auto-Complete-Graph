@@ -2,8 +2,19 @@ import numpy
 import scipy.stats
 import matplotlib.pyplot as plt
 
-list1 = [67, 74, 75, 69, 65, 65]
-list2 = [96, 86, 91, 91, 77, 93]
+list1 = [67, 74, 75, 69, 65, 65, 66, 64, 69, 73, 70, 65, 68, 61.5]
+list2 = [96, 86, 91, 91, 77, 93, 86, 81, 71, 94, 74, 93, 85, 64]
+list3 = [71, 71]
+list4 = [78, 78]
+
+def allStat(list_in, list_in2):
+	print("T test")
+	res = scipy.stats.ttest_ind(list_in, list_in2, equal_var = False) #<- since False, no need for homogeneity of variance for we use Welsch t-test
+	print(res.statistic)
+	print(res.pvalue)
+	if res.pvalue <= 0.05:
+		print("COOL on a un interval de confiance de moins de 5% blabla. Statiquemtne t les deux listes sont differentes dans un interval de 5% (5% derreur accepté :P)")
+
 
 def mean(list):
 	sum = 0
@@ -86,17 +97,20 @@ print(z_score_min_2)
 is_normal_2 = sevent3(z_score_max_2, z_score_min_2, sd_v_2)
 
 print("normality of list 1: ", is_normal, " and list 2: ", is_normal_2)
-## ASSESSING HOMOGENEITY OF VARIANCE
+# ASSESSING HOMOGENEITY OF VARIANCE
 
-## T test
+# T test
 
-print("T test")
-res = scipy.stats.ttest_ind(list1, list2, False) #<- since False, no need for homogeneity of variance for we use Welsch t-test
-print(res.statistic)
-print(res.pvalue)
+print("All stat list1 and 2")
+allStat(list1, list2)
 
-if res.pvalue <= 0.05:
-	print("COOL on a un interval de confiance de moins de 5% blabla. Statiquemtne t les deux listes sont differentes dans un interval de 5% (5% derreur accepté :P)")
+print("All stat list1 and 70%")
+allStat(list1, list3)
+
+print("All stat list2 and 80%")
+allStat(list2, list4)
+
+
 
 ## PRINTING
 
@@ -105,31 +119,32 @@ if res.pvalue <= 0.05:
         #'size'   : 22}
 
 #plt.rc('font', **font)
-plt.rcParams.update({'font.size': 30})
+plt.rcParams.update({'font.size': 50})
 
 plt.figure(1)
 count, bins, ignored = plt.hist(normal, 30, normed=True)
 #plt.clf()
 plt.figure(2)
-plt.plot(bins, 1/(sd_v * numpy.sqrt(2 * numpy.pi)) *
-               numpy.exp( - (bins - mean_v)**2 / (2 * sd_v**2) ),
-         linewidth=4, color='r')
+plt.axvspan(70, 80, alpha=0.5, color='red')
+#plt.plot(bins, 1/(sd_v * numpy.sqrt(2 * numpy.pi)) *
+               #numpy.exp( - (bins - mean_v)**2 / (2 * sd_v**2) ),
+         #linewidth=4, color='r')
 #plt.clf()
 
-plt.axvline(mean_v - (sd_v*3), color='r')
-plt.axvline(mean_v + (sd_v*3), color='r')
+#plt.axvline(mean_v - (sd_v*3), color='r')
+#plt.axvline(mean_v + (sd_v*3), color='r')
 
 max_c = max(count)
 
 bottom1 = list()
 size1 = list()
 for el in list1:
-	bottom1.append(max_c/6)
-	size1.append(100)
+	bottom1.append(0.4)
+	size1.append(700)
 
 
-bottom1[4] = bottom1[4]*2
-bottom1[5] = bottom1[5]*2
+#bottom1[4] = bottom1[4]*2
+#bottom1[5] = bottom1[5]*2
 
 plt.scatter(list1, bottom1, size1, 'r')
 #plt.show()
@@ -140,31 +155,30 @@ plt.figure(1)
 count_2, bins_2, ignored_2 = plt.hist(normal_2, 30, normed=True)
 #plt.clf()
 plt.figure(2)
-plt.plot(bins_2, 1/(sd_v_2 * numpy.sqrt(2 * numpy.pi)) *
-               numpy.exp( - (bins_2 - mean_v_2)**2 / (2 * sd_v_2**2) ),
-         linewidth=4, color='g')
+#plt.plot(bins_2, 1/(sd_v_2 * numpy.sqrt(2 * numpy.pi)) *
+               #numpy.exp( - (bins_2 - mean_v_2)**2 / (2 * sd_v_2**2) ),
+         #linewidth=4, color='g')
 
-plt.axvline(mean_v_2 - (sd_v_2*3), color='g')
-plt.axvline(mean_v_2 + (sd_v_2*3), color='g')
+#plt.axvline(mean_v_2 - (sd_v_2*3), color='g')
+#plt.axvline(mean_v_2 + (sd_v_2*3), color='g')
 
 max_c_2 = max(count_2)
 
 bottom = list()
 size = list()
 for el in list2:
-	bottom.append(max_c_2/6)
-	size.append(100)
+	bottom.append(0.2)
+	size.append(700)
 
-bottom[2] = bottom[2]*2
-bottom[3] = bottom[3]*2
+#bottom[2] = bottom[2]*2
+#bottom[3] = bottom[3]*2
 
 plt.scatter(list2, bottom, size, 'g')
 
 #Draw the grey zone
-plt.axvspan(75, 80, alpha=0.5, color='red')
 
 plt.xlabel('percentage')
-plt.axis([50, 100, 0, max_c])
+plt.axis([60, 100, 0, 0.5])
 
 
 plt.show()
