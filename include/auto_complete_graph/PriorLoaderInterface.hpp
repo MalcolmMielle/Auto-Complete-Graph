@@ -21,6 +21,7 @@ namespace AASS{
 			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge> _prior_graph;
 			cv::Mat _scale_transform_prior2ndt;
 			std::string _file;
+			AASS::das::CornerDetector _cornerDetect;
 			
 		public: 
 			PriorLoaderInterface(const std::string& file) : _file(file){
@@ -66,12 +67,11 @@ namespace AASS{
 			void extractCornerPrior(){
 		// 		AASS::das::BasementPriorLine basement;
 				
-				
-				AASS::das::CornerDetector cornerDetect;
-				cornerDetect.getFeaturesGraph(_file);
+				_cornerDetect.clear();
+				_cornerDetect.getFeaturesGraph(_file);
 // 				cornerDetect.removeClosePoints(20);
-				_corner_prior = cornerDetect.getGraphPoint();
-				_prior_graph = cornerDetect.getGraph();
+				_corner_prior = _cornerDetect.getGraphPoint();
+				_prior_graph = _cornerDetect.getGraph();
 				
 // 				//PRINT
 // 				cv::Mat src = cv::imread( _file, CV_LOAD_IMAGE_COLOR ), src_gray;

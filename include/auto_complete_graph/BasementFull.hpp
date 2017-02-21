@@ -28,6 +28,8 @@ namespace AASS{
 		public: 
 			BasementFull(double deviation, double anglet, double scalet, cv::Point2f center) : PriorLoaderInterface("/home/malcolm/ros_catkin_ws/indigo_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png"){
 				
+				this->_cornerDetect.setMinimumDeviationCorner( (85 * 3.14159) / 180 );
+				
 				auto randomNoise = [](double mean, double deviationt) -> double {
 					std::default_random_engine engine{std::random_device()() };
 					std::normal_distribution<double> dist(mean, deviationt);
