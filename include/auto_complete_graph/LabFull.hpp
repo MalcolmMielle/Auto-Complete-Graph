@@ -56,37 +56,37 @@ namespace AASS{
 				std::cout << "Noise X Y " << noise_x << " " << noise_y << std::endl;
 // 				exit(0);
 				
-				cv::Point2f out = cv::Point2f(19.36 + noise_x, 6.25 + noise_y);
+				cv::Point2f out = cv::Point2f(-0.896738 + noise_x, 1.00293 + noise_y);
 				cv::Point2f slam_point = rotatef(rot_mat, out);
 				
-				_same_point_prior.push_back(cv::Point2f(786, 373));
+				_same_point_prior.push_back(cv::Point2f(1269, 1022));
 				_same_point_slam.push_back(slam_point);
 				
 				noise_x = randomNoise(0, deviation);
 				noise_y = randomNoise(0, deviation);
-				out = cv::Point2f(19.14 + noise_x, 2.25 + noise_y);
+				out = cv::Point2f(-1.00426 + noise_x, -1.29674 + noise_y);
 				slam_point = rotatef(rot_mat, out);
 				
-				_same_point_prior.push_back(cv::Point2f(788, 311));                   
+				_same_point_prior.push_back(cv::Point2f(1269, 1097));                   
 				_same_point_slam.push_back(slam_point);
 				
 				noise_x = randomNoise(0, deviation);
 				noise_y = randomNoise(0, deviation);
-				out = cv::Point2f(7.64 + noise_x, 3.63 + noise_y);
+				out = cv::Point2f(7.19963 + noise_x, 2.48775 + noise_y);
 				slam_point = rotatef(rot_mat, out);
+				
+				_same_point_prior.push_back(cv::Point2f(1533, 1011));
+				_same_point_slam.push_back(slam_point);
 				
 				//ATTENTION : next line or for used the points only
 				
-				_same_point_prior.push_back(cv::Point2f(614, 306));
-				_same_point_slam.push_back(slam_point);
-				
-				noise_x = randomNoise(0, deviation);
-				noise_y = randomNoise(0, deviation);
-				out = cv::Point2f(9.5 + noise_x, 16 + noise_y);
-				slam_point = rotatef(rot_mat, out);
-				
-				_same_point_prior.push_back(cv::Point2f(637, 529));              
-				_same_point_slam.push_back(slam_point);
+// 				noise_x = randomNoise(0, deviation);
+// 				noise_y = randomNoise(0, deviation);
+// 				out = cv::Point2f(9.5 + noise_x, 16 + noise_y);
+// 				slam_point = rotatef(rot_mat, out);
+// 				
+// 				_same_point_prior.push_back(cv::Point2f(637, 529));              
+// 				_same_point_slam.push_back(slam_point);
 				
 // 				_same_point_prior.push_back(cv::Point2f(786, 373));
 // 				_same_point_slam.push_back(cv::Point2f(786, 373));
@@ -102,7 +102,7 @@ namespace AASS{
 // 				_same_point_prior.push_back(cv::Point2f(637, 529));              
 // 				_same_point_slam.push_back(cv::Point2f(786, 373));
 				
-				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
+// 				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
 		
 			}
 			

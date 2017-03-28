@@ -588,6 +588,7 @@ private:
 			_flag_optimize = checkAbleToOptimize();
 			
 			if(_flag_optimize == true){
+				std::cout << "OPTIMIZE" << std::endl;
 
 				if(_flag_use_robust_kernel){
 					setAgeingHuberKernel();
@@ -623,6 +624,9 @@ private:
 				}
 			
 
+			}
+			else{
+				std::cout << "No Optimization :(" << std::endl;
 			}
 			
 			std::cout << "AFTER THE OPTIMIZATION CREATE" << std::endl;
@@ -727,7 +731,8 @@ private:
 		
 		///@brief return true if ACG got more than or equal to 5 links. Make this better.
 		bool checkAbleToOptimize(){
-			if(_nodes_ndt.size() >= 5){
+			std::cout << "edge link size: " << _edge_link.size() << std::endl;
+			if(_edge_link.size() >= 6){
 				return true;
 			}
 			return false;

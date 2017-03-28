@@ -142,7 +142,7 @@ namespace acg{
 				p.y = vertex(1);
 				p.z = 0;
 				
-				std::cout << "first point " << p.x << "" << p.y << std::endl;
+				std::cout << "first point " << p.x << " " << p.y << std::endl;
 				
 				_link_markers.points.push_back(p);
 				
@@ -151,7 +151,7 @@ namespace acg{
 				p.y = vertex2(1);
 				p.z = 0;
 				
-				std::cout << "second point " << p.x << "" << p.y << std::endl;
+				std::cout << "second point " << p.x << " " << p.y << std::endl;
 				
 				_link_markers.points.push_back(p);
 				

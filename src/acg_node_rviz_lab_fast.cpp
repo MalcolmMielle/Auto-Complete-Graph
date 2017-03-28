@@ -315,13 +315,13 @@ int main(int argc, char **argv)
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
 // 		visu.updateRvizV2();
-// 		std::cout << oacg.getLinkEdges().size()<< std::endl;
+		std::cout << oacg.getLinkEdges().size()<< " and new node " << new_node << std::endl;
 		
 		ros::Time future = ros::Time::now();
-// 		std::cout << "future " << (future - timef).toSec() << " since " << future << " " << timef << std::endl;
+		std::cout << "future " << (future - timef).toSec() << " since " << future << " " << timef << std::endl;
 // 		exit(0);
 		
-		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true){
+		if( (future - timef).toSec() >= 10 && oacg.getLinkEdges().size() > 5 && new_node == true){
 // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
 // 			exit(0);
 			visu.updateRvizNoNDT();	
