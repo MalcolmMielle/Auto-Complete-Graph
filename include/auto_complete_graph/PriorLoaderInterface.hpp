@@ -22,50 +22,39 @@ namespace AASS{
 			cv::Mat _scale_transform_prior2ndt;
 			std::string _file;
 			AASS::das::CornerDetector _cornerDetect;
+			double _deviation;
+			double _angle;
+			double _scale;
+			cv::Point2f _center;
 			
 		public: 
-			PriorLoaderInterface(const std::string& file) : _file(file){
-				
-// 				_same_point_prior.push_back(cv::Point2f(786, 373));
-// 				_same_point_slam.push_back(cv::Point2f(190.36, 60.25));
-// 				
-// 				_same_point_prior.push_back(cv::Point2f(788, 311));                   
-// 				_same_point_slam.push_back(cv::Point2f(190.14,20.25));
-// 				
-// 				//ATTENTION : next line or for used the points only
-// 				
-// 				_same_point_prior.push_back(cv::Point2f(614, 306));
-// 				_same_point_slam.push_back(cv::Point2f(70.64,30.63));
-// 				
-// 				_same_point_prior.push_back(cv::Point2f(637, 529));              
-// 				_same_point_slam.push_back(cv::Point2f(90.5, 160));
-				
-// 				_same_point_prior.push_back(cv::Point2f(786, 373));
-// 				_same_point_slam.push_back(cv::Point2f(786, 373));
-// 				
-// 				_same_point_prior.push_back(cv::Point2f(788, 311));                   
-// 				_same_point_slam.push_back(cv::Point2f(786, 373));
-// 				
-// 				//ATTENTION : next line or for used the points only
-// 				
-// 				_same_point_prior.push_back(cv::Point2f(614, 306));
-// 				_same_point_slam.push_back(cv::Point2f(786, 373));
-// 				
-// 				_same_point_prior.push_back(cv::Point2f(637, 529));              
-// 				_same_point_slam.push_back(cv::Point2f(786, 373));
-				
-// 				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
-		
+			PriorLoaderInterface(const std::string& file) : _file(file){		
 			}
 			
 			const bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge> getGraph() const {return _prior_graph;}
 			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge> getGraph(){return _prior_graph;}
+			
+			double getDeviation(){return _deviation;}
+			double getAngle(){return _angle;}
+			double getScale(){return _scale;}
+			cv::Point2f getCenter(){return _center;}
+			
+			/**
+			 * @brief Extract the corners and do the transformation onto the SLAM
+			 */
+			void prepare(){
+				extractCornerPrior();
+				transformOntoSLAM();
+			}
 			
 			/**
 			* @brief Extracting the corner from the prior
 			*/
 			void extractCornerPrior(){
 		// 		AASS::das::BasementPriorLine basement;
+				
+				_corner_prior.clear();
+				_prior_graph.clear();
 				
 				_cornerDetect.clear();
 				_cornerDetect.getFeaturesGraph(_file);
@@ -157,6 +146,116 @@ namespace AASS{
 				}
 				
 				
+				
+			}
+			
+			/**
+			 * @brief initialze the structure
+			 * @param[in] pt_slam : points from the robot slam map
+			 * @param[in] pt_prior : equivalent points from the robot slam map
+			 */
+			void initialize(const std::vector<cv::Point2f>& pt_slam, const std::vector<cv::Point2f>& pt_prior, double deviation, double angle, double scale, cv::Point2f center){
+				
+				_deviation = deviation;
+				_angle = angle;
+				_scale = scale;
+				_center = center;
+				
+				initialize(pt_slam, pt_prior);
+				
+			}
+			
+			/**
+			 * @brief initialze the structure
+			 * @param[in] pt_slam : points from the robot slam map
+			 * @param[in] pt_prior : equivalent points from the robot slam map
+			 */
+			void initialize(const std::vector<cv::Point2f>& pt_slam, const std::vector<cv::Point2f>& pt_prior){
+				
+				assert(pt_slam.size() >= 4);
+				assert(pt_prior.size() == pt_slam.size());
+				
+				_same_point_prior.clear();
+				_same_point_slam.clear();
+				
+				this->_cornerDetect.setMinimumDeviationCorner( (85 * 3.14159) / 180 );
+				
+				auto randomNoise = [](double mean, double deviationt) -> double {
+					std::default_random_engine engine{std::random_device()() };
+					std::normal_distribution<double> dist(mean, deviationt);
+					return dist(engine);
+				};
+				
+// 				cv::Point center = cv::Point(7, 08);
+				
+				cv::Mat rot_mat = cv::getRotationMatrix2D(_center, _angle, _scale);
+				std::cout << rot_mat << std::endl;
+// 				exit(0);
+				
+				auto rotatef = [](const cv::Mat& rot_mat, const cv::Point2d point) -> cv::Point2d {
+					//Matrix multiplication
+					cv::Mat point_m = (cv::Mat_<double>(3,1) << point.x, point.y, 1);
+					cv::Mat mat_out = rot_mat * point_m;
+// 					std::cout << "Mat out " << mat_out << std::endl;
+					cv::Point2d point_out;
+					point_out.x = mat_out.at<double>(0);
+					point_out.y = mat_out.at<double>(1);
+					return point_out;
+				};
+				
+				auto noise_x = randomNoise(0, _deviation);
+				auto noise_y = randomNoise(0, _deviation);
+				
+				std::cout << "Noise X Y " << noise_x << " " << noise_y << std::endl;
+// 				exit(0);
+				
+				cv::Point2f out = cv::Point2f(pt_slam[0].x + noise_x, pt_slam[0].y + noise_y);
+				cv::Point2f slam_point = rotatef(rot_mat, out);
+				
+				_same_point_prior.push_back(pt_prior[0]);
+				_same_point_slam.push_back(slam_point);
+				
+				noise_x = randomNoise(0, _deviation);
+				noise_y = randomNoise(0, _deviation);
+				out = cv::Point2f(pt_slam[1].x + noise_x, pt_slam[1].y + noise_y);
+				slam_point = rotatef(rot_mat, out);
+				
+				_same_point_prior.push_back(pt_prior[1]);                   
+				_same_point_slam.push_back(slam_point);
+				
+				noise_x = randomNoise(0, _deviation);
+				noise_y = randomNoise(0, _deviation);
+				out = cv::Point2f(pt_slam[2].x + noise_x, pt_slam[2].y + noise_y);
+				slam_point = rotatef(rot_mat, out);
+				
+				//ATTENTION : next line or for used the points only
+				
+				_same_point_prior.push_back(pt_prior[2]);
+				_same_point_slam.push_back(slam_point);
+				
+				noise_x = randomNoise(0, _deviation);
+				noise_y = randomNoise(0, _deviation);
+				out = cv::Point2f(pt_slam[3].x + noise_x, pt_slam[3].y + noise_y);
+				slam_point = rotatef(rot_mat, out);
+				
+				_same_point_prior.push_back(pt_prior[3]);              
+				_same_point_slam.push_back(slam_point);
+				
+// 				_same_point_prior.push_back(cv::Point2f(786, 373));
+// 				_same_point_slam.push_back(cv::Point2f(786, 373));
+// 				
+// 				_same_point_prior.push_back(cv::Point2f(788, 311));                   
+// 				_same_point_slam.push_back(cv::Point2f(786, 373));
+// 				
+// 				//ATTENTION : next line or for used the points only
+// 				
+// 				_same_point_prior.push_back(cv::Point2f(614, 306));
+// 				_same_point_slam.push_back(cv::Point2f(786, 373));
+// 				
+// 				_same_point_prior.push_back(cv::Point2f(637, 529));              
+// 				_same_point_slam.push_back(cv::Point2f(786, 373));
+				
+				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
 				
 			}
 			

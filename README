@@ -1,0 +1,25 @@
+# Auto Complete Graph.
+
+## Paper
+
+The auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087).
+
+## How to optimize. Short version.
+
+First we fix a node a the graph
+
+```
+oacg->getGraph().setFirst();
+```
+
+Then the graph is prepare by selecting the nodes and doing the initial optimization
+
+```
+oacg->prepare();
+```
+
+And then the optimization take place
+
+```
+oacg->optimize();
+```

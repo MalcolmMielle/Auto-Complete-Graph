@@ -141,7 +141,7 @@ namespace acg{
 			this->initializeOptimization();
 		}
 		
-		//Set Marginalized to false and do initializeOptimization
+		///@brief Set Marginalized to false and do initializeOptimization
 		void prepare(){
 			//Prepare when changing kernels
 			for (SparseOptimizer::VertexIDMap::const_iterator it = vertices().begin(); it != vertices().end(); ++it) {
@@ -245,7 +245,9 @@ namespace acg{
 		}
 		
 	
-		
+		/**
+		 * @brief Fix a node in the graph before the optimization
+		 */
 		void setFirst(){
 // 			auto firstRobotPose = this->vertex(0);
 // 			firstRobotPose->setFixed(true);

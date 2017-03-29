@@ -345,6 +345,7 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 
 
 //FUNCTION TO REMOVE A VERTEX
+//TODO : remove all link edges from list
 void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	//Prior
 	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
@@ -377,6 +378,40 @@ void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	}
 	_optimizable_graph.removeVertex(v1, true);
 }
+
+// TODO
+// void AASS::acg::AutoCompleteGraph::removeEdge(g2o::HyperGraph::Edge* v1){
+// 	//Prior
+// 	g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(v1);
+// 	g2o::EdgeSE2Prior_malcolm* ptr_se2 = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(v1);
+// 	g2o::EdgeOdometry_malcolm* ptr_se3 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(v1);
+// 	
+// 	if(ptr != NULL){
+// 		int index = findPriorNode(v1);
+// 		assert(index != -1);
+// 		auto which = _edge_landmark.begin() + index;
+// 		_nodes_prior.erase(which);
+// 	}
+// 	//Robot node
+// 	else if( ptr_se2 != NULL){
+// 		int index = findRobotNode(v1);
+// 		assert(index != -1);
+// 		auto which = _nodes_ndt.begin() + index;
+// 		_nodes_ndt.erase(which);
+// 		
+// 	}
+// 	//Landmark Node
+// 	else if( ptr_se3 != NULL){
+// 		int index = findLandmarkNode(v1);
+// 		assert(index != -1);
+// 		auto which = _nodes_landmark.begin() + index;
+// 		_nodes_landmark.erase(which);
+// 	}
+// 	else{
+// 		throw std::runtime_error("Vertex type not found in list");
+// 	}
+// 	_optimizable_graph.removeVertex(v1, true);
+// }
 
 int AASS::acg::AutoCompleteGraph::findRobotNode(g2o::HyperGraph::Vertex* v){
 	int pos = 0;

@@ -483,6 +483,7 @@ private:
 		
 		//FUNCTION TO REMOVE A VERTEX
 		void removeVertex(g2o::HyperGraph::Vertex* v1);
+// 		void removeEdge(g2o::HyperGraph::Edge* v1);
 		
 		int findRobotNode(g2o::HyperGraph::Vertex* v);
 		int findLandmarkNode(g2o::HyperGraph::Vertex* v);
@@ -497,6 +498,29 @@ private:
 		 */
 		void addPriorGraph(const bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>& graph);
 		
+		
+		void clearPrior(){
+			
+			for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ;){
+				auto it_tmp = it;
+				it++;
+				this->removeVertex(*it_tmp);
+			}
+			assert(_nodes_prior.size() == 0);
+			
+// 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+// 				_optimizable_graph.removeVertex(it, true);
+// 			}
+			 _edge_prior.clear();
+			 
+			//Making sure all edge prior were removed.
+			auto idmapedges = _optimizable_graph.edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+				assert( dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) == NULL );
+			}		
+			 
+			 
+		}
 		
 		
 		void copyNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph){
@@ -574,6 +598,10 @@ private:
 			infile.close();
 		}
 		
+		/**
+		 * @brief actual optimization loop. Make sure setFirst and prepare are called before. Use Huber first and then DCS.
+		 * 
+		 */
 		void optimize(int iter = 10){
 			
 			_chi2s.clear();
@@ -679,7 +707,7 @@ private:
 			}
 		}
 		
-		//Set Marginalized to false and do initializeOptimization
+		///@brief Set Marginalized to false and do initializeOptimization
 		void prepare(){
 			_optimizable_graph.prepare();
 		}
