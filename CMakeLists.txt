@@ -7,6 +7,7 @@ project(auto_complete_graph)
 find_package(catkin REQUIRED COMPONENTS
   das
   ndt_feature
+  flirtlib_ros 
   ndt_map
   roscpp
   rospy
