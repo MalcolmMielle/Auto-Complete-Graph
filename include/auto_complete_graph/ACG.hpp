@@ -742,8 +742,9 @@ private:
 		
 // 		getGridMap();
 		
-	private:
+	public:
 		
+
 		///@brief do createNewLinks and removeBadLinks
 		void updateLinks();
 		
@@ -868,6 +869,8 @@ private:
 			
 		}
 	
+		void testNoNanInPrior();
+		
 	};
 }
 

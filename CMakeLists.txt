@@ -27,7 +27,17 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package( Boost REQUIRED )
+find_package(Boost REQUIRED )
+
+add_subdirectory(cmake_modules)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
+
+find_package(G2O REQUIRED)
+find_package(SUITESPARSE REQUIRED)
+INCLUDE_DIRECTORIES(${CSPARSE_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${G2O_INCLUDE_DIR})
+
+set(G2O_LIBS ${G2O_CORE_LIBRARY} ${G2O_SOLVER_CSPARSE}  ${CSPARSE_LIBRARY} ${G2O_STUFF_LIBRARY} ${CHOLMOD_LIBRARY}  ${G2O_SOLVER_CSPARSE_EXTENSION} ${G2O_SOLVER_SLAM2D_LINEAR} ${G2O_TYPES_SLAM2D})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -117,6 +127,7 @@ find_package( Boost REQUIRED )
 catkin_package(
 
  INCLUDE_DIRS include
+ LIBRARIES ${G2O_LIBS}
 #  LIBRARIES auto_complete_graph
  CATKIN_DEPENDS message_runtime das ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv
  DEPENDS system_lib eigen
@@ -147,53 +158,55 @@ add_library(auto_complete_graph_lib
 
 ## TODO : find a way to remove this by linking it where it should be in ndt_feature
 include_directories(/usr/local/include/flirtlib)
-set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry -lgui -lsensors -lsensorstream -lutils_flirt -lutils)
+set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry 
+#-lgui 
+-lsensors -lsensorstream -lutils_flirt -lutils)
 
 ## Declare a C++ executable
-# # # # # # # # # # # add_executable(acg_node src/acg_node.cpp)
+# # # # # # add_executable(acg_node src/acg_node.cpp)
+# # # # # # 
+# # # # # # ## Add cmake target dependencies of the executable
+# # # # # # ## same as for the library above
+# # # # # # add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} )
+# # # # # # 
+# # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # target_link_libraries(acg_node
+# # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+# # # # # # )
+# # # # # # 
+# # # # # # add_executable(acg_node_rviz src/acg_node_rviz.cpp)
+# # # # # # 
+# # # # # # ## Add cmake target dependencies of the executable
+# # # # # # ## same as for the library above
+# # # # # # add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${G2O_LIBS})
+# # # # # # 
+# # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # target_link_libraries(acg_node_rviz
+# # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+# # # # # # )
+# # # # # # 
+# # # # # # add_executable(acg_node_rviz_noise src/acg_node_rviz_noise.cpp)
+# # # # # # 
+# # # # # # ## Add cmake target dependencies of the executable
+# # # # # # ## same as for the library above
+# # # # # # add_dependencies(acg_node_rviz_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # 
+# # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # target_link_libraries(acg_node_rviz_noise
+# # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+# # # # # # )
+# # # # # # 
+# # # # # # add_executable(acg_node_rviz_noptimi src/acg_node_rviz_noptimi.cpp)
+# # # # # # 
+# # # # # # ## Add cmake target dependencies of the executable
+# # # # # # ## same as for the library above
+# # # # # # add_dependencies(acg_node_rviz_noptimi ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# # # # # # 
+# # # # # # ## Specify libraries to link a library or executable target against
+# # # # # # target_link_libraries(acg_node_rviz_noptimi
+# # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+# # # # # # )
 
-# # # # # # # # # # ## Add cmake target dependencies of the executable
-# # # # # # # # # # ## same as for the library above
-# # # # # # # # # # # add_dependencies(acg_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# # # # # # # # # # # 
-# # # # # # # # # # # ## Specify libraries to link a library or executable target against
-# # # # # # # # # # # target_link_libraries(acg_node
-# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-# # # # # # # # # # # )
-# # # # # # # # # # # 
-# # # # # # # # # # # add_executable(acg_node_rviz src/acg_node_rviz.cpp)
-# # # # # # # # # # # 
-# # # # # # # # # # # ## Add cmake target dependencies of the executable
-# # # # # # # # # # # ## same as for the library above
-# # # # # # # # # # # add_dependencies(acg_node_rviz ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# # # # # # # # # # # 
-# # # # # # # # # # # ## Specify libraries to link a library or executable target against
-# # # # # # # # # # # target_link_libraries(acg_node_rviz
-# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-# # # # # # # # # # # )
-# # # # # # # # # # # 
-# # # # # # # # # # # add_executable(acg_node_rviz_noise src/acg_node_rviz_noise.cpp)
-# # # # # # # # # # # 
-# # # # # # # # # # # ## Add cmake target dependencies of the executable
-# # # # # # # # # # # ## same as for the library above
-# # # # # # # # # # # add_dependencies(acg_node_rviz_noise ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# # # # # # # # # # # 
-# # # # # # # # # # # ## Specify libraries to link a library or executable target against
-# # # # # # # # # # # target_link_libraries(acg_node_rviz_noise
-# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-# # # # # # # # # # # )
-# # # # # # # # # # # 
-# # # # # # # # # # # add_executable(acg_node_rviz_noptimi src/acg_node_rviz_noptimi.cpp)
-# # # # # # # # # # # 
-# # # # # # # # # # # ## Add cmake target dependencies of the executable
-# # # # # # # # # # # ## same as for the library above
-# # # # # # # # # # # add_dependencies(acg_node_rviz_noptimi ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# # # # # # # # # # # 
-# # # # # # # # # # # ## Specify libraries to link a library or executable target against
-# # # # # # # # # # # target_link_libraries(acg_node_rviz_noptimi
-# # # # # # # # # # #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
-# # # # # # # # # # # )
-# # # # # # # # # # # 
 # add_executable(acg_node_rviz_noptimi_full src/acg_node_rviz_nooptimi_full.cpp)
 # 
 # # Add cmake target dependencies of the executable
@@ -202,7 +215,7 @@ set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry -lgui -lsens
 # 
 # # Specify libraries to link a library or executable target against
 # target_link_libraries(acg_node_rviz_noptimi_full
-#   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+#   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 # )
 
 add_executable(acg_node_review src/acg_node_review.cpp)
@@ -225,7 +238,7 @@ add_dependencies(acg_node_rviz_full_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_full_fast
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 add_executable(acg_node_rviz_lab_fast src/acg_node_rviz_lab_fast.cpp)
@@ -246,9 +259,8 @@ target_link_libraries(acg_node_rviz_lab_fast
 # ## same as for the library above
 # add_dependencies(acg_node_rviz_full ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # 
-# ## Specify libraries to link a library or executable target against
 # target_link_libraries(acg_node_rviz_full
-#   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+#   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 # )
 # # # # # # # # # # # 
 # # # # # # # # # # # 
@@ -333,4 +345,5 @@ target_link_libraries(acg_node_rviz_lab_fast
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+#useless commment
 add_subdirectory(tests)

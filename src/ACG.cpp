@@ -851,6 +851,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 
 void AASS::acg::AutoCompleteGraph::updateLinks()
 {
+
 	std::cout << "Create new links" << std::endl;
 	int count = countLinkToMake();
 	int count2 = createNewLinks();
@@ -1040,10 +1041,12 @@ void AASS::acg::AutoCompleteGraph::testNoNanInPrior(const std::string& before){
 	
 }
 
+
 void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 {
 	
 	std::cout << "DO NOT USE " << std::endl;
+	testNoNanInPrior("no dtat");
 	assert(false);
 	
 	auto edges = _edge_prior;	
@@ -1120,7 +1123,7 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 		//Sometime the optimization in one turn goes under the limit so need to correct those cases ;)
 // 		assert(new_cov >= 0);
 		
-		if(new_cov <= 0){
+		if(new_cov <= 0.001){
 			//Apparently the vaqlue in the edge does not get changed so it's useless modifying it ?
 			//See :
 // 			double tre[3];
@@ -1144,8 +1147,11 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 			assert(new_cov >= 0);
 		}
 		
+		
 	// 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
 		std::pair<double, double> eigenval(new_cov, _priorNoise(1));
+		
+		std::cout << "Eigen vec " << eigenvec << " egenval " << eigenval.first << " " << eigenval.second << std::endl;
 		
 		Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
 		
@@ -1160,6 +1166,9 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 	// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
 		covariance_prior(2, 2) = _prior_rot * _prior_rot;
 		Eigen::Matrix3d information_prior = covariance_prior.inverse();
+		
+		std::cout << "ALL INFO \n" << information_prior << "\n new cov " << new_cov << " cov mat " << cov << std::endl; 
+		
 		(*it)->setInformation(information_prior);
 		
 	}

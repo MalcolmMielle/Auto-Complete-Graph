@@ -9,6 +9,8 @@
 #include <ctime> 
 
 
+#include "auto_complete_graph/covariance.hpp"
+
 BOOST_AUTO_TEST_CASE(trying)
 {
 
@@ -59,14 +61,28 @@ BOOST_AUTO_TEST_CASE(trying)
 	diff_norm_normalized = 1 - ( ( ( (max_range - min_range) * (diff_norm - min ) ) / (max - min) ) + min_range );
 	
 	BOOST_CHECK_EQUAL(diff_norm_normalized, 0);
+
+	Eigen::Vector2d eigenvec; eigenvec << -0.00111417, -3.81661;
+	std::pair<double, double> eigenval;
+	eigenval.first = 0.001;
+	eigenval.second = 0.01;
 	
+	std::cout << "out " << AASS::acg::getCovarianceVec(eigenvec, eigenval) << std::endl;
+	std::cout << "inv " << AASS::acg::getCovarianceVec(eigenvec, eigenval).inverse() << std::endl;
 	
+	Eigen::Vector2d eigenvec2; eigenvec2 << -0.00111417, -3.81661;
+	std::pair<double, double> eigenval2;
+	eigenval2.first = 0.3;
+	eigenval2.second = 0.01;
 	
+	std::cout << "out " << AASS::acg::getCovarianceVec(eigenvec2, eigenval2) << std::endl;
+	std::cout << "inv " << AASS::acg::getCovarianceVec(eigenvec2, eigenval2).inverse() << std::endl;
 	
+	Eigen::Vector2d eigenvec3; eigenvec3 << -0.00111417, -3.81661;
+	std::pair<double, double> eigenval3;
+	eigenval3.first = 0.05;
+	eigenval3.second = 0.01;
 	
-	
-	
-	
-	
-	
+	std::cout << "out " << AASS::acg::getCovarianceVec(eigenvec3, eigenval3) << std::endl;
+	std::cout << "inv " << AASS::acg::getCovarianceVec(eigenvec3, eigenval3).inverse() << std::endl;
 }

@@ -1,4 +1,5 @@
 #include "auto_complete_graph/ACG.hpp"
+#include <limits>
 
 g2o::VertexSE2Prior* prior0;
 g2o::EdgeLinkXY_malcolm* link11;
@@ -163,13 +164,14 @@ int main(){
 	
 	acg.getGraph().setFirst();
 	acg.prepare();
+// 	acg.updatePriorEdgeCovariance();
 // 	acg.initializeOptimization();
-	acg.computeInitialGuess();
+// 	acg.computeInitialGuess();
 // 	acg.prepare();
 	
 	acg.save("/home/malcolm/ACG_folder/initguess.g2o");
-	acg.getGraph().setHuberKernel();
-	acg.optimize(1);
+// 	acg.getGraph().setHuberKernel();
+	acg.getGraph().optimize(10);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_0after.g2o");
 	
 	assert(link11->interface->manuallySetAge() == true);
@@ -181,17 +183,31 @@ int main(){
 	assert(link11->interface->getAge() == age);
 	assert(link11->interface->manuallySetAge() == true);
 
-	acg.getGraph().setHuberKernel();
+	std::cout << "AFTER 0 " << std::endl << std::endl;
+	std::cout << "AFTER 0 " << std::endl << std::endl;
+// 	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_1after.g2o");
 
-	acg.getGraph().setHuberKernel();
+	std::cout << "AFTER 1 " << std::endl << std::endl;
+	std::cout << "AFTER 1 " << std::endl << std::endl;
+// 	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_2after.g2o");
+	
+	std::cout << "AFTER 2 " << std::endl << std::endl;
+	std::cout << "AFTER 2 " << std::endl << std::endl;
 
-	acg.getGraph().setHuberKernel();
+// 	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_3after.g2o");
+	
+
+
+	std::cout << "min" << std::numeric_limits<double>::lowest() << std::endl;
+	
+	exit(0);
+	
 	
 	addPostNodes(acg);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_poseNode.g2o");
@@ -199,7 +215,7 @@ int main(){
 	acg.prepare();
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_poseNodeinitOpti.g2o");
 	
-	acg.getGraph().setHuberKernel();
+// 	acg.getGraph().setHuberKernel();
 	acg.optimize(1);
 	acg.save("/home/malcolm/ACG_folder/simpleGraph_poseNodeopti1.g2o");
 	
