@@ -139,9 +139,9 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	oacg->initializeOptimization();
 // 	oacg->initialGuess();
 	//Prepare the graph : marginalize + initializeOpti
-// 	oacg->getGraph().setFirst();
-// 	oacg->prepare();
-// 	oacg->optimize();
+	oacg->getGraph().setFirst();
+	oacg->prepare();
+	oacg->optimize();
 	count++;
 	
 // 	printImages(oacg);

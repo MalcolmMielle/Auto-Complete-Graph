@@ -226,7 +226,7 @@ add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_review
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 
@@ -249,7 +249,7 @@ add_dependencies(acg_node_rviz_lab_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${ca
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_lab_fast
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
 
