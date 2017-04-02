@@ -578,13 +578,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
 		}
 		
-// 		Eigen::Isometry2d diff;
-// 		diff.matrix() << 1, 0, 0, 
-// 				0, 1, 0, 
-// 				0, 0, 0;
-				
-				
-		Eigen::Vector3d diff_vec;
+		Eigen::Vector3d diff_vec; diff_vec << 0, 0, 0;
 				
 		//**************** Calculate the previous transformations if there as already been something added *** //
 				
@@ -648,40 +642,61 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		
 			
 			std::cout << "Checking node nb " << i << std::endl;
+			
+			
 			//RObot pose
-				ndt_feature::NDTFeatureNode* feature = new ndt_feature::NDTFeatureNode();
-				std::cout << "Copy feature" << std::endl;
-				feature->copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
-			Eigen::Affine3d affine = Eigen::Affine3d(feature->getPose());
+// 			ndt_feature::NDTFeatureNode& feature = dynamic_cast<ndt_feature::NDTFeatureNode&>(ndt_graph.getNodeInterface(i));
+			std::cout << "Copy feature" << std::endl;
+			
+// 			feature.copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
+			Eigen::Affine3d affine = Eigen::Affine3d(ndt_graph.getNodeInterface(i).getPose());
 			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
 			
 			//TODO make this work
 // 			isometry2d =  diff * isometry2d;
 			
-			g2o::SE2 robot_pos(isometry2d);
-			g2o::SE2 diff_vec_se2(diff_vec);
-			robot_pos = robot_pos * diff_vec_se2;
+			//BUG IS AFTER
+			std::cout << "print" << std::endl;
 			
-			double resolution = feature->map->params_.resolution;
-				delete feature;
+			g2o::SE2 robot_pos(isometry2d);
+			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
+			g2o::SE2 diff_vec_se2(diff_vec);
+			std::cout << "diff vec done" << diff_vec << std::endl;
+			robot_pos = robot_pos * diff_vec_se2;
+			std::cout << "multiply" << std::endl;
+// 				delete feature;
 // 			Eigen::Vector2d robot_pos; robot_pos << robot_pos_tmp(0), robot_pos_tmp(1);
 // 			robot_pos << ndt_graph.getNode(i).T(0), ndt_graph.getNode(i).T(1);
-			
+				
 			//ATTENTION THIS GETS FORGOTTEN
 			lslgeneric::NDTMap* map = ndt_graph.getMap(i);
 			
+			//ATTENTION IMPORTANT BUG Uncomment this part of code to print images. Don't forget to delete pointer in destructor
+			/********************************************************/
+				
+// 			std::cout << "get res" << std::endl;
+// 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;
 			//Use a a msg to copy to a new pointer so it doesn't get forgotten :|
-			ndt_map::NDTMapMsg msg;
+// 			ndt_map::NDTMapMsg msg;
 			//ATTENTION Frame shouldn't be fixed
-			bool good = lslgeneric::toMessage(map, msg, "/world");
-			lslgeneric::NDTMap* map_copy = new lslgeneric::NDTMap(new lslgeneric::LazyGrid(resolution));
-			lslgeneric::LazyGrid *lz = dynamic_cast<lslgeneric::LazyGrid*>(map_copy->getMyIndex() );
-			std::string frame;
-			bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
+// 			bool good = lslgeneric::toMessage(map, msg, "/world");
+// 			lslgeneric::NDTMap* map_copy = new lslgeneric::NDTMap(new lslgeneric::LazyGrid(resolution));
+// 			lslgeneric::LazyGrid *lz = dynamic_cast<lslgeneric::LazyGrid*>(map_copy->getMyIndex() );
+// 			std::string frame;
+// 			bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
+			
+			/*********************************************************/
+			//Comment this
+			lslgeneric::NDTMap* map_copy;
+			
+			/********************************************************/
+			
 			
 // 			if(noise_flag = true && i != 0){
 // 				robot_pos = robot_pos * noise_se2;
 // 			}
+			
+			//BUG IS BEFORE
 			
 			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, affine, map_copy);
 			//Add Odometry if there is more than one node
@@ -719,14 +734,19 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			//********************** Extract the corners *****************//
 			
 			//HACK For now : we translate the Corner extracted and not the ndt-maps
-			auto cells = map->getAllCells();
+			auto cells = map->getAllCellsShared();
+			std::cout << "got all cell shared" << std::endl;
 			double x2, y2, z2;
 			map->getCellSizeInMeters(x2, y2, z2);
+			std::cout << "got all cell sized" << std::endl;
 			cell_size = x2;
 			
 			AASS::das::NDTCorner cornersExtractor;
+			std::cout << "hopidy" << std::endl;
 			auto ret_export = cornersExtractor.getAllCorners(*map);
-			auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();		
+			std::cout << "gotall corner" << std::endl;
+			auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();	
+			std::cout << "got all accurate corners" << std::endl;	
 			
 			
 			

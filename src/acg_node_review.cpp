@@ -109,7 +109,8 @@ void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompl
 
 
 
-void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
+// void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu)
+void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 	new_node = true;
 	std::cout << "Got a new graph " << std::endl;
 	
@@ -118,6 +119,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	ndt_feature::NDTFeatureGraph graph;
 	
 	std::string frame;
+	//ATTENTION: THE BAD GUY !
 	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
 	
 
@@ -134,7 +136,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	std::cout << "saved to " << file_out << std::endl;
 	
 	/*** image****/
-	visu.updateRvizNoNDT();
+// 	visu.updateRvizNoNDT();
 	
 	
 // 	oacg->initializeOptimization();
@@ -236,24 +238,29 @@ int main(int argc, char **argv)
 		}
 	}
 
-	AASS::acg::BasementFull basement(deviation, angle, scale, center);
-	basement.extractCornerPrior();
-	basement.transformOntoSLAM();
-	auto graph_prior = basement.getGraph();
+// 	AASS::acg::BasementFull basement(deviation, angle, scale, center);
+// 	basement.extractCornerPrior();
+// 	basement.transformOntoSLAM();
+// 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
-	oacg.addPriorGraph(graph_prior);	
+	
+	//ATTENTION
+// 	oacg.addPriorGraph(graph_prior);	
 	
 	//Create initialiser
-	AASS::acg::RvizPoints initialiser(nh, &oacg);
-	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
-	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
+// 	AASS::acg::RvizPoints initialiser(nh, &oacg);
 	
-	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	
+// 	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
+// 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
+	
+// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	
-	visu.updateRvizNoNDT();
+// 	visu.updateRvizNoNDT();
 	
 	timef = ros::Time::now();
 	ros::Time time_begin = ros::Time::now();
@@ -263,10 +270,10 @@ int main(int argc, char **argv)
 // 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
 		
-		if(initialiser.size() == 4 && was_init == false){
-			was_init = true;
-			initAll(oacg, initialiser, basement);
-		}
+// 		if(initialiser.size() == 4 && was_init == false){
+// 			was_init = true;
+// 			initAll(oacg, initialiser, basement);
+// 		}
 		
 // 		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
@@ -278,7 +285,7 @@ int main(int argc, char **argv)
 		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true){
 // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
 // 			exit(0);
-			visu.updateRvizNoNDT();	
+// 			visu.updateRvizNoNDT();	
 		// 	oacg->initializeOptimization();
 		// 	oacg->initialGuess();
 			//Prepare the graph : marginalize + initializeOpti
@@ -294,7 +301,7 @@ int main(int argc, char **argv)
 			std::cout << "********************************************************" << std::endl << std::endl;
 // 			flag = false;
 			
-			visu.updateRviz();
+// 			visu.updateRviz();
 						
 			new_node = false;
 			

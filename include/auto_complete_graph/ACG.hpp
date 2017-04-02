@@ -1,4 +1,4 @@
-#ifndef AUTOCOMPLETEGRAPH_ACG_15092016
+g2o::ParameterSE2Offset#ifndef AUTOCOMPLETEGRAPH_ACG_15092016
 #define AUTOCOMPLETEGRAPH_ACG_15092016
 
 #include <ctime>
@@ -355,14 +355,14 @@ private:
 		virtual ~AutoCompleteGraph(){
 			
 // 			std::cout << "Calling ACG dest with size" << _nodes_ndt.size() << std::endl ;
-// 			delete _sensorOffset;
+			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
 			
 // 			cleanup pointers in NODE
 			
 			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
 // 				std::cout << "Deleting the NDT maps" << std::endl;
- 				delete _nodes_ndt[i].getMap();
+//  				delete _nodes_ndt[i].getMap();
 			}
 // 			std::cout << "OUT ACG dest " << std::endl ;
 			
