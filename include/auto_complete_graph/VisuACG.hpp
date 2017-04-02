@@ -350,7 +350,7 @@ namespace acg{
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, _resolution, "/world");
+					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap().get(), *omap_tmp, _resolution, "/world");
 // 					auto pose = _acg->getRobotNodes()[i].getPose();
 					auto node = _acg->getRobotNodes()[i].getNode();
 					auto vertex = node->estimate().toIsometry();
@@ -428,7 +428,7 @@ namespace acg{
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap(), *omap_tmp, _resolution, "/world");
+					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i].getMap().get(), *omap_tmp, _resolution, "/world");
 					auto pose = _acg->getRobotNodes()[i].getPose();
 // 					auto vertex = node->estimate().toVector();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);

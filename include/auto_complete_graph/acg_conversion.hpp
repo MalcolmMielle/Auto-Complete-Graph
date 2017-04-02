@@ -234,7 +234,7 @@ namespace acg{
 			std::cout << "Node" << std::endl;
 			nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-			lslgeneric::toOccupancyGrid(it_start->getMap(), *omap, 0.1, "/world");
+			lslgeneric::toOccupancyGrid(it_start->getMap().get(), *omap, 0.1, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
 			auto node = it_start->getNode();
 			auto vertex = node->estimate().toIsometry();
@@ -418,7 +418,7 @@ namespace acg{
 				std::cout << "Node" << std::endl;
 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap(), *omap, resol, "/world");
+				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap().get(), *omap, resol, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
 				auto node = acg.getRobotNodes()[i].getNode();
 				auto vertex = node->estimate().toIsometry();

@@ -1,4 +1,4 @@
-g2o::ParameterSE2Offset#ifndef AUTOCOMPLETEGRAPH_ACG_15092016
+#ifndef AUTOCOMPLETEGRAPH_ACG_15092016
 #define AUTOCOMPLETEGRAPH_ACG_15092016
 
 #include <ctime>
@@ -182,19 +182,19 @@ private:
 		*/
 		class NDTNodeAndMap{
 			g2o::VertexSE2* _node;
-			lslgeneric::NDTMap* _map;
+			std::shared_ptr<lslgeneric::NDTMap> _map;
 			Eigen::Affine3d _T;
 		public:
-			NDTNodeAndMap(g2o::VertexSE2* node, lslgeneric::NDTMap* map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){};
+			NDTNodeAndMap(g2o::VertexSE2* node, const std::shared_ptr<lslgeneric::NDTMap>& map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){};
 			
 	// 		~NDTNodeAndMap(){delete _map;}
 			
 			g2o::VertexSE2* getNode(){return _node;}
 			const g2o::VertexSE2* getNode() const {return _node;}
 			void setNode(g2o::VertexSE2* node){_node = node;}
-			lslgeneric::NDTMap* getMap(){return _map;}
-			lslgeneric::NDTMap* getMap() const {return _map;}
-			void setMap(lslgeneric::NDTMap* map){_map = map;}
+			std::shared_ptr<lslgeneric::NDTMap> getMap(){return _map;}
+			std::shared_ptr<lslgeneric::NDTMap> getMap() const {return _map;}
+			void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
 			Eigen::Affine3d getPose(){return _T;}
 			const Eigen::Affine3d& getPose() const {return _T;}
 			
@@ -448,9 +448,9 @@ private:
 		const AASS::acg::OptimizableAutoCompleteGraph& getGraph() const {return _optimizable_graph;}
 		
 		/***FUNCTIONS TO ADD THE NODES***/
-		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
-		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
-		g2o::VertexSE2* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, lslgeneric::NDTMap* map);
+		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
+		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
+		g2o::VertexSE2* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
 		
 		g2o::VertexPointXY* addLandmarkPose(const g2o::Vector2D& pos, int strength = 1);
 		g2o::VertexPointXY* addLandmarkPose(double x, double y, int strength = 1);
@@ -524,7 +524,7 @@ private:
 		
 		
 		void copyNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph){
-			
+			assert(true == false && " do not use");
 			//ATTENTION : Might crash
 			if(_ndt_graph->wasInit()){
 				delete _ndt_graph;
