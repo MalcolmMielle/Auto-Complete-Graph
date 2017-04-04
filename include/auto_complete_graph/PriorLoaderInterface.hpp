@@ -98,6 +98,9 @@ namespace AASS{
 				dstTri[1] = _same_point_slam[1];
 				dstTri[2] = _same_point_slam[2];
 				
+				std::cout << "Point for transfo" << std::endl;
+				std::cout << _same_point_prior[0] << " " << _same_point_slam[0] << std::endl << _same_point_prior[1] << " " << _same_point_slam[1] << std::endl << _same_point_prior[2] << " " << _same_point_slam[0] << std::endl;
+				
 				cv::Mat warp_mat = cv::getAffineTransform( srcTri, dstTri );
 				/// Compute a rotation matrix with respect to the center of the image
 // 				cv::Point center = cv::Point( warp_dst.cols/2, warp_dst.rows/2 );
@@ -127,23 +130,22 @@ namespace AASS{
 // 				cv::warpAffine( warp_dst, warp_rotate_dst, rot_mat, warp_dst.size() );
 				
 				
-				//Scale graph
-				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
-				//vertices access all the vertix
-				//Classify them in order
-	// 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;
-				int i = 0 ;
-				for (vp = boost::vertices(_prior_graph); vp.first != vp.second; ++vp.first) {
-	// 					std::cout << "going throught grph " << i << std::endl; ++i;
-					AASS::das::CornerDetector::CornerVertex v = *vp.first;
-					cv::Point2f p;
-					std::cout << "OLD value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
-					std::cout << "New value " << _corner_prior_matched[i].x << " " << _corner_prior_matched[i].y << std::endl;
-					_prior_graph[v].setX(_corner_prior_matched[i].x);
-					_prior_graph[v].setY(_corner_prior_matched[i].y);
-					std::cout << "New value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
-					++i;
-				}
+				//Scale graph -> redundant with AffineTransformGraph
+// 				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
+// 				//vertices access all the vertix
+// 				//Classify them in order
+// 				std::cout << " Game on" << std::endl;
+// 				int i = 0 ;
+// 				for (vp = boost::vertices(_prior_graph); vp.first != vp.second; ++vp.first) {
+// 	// 					std::cout << "going throught grph " << i << std::endl; ++i;
+// 					AASS::das::CornerDetector::CornerVertex v = *vp.first;
+// 					std::cout << "OLD value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
+// 					std::cout << "New value " << _corner_prior_matched[i].x << " " << _corner_prior_matched[i].y << std::endl;
+// 					_prior_graph[v].setX(_corner_prior_matched[i].x);
+// 					_prior_graph[v].setY(_corner_prior_matched[i].y);
+// 					std::cout << "New value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
+// 					++i;
+// 				}
 				
 				
 				
@@ -174,6 +176,8 @@ namespace AASS{
 				
 				assert(pt_slam.size() >= 4);
 				assert(pt_prior.size() == pt_slam.size());
+				
+				std::cout << pt_prior[0] << " " << pt_slam[0] << std::endl << pt_prior[1] << " " << pt_slam[1] << std::endl << pt_prior[2] << " " << pt_slam[0] << std::endl;
 				
 				_same_point_prior.clear();
 				_same_point_slam.clear();
@@ -321,6 +325,7 @@ namespace AASS{
 					cv::Point2d point_out;
 					point_out.x = mat_out.at<double>(0);
 					point_out.y = mat_out.at<double>(1);
+					std::cout << "reutnr point " << point_out.x << " " << point_out.y << std::endl;
 					return point_out;
 				};
 				
@@ -340,7 +345,7 @@ namespace AASS{
 					point.x = _prior_graph[v].getX();
 					point.y = _prior_graph[v].getY();
 					
-					auto point_out = transf(warp_transfo, point);
+					cv::Point2d point_out = transf(warp_transfo, point);
 					
 					//Matrix multiplication
 					

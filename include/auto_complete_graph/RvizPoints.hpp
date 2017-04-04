@@ -43,6 +43,8 @@ namespace acg{
 			
 		}
 		
+		void clear(){_points.clear(); _flag_go = false;}
+		
 		std::vector<AASS::acg::Match>& getMatches(){return _points;}
 		const std::vector<Match>& getMatches() const {return _points;}
 		std::size_t size() const {return _points.size();}

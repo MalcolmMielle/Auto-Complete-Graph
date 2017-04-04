@@ -6,6 +6,7 @@
 #include "grid_map_ros/GridMapRosConverter.hpp"
 #include <grid_map_cv/grid_map_cv.hpp>
 #include "occupancy_grid_utils/combine_grids.h"
+#include "ndt_feature/ndt_feature_graph.h"
 
 #include "ACG.hpp"
 
@@ -232,9 +233,14 @@ namespace acg{
 			
 //Grid map test
 			std::cout << "Node" << std::endl;
-			nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
+			nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();		
+			std::cout << "Node size" << it_start->getMap()->getAllInitializedCellsShared().size() << std::endl;
+			assert(it_start->getMap()->getAllInitializedCellsShared().size() == it_start->getMap().get()->getAllInitializedCellsShared().size());
+			
+			std::cout << "Node size" << it_start->getMap()->getAllCellsShared().size() << std::endl;
+			assert(it_start->getMap()->getAllCellsShared().size() == it_start->getMap().get()->getAllCellsShared().size());
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-			lslgeneric::toOccupancyGrid(it_start->getMap().get(), *omap, 0.1, "/world");
+			lslgeneric::toOccupancyGrid(it_start->getMap().get(), *omap, 0.3, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
 			auto node = it_start->getNode();
 			auto vertex = node->estimate().toIsometry();
@@ -807,6 +813,27 @@ namespace acg{
 	}
 	
 	
+	inline ACGToVectorMaps(const AASS::acg::AutoCompleteGraph& acg, const ndt_map::NDTVectorMapMsg& maps){
+		if(acg.getRobotNodes().size() != 0){
+			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
+				
+				///Copy map
+				ndt_map::NDTMapMsg msg;
+				bool good = lslgeneric::toMessage(it->getMap().get(), msg, "/world");
+	// 			
+				
+				auto pose = it->getNode()->estimate().toVector();
+				geometry_msgs::Transform transform;
+				transform.translation.x = pose(0);
+				transform.translation.y = pose(1);
+				transform.translation.z = 0;
+				
+				auto quat = tf::createQuaternionFromRPY(0, 0, pose(2));
+				transform.rotation = quat;
+
+			}
+		}
+	}
 	
 	
 	

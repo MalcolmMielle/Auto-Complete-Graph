@@ -3,7 +3,7 @@
 
 #include "auto_complete_graph/ACG.hpp"
 #include "occupancy_grid_utils/combine_grids.h"
-
+#include "ndt_map/NDTVectorMapMsg.h"
 #include "acg_conversion.hpp"
 
 
@@ -24,6 +24,7 @@ namespace acg{
 		ros::Publisher _prior_node_pub;
 		ros::Publisher _corner_ndt_node_pub;
 		ros::Publisher _link_pub;
+		ros::Publisher _ndtmap;
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 		AutoCompleteGraph* _acg;
@@ -51,6 +52,7 @@ namespace acg{
 			_prior_node_pub = _nh.advertise<visualization_msgs::Marker>("prior_nodes_marker", 10);
 			_corner_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("corner_ndt_marker", 10);
 			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
+			_ndtmap = _nh.advertise<ndt_map::NDTVectorMapMsg>("ndt_map_msg_node", 10);
 			
 			_acg = acg;
 			
@@ -156,6 +158,9 @@ namespace acg{
 // 				saveImage(occ_out);
 // 				std::cout << "Image saved" << std::endl;
 				
+				ndt_map::NDTVectorMapMsg msg;
+				ACGToVectorMaps(*_acg, msg);
+				_ndtmap.publish(msg);
 // 				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*occ_out);
 				
 // 				exit(0);
@@ -209,7 +214,11 @@ namespace acg{
 // 				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
 				
 // 				std::cout << "Pub" << std::endl;
-				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
+// 				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
+// 				ndt_map::NDTVectorMapMsg msg;
+// 				(NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id
+// // 				lslgeneric::toMessage((*_acg).getRobotNodes()[(*_acg).getRobotNodes().size() - 1].getMap().get(), msg, "world");
+// 				_ndtmap.publish<ndt_map::NDTMapMsg>(msg);
 // 				saveImage(occ_out);
 // 				std::cout << "Image saved" << std::endl;
 				

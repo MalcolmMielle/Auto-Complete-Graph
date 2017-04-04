@@ -251,6 +251,8 @@ private:
 		///@brief min value of the age of an edge. Need to be more or equal to 0
 		double _min_age;
 		
+		//Iterator on ID
+		int new_id_;
 	
 	public:
 		
@@ -262,7 +264,7 @@ private:
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -276,7 +278,7 @@ private:
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -287,7 +289,7 @@ private:
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
 			
 		
 			std::ifstream infile(load_file);
@@ -479,7 +481,7 @@ private:
 		
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
-		void removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1);
+		std::vector <g2o::EdgeLinkXY_malcolm* >::iterator removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1);
 		
 		//FUNCTION TO REMOVE A VERTEX
 		void removeVertex(g2o::HyperGraph::Vertex* v1);
@@ -500,26 +502,52 @@ private:
 		
 		
 		void clearPrior(){
+			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
+			int i = 0;
+			for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ; ++it){
+				
+				for(auto it1 = it + 1 ; it1 != _nodes_prior.end() ;++it1){
+					assert(*it != *it1);
+					++i;
+				}
+			}
+			
 			
 			for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ;){
-				auto it_tmp = it;
-				it++;
-				this->removeVertex(*it_tmp);
+// 				auto it_tmp = it;
+// 				assert(*it_tmp == *it);
+// 				++it;
+// 				assert(*it_tmp != *it);
+// 				std::cout <<"removing the vertex " << *it << std::endl;
+// 				if (it != _nodes_prior.end()) {
+// 					std::cout <<"Done " << _nodes_prior.size() <<std::endl;
+					//DIESNT WORK :(
+// 					this->removeVertex(*it);
+					_optimizable_graph.removeVertex(*it, false);
+					it = _nodes_prior.erase(it);
+// 					std::cout <<"removed the vertex " << std::endl;
+// 				}
+// 				it = it_tmp;
+// 				++it;
+				
 			}
+// 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
 			assert(_nodes_prior.size() == 0);
 			
 // 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
 // 				_optimizable_graph.removeVertex(it, true);
 // 			}
+// 			std::cout <<"clearing the edges " << std::endl;
 			 _edge_prior.clear();
 			 
 			//Making sure all edge prior were removed.
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
 				assert( dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) == NULL );
 			}		
-			 
-			 
+			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
+			std::cout << "DONE removing " << std::endl;
 		}
 		
 		

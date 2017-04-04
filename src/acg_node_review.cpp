@@ -134,6 +134,8 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 
 void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
+	
+	
 	new_node = true;
 // 	abort_f = true;
 	std::cout << "Got a new graph " << std::endl;
@@ -167,10 +169,13 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	oacg->initialGuess();
 	
 	//Prepare the graph : marginalize + initializeOpti
-	oacg->getGraph().setFirst();
-	oacg->prepare();
-	oacg->optimize();
-	count++;
+	
+	if(was_init == true){
+		oacg->getGraph().setFirst();
+		oacg->prepare();
+		oacg->optimize();
+		count++;
+	}
 	
 // 	printImages(oacg);
 // 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
@@ -208,18 +213,18 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 
 
 
-void initAll(AASS::acg::AutoCompleteGraph& oacg, const AASS::acg::RvizPoints& initialiser, AASS::acg::PriorLoaderInterface& priorloader){
+void initAll(AASS::acg::AutoCompleteGraph& oacg, AASS::acg::RvizPoints& initialiser, AASS::acg::PriorLoaderInterface& priorloader){
 	
 	std::vector<cv::Point2f> slam_pt;
 	std::vector<cv::Point2f> prior_pt;
 	auto match = initialiser.getMatches();
 	for(auto it = match.begin() ; it != match.end() ; ++it){
 
-		Eigen::Vector3d pose = match[0].getPriorNode()->estimate().toVector();
+		Eigen::Vector3d pose = it->getPriorNode()->estimate().toVector();
 		cv::Point2f pose2d; pose2d.x = pose(0) ; pose2d.y = pose(1);
 		prior_pt.push_back(pose2d);
 		
-		Eigen::Vector2d pose2de = match[0].getLandmarkNode()->estimate();
+		Eigen::Vector2d pose2de = it->getLandmarkNode()->estimate();
 		pose2d.x = pose2de(0) ; pose2d.y = pose2de(1);
 		slam_pt.push_back(pose2d);
 	}
@@ -233,6 +238,8 @@ void initAll(AASS::acg::AutoCompleteGraph& oacg, const AASS::acg::RvizPoints& in
 	
 	oacg.clearPrior();
 	oacg.addPriorGraph(graph_prior);
+	
+	initialiser.clear();
 	
 }
 
@@ -262,19 +269,19 @@ int main(int argc, char **argv)
 		}
 	}
 
-// 	AASS::acg::BasementFull basement(deviation, angle, scale, center);
-// 	basement.extractCornerPrior();
-// 	basement.transformOntoSLAM();
-// 	auto graph_prior = basement.getGraph();
+	AASS::acg::BasementFull basement(deviation, angle, scale, center);
+	basement.extractCornerPrior();
+	basement.transformOntoSLAM();
+	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
 	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
 	
 	//ATTENTION
-// 	oacg.addPriorGraph(graph_prior);	
-	
+	oacg.addPriorGraph(graph_prior);	
+		
 	//Create initialiser
-// 	AASS::acg::RvizPoints initialiser(nh, &oacg);
+	AASS::acg::RvizPoints initialiser(nh, &oacg);
 	
 	
 	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
@@ -299,19 +306,20 @@ int main(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 		
-// 		if(initialiser.size() == 4 && was_init == false){
-// 			was_init = true;
-// 			initAll(oacg, initialiser, basement);
-// 		}
+		if(initialiser.size() == 4 && was_init == false){
+			was_init = true;
+			initAll(oacg, initialiser, basement);
+			visu.updateRvizNoNDT();
+		}
 		
 // 		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 		
 		ros::Time future = ros::Time::now();
-// 		std::cout << "future " << (future - timef).toSec() << " since " << future << " " << timef << std::endl;
+		std::cout << "future " << (future - timef).toSec() << " since " << oacg.getRobotNodes().size() << ">" << 5 << " "<< new_node << "==" << true  << " "<< was_init << "==" << true << std::endl;
 // 		exit(0);
 		
-		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true){
+		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true && was_init == true){
 // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
 // 			exit(0);
 // 			visu.updateRvizNoNDT();	
@@ -336,7 +344,7 @@ int main(int argc, char **argv)
 			
 		}	
 		
-		
+		visu.updateRviz();
 		
 	}
 	

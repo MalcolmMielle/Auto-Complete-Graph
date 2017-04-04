@@ -5,7 +5,8 @@ g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, 
 	std::cout << "Adding the robot pose " << std::endl;
 	g2o::VertexSE2* robot =  new g2o::VertexSE2;
 	robot->setEstimate(se2);
-	robot->setId(_optimizable_graph.vertices().size());
+	robot->setId(new_id_);
+	++new_id_;
 	_optimizable_graph.addVertex(robot);
 	
 	NDTNodeAndMap nodeAndMap(robot, map, affine);
@@ -25,7 +26,8 @@ g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, d
 
 g2o::VertexPointXY* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vector2D& pos, int strength){
 	g2o::VertexPointXY* landmark = new g2o::VertexPointXY;
-	landmark->setId(_optimizable_graph.vertices().size());
+	landmark->setId(new_id_);
+	++new_id_;
 	std::cout << "Setting the id " << _optimizable_graph.vertices().size() << std::endl;
 	landmark->setEstimate(pos);
 	_optimizable_graph.addVertex(landmark);
@@ -40,7 +42,8 @@ g2o::VertexPointXY* AASS::acg::AutoCompleteGraph::addLandmarkPose(double x, doub
 
 g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(const g2o::SE2& se2){
 	g2o::VertexSE2Prior* priorlandmark = new g2o::VertexSE2Prior;
-	priorlandmark->setId(_optimizable_graph.vertices().size());
+	priorlandmark->setId(new_id_);
+	++new_id_;
 	priorlandmark->setEstimate(se2);
 	_optimizable_graph.addVertex(priorlandmark);
 	_nodes_prior.push_back(priorlandmark);
@@ -314,15 +317,17 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 }
 
 
-void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
+std::vector <g2o::EdgeLinkXY_malcolm* >::iterator AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
 {
+	
+	std::vector <g2o::EdgeLinkXY_malcolm* >::iterator next_el;
 	auto it = _edge_link.begin();
 	int size = _edge_link.size();
 	int place = 0;
 	for(it; it != _edge_link.end() ;){
 		if(*it == v1){
 			std::cout << "Found"<<std::endl;
-			_edge_link.erase(it);
+			next_el = _edge_link.erase(it);
 			break;
 		}
 		else{
@@ -340,6 +345,8 @@ void AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm
 	
 	std::cout << "Out of remove edge" << std::endl;
 	
+	return next_el;
+	
 }
 
 
@@ -353,6 +360,7 @@ void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	g2o::VertexPointXY* ptr_se3 = dynamic_cast<g2o::VertexPointXY*>(v1);
 	
 	if(ptr != NULL){
+		std::cout <<"Find prior" << std::endl;
 		int index = findPriorNode(v1);
 		assert(index != -1);
 		std::vector<g2o::VertexSE2Prior*>::iterator which = _nodes_prior.begin() + index;
@@ -376,7 +384,7 @@ void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	else{
 		throw std::runtime_error("Vertex type not found in list");
 	}
-	_optimizable_graph.removeVertex(v1, true);
+	_optimizable_graph.removeVertex(v1, false);
 }
 
 // TODO
@@ -455,7 +463,7 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 	std::deque<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vec_deque;
 	std::vector<g2o::VertexSE2Prior*> out_prior;
 	
-// 	std::cout << "NOOOOOOW" << std::endl << std::endl; 
+	std::cout << "NOOOOOOW" << _optimizable_graph.vertices().size() << std::endl << std::endl; 
 	
 	assert( _nodes_prior.size() == 0 );
 	
@@ -464,7 +472,7 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 		auto v = *vp.first;
 		//ATTENTION Magic number
 		
-// 		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
+		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
 		
 		
 		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0);
@@ -961,7 +969,7 @@ void AASS::acg::AutoCompleteGraph::removeBadLinks()
 {
 	//Remove links that went too far away from the points and restor the edges to original state when possible:
 	int count = 0 ;
-	
+	size_t siz = _edge_link.size();
 	auto it_old_links = _edge_link.begin();
 	for(it_old_links; it_old_links != _edge_link.end();){
 		
@@ -992,28 +1000,24 @@ void AASS::acg::AutoCompleteGraph::removeBadLinks()
 		assert(vertex_out.size() == 2);
 		double norm = (vertex_out[0] - vertex_out[1]).norm();
 		//Attention magic number
-		auto it_tmp = it_old_links;
-		
-		auto it_chec = it_old_links + 1;
-		
-		it_old_links++;
-		
-		assert(it_chec == it_old_links);
+// 		auto it_tmp = it_old_links;
+				
+// 		it_old_links++;
+				
+// 		std::vector <g2o::EdgeLinkXY_malcolm* >::iterator next_el = it_old_links;
 		
 		if(norm > _max_distance_for_link_in_meter ){
 			std::cout << "Removing a link" << std::endl;
 			std::cout << "NORM " << norm << "min dist " << _max_distance_for_link_in_meter << std::endl;
-			removeLinkBetweenMaps(*it_tmp);
+			it_old_links = removeLinkBetweenMaps(*it_old_links);
 		}
-		
-		assert(it_chec == it_old_links);
-		
-		count++;
+		else{
+			it_old_links++;
+		}	
 		std::cout << "Count " << count << " size " << _edge_link.size() << std::endl;
-		assert(count <= _edge_link.size());
-// 		else{
-// 			it_old_links++;
-// 		}	
+		assert(count <= siz); 
+		count++;
+
 	}	
 }
 
