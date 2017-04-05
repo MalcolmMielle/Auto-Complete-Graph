@@ -626,6 +626,12 @@ private:
 			infile.close();
 		}
 		
+		
+		void setFirst(){
+			g2o::OptimizableGraph::Vertex* fRobot = _nodes_ndt[0].getNode();
+			_optimizable_graph.setFirst(fRobot);
+		}
+		
 		/**
 		 * @brief actual optimization loop. Make sure setFirst and prepare are called before. Use Huber first and then DCS.
 		 * 

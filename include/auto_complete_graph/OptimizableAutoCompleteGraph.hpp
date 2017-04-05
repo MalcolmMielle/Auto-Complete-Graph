@@ -248,22 +248,28 @@ namespace acg{
 		/**
 		 * @brief Fix a node in the graph before the optimization
 		 */
-		void setFirst(){
+		void setFirst(g2o::OptimizableGraph::Vertex* fRobot){
 // 			auto firstRobotPose = this->vertex(0);
 // 			firstRobotPose->setFixed(true);
-			bool gaugeFreedo = gaugeFreedom();
-			g2o::OptimizableGraph::Vertex* gauge = findGauge();
-			if (gaugeFreedo) {
-				if (! gauge) {
-				std::cerr <<  "cannot find a vertex to fix in this thing" << std::endl;
-				return;
-				} else {
-				std::cerr << "graph is fixed by node " << gauge->id() << std::endl;
-				gauge->setFixed(true);
-				}
-			} else {
-				std::cerr << "graph is fixed by priors or nodes are already fixed" << std::endl;
-			}
+			
+			
+			
+// 			bool gaugeFreedo = gaugeFreedom();
+// 			g2o::OptimizableGraph::Vertex* gauge = findGauge();
+// 			if (gaugeFreedo) {
+// 				if (! gauge) {
+// 				std::cerr <<  "cannot find a vertex to fix in this thing" << std::endl;
+// 				return;
+// 				} else {
+// 				std::cerr << "graph is fixed by node " << gauge->id() << std::endl;
+// 				gauge->setFixed(true);
+// 				}
+// 			} else {
+// 				std::cerr << "graph is fixed by priors or nodes are already fixed" << std::endl;
+// 			}
+			
+			fRobot->setFixed(true);
+			
 		}
 		
 		private:
