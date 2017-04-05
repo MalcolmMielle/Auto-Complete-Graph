@@ -171,7 +171,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	//Prepare the graph : marginalize + initializeOpti
 	
 	if(was_init == true){
-		oacg->getGraph().setFirst();
+		oacg->setFirst();
 		oacg->prepare();
 		oacg->optimize();
 		count++;
@@ -315,34 +315,34 @@ int main(int argc, char **argv)
 // 		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 		
-		ros::Time future = ros::Time::now();
-		std::cout << "future " << (future - timef).toSec() << " since " << oacg.getRobotNodes().size() << ">" << 5 << " "<< new_node << "==" << true  << " "<< was_init << "==" << true << std::endl;
+// 		ros::Time future = ros::Time::now();
+// 		std::cout << "future " << (future - timef).toSec() << " since " << oacg.getRobotNodes().size() << ">" << 5 << " "<< new_node << "==" << true  << " "<< was_init << "==" << true << std::endl;
 // 		exit(0);
 		
-		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true && was_init == true){
-// 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
-// 			exit(0);
-// 			visu.updateRvizNoNDT();	
-		// 	oacg->initializeOptimization();
-		// 	oacg->initialGuess();
-			//Prepare the graph : marginalize + initializeOpti
-			oacg.getGraph().setFirst();
-			oacg.prepare();
-			oacg.optimize();
-			count++;
-// 			printImages(&oacg);
-			
-			std::cout << "********************************************************" << std::endl << std::endl;
-			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
-			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
-			std::cout << "********************************************************" << std::endl << std::endl;
-// 			flag = false;
-			
-			visu.updateRviz();
-						
-			new_node = false;
-			
-		}	
+// 		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true && was_init == true){
+// // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
+// // 			exit(0);
+// // 			visu.updateRvizNoNDT();	
+// 		// 	oacg->initializeOptimization();
+// 		// 	oacg->initialGuess();
+// 			//Prepare the graph : marginalize + initializeOpti
+// 			oacg.getGraph().setFirst();
+// 			oacg.prepare();
+// 			oacg.optimize();
+// 			count++;
+// // 			printImages(&oacg);
+// 			
+// 			std::cout << "********************************************************" << std::endl << std::endl;
+// 			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
+// 			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
+// 			std::cout << "********************************************************" << std::endl << std::endl;
+// // 			flag = false;
+// 			
+// 			visu.updateRviz();
+// 						
+// 			new_node = false;
+// 			
+// 		}	
 		
 		visu.updateRviz();
 		

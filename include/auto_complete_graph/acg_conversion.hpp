@@ -7,6 +7,7 @@
 #include <grid_map_cv/grid_map_cv.hpp>
 #include "occupancy_grid_utils/combine_grids.h"
 #include "ndt_feature/ndt_feature_graph.h"
+#include "ndt_map/NDTVectorMapMsg.h"
 
 #include "ACG.hpp"
 
@@ -813,14 +814,15 @@ namespace acg{
 	}
 	
 	
-	inline ACGToVectorMaps(const AASS::acg::AutoCompleteGraph& acg, const ndt_map::NDTVectorMapMsg& maps){
+	inline void ACGToVectorMaps(const AASS::acg::AutoCompleteGraph& acg, ndt_map::NDTVectorMapMsg& maps){
 		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
-				
+				std::cout << "ADDING A MAP" << std::endl;
 				///Copy map
 				ndt_map::NDTMapMsg msg;
 				bool good = lslgeneric::toMessage(it->getMap().get(), msg, "/world");
 	// 			
+				maps.maps.push_back(msg);
 				
 				auto pose = it->getNode()->estimate().toVector();
 				geometry_msgs::Transform transform;
@@ -829,7 +831,12 @@ namespace acg{
 				transform.translation.z = 0;
 				
 				auto quat = tf::createQuaternionFromRPY(0, 0, pose(2));
-				transform.rotation = quat;
+				transform.rotation.x = quat.getX();
+				transform.rotation.y = quat.getY();
+				transform.rotation.z = quat.getZ();
+				transform.rotation.w = quat.getW();
+				
+				maps.transformations.push_back(transform);
 
 			}
 		}

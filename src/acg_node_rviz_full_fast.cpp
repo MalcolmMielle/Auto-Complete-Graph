@@ -139,10 +139,13 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	oacg->initializeOptimization();
 // 	oacg->initialGuess();
 	//Prepare the graph : marginalize + initializeOpti
-	oacg->getGraph().setFirst();
+	oacg->setFirst();
 	oacg->prepare();
 	oacg->optimize();
 	count++;
+	
+	
+	visu.updateRviz();
 	
 // 	printImages(oacg);
 // 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
@@ -328,7 +331,7 @@ int main(int argc, char **argv)
 		// 	oacg->initializeOptimization();
 		// 	oacg->initialGuess();
 			//Prepare the graph : marginalize + initializeOpti
-			oacg.getGraph().setFirst();
+			oacg.setFirst();
 			oacg.prepare();
 			oacg.optimize();
 			count++;

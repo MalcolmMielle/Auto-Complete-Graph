@@ -241,16 +241,16 @@ target_link_libraries(acg_node_rviz_full_fast
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 
-add_executable(acg_node_rviz_lab_fast src/acg_node_rviz_lab_fast.cpp)
+# add_executable(acg_node_rviz_lab_fast src/acg_node_rviz_lab_fast.cpp)
 
 # Add cmake target dependencies of the executable
 # same as for the library above
-add_dependencies(acg_node_rviz_lab_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(acg_node_rviz_lab_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 # Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_rviz_lab_fast
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
-)
+# target_link_libraries(acg_node_rviz_lab_fast
+#   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+# )
 
 
 # add_executable(acg_node_rviz_full src/acg_node_rviz_full.cpp)
