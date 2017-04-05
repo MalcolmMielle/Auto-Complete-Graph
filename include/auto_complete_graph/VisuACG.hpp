@@ -179,9 +179,9 @@ namespace acg{
 // 			_ndt_node_markers.points.clear();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
-				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
-				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
-				ACGtoOccupancyGrid(*_acg, occ_outt);
+// 				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
+// 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
+// 				ACGtoOccupancyGrid(*_acg, occ_outt);
 				
 // 				grid_map::GridMap gridMap;
 // 				ACGToGridMap(*_acg, gridMap);
@@ -223,7 +223,14 @@ namespace acg{
 // 				std::cout << "Image saved" << std::endl;
 				
 // 				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*occ_out);
+
+				ndt_map::NDTVectorMapMsg msg;
+				msg.header.frame_id = "/world";
+				msg.header.stamp=ros::Time::now();
+				ACGToVectorMaps(*_acg, msg);
+				_ndtmap.publish(msg);	
 				
+				_nb_of_zone = _acg->getRobotNodes().size();
 // 				exit(0);
 				
 			}
