@@ -1033,7 +1033,7 @@ void AASS::acg::AutoCompleteGraph::removeBadLinks()
 
 
 
-void AASS::acg::AutoCompleteGraph::testNoNanInPrior(const std::string& before){
+void AASS::acg::AutoCompleteGraph::testNoNanInPrior(const std::string& before) const {
 	
 	std::cout << "Test No nan in prior after " << before << std::endl;
 	auto it = _nodes_prior.begin();
@@ -1073,6 +1073,38 @@ void AASS::acg::AutoCompleteGraph::testNoNanInPrior(const std::string& before){
 		assert(!std::isnan(pose2[1]));
 		assert(!std::isnan(pose2[2]));
 	}
+	
+}
+
+void AASS::acg::AutoCompleteGraph::testInfoNonNul(const std::string& before) const {
+	
+	std::cout << "Test info non nul after " << before << std::endl;
+	auto idmapedges = _optimizable_graph.edges();
+	
+	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+		assert((*ite)->vertices().size() >= 1);
+		
+		g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(*ite);
+		g2o::EdgeSE2Prior_malcolm* ptr1 = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
+		g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(*ite);
+		g2o::EdgeLinkXY_malcolm* ptr3 = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite);
+		if(ptr != NULL){
+			assert(ptr->information().isZero(1e-10) == false);
+		}		
+		else if(ptr1 != NULL){
+			assert(ptr1->information().isZero(1e-10) == false);
+		}	
+		else if(ptr2 != NULL){
+			assert(ptr2->information().isZero(1e-10) == false);
+		}	
+		else if(ptr3 != NULL){
+			assert(ptr3->information().isZero(1e-10) == false);
+		}
+		else{
+			throw std::runtime_error("Didn't find the type of the edge :S");
+		}
+	}	
+
 	
 }
 

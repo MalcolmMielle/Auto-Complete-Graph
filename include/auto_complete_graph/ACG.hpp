@@ -656,6 +656,7 @@ private:
 					setAgeingHuberKernel();
 				}
 				testNoNanInPrior("set age in huber kernel");
+				testInfoNonNul("set age in huber kernel");
 				
 // 				updatePriorEdgeCovariance();
 				testNoNanInPrior("update prior edge cov");
@@ -664,6 +665,7 @@ private:
 				for(size_t i = 0 ; i < iter ; ++i){
 					_optimizable_graph.optimize(1);
 					testNoNanInPrior("optimized with huber");
+					testInfoNonNul("optimized with huber");
 					//Update prior edge covariance
 // 					updatePriorEdgeCovariance();
 					testNoNanInPrior("update prior edge cov after opti huber");
@@ -679,6 +681,7 @@ private:
 				for(size_t i = 0 ; i < iter*2 ; ++i){
 					_optimizable_graph.optimize(1);
 					testNoNanInPrior("optimized with dcs");
+					testInfoNonNul("optimized with dcs");
 					//Update prior edge covariance
 // 					updatePriorEdgeCovariance();
 					testNoNanInPrior("update prior edge cov after opti dcs");
@@ -790,7 +793,8 @@ private:
 		void updatePriorEdgeCovariance();
 		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step);
 		
-		void testNoNanInPrior(const std::string& before = "no data");
+		void testNoNanInPrior(const std::string& before = "no data") const ;
+		void testInfoNonNul(const std::string& before = "no data") const ;
 		
 		///@brief return true if ACG got more than or equal to 5 links. Make this better.
 		bool checkAbleToOptimize(){
@@ -903,7 +907,7 @@ private:
 			
 		}
 	
-		void testNoNanInPrior();
+// 		void testNoNanInPrior();
 		
 	};
 }
