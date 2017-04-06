@@ -76,6 +76,8 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::
 		 information = information_tmp;
 	}
 	
+	assert(information.isZero(1e-10) == false);
+	
 	g2o::EdgeOdometry_malcolm* odometry = new g2o::EdgeOdometry_malcolm;
 	odometry->vertices()[0] = v1 ;
 	odometry->vertices()[1] = v2 ;
@@ -135,6 +137,9 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 	landmarkObservation->vertices()[0] = v1;
 	landmarkObservation->vertices()[1] = v2;
 	landmarkObservation->setMeasurement(pos);
+	
+	assert(information_landmark.isZero(1e-10) == false);
+	
 	landmarkObservation->setInformation(information_landmark);
 	landmarkObservation->setParameterId(0, _sensorOffset->id());
 	
@@ -198,7 +203,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	Eigen::Matrix3d information_prior = covariance_prior.inverse();
 // 			std::cout << "Information prior " << std::endl << cov.format(cleanFmt) << std::endl;
 	
-	
+	assert(information_prior.isZero(1e-10) == false);
 	
 	g2o::EdgeSE2Prior_malcolm* priorObservation =  new g2o::EdgeSE2Prior_malcolm;
 	priorObservation->vertices()[0] = v1;
@@ -239,6 +244,8 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 	
 // 			covariance_link(2, 2) = 13;//<- Rotation covariance link is more than 4PI
 	Eigen::Matrix2d information_link = covariance_link.inverse();
+	
+	assert(information_link.isZero(1e-10) == false);
 // 	std::cout << "Link cov2 " << covariance_link << std::endl;
 	
 	g2o::EdgeLinkXY_malcolm* linkObservation = new g2o::EdgeLinkXY_malcolm;
