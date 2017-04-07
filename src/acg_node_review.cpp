@@ -215,6 +215,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 
 void initAll(AASS::acg::AutoCompleteGraph& oacg, AASS::acg::RvizPoints& initialiser, AASS::acg::PriorLoaderInterface& priorloader){
 	
+	std::cout << "INIT ALL" << std::endl;
 	std::vector<cv::Point2f> slam_pt;
 	std::vector<cv::Point2f> prior_pt;
 	auto match = initialiser.getMatches();
@@ -236,7 +237,9 @@ void initAll(AASS::acg::AutoCompleteGraph& oacg, AASS::acg::RvizPoints& initiali
 	priorloader.transformOntoSLAM();
 	auto graph_prior = priorloader.getGraph();	
 	
+	std::cout << "clear prior" << std::endl;
 	oacg.clearPrior();
+	std::cout << "add prior" << std::endl;
 	oacg.addPriorGraph(graph_prior);
 	
 	initialiser.clear();
@@ -249,7 +252,6 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
     ros::NodeHandle nh("~");
-	
 	
 	double deviation = 0;
 	double angle = 0;

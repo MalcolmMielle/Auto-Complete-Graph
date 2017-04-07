@@ -10,7 +10,7 @@
 #include "g2o/types/slam2d/edge_se2.h"
 #include "g2o/types/slam2d/edge_se2_pointxy.h"
 #include "g2o/types/slam2d/parameter_se2_offset.h"
-#include "g2o/types/slam2d/edge_se2_prior.h"
+// #include "g2o/types/slam2d/edge_se2_prior.h"
 #include "g2o/types/slam2d/edge_se2_link.h"
 // #include "g2o/types/slam2d/edge_landmark_se2.h"
 #include "g2o/types/slam2d/edge_link_xy.h"
@@ -45,6 +45,17 @@
 namespace AASS {
 
 namespace acg{	
+	
+	 class EdgeSE2Prior_malcolm : public g2o::EdgeSE2
+	{
+		public:
+			g2o::EdgeInterfaceMalcolm interface;
+			cv::KeyPoint keypoint;
+			cv::Mat mat;
+			cv::Point2d position;
+			EdgeSE2Prior_malcolm() : g2o::EdgeSE2(){};
+
+	};
 	
 	/**
 	 * @brief The graph class containing all elemnts from each map and the graph used in the g2o optimisation.
@@ -139,13 +150,13 @@ private:
 		//ATTENTION Already useless
 		class EdgePriorAndInitialValue{
 		protected:
-			g2o::EdgeSE2Prior_malcolm* _edge;
+			AASS::acg::EdgeSE2Prior_malcolm* _edge;
 			g2o::SE2 _original_value;
 			
 		public:
-			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
+			EdgePriorAndInitialValue(AASS::acg::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
 			
-			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
+			AASS::acg::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
 			g2o::SE2 getOriginalValue(){return _original_value;}
 		};
 		
@@ -230,7 +241,7 @@ private:
 		///@brief vector storing all edges between a landmark and the robot
 		std::vector<g2o::EdgeLandmark_malcolm*> _edge_landmark;
 		///@brief vector storing all edge between the prior nodes
-		std::vector<g2o::EdgeSE2Prior_malcolm*> _edge_prior;
+		std::vector<AASS::acg::EdgeSE2Prior_malcolm*> _edge_prior;
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeOdometry_malcolm*> _edge_odometry;
 		
@@ -386,8 +397,8 @@ private:
 		std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges(){return _edge_landmark;}
 		const std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges() const {return _edge_landmark;}
 		///@brief vector storing all edge between the prior nodes
-		std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
-		const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
+		std::vector<AASS::acg::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
+		const std::vector<AASS::acg::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges(){return _edge_odometry;}
 		const std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges() const {return _edge_odometry;}
@@ -417,34 +428,6 @@ private:
 		
 		void useRobustKernel(bool use){_flag_use_robust_kernel = use;}
 		
-// 		void read(const std::string& file){
-// 			
-// 			AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1),
-// 				Eigen::Vector2d(0.0005, 0.0001), //Robot translation noise
-// 				DEG2RAD(2.), 				//Rotation noise for robot
-// 				Eigen::Vector2d(0.05, 0.05), //Landmarks noise
-// 				Eigen::Vector2d(1, 0.01), //Prior noise
-// 				DEG2RAD(2.), //Prior rot							 
-// 				Eigen::Vector2d(0.2, 0.2) //Link noise,
-// 			);
-// 			std::ifstream infile("thefile.txt");
-// 			double a, b, c;
-// 			infile >> a >> b >> c;
-// 			g2o::SE2 sensornoise(a, b, c);
-// 			infile >> a >> b;
-// 			Eigen::Vector2d robottrans(a, b);
-// 			double robotrotnoise;
-// 			infile >> robotrotnoise;
-// 			
-// 			infile >> a >> b;
-// 			Eigen::Vector2d landmarknoise(a, b);
-// 			infile >> a >> b;
-// 			Eigen::Vector2d priornoise(a, b);
-// 			infile >> a >> b;
-// 			Eigen::Vector2d linknoise(a, b);
-// 			
-// 		}
-		
 		///@brief the main dish : the graph
 		AASS::acg::OptimizableAutoCompleteGraph& getGraph(){return _optimizable_graph;}
 		const AASS::acg::OptimizableAutoCompleteGraph& getGraph() const {return _optimizable_graph;}
@@ -473,7 +456,7 @@ private:
 		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
-		g2o::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		AASS::acg::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 		
@@ -501,6 +484,7 @@ private:
 		void addPriorGraph(const bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>& graph);
 		
 		
+		///@remove the prior and all link edges
 		void clearPrior(){
 			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 			int i = 0;
@@ -543,8 +527,38 @@ private:
 			//Making sure all edge prior were removed.
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-				assert( dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) == NULL );
+// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+				assert( dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) == NULL );
+				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
+			}		
+			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
+			std::cout << "DONE removing " << std::endl;
+		}
+		
+		
+		void clearLinks(){
+			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
+			int i = 0;
+						
+			for(auto it = _edge_link.begin() ; it != _edge_link.end() ;){
+
+				_optimizable_graph.removeEdge(*it);
+				it = _edge_link.erase(it);
+				
+			}
+// 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
+			assert(_edge_link.size() == 0);
+			
+// 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+// 				_optimizable_graph.removeVertex(it, true);
+// 			}
+// 			std::cout <<"clearing the edges " << std::endl;
+			 
+			//Making sure all edge prior were removed.
+			auto idmapedges = _optimizable_graph.edges();
+			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
 			}		
 			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 			std::cout << "DONE removing " << std::endl;

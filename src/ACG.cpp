@@ -157,7 +157,7 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 	return addLandmarkObservation(pos, from_ptr, toward_ptr);
 }
 
-g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 	
 	
 	//Get Eigen vector
@@ -205,7 +205,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	
 	assert(information_prior.isZero(1e-10) == false);
 	
-	g2o::EdgeSE2Prior_malcolm* priorObservation =  new g2o::EdgeSE2Prior_malcolm;
+	AASS::acg::EdgeSE2Prior_malcolm* priorObservation =  new AASS::acg::EdgeSE2Prior_malcolm;
 	priorObservation->vertices()[0] = v1;
 	priorObservation->vertices()[1] = v2;
 	priorObservation->setMeasurement(se2);
@@ -398,7 +398,7 @@ void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 // void AASS::acg::AutoCompleteGraph::removeEdge(g2o::HyperGraph::Edge* v1){
 // 	//Prior
 // 	g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(v1);
-// 	g2o::EdgeSE2Prior_malcolm* ptr_se2 = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(v1);
+// 	AASS::acg::EdgeSE2Prior_malcolm* ptr_se2 = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(v1);
 // 	g2o::EdgeOdometry_malcolm* ptr_se3 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(v1);
 // 	
 // 	if(ptr != NULL){
@@ -1085,7 +1085,7 @@ void AASS::acg::AutoCompleteGraph::testInfoNonNul(const std::string& before) con
 		assert((*ite)->vertices().size() >= 1);
 		
 		g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(*ite);
-		g2o::EdgeSE2Prior_malcolm* ptr1 = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
+		AASS::acg::EdgeSE2Prior_malcolm* ptr1 = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
 		g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(*ite);
 		g2o::EdgeLinkXY_malcolm* ptr3 = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite);
 		if(ptr != NULL){
@@ -1336,7 +1336,7 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 			
 	g2o::EdgeLinkXY_malcolm* v_linkxy = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(e);
 	g2o::EdgeLandmark_malcolm* v_land = dynamic_cast<g2o::EdgeLandmark_malcolm*>(e);
-	g2o::EdgeSE2Prior_malcolm* v_prior = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(e);
+	AASS::acg::EdgeSE2Prior_malcolm* v_prior = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(e);
 	g2o::EdgeOdometry_malcolm* v_odom = dynamic_cast<g2o::EdgeOdometry_malcolm*>(e);
 	double age = -1;
 	

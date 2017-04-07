@@ -17,7 +17,7 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	
 	g2o::SE2 move(1, 0, DEG2RAD(90));
 	
-	g2o::EdgeSE2Prior_malcolm* wall0 = acg.addEdgePrior(move, prior0, prior1);
+	AASS::acg::EdgeSE2Prior_malcolm* wall0 = acg.addEdgePrior(move, prior0, prior1);
 	
 // 	assert(acg.getGraph().vertices().size() == 6 && "prior crash");
 	
