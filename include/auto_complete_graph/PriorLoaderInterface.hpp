@@ -4,21 +4,40 @@
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
 #include "das/CornerDetector.hpp"
+#include "KeypointPriorDetector.hpp"
 
 namespace AASS{
 	namespace acg{
+		
+		
+		class PriorAttr : public AASS::vodigrex::SimpleNode{
+		public:
+			cv::KeyPoint keypoint;
+			cv::Mat mat;
+			cv::Point2d position;
+			PriorAttr() : AASS::vodigrex::SimpleNode(){};
+			PriorAttr(const AASS::vodigrex::SimpleNode& inp) : AASS::vodigrex::SimpleNode(inp){}
+		};
+		
 
 		/**
 		 * @brief The class with all the hardcoded first guess things
 		 */
 		class PriorLoaderInterface{
+		public : 
+			typedef typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge> PriorGraph;
+			typedef typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::GraphType PriorGraphType;
+			typedef typename boost::graph_traits<PriorGraphType>::vertex_iterator PriorVertexIterator;
+			typedef typename boost::graph_traits<PriorGraphType>::vertex_descriptor PriorVertex;
+			typedef typename boost::graph_traits<PriorGraphType>::edge_descriptor PriorEdge;
+			typedef typename boost::graph_traits<PriorGraphType>::out_edge_iterator PriorEdgeIterator;
 			
 		protected:
 			std::vector<cv::Point2f> _corner_prior;
 			std::vector<cv::Point2f> _same_point_prior;
 			std::vector<cv::Point2f> _same_point_slam;
 			std::vector<cv::Point2f> _corner_prior_matched;
-			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge> _prior_graph;
+			bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge> _prior_graph;
 			cv::Mat _scale_transform_prior2ndt;
 			std::string _file;
 			AASS::das::CornerDetector _cornerDetect;
@@ -27,12 +46,14 @@ namespace AASS{
 			double _scale;
 			cv::Point2f _center;
 			
+			KeypointPriorDetector _keypoints;
+			
 		public: 
 			PriorLoaderInterface(const std::string& file) : _file(file){		
 			}
 			
-			const bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge> getGraph() const {return _prior_graph;}
-			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge> getGraph(){return _prior_graph;}
+			const PriorGraph getGraph() const {return _prior_graph;}
+			PriorGraph getGraph(){return _prior_graph;}
 			
 			double getDeviation(){return _deviation;}
 			double getAngle(){return _angle;}
@@ -60,7 +81,9 @@ namespace AASS{
 				_cornerDetect.getFeaturesGraph(_file);
 // 				cornerDetect.removeClosePoints(20);
 				_corner_prior = _cornerDetect.getGraphPoint();
-				_prior_graph = _cornerDetect.getGraph();
+				auto prior_graph = _cornerDetect.getGraph();
+				
+				extractKeypoints(prior_graph);
 				
 // 				//PRINT
 // 				cv::Mat src = cv::imread( _file, CV_LOAD_IMAGE_COLOR ), src_gray;
@@ -266,6 +289,60 @@ namespace AASS{
 			
 		protected:
 			
+		
+			
+			
+			void extractKeypoints(const bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>& graph){
+				
+				//vertices access all the vertix
+				//Classify them in order
+	// 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;
+				int i = 0 ;
+				std::vector<AASS::das::CornerDetector::CornerVertex> das_v;
+				std::vector<PriorVertex> prior_v;
+				
+				//Adding all the vertices
+				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
+				for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
+					AASS::das::CornerDetector::CornerVertex v = *vp.first;
+					PriorVertex vertex_out;
+					PriorAttr nodeAttribute(graph[v]);
+					_prior_graph.addVertex(vertex_out, nodeAttribute);
+					das_v.push_back(v);
+					prior_v.push_back(vertex_out);
+				}
+				
+				//Adding all the edges
+				auto es = boost::edges(graph);
+				for (auto eit = es.first; eit != es.second; ++eit) {
+				//Since we fuse the old zone in biggest we only need to link them to biggest
+					auto sour = boost::source(*eit, graph);			
+					auto targ = boost::target(*eit, graph);
+					PriorVertex source_p;
+					PriorVertex target_p;
+					bool flag_found_src = false;
+					bool flag_found_targ = false;
+					for(int i = 0 ; i < das_v.size() ; ++i){
+						if(das_v[i] == sour){
+							source_p = prior_v[i];
+							assert(flag_found_src == false);
+							flag_found_src = true;
+						}
+						if(das_v[i] == targ){
+							target_p = prior_v[i];
+							assert(flag_found_targ == false);
+							flag_found_targ = true;
+						}
+					}
+					assert(flag_found_src == true);
+					assert(flag_found_targ == true);
+					
+					PriorEdge out_edge;
+					_prior_graph.addEdge(out_edge, source_p, target_p, graph[*eit]);
+				}
+			}
+			
+			
 			void rotateGraph(const cv::Mat& rot_mat ){
 				
 				
@@ -283,7 +360,7 @@ namespace AASS{
 				
 				
 				
-				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
+				std::pair< PriorVertexIterator, PriorVertexIterator > vp;
 				//vertices access all the vertix
 				//Classify them in order
 	// 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;
@@ -332,7 +409,7 @@ namespace AASS{
 				
 				
 				
-				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
+				std::pair< PriorVertexIterator, PriorVertexIterator > vp;
 				//vertices access all the vertix
 				//Classify them in order
 	// 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;

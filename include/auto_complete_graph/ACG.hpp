@@ -41,6 +41,7 @@
 #include "covariance.hpp"
 #include "conversion.hpp"
 #include "OptimizableAutoCompleteGraph.hpp"
+#include "PriorLoaderInterface.hpp"
 
 namespace AASS {
 
@@ -481,7 +482,7 @@ private:
 		 * @brief Directly use the prior graph to init the prior part of the ACG
 		 * 
 		 */
-		void addPriorGraph(const bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>& graph);
+		void addPriorGraph(const PriorLoaderInterface::PriorGraph& graph);
 		
 		
 		///@remove the prior and all link edges
