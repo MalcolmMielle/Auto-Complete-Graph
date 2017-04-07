@@ -487,7 +487,7 @@ namespace acg{
 		
 // 		bool fuseNDTMap(const AutoCompleteGraph& acg, nav_msgs::OccupancyGridPtr& final);
 // 		bool printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
-// 		void printPrior(const std::vector<g2o::VertexSE2Prior*>& prior_corners);
+// 		void printPrior(const std::vector<AASS::acg::VertexSE2Prior*>& prior_corners);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &pose_vec);
 // 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Vector3d &pose_vec);
@@ -517,7 +517,7 @@ namespace acg{
 // 	}
 // 
 // 
-// 	inline void AASS::acg::VisuAutoCompleteGraph::printPrior(const std::vector< g2o::VertexSE2Prior* >& prior_corners)
+// 	inline void AASS::acg::VisuAutoCompleteGraph::printPrior(const std::vector< AASS::acg::VertexSE2Prior* >& prior_corners)
 // 	{
 // 
 // 	}
@@ -598,7 +598,7 @@ namespace acg{
 			for(itt ; itt != prior_node.end() ; ++itt){
 				
 				geometry_msgs::Point p;
-				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*itt));
+				AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>((*itt));
 				auto vertex = ptr->estimate().toVector();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);

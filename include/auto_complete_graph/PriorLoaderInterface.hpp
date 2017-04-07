@@ -13,8 +13,8 @@ namespace AASS{
 		class PriorAttr : public AASS::vodigrex::SimpleNode{
 		public:
 			cv::KeyPoint keypoint;
-			cv::Mat mat;
 			cv::Point2d position;
+			cv::Mat descriptor;
 			PriorAttr() : AASS::vodigrex::SimpleNode(){};
 			PriorAttr(const AASS::vodigrex::SimpleNode& inp) : AASS::vodigrex::SimpleNode(inp){}
 		};
@@ -33,6 +33,7 @@ namespace AASS{
 			typedef typename boost::graph_traits<PriorGraphType>::out_edge_iterator PriorEdgeIterator;
 			
 		protected:
+			cv::Mat _img_gray;
 			std::vector<cv::Point2f> _corner_prior;
 			std::vector<cv::Point2f> _same_point_prior;
 			std::vector<cv::Point2f> _same_point_slam;
@@ -78,7 +79,15 @@ namespace AASS{
 				_prior_graph.clear();
 				
 				_cornerDetect.clear();
-				_cornerDetect.getFeaturesGraph(_file);
+				
+				cv::Mat src = cv::imread( _file, 1 );
+				cv::cvtColor( src, _img_gray, CV_BGR2GRAY );
+				
+// 				cv::imshow("TEST IMG", _img_gray);
+// 				cv::waitKey(0);
+				
+				_cornerDetect.getFeaturesGraph(_img_gray);
+				
 // 				cornerDetect.removeClosePoints(20);
 				_corner_prior = _cornerDetect.getGraphPoint();
 				auto prior_graph = _cornerDetect.getGraph();
@@ -301,15 +310,71 @@ namespace AASS{
 				std::vector<AASS::das::CornerDetector::CornerVertex> das_v;
 				std::vector<PriorVertex> prior_v;
 				
+				
 				//Adding all the vertices
 				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
 				for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
 					AASS::das::CornerDetector::CornerVertex v = *vp.first;
 					PriorVertex vertex_out;
 					PriorAttr nodeAttribute(graph[v]);
+					
+					
+					//Creating a SIFT descriptor for eahc corner
+					cv::KeyPoint keypoint;
+					keypoint.pt = cv::Point2f( nodeAttribute.getX(), nodeAttribute.getY() );
+					
+					//Calculate smallest edge size
+					std::deque<AASS::das::CornerDetector::CornerVertex> out;
+					graph.getAllVertexLinked(v, out); 
+					double smallest = -1;
+					for(auto it = out.begin() ; it != out.end() ; ++it){
+						if(v != *it){
+							double tmp_size_x = (graph[v].getX() - graph[*it].getX());
+							double tmp_size_y = (graph[v].getY() - graph[*it].getY());
+							tmp_size_x = std::abs(tmp_size_x);
+							tmp_size_y = std::abs(tmp_size_y);
+							double tmp_size = (tmp_size_x * tmp_size_x) + (tmp_size_y * tmp_size_y);
+							if(smallest == -1 || smallest > tmp_size){
+								if(tmp_size >  0){
+									std::cout << "Smallest size " << tmp_size << std::endl;
+									smallest = tmp_size;
+								}
+								else{
+									std::cout << "Weird zero distance between points" <<std::endl;
+								}
+							}
+						}
+					}
+					
+					keypoint.size = std::sqrt(smallest) ;
+					keypoint.angle = -1 ;
+					keypoint.octave = 1 ;
+					
+// 					cv::Mat copy;
+// 					_img_gray.copyTo(copy);
+// 					cv::circle(copy, cv::Point2f( nodeAttribute.getX(), nodeAttribute.getY() ), keypoint.size, cv::Scalar(255), 1);
+// 					
+// 					cv::imshow("Keypoint", copy);
+// 					cv::waitKey(0);
+					
+					std::vector<cv::KeyPoint> keypoint_v;
+					keypoint_v.push_back(keypoint);
+					
+					cv::Mat descriptors_1;
+					cv::SiftDescriptorExtractor extractor;
+					extractor.compute( _img_gray, keypoint_v, descriptors_1);
+					
+					std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
+					assert(descriptors_1.rows == 1);
+					
+					nodeAttribute.keypoint = keypoint;
+					nodeAttribute.position = keypoint.pt;
+					nodeAttribute.descriptor = descriptors_1;
+					
 					_prior_graph.addVertex(vertex_out, nodeAttribute);
 					das_v.push_back(v);
 					prior_v.push_back(vertex_out);
+					
 				}
 				
 				//Adding all the edges
@@ -340,6 +405,7 @@ namespace AASS{
 					PriorEdge out_edge;
 					_prior_graph.addEdge(out_edge, source_p, target_p, graph[*eit]);
 				}
+							
 			}
 			
 			

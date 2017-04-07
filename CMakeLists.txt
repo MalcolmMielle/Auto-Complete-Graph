@@ -218,16 +218,16 @@ set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry
 #   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 # )
 
-add_executable(acg_node_review src/acg_node_review.cpp)
-
-# Add cmake target dependencies of the executable
-# same as for the library above
-add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-# Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_review
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
-)
+# add_executable(acg_node_review src/acg_node_review.cpp)
+# 
+# # Add cmake target dependencies of the executable
+# # same as for the library above
+# add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# 
+# # Specify libraries to link a library or executable target against
+# target_link_libraries(acg_node_review
+#   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+# )
 
 
 add_executable(acg_node_rviz_full_fast src/acg_node_rviz_full_fast.cpp)
@@ -240,6 +240,17 @@ add_dependencies(acg_node_rviz_full_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 target_link_libraries(acg_node_rviz_full_fast
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
+
+# add_executable(test_match tests/test_match.cpp)
+# 
+# # Add cmake target dependencies of the executable
+# # same as for the library above
+# add_dependencies(test_match ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# 
+# # Specify libraries to link a library or executable target against
+# target_link_libraries(test_match
+#   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+# )
 
 # add_executable(acg_node_rviz_lab_fast src/acg_node_rviz_lab_fast.cpp)
 

@@ -29,7 +29,7 @@ namespace acg{
 				auto links = _acg->getLinkEdges();
 				for(auto it_acg = links.begin(); it_acg != links.end(); ++it_acg){
 					
-					g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_acg)->vertices()[0]);
+					AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>((*it_acg)->vertices()[0]);
 					if(ptr == NULL){
 						std::cout << ptr << " and " << (*it_acg)->vertices()[0] << std::endl;
 						throw std::runtime_error("Links do not have the good vertex type. Prior lae");

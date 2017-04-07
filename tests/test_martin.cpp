@@ -8,10 +8,13 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	
 	acg.printGraph();
 	
+	AASS::acg::PriorAttr at;
+	
+	
 	g2o::SE2 priorse20(1, 1, 0);
-	g2o::VertexSE2Prior* prior0 = acg.addPriorLandmarkPose(priorse20);
+	AASS::acg::VertexSE2Prior* prior0 = acg.addPriorLandmarkPose(priorse20, at);
 	g2o::SE2 priorse21(2, 1, 0);
-	g2o::VertexSE2Prior* prior1 = acg.addPriorLandmarkPose(priorse21);
+	AASS::acg::VertexSE2Prior* prior1 = acg.addPriorLandmarkPose(priorse21, at);
 	
 	
 	

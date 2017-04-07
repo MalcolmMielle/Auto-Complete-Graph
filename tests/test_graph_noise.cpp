@@ -19,13 +19,14 @@ void simpleGraph(AASS::acg::AutoCompleteGraph& acg){
 	std::cout << "Making the landmarks" << std::endl;
 	//Adding robot poses
 	g2o::Vector2D se2; se2 << 1, 1;
-	g2o::VertexPointXY* out0 = acg.addLandmarkPose(se2);
+	cv::Point2f p;
+	AASS::acg::VertexLandmarkNDT* out0 = acg.addLandmarkPose(se2, p);
 	out0->setId(0);
 	g2o::Vector2D se22; se22 << 2, 1.1;	
-	g2o::VertexPointXY* out1 = acg.addLandmarkPose(se22);
+	AASS::acg::VertexLandmarkNDT* out1 = acg.addLandmarkPose(se22, p);
 	out1->setId(1);
 	g2o::Vector2D se222; se222 << 3, 2;
-	g2o::VertexPointXY* out2 = acg.addLandmarkPose(se222);
+	AASS::acg::VertexLandmarkNDT* out2 = acg.addLandmarkPose(se222, p);
 	out2->setId(2);
 	
 	assert(acg.getGraph().vertices().size() == 3 && "landmark crash");
@@ -45,15 +46,15 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	std::cout << "Making the prior" << std::endl;
 	
 	acg.printGraph();
-	
+	AASS::acg::PriorAttr at;
 	g2o::SE2 priorse20(1, 1, 0);
-	g2o::VertexSE2Prior* prior0 = acg.addPriorLandmarkPose(priorse20);
+	AASS::acg::VertexSE2Prior* prior0 = acg.addPriorLandmarkPose(priorse20, at);
 	prior0->setId(3);
 	g2o::SE2 priorse21(2, 1, 0);
-	g2o::VertexSE2Prior* prior1 = acg.addPriorLandmarkPose(priorse21);
+	AASS::acg::VertexSE2Prior* prior1 = acg.addPriorLandmarkPose(priorse21, at);
 	prior1->setId(4);
 	g2o::SE2 priorse22(3, 1, 0);
-	g2o::VertexSE2Prior* prior2 = acg.addPriorLandmarkPose(priorse22);
+	AASS::acg::VertexSE2Prior* prior2 = acg.addPriorLandmarkPose(priorse22, at);
 	prior2->setId(5);
 	
 	
@@ -66,9 +67,9 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	
 	assert(acg.getGraph().vertices().size() == 6 && "prior crash");
 	
-	auto land0 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(0));
-	auto land1 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(1));
-	auto land2 = dynamic_cast<g2o::VertexPointXY*>(acg.getGraph().vertex(2));
+	auto land0 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(acg.getGraph().vertex(0));
+	auto land1 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(acg.getGraph().vertex(1));
+	auto land2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(acg.getGraph().vertex(2));
 	
 	// TODO : why is this not working
 	assert(land0 != NULL);

@@ -14,7 +14,7 @@
 #include "g2o/types/slam2d/edge_se2_link.h"
 // #include "g2o/types/slam2d/edge_landmark_se2.h"
 #include "g2o/types/slam2d/edge_link_xy.h"
-#include "g2o/types/slam2d/vertex_se2_prior.h"
+// #include "g2o/types/slam2d/vertex_se2_prior.h"
 #include "g2o/types/slam2d/edge_landmark_malcolm.h"
 #include "g2o/types/slam2d/edge_odometry_malcolm.h"
 // #include "types_tutorial_slam2d.h"
@@ -42,6 +42,7 @@
 #include "conversion.hpp"
 #include "OptimizableAutoCompleteGraph.hpp"
 #include "PriorLoaderInterface.hpp"
+#include "das/conversion.hpp"
 
 namespace AASS {
 
@@ -50,11 +51,37 @@ namespace acg{
 	 class EdgeSE2Prior_malcolm : public g2o::EdgeSE2
 	{
 		public:
+			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 			g2o::EdgeInterfaceMalcolm interface;
-			cv::KeyPoint keypoint;
-			cv::Mat mat;
-			cv::Point2d position;
+			
 			EdgeSE2Prior_malcolm() : g2o::EdgeSE2(){};
+
+	};
+	
+	class VertexSE2Prior : public g2o::VertexSE2
+  {
+    public:
+      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      VertexSE2Prior() : g2o::VertexSE2(){}
+	  PriorAttr priorattr;
+	  
+// 	virtual bool read(std::istream& is);
+// 	virtual bool write(std::ostream& os) const;
+
+  };
+  
+	class VertexLandmarkNDT: public g2o::VertexPointXY
+	{
+		public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		g2o::EdgeInterfaceMalcolm interface;
+
+		cv::Point2f position;
+		cv::KeyPoint keypoint;
+// 		cv::Point2d position;
+		cv::Mat descriptor;
+		
+		VertexLandmarkNDT() : g2o::VertexPointXY(){};
 
 	};
 	
@@ -197,7 +224,14 @@ private:
 			std::shared_ptr<lslgeneric::NDTMap> _map;
 			Eigen::Affine3d _T;
 		public:
-			NDTNodeAndMap(g2o::VertexSE2* node, const std::shared_ptr<lslgeneric::NDTMap>& map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){};
+			
+			cv::Mat img;
+			
+			NDTNodeAndMap(g2o::VertexSE2* node, const std::shared_ptr<lslgeneric::NDTMap>& map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){
+				
+				AASS::das::toCvMat(*map, img, 500);
+				
+			};
 			
 	// 		~NDTNodeAndMap(){delete _map;}
 			
@@ -228,9 +262,9 @@ private:
 		g2o::SE2 _sensorOffsetTransf;
 		
 		///@brief vector storing all node from the prior 
-		std::vector<g2o::VertexSE2Prior*> _nodes_prior;
+		std::vector<AASS::acg::VertexSE2Prior*> _nodes_prior;
 		///@brief vector storing all node from the landarks 
-		std::vector<g2o::VertexPointXY*> _nodes_landmark;
+		std::vector<AASS::acg::VertexLandmarkNDT*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
 		std::vector<NDTNodeAndMap> _nodes_ndt;
 		///@brief vector storing all linking edges
@@ -383,11 +417,11 @@ private:
 		}
 		
 		/** Accessor**/
-		std::vector<g2o::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
-		const std::vector<g2o::VertexSE2Prior*>& getPriorNodes() const {return _nodes_prior;}
+		std::vector<AASS::acg::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
+		const std::vector<AASS::acg::VertexSE2Prior*>& getPriorNodes() const {return _nodes_prior;}
 		///@brief vector storing all node from the prior 
-		std::vector<g2o::VertexPointXY*>& getLandmarkNodes(){return _nodes_landmark;}
-		const std::vector<g2o::VertexPointXY*>& getLandmarkNodes() const {return _nodes_landmark;}
+		std::vector<AASS::acg::VertexLandmarkNDT*>& getLandmarkNodes(){return _nodes_landmark;}
+		const std::vector<AASS::acg::VertexLandmarkNDT*>& getLandmarkNodes() const {return _nodes_landmark;}
 		///@brief vector storing all node from the ndt ndt_feature_graph
 		std::vector<NDTNodeAndMap>& getRobotNodes(){return _nodes_ndt;}
 		const std::vector<NDTNodeAndMap>& getRobotNodes() const {return _nodes_ndt;}
@@ -438,12 +472,12 @@ private:
 		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
 		g2o::VertexSE2* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
 		
-		g2o::VertexPointXY* addLandmarkPose(const g2o::Vector2D& pos, int strength = 1);
-		g2o::VertexPointXY* addLandmarkPose(double x, double y, int strength = 1);
+		AASS::acg::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2D& pos, const cv::Point2f& pos_img, int strength = 1);
+		AASS::acg::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& pos_img, int strength = 1);
 		
-		g2o::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2);
-		g2o::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan);
-		g2o::VertexSE2Prior* addPriorLandmarkPose(double x, double y, double theta);
+		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr);
+		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr);
+		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr);
 		
 		
 		/** FUNCTION TO ADD THE EGDES **/
@@ -461,7 +495,7 @@ private:
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 		
-		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::VertexSE2Prior* v2, g2o::VertexPointXY* v1);
+		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1);
 		
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
@@ -484,6 +518,8 @@ private:
 		 */
 		void addPriorGraph(const PriorLoaderInterface::PriorGraph& graph);
 		
+
+		void matchLinks();
 		
 		///@remove the prior and all link edges
 		void clearPrior(){
@@ -724,6 +760,9 @@ private:
 			
 			exportChi2s();
 			
+// 			cv::Mat d;
+// 			createDescriptorNDT(d);
+			
 		}
 		
 		void setAgeingHuberKernel(){
@@ -788,14 +827,17 @@ private:
 		
 		
 		//Todo move in private
-		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
-		bool linkAlreadyExist(g2o::VertexPointXY* v_pt, g2o::VertexSE2Prior* v_prior);
+		bool linkAlreadyExist(AASS::acg::VertexLandmarkNDT* v_pt, AASS::acg::VertexSE2Prior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
+		bool linkAlreadyExist(AASS::acg::VertexLandmarkNDT* v_pt, AASS::acg::VertexSE2Prior* v_prior);
 		bool noDoubleLinks();
 		
 // 		getGridMap();
 		
 	public:
 		
+		
+		void createDescriptorNDT(cv::Mat& desc);
+		void createDescriptorPrior(cv::Mat& desc);
 
 		///@brief do createNewLinks and removeBadLinks
 		void updateLinks();
@@ -891,7 +933,7 @@ private:
 				
 				assert((*it_old_links)->vertices().size() == 2);
 				
-				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
+				AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
 				if(ptr == NULL){
 					std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
 					throw std::runtime_error("Links do not have the good vertex type. Prior");
@@ -899,7 +941,7 @@ private:
 				auto vertex = ptr->estimate().toVector();
 				vertex_out.push_back(vertex);
 				
-				g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*it_old_links)->vertices()[1]);
+				AASS::acg::VertexLandmarkNDT* ptr2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>((*it_old_links)->vertices()[1]);
 				if(ptr2 == NULL){
 					throw std::runtime_error("Links do not have the good vertex type. Landmark");
 				}
