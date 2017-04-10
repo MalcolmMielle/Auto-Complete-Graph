@@ -81,6 +81,8 @@ namespace AASS{
 			 * @brief scale the corner and the graph depending on the _scale_transform_prior2ndt attribute
 			 */
 			void transformOntoSLAM(){
+				
+				
 // 				std::cout << "Transform onto slam from scale : " << std::endl << _scale_transform_prior2ndt << std::endl;
 				//Scale transform here:		
 				//Then create association
@@ -93,61 +95,70 @@ namespace AASS{
 				srcTri[0] = _same_point_prior[0];
 				srcTri[1] = _same_point_prior[1];
 				srcTri[2] = _same_point_prior[2];
-                          
+				
 				dstTri[0] = _same_point_slam[0];
 				dstTri[1] = _same_point_slam[1];
-				dstTri[2] = _same_point_slam[2];
-				
+
 				std::cout << "Point for transfo" << std::endl;
 				std::cout << _same_point_prior[0] << " " << _same_point_slam[0] << std::endl << _same_point_prior[1] << " " << _same_point_slam[1] << std::endl << _same_point_prior[2] << " " << _same_point_slam[0] << std::endl;
-				
-				cv::Mat warp_mat = cv::getAffineTransform( srcTri, dstTri );
-				/// Compute a rotation matrix with respect to the center of the image
-// 				cv::Point center = cv::Point( warp_dst.cols/2, warp_dst.rows/2 );
-// 				double angle = -50.0;
-// 				double scale = 0.6;
-
-				/// Get the rotation matrix with the specifications above
-// 				rot_mat = cv::getRotationMatrix2D( center, angle, scale );
-				
-				/// Apply the Affine Transform just found to the src image
-// 				cv::Mat warp_dst = cv::imread( _file, 1 );
-				
-				std::cout << "Warp Affine" << warp_mat <<std::endl;
-				//TODO Implement myself
-// 				cv::warpAffine( _same_point_prior, warp_dst, warp_mat, warp_dst.size() );
+								
+				//Translate to origin
+				cv::Point2d translation = - srcTri[0];
+				double angle = 0;
+				cv::Mat warp_mat = (cv::Mat_<double>(3,3) << std::cos(angle), -std::sin(angle), translation.x, std::sin(angle), std::cos(angle), translation.y, 0, 0, 1);
 				AffineTransformGraph(warp_mat);
 				
+				//Rotate
+				Eigen::Vector2d vece1s; vece1s << srcTri[1].x - srcTri[0].x, srcTri[1].y - srcTri[0].y;
+				Eigen::Vector2d vece2s; vece2s << dstTri[1].x - dstTri[0].x, dstTri[1].y - dstTri[0].y;
 				
+				angle = atan2(vece2s(1),vece2s(0)) - atan2(vece1s(1), vece1s(0));
+				if (angle < 0) angle += 2 * M_PI;
 				
-// 				cv::namedWindow( "fuck", CV_WINDOW_AUTOSIZE );
-// 				cv::imshow( "fuck", warp_dst );
-				/** Rotating the image after Warp */
-
+// 				std::cout << "Angle : "<< angle << std::endl;
+// 				angle = angle * 2 * 3.14157 / 360;
+				warp_mat = (cv::Mat_<double>(3,3) << std::cos(angle), -std::sin(angle), 0, std::sin(angle), std::cos(angle), 0, 0, 0, 1);
+// 				std::cout << "mat " << warp_mat << std::endl;
+				AffineTransformGraph(warp_mat);
 				
-
-				/// Rotate the warped image
-// 				cv::warpAffine( warp_dst, warp_rotate_dst, rot_mat, warp_dst.size() );
+				//Scale
+				cv::Point2f vec1 = srcTri[1] - srcTri[0];
+				cv::Point2f vec2 = dstTri[1] - dstTri[0];
+				cv::Mat mat_transfo =  (cv::Mat_<float>(2,2) << vec2.x / vec1.x, 0, 0, vec2.y / vec1.y);
+				double l1 = std::sqrt( ( vec1.x * vec1.x ) + ( vec1.y * vec1.y ) );
+				double l2 = std::sqrt( ( vec2.x * vec2.x ) + ( vec2.y * vec2.y ) );
+				double ratio = l2 / l1;
 				
-				
-				//Scale graph -> redundant with AffineTransformGraph
-// 				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
-// 				//vertices access all the vertix
-// 				//Classify them in order
-// 				std::cout << " Game on" << std::endl;
+				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
+				//vertices access all the vertix
+				//Classify them in order
+	// 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;
 // 				int i = 0 ;
-// 				for (vp = boost::vertices(_prior_graph); vp.first != vp.second; ++vp.first) {
-// 	// 					std::cout << "going throught grph " << i << std::endl; ++i;
-// 					AASS::das::CornerDetector::CornerVertex v = *vp.first;
-// 					std::cout << "OLD value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
-// 					std::cout << "New value " << _corner_prior_matched[i].x << " " << _corner_prior_matched[i].y << std::endl;
-// 					_prior_graph[v].setX(_corner_prior_matched[i].x);
-// 					_prior_graph[v].setY(_corner_prior_matched[i].y);
-// 					std::cout << "New value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
-// 					++i;
-// 				}
-				
-				
+				for (vp = boost::vertices(_prior_graph); vp.first != vp.second; ++vp.first) {
+	// 					std::cout << "going throught grph " << i << std::endl; ++i;
+					AASS::das::CornerDetector::CornerVertex v = *vp.first;
+					//ATTENTION !
+					cv::Point2d point;
+					point.x = _prior_graph[v].getX();
+					point.y = _prior_graph[v].getY();
+					
+					cv::Point2d point_out = point * ratio;
+
+					_prior_graph[v].setX(point_out.x);
+					_prior_graph[v].setY(point_out.y);
+				}
+// 				//Translate back
+				translation = srcTri[0];
+				angle = 0;
+				warp_mat = (cv::Mat_<double>(3,3) << std::cos(angle), -std::sin(angle), translation.x, std::sin(angle), std::cos(angle), translation.y, 0, 0, 1);
+				AffineTransformGraph(warp_mat);
+// 				
+// 				//Translate to point
+				translation = dstTri[0] - srcTri[0];
+				angle = 0;
+				warp_mat = (cv::Mat_<double>(3,3) << std::cos(angle), -std::sin(angle), translation.x, std::sin(angle), std::cos(angle), translation.y, 0, 0, 1);
+				AffineTransformGraph(warp_mat);
+
 				
 			}
 			
@@ -349,14 +360,14 @@ namespace AASS{
 					
 					//Matrix multiplication
 					
-					std::cout << "Point out " << point_out << std::endl;
+// 					std::cout << "Point out " << point_out << std::endl;
 					
-					std::cout << "OLD value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
+// 					std::cout << "OLD value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
 					_prior_graph[v].setX(point_out.x);
 					_prior_graph[v].setY(point_out.y);
 					_corner_prior_matched.push_back(point_out);
-					std::cout << "New value " << _corner_prior_matched[i].x << " " << _corner_prior_matched[i].y << std::endl;
-					std::cout << "New value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
+// 					std::cout << "New value " << _corner_prior_matched[i].x << " " << _corner_prior_matched[i].y << std::endl;
+// 					std::cout << "New value " << _prior_graph[v].getX() << " " << _prior_graph[v].getY() << std::endl;
 					++i;
 				}
 				
