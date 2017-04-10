@@ -2,7 +2,7 @@
 
 g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map){
 	
-	std::cout << "Adding the robot pose " << std::endl;
+// 	std::cout << "Adding the robot pose " << std::endl;
 	g2o::VertexSE2* robot =  new g2o::VertexSE2;
 	robot->setEstimate(se2);
 	robot->setId(new_id_);
@@ -28,7 +28,7 @@ g2o::VertexPointXY* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vec
 	g2o::VertexPointXY* landmark = new g2o::VertexPointXY;
 	landmark->setId(new_id_);
 	++new_id_;
-	std::cout << "Setting the id " << _optimizable_graph.vertices().size() << std::endl;
+// 	std::cout << "Setting the id " << _optimizable_graph.vertices().size() << std::endl;
 	landmark->setEstimate(pos);
 	_optimizable_graph.addVertex(landmark);
 	_nodes_landmark.push_back(landmark);
@@ -180,7 +180,7 @@ AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(cons
 	
 	int test_tt = newnorm * 100;
 	int test_ttt = newnorm_old * 100;
-	std::cout << newnorm << " " << test_ttt << " test " << test_tt << " base " << _priorNoise(0) << " "<< _priorNoise(1) << std::endl;
+// 	std::cout << newnorm << " " << test_ttt << " test " << test_tt << " base " << _priorNoise(0) << " "<< _priorNoise(1) << std::endl;
 	
 	assert(test_tt <= test_ttt);
 	assert(newnorm >= 0);
@@ -233,7 +233,7 @@ AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(cons
 // }
 
 g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, g2o::VertexSE2Prior* v2, g2o::VertexPointXY* v1){
-	std::cout << "Adding link" << std::endl;
+// 	std::cout << "Adding link" << std::endl;
 	
 	Eigen::Matrix2d covariance_link; 
 	covariance_link.fill(0.);
@@ -479,7 +479,7 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 		auto v = *vp.first;
 		//ATTENTION Magic number
 		
-		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
+// 		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
 		
 		
 		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0);
@@ -527,15 +527,15 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 				double x_diff = graph[targ].getX() - graph[v].getX();
 				double y_diff = graph[targ].getY() - graph[v].getY();
 				
-				std::cout << "Index" << idx << " " <<count << std::endl;
+// 				std::cout << "Index" << idx << " " <<count << std::endl;
 				
-				std::cout << "Because : " << graph[targ].getX() << " - " << graph[v].getX() << " and " << graph[targ].getY() << " - " << graph[v].getY() << std::endl;
+// 				std::cout << "Because : " << graph[targ].getX() << " - " << graph[v].getX() << " and " << graph[targ].getY() << " - " << graph[v].getY() << std::endl;
 				
 // 				std::cout << "diff: " <<x_diff << " " << y_diff << std::endl;
 				
 				g2o::SE2 se2(x_diff, y_diff, 0);
 				
-				std::cout << "SE2 pushed in edge \n" << se2.toVector() << std::endl;
+// 				std::cout << "SE2 pushed in edge \n" << se2.toVector() << std::endl;
 				
 				auto edge_out = addEdgePrior(se2, from, toward);
 // 				_edge_prior.push_back(edge_out);
@@ -545,8 +545,8 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const bettergraph::PseudoGraph<
 		++count;
 	}
 	
-	std::cout << _edge_prior.size() << " == " << graph.getNumEdges() << " - " << self_link / 2 << std::endl;
-	std::cout << _nodes_prior.size() << " == " << graph.getNumVertices() << std::endl;
+// 	std::cout << _edge_prior.size() << " == " << graph.getNumEdges() << " - " << self_link / 2 << std::endl;
+// 	std::cout << _nodes_prior.size() << " == " << graph.getNumVertices() << std::endl;
 	
 	assert( _nodes_prior.size() == graph.getNumVertices() );
 	//Self link / 2 because they are seen twice
@@ -674,9 +674,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::cout << "print" << std::endl;
 			
 			g2o::SE2 robot_pos(isometry2d);
-			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
+// 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
 			g2o::SE2 diff_vec_se2(diff_vec);
-			std::cout << "diff vec done" << diff_vec << std::endl;
+// 			std::cout << "diff vec done" << diff_vec << std::endl;
 			robot_pos = robot_pos * diff_vec_se2;
 			std::cout << "multiply" << std::endl;
 // 				delete feature;

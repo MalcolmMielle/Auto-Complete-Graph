@@ -523,6 +523,8 @@ private:
 // 			}
 // 			std::cout <<"clearing the edges " << std::endl;
 			 _edge_prior.clear();
+			 _edge_link.clear();
+			 _edge_interface_of_links.clear();
 			 
 			//Making sure all edge prior were removed.
 			auto idmapedges = _optimizable_graph.edges();
