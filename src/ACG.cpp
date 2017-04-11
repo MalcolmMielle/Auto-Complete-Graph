@@ -777,17 +777,17 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::cout << "hopidy" << std::endl;
 			auto ret_export = cornersExtractor.getAllCorners(*map);
 			std::cout << "gotall corner" << std::endl;
-			ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();	
+			auto ret_opencv_point_corner_tmp = cornersExtractor.getAccurateCvCorners();	
 			std::cout << "got all accurate corners" << std::endl;	
 			
 			
 			
-			auto it = ret_opencv_point_corner.begin();
+			auto it = ret_opencv_point_corner_tmp.begin();
 			
-			std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;			
+			std::cout << "Found " << ret_opencv_point_corner_tmp.size() << " corners " << std::endl;			
 			//Find all the observations :
 			//**************** HACK: translate the corners now : **************//
-			for(it ; it != ret_opencv_point_corner.end() ; ++it){
+			for(it ; it != ret_opencv_point_corner_tmp.end() ; ++it){
 // 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
 				Eigen::Vector3d vec;
 				vec << it->x, it->y, 0;
@@ -821,14 +821,17 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				NDTCornerGraphElement cor(p_out);
 				cor.addAllObserv(i, robot_ptr, observation);
 				corners_end.push_back(cor);
+				ret_opencv_point_corner.push_back(*it);
 				
 			}
 			//At this point, we have all the corners
-			assert(corners_end.size() - c_size == ret_opencv_point_corner.size());
+			assert(corners_end.size() - c_size == ret_opencv_point_corner_tmp.size());
+			assert(corners_end.size() == ret_opencv_point_corner.size());
 			c_size = corners_end.size();
 		}
 		//Save new number of nodes to update
 	
+		assert(corners_end.size() == ret_opencv_point_corner.size());
 // 		std::vector<AASS::acg::VertexLandmarkNDT*> all_new_landmarks;
 		
 		// ************ Add the landmarks that were added the corners_end ************************************//
@@ -854,7 +857,8 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				}
 			}
 			if(seen == false){
-				std::cout << "New point" << std::endl;
+				std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
+				assert(i < ret_opencv_point_corner.size());
 				g2o::Vector2D vec;
 				vec << corners_end[i].point.x, corners_end[i].point.y ;
 				AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_opencv_point_corner[i], 1);
