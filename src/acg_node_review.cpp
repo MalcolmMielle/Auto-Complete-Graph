@@ -135,34 +135,35 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 	
-	if(was_init == true){
-		new_node = true;
-	// 	abort_f = true;
-		std::cout << "Got a new graph " << std::endl;
-		
-		ros::Time start = ros::Time::now();
-		
-		ndt_feature::NDTFeatureGraph graph;
-		
-		std::string frame;
-		//ATTENTION: THE BAD GUY !
-		ndt_feature::msgToNDTGraph(*msg, graph, frame);	
-		
+	
+	new_node = true;
+// 	abort_f = true;
+	std::cout << "Got a new graph " << std::endl;
+	
+	ros::Time start = ros::Time::now();
+	
+	ndt_feature::NDTFeatureGraph graph;
+	
+	std::string frame;
+	//ATTENTION: THE BAD GUY !
+	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
+	
 
-		oacg->updateNDTGraph(graph);
-		
-		
-	// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
-		std::ostringstream convert;   // stream used for the conversion
-		convert << graph.getNbNodes(); 
-	// 	file_out = file_out + convert.str();
-	// 	file_out = file_out + "nodes.g2o";
-	// 	oacg->getGraph().save(file_out.c_str());
-	// 	
-	// 	std::cout << "saved to " << file_out << std::endl;
-		
-		/*** image****/
-		visu.updateRvizNoNDT();
+	oacg->updateNDTGraph(graph);
+	
+	
+// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
+	std::ostringstream convert;   // stream used for the conversion
+	convert << graph.getNbNodes(); 
+// 	file_out = file_out + convert.str();
+// 	file_out = file_out + "nodes.g2o";
+// 	oacg->getGraph().save(file_out.c_str());
+// 	
+// 	std::cout << "saved to " << file_out << std::endl;
+	
+	/*** image****/
+	visu.updateRvizNoNDT();
+		if(was_init == true){
 		int a;
 		std::cout << "PRESS ANYTHING NOT OPTIMISED YET" << std::endl;
 		std::cin >>a;
