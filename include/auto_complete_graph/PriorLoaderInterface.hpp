@@ -88,19 +88,19 @@ namespace AASS{
 				//Then create association
 // 				cv::perspectiveTransform( _corner_prior, _corner_prior_matched, _scale_transform_prior2ndt);
 				
-				assert(_same_point_prior.size() >= 3);
+				assert(_same_point_prior.size() >= 2);
 				
-				cv::Point2f srcTri[3];
-				cv::Point2f dstTri[3];
+				cv::Point2f srcTri[2];
+				cv::Point2f dstTri[2];
 				srcTri[0] = _same_point_prior[0];
 				srcTri[1] = _same_point_prior[1];
-				srcTri[2] = _same_point_prior[2];
+// 				srcTri[2] = _same_point_prior[2];
 				
 				dstTri[0] = _same_point_slam[0];
 				dstTri[1] = _same_point_slam[1];
 
 				std::cout << "Point for transfo" << std::endl;
-				std::cout << _same_point_prior[0] << " " << _same_point_slam[0] << std::endl << _same_point_prior[1] << " " << _same_point_slam[1] << std::endl << _same_point_prior[2] << " " << _same_point_slam[0] << std::endl;
+				std::cout << _same_point_prior[0] << " " << _same_point_slam[0] << std::endl << _same_point_prior[1] << " " << _same_point_slam[1] << std::endl;
 								
 				//Translate to origin
 				cv::Point2d translation = - srcTri[0];
@@ -185,10 +185,10 @@ namespace AASS{
 			 */
 			void initialize(const std::vector<cv::Point2f>& pt_slam, const std::vector<cv::Point2f>& pt_prior){
 				
-				assert(pt_slam.size() >= 4);
+				assert(pt_slam.size() >= 2);
 				assert(pt_prior.size() == pt_slam.size());
 				
-				std::cout << pt_prior[0] << " " << pt_slam[0] << std::endl << pt_prior[1] << " " << pt_slam[1] << std::endl << pt_prior[2] << " " << pt_slam[0] << std::endl;
+				std::cout << pt_prior[0] << " " << pt_slam[0] << std::endl << pt_prior[1] << " " << pt_slam[1] << std::endl;
 				
 				_same_point_prior.clear();
 				_same_point_slam.clear();
@@ -238,23 +238,23 @@ namespace AASS{
 				_same_point_prior.push_back(pt_prior[1]);                   
 				_same_point_slam.push_back(slam_point);
 				
-				noise_x = randomNoise(0, _deviation);
-				noise_y = randomNoise(0, _deviation);
-				out = cv::Point2f(pt_slam[2].x + noise_x, pt_slam[2].y + noise_y);
-				slam_point = rotatef(rot_mat, out);
-				
-				//ATTENTION : next line or for used the points only
-				
-				_same_point_prior.push_back(pt_prior[2]);
-				_same_point_slam.push_back(slam_point);
-				
-				noise_x = randomNoise(0, _deviation);
-				noise_y = randomNoise(0, _deviation);
-				out = cv::Point2f(pt_slam[3].x + noise_x, pt_slam[3].y + noise_y);
-				slam_point = rotatef(rot_mat, out);
-				
-				_same_point_prior.push_back(pt_prior[3]);              
-				_same_point_slam.push_back(slam_point);
+// 				noise_x = randomNoise(0, _deviation);
+// 				noise_y = randomNoise(0, _deviation);
+// 				out = cv::Point2f(pt_slam[2].x + noise_x, pt_slam[2].y + noise_y);
+// 				slam_point = rotatef(rot_mat, out);
+// 				
+// 				//ATTENTION : next line or for used the points only
+// 				
+// 				_same_point_prior.push_back(pt_prior[2]);
+// 				_same_point_slam.push_back(slam_point);
+// 				
+// 				noise_x = randomNoise(0, _deviation);
+// 				noise_y = randomNoise(0, _deviation);
+// 				out = cv::Point2f(pt_slam[3].x + noise_x, pt_slam[3].y + noise_y);
+// 				slam_point = rotatef(rot_mat, out);
+// 				
+// 				_same_point_prior.push_back(pt_prior[3]);              
+// 				_same_point_slam.push_back(slam_point);
 				
 // 				_same_point_prior.push_back(cv::Point2f(786, 373));
 // 				_same_point_slam.push_back(cv::Point2f(786, 373));
@@ -270,7 +270,7 @@ namespace AASS{
 // 				_same_point_prior.push_back(cv::Point2f(637, 529));              
 // 				_same_point_slam.push_back(cv::Point2f(786, 373));
 				
-				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
+// 				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
 				
 			}
 			

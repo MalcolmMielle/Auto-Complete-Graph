@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 		
-		if(initialiser.size() == 4 && was_init == false){
+		if(initialiser.size() == 2 && was_init == false){
 			was_init = true;
 			initAll(oacg, initialiser, basement);
 			visu.updateRvizNoNDT();
