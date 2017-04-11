@@ -52,7 +52,7 @@ namespace acg{
 		/**
 		 * @brief register a point from either the prior or the robot map. Start with the prior
 		 */
-		void clicked(const geometry_msgs::PointStamped::ConstPtr& msg){
+		virtual void clicked(const geometry_msgs::PointStamped::ConstPtr& msg){
 			std::cout << "Clicked !!! " << _flag_go << std::endl;
 			cv::Point2f point(msg->point.x, msg->point.y);
 			
@@ -62,12 +62,12 @@ namespace acg{
 			else{
 				std::cout << "add point" << std::endl;
 				Match match(_tmp_point, point);
-				match.getNodes(*_acg);
+// 				match.getNodes(*_acg);
 				
-				if(checkMatchExist(match) == false)
-				{
+// 				if(checkMatchExist(match) == false)
+// 				{
 					_points.push_back(match);
-				}
+// 				} 
 			}
 			
 			if(_flag_go == true){
@@ -81,7 +81,7 @@ namespace acg{
 
 		}
 		
-		void publishAll(){
+		virtual void publishAll(){
 			
 			std::cout << "Publishing " << _points.size() << std::endl;
 			
@@ -91,18 +91,20 @@ namespace acg{
 			for(auto it = _points.begin(); it != _points.end(); ++it){
 				geometry_msgs::Point p;
 				
-				auto vertex = it->getPriorNode()->estimate().toVector();
-				p.x = vertex(0);
-				p.y = vertex(1);
+// 				auto vertex = it->getPriorNode()->estimate().toVector();
+				auto vertex = it->getPriorPoint();
+				p.x = vertex.x;
+				p.y = vertex.y;
 				p.z = 0;
 				
 				std::cout << "first point " << p.x << " " << p.y << std::endl;
 				
 				_link_markers.points.push_back(p);
 				
-				auto vertex2 = it->getLandmarkNode()->estimate();
-				p.x = vertex2(0);
-				p.y = vertex2(1);
+// 				auto vertex2 = it->getLandmarkNode()->estimate();
+				auto vertex2 = it->getLandmarkPoint();
+				p.x = vertex2.x;
+				p.y = vertex2.y;
 				p.z = 0;
 				
 				std::cout << "second point " << p.x << " " << p.y << std::endl;
@@ -114,22 +116,6 @@ namespace acg{
 			_link_pub.publish(_link_markers);
 			
 		}
-		
-
-		
-	private:
-		bool checkMatchExist(Match& match){
-		
-			for(auto it = _points.begin(); it != _points.end(); ++it){
-				if(match.getPriorNode() == it->getPriorNode() && match.getLandmarkNode() == it->getLandmarkNode() ){
-					return true;
-				}
-			}
-			
-			return false;
-			
-		}
-		
 		
 	};
 }

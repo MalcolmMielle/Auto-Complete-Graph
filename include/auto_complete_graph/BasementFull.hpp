@@ -31,11 +31,11 @@ namespace AASS{
 				pt_slam.push_back(cv::Point2f(19.14, 2.25));
 				pt_prior.push_back(cv::Point2f(788, 311));
 				
-				pt_slam.push_back(cv::Point2f(7.64, 3.63));
-				pt_prior.push_back(cv::Point2f(614, 306));
-				
-				pt_slam.push_back(cv::Point2f(9.5, 16));
-				pt_prior.push_back(cv::Point2f(637, 529));
+// 				pt_slam.push_back(cv::Point2f(7.64, 3.63));
+// 				pt_prior.push_back(cv::Point2f(614, 306));
+// 				
+// 				pt_slam.push_back(cv::Point2f(9.5, 16));
+// 				pt_prior.push_back(cv::Point2f(637, 529));
 				
 				initialize(pt_slam, pt_prior, deviation, anglet, scalet, center);
 				

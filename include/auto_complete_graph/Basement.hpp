@@ -34,13 +34,13 @@ namespace AASS{
 				
 				//ATTENTION : next line or for used the points only
 				
-				_same_point_prior.push_back(cv::Point2f(117,37));
-				_same_point_slam.push_back(cv::Point2f(7.64,3.63));
-				
-				_same_point_prior.push_back(cv::Point2f(138, 260));              
-				_same_point_slam.push_back(cv::Point2f(9.5, 16));
-				
-				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
+// 				_same_point_prior.push_back(cv::Point2f(117,37));
+// 				_same_point_slam.push_back(cv::Point2f(7.64,3.63));
+// 				
+// 				_same_point_prior.push_back(cv::Point2f(138, 260));              
+// 				_same_point_slam.push_back(cv::Point2f(9.5, 16));
+// 				
+// 				_scale_transform_prior2ndt = cv::findHomography(_same_point_prior, _same_point_slam, CV_RANSAC, 3, cv::noArray());
 		
 			}
 			

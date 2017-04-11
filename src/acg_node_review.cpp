@@ -221,13 +221,11 @@ void initAll(AASS::acg::AutoCompleteGraph& oacg, AASS::acg::RvizPoints& initiali
 	auto match = initialiser.getMatches();
 	for(auto it = match.begin() ; it != match.end() ; ++it){
 
-		Eigen::Vector3d pose = it->getPriorNode()->estimate().toVector();
-		cv::Point2f pose2d; pose2d.x = pose(0) ; pose2d.y = pose(1);
-		prior_pt.push_back(pose2d);
+		auto pose = it->getPriorPoint();
+		prior_pt.push_back(pose);
 		
-		Eigen::Vector2d pose2de = it->getLandmarkNode()->estimate();
-		pose2d.x = pose2de(0) ; pose2d.y = pose2de(1);
-		slam_pt.push_back(pose2d);
+		auto pose2de = it->getLandmarkPoint();
+		slam_pt.push_back(pose2de);
 	}
 	
 	priorloader.initialize(slam_pt, prior_pt);
@@ -308,7 +306,7 @@ int main(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 		
-		if(initialiser.size() == 4 && was_init == false){
+		if(initialiser.size() == 2 && was_init == false){
 			was_init = true;
 			initAll(oacg, initialiser, basement);
 			visu.updateRvizNoNDT();
