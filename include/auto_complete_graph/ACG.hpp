@@ -43,6 +43,7 @@
 #include "OptimizableAutoCompleteGraph.hpp"
 #include "PriorLoaderInterface.hpp"
 #include "das/conversion.hpp"
+#include "utils.hpp"
 
 namespace AASS {
 
@@ -67,6 +68,28 @@ namespace acg{
 	  
 // 	virtual bool read(std::istream& is);
 // 	virtual bool write(std::ostream& os) const;
+
+  };
+  
+  class VertexSE2RobotPose : public g2o::VertexSE2
+  {
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		VertexSE2RobotPose() : g2o::VertexSE2(){}
+		
+	protected:
+		std::shared_ptr<lslgeneric::NDTMap> _map;
+		Eigen::Affine3d _T;
+	public:
+		cv::Mat img;
+		
+		std::shared_ptr<lslgeneric::NDTMap>& getMap(){return _map;}
+		const std::shared_ptr<lslgeneric::NDTMap>& getMap() const {return _map;}
+		void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
+		Eigen::Affine3d getPose(){return _T;}
+		const Eigen::Affine3d& getPose() const {return _T;}
+		void setPose(const Eigen::Affine3d& T) {_T = T;}
+
 
   };
   
@@ -121,14 +144,14 @@ private:
 			protected:
 				//TODO : change it to a set
 				std::vector<int> nodes_linked;
-				std::vector<g2o::VertexSE2*> nodes_linked_ptr;
+				std::vector<AASS::acg::VertexSE2RobotPose*> nodes_linked_ptr;
 				std::vector<g2o::Vector2D> observations;
 				
 			public:
 				NDTCornerGraphElement(float x, float y) : point(x, y){};
 				NDTCornerGraphElement(const cv::Point2f& p) : point(p){};
 				
-				void addAllObserv(int i, g2o::VertexSE2* ptr, g2o::Vector2D obs){
+				void addAllObserv(int i, AASS::acg::VertexSE2RobotPose* ptr, g2o::Vector2D obs){
 					nodes_linked.push_back(i);
 					observations.push_back(obs);
 					nodes_linked_ptr.push_back(ptr);
@@ -142,7 +165,7 @@ private:
 				
 		// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
-				const std::vector<g2o::VertexSE2*>& getNodeLinkedPtr() const {return nodes_linked_ptr;}
+				const std::vector<AASS::acg::VertexSE2RobotPose*>& getNodeLinkedPtr() const {return nodes_linked_ptr;}
 				const std::vector<g2o::Vector2D>& getObservations() const {return observations;}
 				
 		// 		void push_back(int i){nodes_linked.push_back(i);}
@@ -219,32 +242,32 @@ private:
 		/**
 		* @brief A class that old a NDT node pointer for the g2o graph, the associated NDTMap and the original affine transform (the one received when the NDTGraph was received)
 		*/
-		class NDTNodeAndMap{
-			g2o::VertexSE2* _node;
-			std::shared_ptr<lslgeneric::NDTMap> _map;
-			Eigen::Affine3d _T;
-		public:
-			
-			cv::Mat img;
-			
-			NDTNodeAndMap(g2o::VertexSE2* node, const std::shared_ptr<lslgeneric::NDTMap>& map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){
-				
-				AASS::das::toCvMat(*map, img, 500);
-				
-			};
-			
-	// 		~NDTNodeAndMap(){delete _map;}
-			
-			g2o::VertexSE2* getNode(){return _node;}
-			const g2o::VertexSE2* getNode() const {return _node;}
-			void setNode(g2o::VertexSE2* node){_node = node;}
-			std::shared_ptr<lslgeneric::NDTMap> getMap(){return _map;}
-			std::shared_ptr<lslgeneric::NDTMap> getMap() const {return _map;}
-			void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
-			Eigen::Affine3d getPose(){return _T;}
-			const Eigen::Affine3d& getPose() const {return _T;}
-			
-		};
+// 		class NDTNodeAndMap{
+// 			g2o::VertexSE2* _node;
+// 			std::shared_ptr<lslgeneric::NDTMap> _map;
+// 			Eigen::Affine3d _T;
+// 		public:
+// 			
+// 			cv::Mat img;
+// 			
+// 			NDTNodeAndMap(g2o::VertexSE2* node, const std::shared_ptr<lslgeneric::NDTMap>& map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){
+// 				
+// 				AASS::das::toCvMat(*map, img, 500);
+// 				
+// 			};
+// 			
+// 	// 		~NDTNodeAndMap(){delete _map;}
+// 			
+// 			g2o::VertexSE2* getNode(){return _node;}
+// 			const g2o::VertexSE2* getNode() const {return _node;}
+// 			void setNode(g2o::VertexSE2* node){_node = node;}
+// 			std::shared_ptr<lslgeneric::NDTMap> getMap(){return _map;}
+// 			std::shared_ptr<lslgeneric::NDTMap> getMap() const {return _map;}
+// 			void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
+// 			Eigen::Affine3d getPose(){return _T;}
+// 			const Eigen::Affine3d& getPose() const {return _T;}
+// 			
+// 		};
 		
 		
 		
@@ -266,7 +289,7 @@ private:
 		///@brief vector storing all node from the landarks 
 		std::vector<AASS::acg::VertexLandmarkNDT*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
-		std::vector<NDTNodeAndMap> _nodes_ndt;
+		std::vector<AASS::acg::VertexSE2RobotPose*> _nodes_ndt;
 		///@brief vector storing all linking edges
 		std::vector<g2o::EdgeLinkXY_malcolm*> _edge_link;
 		
@@ -423,8 +446,8 @@ private:
 		std::vector<AASS::acg::VertexLandmarkNDT*>& getLandmarkNodes(){return _nodes_landmark;}
 		const std::vector<AASS::acg::VertexLandmarkNDT*>& getLandmarkNodes() const {return _nodes_landmark;}
 		///@brief vector storing all node from the ndt ndt_feature_graph
-		std::vector<NDTNodeAndMap>& getRobotNodes(){return _nodes_ndt;}
-		const std::vector<NDTNodeAndMap>& getRobotNodes() const {return _nodes_ndt;}
+		std::vector<AASS::acg::VertexSE2RobotPose*>& getRobotNodes(){return _nodes_ndt;}
+		const std::vector<AASS::acg::VertexSE2RobotPose*>& getRobotNodes() const {return _nodes_ndt;}
 		///@brief vector storing all linking edges
 		std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges(){return _edge_link;}
 		const std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges() const {return _edge_link;}
@@ -468,9 +491,9 @@ private:
 		const AASS::acg::OptimizableAutoCompleteGraph& getGraph() const {return _optimizable_graph;}
 		
 		/***FUNCTIONS TO ADD THE NODES***/
-		g2o::VertexSE2* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
-		g2o::VertexSE2* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
-		g2o::VertexSE2* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
+		AASS::acg::VertexSE2RobotPose* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
+		AASS::acg::VertexSE2RobotPose* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
+		AASS::acg::VertexSE2RobotPose* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
 		
 		AASS::acg::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2D& pos, const cv::Point2f& pos_img, int strength = 1);
 		AASS::acg::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& pos_img, int strength = 1);
@@ -679,7 +702,7 @@ private:
 		
 		
 		void setFirst(){
-			g2o::OptimizableGraph::Vertex* fRobot = _nodes_ndt[0].getNode();
+			g2o::OptimizableGraph::Vertex* fRobot = _nodes_ndt[0];
 			_optimizable_graph.setFirst(fRobot);
 		}
 		
@@ -835,7 +858,7 @@ private:
 		
 	public:
 		
-		
+		void SIFTNdtLandmark(const cv::Point2f centre, const cv::Mat& img, double size_image_max, double cell_size, AASS::acg::VertexLandmarkNDT* vertex);
 		void createDescriptorNDT(cv::Mat& desc);
 		void createDescriptorPrior(cv::Mat& desc);
 

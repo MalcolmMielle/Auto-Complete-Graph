@@ -19,9 +19,7 @@ namespace acg{
 	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer = "combined", const std::string& layer2 = "combined", const std::string& final_layer = "combined");
 	
 	inline void ACGNdtNodetoVecGrids(
-		const AASS::acg::AutoCompleteGraph& acg, 
-		std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_start,
-		std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_end,
+		const AASS::acg::AutoCompleteGraph& acg, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_end,
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out
 	);
 	
@@ -153,8 +151,8 @@ namespace acg{
 		if(acg.getRobotNodes().size() != 0){
 			grids.push_back(ptr_prior_occ);
 				
-			std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator it;
-			std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator it_end;
+			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it;
+			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it_end;
 			std::cout <<"update the zones" << std::endl;
 			if(start < acg.getRobotNodes().size() && start >= 0){
 				it = acg.getRobotNodes().begin() + start;
@@ -227,7 +225,7 @@ namespace acg{
 	}
 	
 	
-	inline void ACGNdtNodetoVecGrids(const AASS::acg::AutoCompleteGraph& acg, std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_start, std::vector<AASS::acg::AutoCompleteGraph::NDTNodeAndMap>::const_iterator& it_end, std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out){
+	inline void ACGNdtNodetoVecGrids(const AASS::acg::AutoCompleteGraph& acg, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_end, std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out){
 		
 		for(it_start ; it_start != it_end ; ++it_start){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
@@ -235,15 +233,15 @@ namespace acg{
 //Grid map test
 			std::cout << "Node" << std::endl;
 			nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();		
-			std::cout << "Node size" << it_start->getMap()->getAllInitializedCellsShared().size() << std::endl;
-			assert(it_start->getMap()->getAllInitializedCellsShared().size() == it_start->getMap().get()->getAllInitializedCellsShared().size());
+			std::cout << "Node size" << (*it_start)->getMap()->getAllInitializedCellsShared().size() << std::endl;
+			assert((*it_start)->getMap()->getAllInitializedCellsShared().size() == (*it_start)->getMap().get()->getAllInitializedCellsShared().size());
 			
-			std::cout << "Node size" << it_start->getMap()->getAllCellsShared().size() << std::endl;
-			assert(it_start->getMap()->getAllCellsShared().size() == it_start->getMap().get()->getAllCellsShared().size());
+			std::cout << "Node size" << (*it_start)->getMap()->getAllCellsShared().size() << std::endl;
+			assert((*it_start)->getMap()->getAllCellsShared().size() == (*it_start)->getMap().get()->getAllCellsShared().size());
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-			lslgeneric::toOccupancyGrid(it_start->getMap().get(), *omap, 0.3, "/world");
+			lslgeneric::toOccupancyGrid((*it_start)->getMap().get(), *omap, 0.3, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
-			auto node = it_start->getNode();
+			auto node = *it_start;
 			auto vertex = node->estimate().toIsometry();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
 // 					std::cout << "Move : " << node.matrix() << std::endl;
@@ -394,7 +392,7 @@ namespace acg{
 		grid_map::GridMap gridMaptmp({"all"});
 		gridMaptmp["all"].setZero();
 		
-		auto node = acg.getRobotNodes()[0].getNode();
+		auto node = acg.getRobotNodes()[0];
 		auto vertex = node->estimate().toVector();
 		
 		gridMaptmp.setFrameId("/world");
@@ -425,9 +423,9 @@ namespace acg{
 				std::cout << "Node" << std::endl;
 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i].getMap().get(), *omap, resol, "/world");
+				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i]->getMap().get(), *omap, resol, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
-				auto node = acg.getRobotNodes()[i].getNode();
+				auto node = acg.getRobotNodes()[i];
 				auto vertex = node->estimate().toIsometry();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
 // 					std::cout << "Move : " << node.matrix() << std::endl;
@@ -820,11 +818,11 @@ namespace acg{
 				std::cout << "ADDING A MAP" << std::endl;
 				///Copy map
 				ndt_map::NDTMapMsg msg;
-				bool good = lslgeneric::toMessage(it->getMap().get(), msg, "/world");
+				bool good = lslgeneric::toMessage((*it)->getMap().get(), msg, "/world");
 	// 			
 				maps.maps.push_back(msg);
 				
-				auto pose = it->getNode()->estimate().toVector();
+				auto pose = (*it)->estimate().toVector();
 				geometry_msgs::Transform transform;
 				transform.translation.x = pose(0);
 				transform.translation.y = pose(1);

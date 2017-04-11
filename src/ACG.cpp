@@ -1,31 +1,35 @@
 #include "auto_complete_graph/ACG.hpp"
 
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map){
+AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr< lslgeneric::NDTMap >& map){
 	
 	std::cout << "Adding the robot pose " << std::endl;
-	g2o::VertexSE2* robot =  new g2o::VertexSE2;
+	AASS::acg::VertexSE2RobotPose* robot =  new AASS::acg::VertexSE2RobotPose();
 	robot->setEstimate(se2);
 	robot->setId(new_id_);
 	++new_id_;
+	
+	robot->setMap(map);
+	robot->setPose(affine);
+	
 	_optimizable_graph.addVertex(robot);
 	
-	NDTNodeAndMap nodeAndMap(robot, map, affine);
+// 	NDTNodeAndMap nodeAndMap(robot, map, affine);
 	
-	_nodes_ndt.push_back(nodeAndMap);
+	_nodes_ndt.push_back(robot);
 	return robot;
 }
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map){
+AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr< lslgeneric::NDTMap >& map){
 	g2o::SE2 se2(rob(0), rob(1), rob(2));
 	return addRobotPose(se2, affine, map);
 }
-g2o::VertexSE2* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map){
+AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr< lslgeneric::NDTMap >& map){
 	Eigen::Vector3d robot1;
 	robot1 << x, y, theta;
 	return addRobotPose(robot1, affine, map);
 }
 
 AASS::acg::VertexLandmarkNDT* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vector2D& pos, const cv::Point2f& pos_img, int strength){
-	AASS::acg::VertexLandmarkNDT* landmark = new AASS::acg::VertexLandmarkNDT;
+	AASS::acg::VertexLandmarkNDT* landmark = new AASS::acg::VertexLandmarkNDT();
 	landmark->setId(new_id_);
 	++new_id_;
 	std::cout << "Setting the id " << _optimizable_graph.vertices().size() << std::endl;
@@ -42,7 +46,7 @@ AASS::acg::VertexLandmarkNDT* AASS::acg::AutoCompleteGraph::addLandmarkPose(doub
 }
 
 AASS::acg::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr){
-	AASS::acg::VertexSE2Prior* priorlandmark = new AASS::acg::VertexSE2Prior;
+	AASS::acg::VertexSE2Prior* priorlandmark = new AASS::acg::VertexSE2Prior();
 	priorlandmark->setId(new_id_);
 	++new_id_;
 	priorlandmark->setEstimate(se2);
@@ -435,7 +439,7 @@ int AASS::acg::AutoCompleteGraph::findRobotNode(g2o::HyperGraph::Vertex* v){
 	int pos = 0;
 	auto it = _nodes_ndt.begin();
 	for(it ; it != _nodes_ndt.end() ; ++it){
-		if(it->getNode() == v){
+		if(*it == v){
 			return pos;
 		}
 		++pos;
@@ -601,8 +605,8 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		//**************** Calculate the previous transformations if there as already been something added *** //
 				
 		if(_previous_number_of_node_in_ndtgraph != 0){
-			auto node = _nodes_ndt[_nodes_ndt.size() - 1].getNode();
-			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1].getPose();
+			auto node = _nodes_ndt[_nodes_ndt.size() - 1];
+			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1]->getPose();
 			
 			/*******' Using Vec********/
 			Eigen::Isometry2d original2d_aff = Affine3d2Isometry2d(original3d);
@@ -650,6 +654,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		//Assume that all node in the NDT graph must been analysed
 		i = _previous_number_of_node_in_ndtgraph;
 		std::vector<cv::Point2f> ret_opencv_point_corner;
+		
+		int c_size = corners_end.size();
+		assert(c_size == 0);
 		
 		for (i; i < ndt_graph.getNbNodes(); ++i) {
 			
@@ -721,7 +728,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			
 			//BUG IS BEFORE
 			
-			g2o::VertexSE2* robot_ptr = addRobotPose(robot_pos, affine, shared_map);
+			AASS::acg::VertexSE2RobotPose* robot_ptr = addRobotPose(robot_pos, affine, shared_map);
 			//Add Odometry if there is more than one node
 			if(i > 0 ){
 				std::cout << "adding the odometry" << std::endl;
@@ -750,7 +757,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 // 				}
 				
 				std::cout << "Saving odometry " << std::endl;
-				addOdometry(odometry, from.getNode(), toward.getNode(), information);
+				addOdometry(odometry, from, toward, information);
 			}
 			
 			
@@ -775,10 +782,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			
 			auto it = ret_opencv_point_corner.begin();
 			
-			std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;
-
-
-			
+			std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;			
 			//Find all the observations :
 			//**************** HACK: translate the corners now : **************//
 			for(it ; it != ret_opencv_point_corner.end() ; ++it){
@@ -786,7 +790,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				Eigen::Vector3d vec;
 				vec << it->x, it->y, 0;
 				
-				auto vec_out_se2 = _nodes_ndt[i].getNode()->estimate();
+				auto vec_out_se2 = _nodes_ndt[i]->estimate();
 
 				//Uses just added modified node
 				g2o::SE2 se2_tmp(vec);
@@ -818,10 +822,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				
 			}
 			//At this point, we have all the corners
+			assert(corners_end.size() - c_size == ret_opencv_point_corner.size());
+			c_size = corners_end.size();
 		}
 		//Save new number of nodes to update
-
-		assert(corners_end.size() == ret_opencv_point_corner.size());
 	
 // 		std::vector<AASS::acg::VertexLandmarkNDT*> all_new_landmarks;
 		
@@ -859,25 +863,32 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 				
 				//Convert NDT MAP to image
 				cv::Mat ndt_img;
-				
-				//TODO REDESIGN LA CLASS DES NODE NDT
+				auto map_tmp = corners_end[i].getNodeLinkedPtr()[0]->getMap();
 				
 				double size_image_max = 500;
+				double min, max;
 				//TODO: super convoluted, get rid of NDTCornerGraphElement!
-				AASS::das::toCvMat(corners_end[i].getNodeLinkedPtr()[0]->getMap().get(), ndt_img, size_image_max);
+				AASS::das::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
 				
 				//Use accurate CV point
 				//Get old position
-				double min, max;
 				std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
 				cv::Point2d center = AASS::das::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
 				std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
 				assert(center.x <= size_image_max);
 				assert(center.y <= size_image_max);
-				cv::circle(ndt_img, center, 20, cv::Scalar(255, 255, 255), 5);			
+				
+// 				cv::Mat copyy;
+// 				ndt_img.copyTo(copyy);
+// 				cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);			
 
-				cv::imshow("NDT_map", ndt_img);
-				cv::waitKey(0);
+// 				cv::imshow("NDT_map", copyy);
+// 				cv::waitKey(0);
+				
+				double cx, cy, cz;
+				//Should it be in meters ?
+				map_tmp->getGridSizeInMeters(cx, cy, cz);
+				SIFTNdtLandmark(center, ndt_img, size_image_max, cx, ptr);
 			
 				/****************************************************************/
 			
@@ -909,6 +920,46 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 	noDoubleLinks();
 		
 }
+
+
+void AASS::acg::AutoCompleteGraph::SIFTNdtLandmark(const cv::Point2f centre, const cv::Mat& img, double size_image_max, double cell_size, VertexLandmarkNDT* vertex)
+{
+	
+	
+	cv::Mat img_tmpp;
+	img.convertTo(img_tmpp, CV_8U);
+	cv::Mat img_tmp;
+	cv::cvtColor( img_tmpp, img_tmp, CV_BGR2GRAY );
+// 	cv::imshow("NDT_map_C", img_tmp);
+// 	cv::waitKey(0);
+	std::string type = type2str(img_tmp.type());
+	std::cout << ">Type " << type << std::endl;
+	assert(type == "8UC1");
+	//Creating a SIFT descriptor for eahc corner
+	cv::KeyPoint keypoint;
+	keypoint.pt = centre;
+	
+	double sizet = 2 * size_image_max / cell_size ;
+	keypoint.size = sizet ;
+	keypoint.angle = -1 ;
+	keypoint.octave = 1 ;
+	
+	std::vector<cv::KeyPoint> keypoint_v;
+	keypoint_v.push_back(keypoint);
+	
+	cv::Mat descriptors_1;
+	cv::SiftDescriptorExtractor extractor;
+	extractor.compute( img_tmp, keypoint_v, descriptors_1);
+	
+	std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
+	assert(descriptors_1.rows == 1);
+	
+	vertex->descriptor = descriptors_1;
+	vertex->keypoint = keypoint;
+}
+
+
+
 
 
 void AASS::acg::AutoCompleteGraph::updateLinks()
@@ -1469,14 +1520,15 @@ void AASS::acg::AutoCompleteGraph::createDescriptorNDT(cv::Mat& desc)
 	//Convert to OpenCV
 	auto it = _nodes_ndt.begin();
 	cv::Mat ndt_img;
-	AASS::das::toCvMat(*(it->getMap().get()), ndt_img, 500);
+	AASS::das::toCvMat(*((*it)->getMap().get()), ndt_img, 500);
 	for(; it != _nodes_ndt.end() ; ++it){
 		cv::Mat tmp;
 		cv::Mat finl;
 		double max, min;
 		double size_image_max = 500;
-		AASS::das::toCvMat(*(it->getMap().get()), tmp, size_image_max, max, min);
-		g2o::VertexSE2* v_ptr_ndt = it->getNode();
+		AASS::das::toCvMat(*((*it)->getMap().get()), tmp, size_image_max, max, min);
+		std::cout << "MAX min " << max << " " << min << std::endl;
+		AASS::acg::VertexSE2RobotPose* v_ptr_ndt = *it;
 		
 		for(auto it_edge = _edge_landmark.begin() ; it_edge != _edge_landmark.end() ; ++it_edge){
 			AASS::acg::VertexLandmarkNDT* v_ptr = dynamic_cast<AASS::acg::VertexLandmarkNDT*> ((*it_edge)->vertices()[1]);
