@@ -60,16 +60,85 @@ namespace acg{
 	};
 	
 	class VertexSE2Prior : public g2o::VertexSE2
-  {
-    public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-      VertexSE2Prior() : g2o::VertexSE2(){}
-	  PriorAttr priorattr;
-	  
-// 	virtual bool read(std::istream& is);
-// 	virtual bool write(std::ostream& os) const;
+	{
+	protected:
 
-  };
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		VertexSE2Prior() : g2o::VertexSE2(){}
+		PriorAttr priorattr;
+		
+		std::vector<std::pair<double, double> > getAngleDirection() const {
+			std::vector<std::pair<double, double> > out;
+			auto edges = this->edges();
+			std::vector<AASS::acg::EdgeSE2Prior_malcolm*> edges_prior; 
+			//Get only prior edges
+			for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
+// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+				AASS::acg::EdgeSE2Prior_malcolm* ptr = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
+				if(ptr != NULL){
+					edges_prior.push_back(ptr);
+				}
+			}
+			auto ite = edges_prior.begin();
+			auto ite_end = edges_prior.back();
+			out.push_back( angle( (*ite_end), *(*ite) ) );			
+			for ( auto ite = edges_prior.begin(); ite != edges_prior.end(); ++ite ){
+				out.push_back( angle( **ite, **(ite + 1) ) );
+			}
+			return out;
+			
+		}
+		
+	private:
+		std::pair<double, double> angle(const AASS::acg::EdgeSE2Prior_malcolm& from, const AASS::acg::EdgeSE2Prior_malcolm& to) const {
+			
+			auto from_vec2d = getDirection2D(from);
+			auto to_vec2d = getDirection2D(to);
+			//Rotate
+// 			angle = atan2(vector2.y, vector2.x) - atan2(vector1.y, vector1.x);
+			double angle_between = atan2(to_vec2d(1), to_vec2d(0)) - atan2(from_vec2d(1), from_vec2d(0));
+			if (angle_between < 0) angle_between += 2 * M_PI;
+			
+			double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
+			if (angle_from < 0) angle_from += 2 * M_PI;
+			
+			double angle_to = atan2(to_vec2d(1), to_vec2d(0)) - atan2(0, 1);
+			if (angle_to < 0) angle_to += 2 * M_PI;
+			
+			double direction = (angle_to + angle_from) / 2;
+			
+			return std::pair<double, double>(angle_between, direction);
+		}
+		
+		Eigen::Vector2d getDirection2D(const AASS::acg::EdgeSE2Prior_malcolm& from) const {
+			
+			AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[0]);
+			AASS::acg::VertexSE2Prior* ptr2 = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[1]);
+			assert(ptr != NULL);
+			assert(ptr2 != NULL);
+			assert(ptr == this || ptr2 == this);
+			Eigen::Vector3d from_1;
+			Eigen::Vector3d toward;
+			if(ptr == this){
+				from_1 = ptr->estimate().toVector();
+				toward = ptr2->estimate().toVector();
+			}
+			else if(ptr2 == this){
+				from_1 = ptr2->estimate().toVector();
+				toward = ptr->estimate().toVector();
+			}
+			else{
+				assert(true == false && "Weird, the original vertex wasn't found before");
+			}
+			
+			Eigen::Vector3d pose_from1 = toward - from_1;
+			Eigen::Vector2d pose_prior; pose_prior << pose_from1(0), pose_from1(1);
+			return pose_prior;
+			
+		}
+
+	};
   
   class VertexSE2RobotPose : public g2o::VertexSE2
   {
