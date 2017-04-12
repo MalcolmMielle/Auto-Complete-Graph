@@ -162,11 +162,11 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	std::cout << "saved to " << file_out << std::endl;
 	
 	/*** image****/
-	visu.updateRvizNoNDT();
+// 	visu.updateRvizNoNDT();
 		if(was_init == true){
-		int a;
-		std::cout << "PRESS ANYTHING NOT OPTIMISED YET" << std::endl;
-		std::cin >>a;
+// 		int a;
+// 		std::cout << "PRESS ANYTHING NOT OPTIMISED YET" << std::endl;
+// 		std::cin >>a;
 		
 	// 	oacg->initializeOptimization();
 	// 	oacg->initialGuess();
@@ -181,8 +181,8 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 		}
 		
 		visu.updateRvizNoNDT();
-		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
-		std::cin >>a;
+// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
+// 		std::cin >>a;
 		
 	// 	printImages(oacg);
 	// 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
@@ -216,7 +216,9 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 		
 	// 	exit(0);
 	}
-		
+		else{
+			visu.updateRvizNoNDT();
+		}
 }
 
 

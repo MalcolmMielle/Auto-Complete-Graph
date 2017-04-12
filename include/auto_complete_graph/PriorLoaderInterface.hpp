@@ -322,6 +322,7 @@ namespace AASS{
 				std::vector<PriorVertex> prior_v;
 				
 				
+				std::cout << "Keypoints" << std::endl;
 				//Adding all the vertices
 				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
 				for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
@@ -347,11 +348,11 @@ namespace AASS{
 							double tmp_size = (tmp_size_x * tmp_size_x) + (tmp_size_y * tmp_size_y);
 							if(smallest == -1 || smallest > tmp_size){
 								if(tmp_size >  0){
-									std::cout << "Smallest size " << tmp_size << std::endl;
+// 									std::cout << "Smallest size " << tmp_size << std::endl;
 									smallest = tmp_size;
 								}
 								else{
-									std::cout << "Weird zero distance between points" <<std::endl;
+// 									std::cout << "Weird zero distance between points" <<std::endl;
 								}
 							}
 						}
@@ -375,7 +376,7 @@ namespace AASS{
 					cv::SiftDescriptorExtractor extractor;
 					extractor.compute( _img_gray, keypoint_v, descriptors_1);
 					
-					std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
+// 					std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
 					assert(descriptors_1.rows == 1);
 					
 					nodeAttribute.keypoint = keypoint;
@@ -387,6 +388,8 @@ namespace AASS{
 					prior_v.push_back(vertex_out);
 					
 				}
+				
+				std::cout << "Done" << std::endl;
 				
 				//Adding all the edges
 				auto es = boost::edges(graph);
