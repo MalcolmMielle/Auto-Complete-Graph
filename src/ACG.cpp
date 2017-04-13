@@ -563,8 +563,66 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const PriorLoaderInterface::Pri
 	
 }
 
-void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
-	
+
+Eigen::Vector3d AASS::acg::AutoCompleteGraph::getLastTransformation()
+{
+	Eigen::Vector3d diff_vec; diff_vec << 0, 0, 0;
+	//**************** Calculate the previous transformations if there as already been something added *** //
+			
+// 	if(_previous_number_of_node_in_ndtgraph != 0){
+	if(_nodes_ndt.size() != 0){
+		auto node = _nodes_ndt[_nodes_ndt.size() - 1];
+		auto original3d = _nodes_ndt[_nodes_ndt.size() - 1]->getPose();
+		
+		/*******' Using Vec********/
+		Eigen::Isometry2d original2d_aff = Affine3d2Isometry2d(original3d);
+		auto shift_vec = node->estimate().toVector();
+		g2o::SE2 se2_tmptmp(original2d_aff);
+		auto original3d_vec = se2_tmptmp.toVector();
+		diff_vec = original3d_vec - shift_vec;
+		
+		/*****************************/
+		
+// 			auto shift = node->estimate().toIsometry();
+		
+		
+// 		double angle = atan2(shift.rotation()(1,0), shift.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
+// 		auto shift3d = Eigen::Translation3d(shift.translation()(0), shift.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
+// 			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
+// 				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
+// 				Eigen::Vector3d v1(1,0,0);
+// 				Eigen::Vector3d v2 = a.rotation()*v1;
+// 				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
+// 				double angle = acos(dot);
+// 				// Need to find the sign
+// 				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
+// 					return angle;
+// 				return -angle;
+// 			};
+// 			
+		
+		
+// 			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
+		
+// 			Eigen::Affine2d original2d;
+// 			original2d.matrix() << original3d(0, 0), original3d(0, 1), original3d(0, 3),
+// 								   original3d(1, 0), original3d(1, 1), original3d(1, 3),
+// 												  0,                0, original3d(2, 3);
+
+
+		
+// 			auto diff_affine = original2d.inverse() * shift;
+// 			diff.translation() = diff_affine.translation();
+// 			diff.linear() = diff_affine.rotation();
+	}
+
+	return diff_vec;
+}
+
+
+
+std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
+{
 	
 	//Return Gaussian white noise
 	auto randomNoise = [](double mean, double deviationt) -> double {
@@ -573,10 +631,253 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		return dist(engine);
 	};
 	
+	Eigen::Vector3d diff_vec = getLastTransformation();
+	
+	//Calculate noise
+	auto noise_x = randomNoise(0, deviation);
+	auto noise_y = randomNoise(0, deviation);
+	auto noise_t = randomNoise(0, deviation);
+	g2o::SE2 noise_se2(noise_x, noise_y, noise_t);
+
+	std::cout << "Checking node nb " << element << std::endl;
+	
+	//RObot pose
+// 			ndt_feature::NDTFeatureNode& feature = dynamic_cast<ndt_feature::NDTFeatureNode&>(ndt_graph.getNodeInterface(i));
+	std::cout << "Copy feature" << std::endl;
+	
+// 			feature.copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
+	Eigen::Affine3d affine = Eigen::Affine3d(ndt_graph.getNodeInterface(element).getPose());
+	Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
+	
+	//TODO make this work
+// 			isometry2d =  diff * isometry2d;
+	
+	//BUG IS AFTER
+	std::cout << "print" << std::endl;
+	
+	robot_pos = g2o::SE2(isometry2d);
+// 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
+	g2o::SE2 diff_vec_se2(diff_vec);
+// 			std::cout << "diff vec done" << diff_vec << std::endl;
+	robot_pos = robot_pos * diff_vec_se2;
+	std::cout << "multiply" << std::endl;
+		
+	lslgeneric::NDTMap* map = ndt_graph.getMap(element);
+		
+	std::cout << "get res" << std::endl;
+// 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;
+// 			Use a a msg to copy to a new pointer so it doesn't get forgotten :|
+	ndt_map::NDTMapMsg msg;
+// 			ATTENTION Frame shouldn't be fixed
+	bool good = lslgeneric::toMessage(map, msg, "/world");
+// 			lslgeneric::NDTMap* map_copy = new lslgeneric::NDTMap(new lslgeneric::LazyGrid(resolution));
+	
+	lslgeneric::NDTMap* map_copy;
+	lslgeneric::LazyGrid* lz;
+// 			bool good = lslgeneric::fromMessage(lz, fuser.map, m.map, frame);
+	std::string frame;
+	bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
+	std::shared_ptr<lslgeneric::NDTMap> shared_map(map_copy);
+
+	*robot_ptr = addRobotPose(robot_pos, affine, shared_map);
+	assert(*robot_ptr != NULL);
+	//Add Odometry if it is not the first node
+	if(element > 0 ){
+		std::cout << "adding the odometry" << std::endl;
+		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
+		std::cout << " ref " << links[element-1].getRefIdx() << " and mov " << links[element-1].getMovIdx() << std::endl;
+		assert( links[element-1].getRefIdx() < _nodes_ndt.size() );
+		assert( links[element-1].getMovIdx() < _nodes_ndt.size() );
+		auto from = _nodes_ndt[ links[element-1].getRefIdx() ] ;
+		auto toward = _nodes_ndt[ links[element-1].getMovIdx() ] ;
+		
+		std::cout << "Saving cov " << std::endl;
+		//TODO : transpose to 3d and use in odometry!
+		Eigen::MatrixXd cov = links[element - 1].cov_3d;
+		
+		std::cout << "Saving cov to 2d" << std::endl;
+		Eigen::Matrix3d cov_2d;
+		cov_2d << cov(0, 0), cov(0, 1), 0,
+					cov(1, 0), cov(1, 1), 0,
+					0, 		 0, 		cov(5, 5);
+					
+		std::cout << "Saving information " << std::endl;
+		Eigen::Matrix3d information = cov_2d.inverse();
+		
+// 				if(noise_flag = true && i != 0){
+// 					odometry = odometry * noise_se2;
+// 				}
+		
+		std::cout << "Saving odometry " << std::endl;
+		addOdometry(odometry, from, toward, information);
+	}
+	
+	return shared_map;
+
+}
+
+
+void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
+{
 	
 	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
-	double cell_size = 0;
+			
+	//HACK For now : we translate the Corner extracted and not the ndt-maps
+	auto cells = map->getAllCellsShared();
+	std::cout << "got all cell shared" << std::endl;
+	double x2, y2, z2;
+	map->getCellSizeInMeters(x2, y2, z2);
+	std::cout << "got all cell sized" << std::endl;
+	double cell_size = x2;
 	
+	AASS::das::NDTCorner cornersExtractor;
+	std::cout << "hopidy" << std::endl;
+	auto ret_export = cornersExtractor.getAllCorners(*map);
+	std::cout << "gotall corner" << std::endl;
+	auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();	
+	std::cout << "got all accurate corners" << std::endl;	
+// 	auto angles = cornersExtractor.getAngles();
+// 	std::cout << "got all angles" << std::endl;
+	
+	auto it = ret_opencv_point_corner.begin();
+	
+	std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;			
+	//Find all the observations :
+	
+	//**************** HACK: translate the corners now : **************//
+	
+	int count_tmp = 0;
+	for(it ; it != ret_opencv_point_corner.end() ; ++it){
+// 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
+		Eigen::Vector3d vec;
+		vec << it->x, it->y, 0;
+		
+// 		auto vec_out_se2 = _nodes_ndt[i]->estimate();
+
+		//Calculate obstacle position in global coordinates.
+		
+		//Node it beong to :
+		g2o::SE2 vec_out_se2 = g2o::SE2(robot_pos);
+		//Pose of landmajr
+		g2o::SE2 se2_tmp(vec);
+		//Composition
+		vec_out_se2 = vec_out_se2 * se2_tmp;
+		Eigen::Vector3d vec_out = vec_out_se2.toVector();
+		
+		//Pose of landmark in global reference
+		cv::Point2f p_out(vec_out(0), vec_out(1));
+		
+		Eigen::Vector2d real_obs; real_obs << p_out.x, p_out.y;
+		Eigen::Vector2d observation;
+		//Projecting real_obs into robot coordinate frame
+		Eigen::Vector2d trueObservation = robot_pos.inverse() * real_obs;
+		observation = trueObservation;
+
+		
+// 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
+		std::cout << "Position node " << robot_pos.toVector() << std::endl;
+		std::cout << " vec " << vec << std::endl;
+// 		std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
+		
+		//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
+// 				assert (robot_pos + vec == ndt_graph.getNode(i).T * vec);
+		
+// 				std::cout << "NEW POINT : "<< p_out << std::endl;
+		
+		NDTCornerGraphElement cor(p_out);
+		cor.addAllObserv(robot_ptr, observation);
+		corners_end.push_back(cor);
+		count_tmp++;
+		
+	}
+	//At this point, we have all the corners
+// 	assert(corners_end.size() - c_size == ret_opencv_point_corner_tmp.size());
+	assert(corners_end.size() == ret_opencv_point_corner.size());
+// 	assert(corners_end.size() - c_size == angles_tmp.size());
+// 	assert(corners_end.size() == angles.size());
+// 	c_size = corners_end.size();
+	
+	/***************** ADD THE CORNERS INTO THE GRAPH***********************/
+	
+	for(size_t i = 0 ; i < corners_end.size() ; ++i){
+		std::cout << "checking corner : " << _nodes_landmark.size() << std::endl ;  /*corners_end[i].print()*/ ; std::cout << std::endl;	
+		bool seen = false;
+		AASS::acg::VertexLandmarkNDT* ptr_landmark_seen = NULL;
+		for(size_t j = 0 ; j <_nodes_landmark.size() ; ++j){
+// 			if(tmp[j] == _corners_position[i]){
+			g2o::Vector2D landmark = _nodes_landmark[j]->estimate();
+			cv::Point2f point_land(landmark(0), landmark(1));
+			
+			double res = cv::norm(point_land - corners_end[i].point);
+			
+			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
+			
+			//If we found the landmark, we save the data
+			if( res < cell_size * 2){
+				seen = true;
+				ptr_landmark_seen = _nodes_landmark[j];
+			}
+		}
+		if(seen == false){
+			std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
+			assert(i < ret_opencv_point_corner.size());
+			g2o::Vector2D vec;
+			vec << corners_end[i].point.x, corners_end[i].point.y ;
+			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_opencv_point_corner[i], 1);
+			
+			//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later
+			
+			std::cout << "Descriptors" << std::endl;
+			/************************************************************/
+			
+			//Convert NDT MAP to image
+			cv::Mat ndt_img;
+			auto map_tmp = corners_end[i].getNodeLinkedPtr()->getMap();
+			
+			std::cout << "Descriptors" << std::endl;
+			double size_image_max = 500;
+			double min, max;
+			//TODO: super convoluted, get rid of NDTCornerGraphElement!
+			AASS::das::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
+			
+			//Use accurate CV point
+			//Get old position
+			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
+			cv::Point2d center = AASS::das::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
+			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
+			assert(center.x <= size_image_max);
+			assert(center.y <= size_image_max);
+			
+// 			std::cout << "Angle" << angle.
+			
+			cv::Mat copyy;
+			ndt_img.copyTo(copyy);
+			cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);			
+
+			cv::imshow("NDT_map", copyy);
+			cv::waitKey(0);
+			
+			double cx, cy, cz;
+			//Should it be in meters ?
+			map_tmp->getGridSizeInMeters(cx, cy, cz);
+			SIFTNdtLandmark(center, ndt_img, size_image_max, cx, ptr);
+		
+			/****************************************************************/
+
+			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr);
+			
+		}
+		else{
+			std::cout << "Point seen " << std::endl;
+			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr_landmark_seen);
+		}
+	}
+
+}
+
+
+void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
+
 	std::cout << "Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph << std::endl;
 	
 	//************* Add and create all new nodes, and extract the corners from the new NDT maps *********//
@@ -590,8 +891,8 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		size_t i;
 		auto links = ndt_graph.getOdometryLinks();
 		
+		//Update the link in all node not already added
 		
-// 		ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
 		if(_previous_number_of_node_in_ndtgraph >= 1){
 			for (size_t i = _previous_number_of_node_in_ndtgraph - 1; i < links.size(); i++) {
 		//       std::cout << "updating link : " << i << " (size of links :" << links.size() << ")" << std::endl;
@@ -602,318 +903,35 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
 		}
 		
-		Eigen::Vector3d diff_vec; diff_vec << 0, 0, 0;
-				
-		//**************** Calculate the previous transformations if there as already been something added *** //
-				
-		if(_previous_number_of_node_in_ndtgraph != 0){
-			auto node = _nodes_ndt[_nodes_ndt.size() - 1];
-			auto original3d = _nodes_ndt[_nodes_ndt.size() - 1]->getPose();
-			
-			/*******' Using Vec********/
-			Eigen::Isometry2d original2d_aff = Affine3d2Isometry2d(original3d);
-			auto shift_vec = node->estimate().toVector();
-			g2o::SE2 se2_tmptmp(original2d_aff);
-			auto original3d_vec = se2_tmptmp.toVector();
-			diff_vec = original3d_vec - shift_vec;
-			
-			/*****************************/
-			
-// 			auto shift = node->estimate().toIsometry();
-			
-			
-	// 		double angle = atan2(shift.rotation()(1,0), shift.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
-	// 		auto shift3d = Eigen::Translation3d(shift.translation()(0), shift.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
-// 			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
-// 				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
-// 				Eigen::Vector3d v1(1,0,0);
-// 				Eigen::Vector3d v2 = a.rotation()*v1;
-// 				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
-// 				double angle = acos(dot);
-// 				// Need to find the sign
-// 				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
-// 					return angle;
-// 				return -angle;
-// 			};
-// 			
-			
-			
-// 			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
-			
-// 			Eigen::Affine2d original2d;
-// 			original2d.matrix() << original3d(0, 0), original3d(0, 1), original3d(0, 3),
-// 								   original3d(1, 0), original3d(1, 1), original3d(1, 3),
-// 												  0,                0, original3d(2, 3);
-
-
-			
-// 			auto diff_affine = original2d.inverse() * shift;
-// 			diff.translation() = diff_affine.translation();
-// 			diff.linear() = diff_affine.rotation();
-		}
+		
+		
 		//Calculate the original transformation of all 
 		
 		//Assume that all node in the NDT graph must been analysed
 		i = _previous_number_of_node_in_ndtgraph;
-		std::vector<cv::Point2f> ret_opencv_point_corner;
-		
-		int c_size = corners_end.size();
-		assert(c_size == 0);
-		
+// 		std::vector<cv::Point2f> ret_opencv_point_corner;
+// 		std::vector<std::pair<double, double> > angles;
+				
 		for (i; i < ndt_graph.getNbNodes(); ++i) {
 			
-			//Calculate noise
-			auto noise_x = randomNoise(0, deviation);
-			auto noise_y = randomNoise(0, deviation);
-			auto noise_t = randomNoise(0, deviation);
-			g2o::SE2 noise_se2(noise_x, noise_y, noise_t);
-		
-			
-			std::cout << "Checking node nb " << i << std::endl;
-			
-			
-			//RObot pose
-// 			ndt_feature::NDTFeatureNode& feature = dynamic_cast<ndt_feature::NDTFeatureNode&>(ndt_graph.getNodeInterface(i));
-			std::cout << "Copy feature" << std::endl;
-			
-// 			feature.copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
-			Eigen::Affine3d affine = Eigen::Affine3d(ndt_graph.getNodeInterface(i).getPose());
-			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
-			
-			//TODO make this work
-// 			isometry2d =  diff * isometry2d;
-			
-			//BUG IS AFTER
-			std::cout << "print" << std::endl;
-			
-			g2o::SE2 robot_pos(isometry2d);
-// 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
-			g2o::SE2 diff_vec_se2(diff_vec);
-// 			std::cout << "diff vec done" << diff_vec << std::endl;
-			robot_pos = robot_pos * diff_vec_se2;
-			std::cout << "multiply" << std::endl;
-// 				delete feature;
-// 			Eigen::Vector2d robot_pos; robot_pos << robot_pos_tmp(0), robot_pos_tmp(1);
-// 			robot_pos << ndt_graph.getNode(i).T(0), ndt_graph.getNode(i).T(1);
-				
-			//ATTENTION THIS GETS FORGOTTEN
-			lslgeneric::NDTMap* map = ndt_graph.getMap(i);
-			
-			//ATTENTION IMPORTANT BUG Uncomment this part of code to print images. Don't forget to delete pointer in destructor
-			/********************************************************/
-				
-			std::cout << "get res" << std::endl;
-// 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;
-// 			Use a a msg to copy to a new pointer so it doesn't get forgotten :|
-			ndt_map::NDTMapMsg msg;
-// 			ATTENTION Frame shouldn't be fixed
-			bool good = lslgeneric::toMessage(map, msg, "/world");
-// 			lslgeneric::NDTMap* map_copy = new lslgeneric::NDTMap(new lslgeneric::LazyGrid(resolution));
-			
-			lslgeneric::NDTMap* map_copy;
-			lslgeneric::LazyGrid* lz;
-// 			bool good = lslgeneric::fromMessage(lz, fuser.map, m.map, frame);
-			std::string frame;
-			bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
-			std::shared_ptr<lslgeneric::NDTMap> shared_map(map_copy);
-			
-			/*********************************************************/
-			//Comment this
-// 			lslgeneric::NDTMap* map_copy;
-			
-			/********************************************************/
-			
-			
-// 			if(noise_flag = true && i != 0){
-// 				robot_pos = robot_pos * noise_se2;
-// 			}
-			
-			//BUG IS BEFORE
-			
-			AASS::acg::VertexSE2RobotPose* robot_ptr = addRobotPose(robot_pos, affine, shared_map);
-			//Add Odometry if there is more than one node
-			if(i > 0 ){
-				std::cout << "adding the odometry" << std::endl;
-				g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[i - 1]);
-				std::cout << " ref " << links[i-1].getRefIdx() << " and mov " << links[i-1].getMovIdx() << std::endl;
-				assert( links[i-1].getRefIdx() < _nodes_ndt.size() );
-				assert( links[i-1].getMovIdx() < _nodes_ndt.size() );
-				auto from = _nodes_ndt[ links[i-1].getRefIdx() ] ;
-				auto toward = _nodes_ndt[ links[i-1].getMovIdx() ] ;
-				
-				std::cout << "Saving cov " << std::endl;
-				//TODO : transpose to 3d and use in odometry!
-				Eigen::MatrixXd cov = links[i - 1].cov_3d;
-				
-				std::cout << "Saving cov to 2d" << std::endl;
-				Eigen::Matrix3d cov_2d;
-				cov_2d << cov(0, 0), cov(0, 1), 0,
-						  cov(1, 0), cov(1, 1), 0,
-						  0, 		 0, 		cov(5, 5);
-						  
-				std::cout << "Saving information " << std::endl;
-				Eigen::Matrix3d information = cov_2d.inverse();
-				
-// 				if(noise_flag = true && i != 0){
-// 					odometry = odometry * noise_se2;
-// 				}
-				
-				std::cout << "Saving odometry " << std::endl;
-				addOdometry(odometry, from, toward, information);
-			}
-			
-			
+			AASS::acg::VertexSE2RobotPose* robot_ptr;
+			g2o::SE2 robot_pos;
+			auto map = addElementNDT(ndt_graph, links, i, deviation, &robot_ptr, robot_pos);
+			assert(robot_ptr != NULL);
+			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
 			//********************** Extract the corners *****************//
+			extractCornerNDTMap(map, robot_ptr, robot_pos);
 			
-			//HACK For now : we translate the Corner extracted and not the ndt-maps
-			auto cells = map->getAllCellsShared();
-			std::cout << "got all cell shared" << std::endl;
-			double x2, y2, z2;
-			map->getCellSizeInMeters(x2, y2, z2);
-			std::cout << "got all cell sized" << std::endl;
-			cell_size = x2;
-			
-			AASS::das::NDTCorner cornersExtractor;
-			std::cout << "hopidy" << std::endl;
-			auto ret_export = cornersExtractor.getAllCorners(*map);
-			std::cout << "gotall corner" << std::endl;
-			auto ret_opencv_point_corner_tmp = cornersExtractor.getAccurateCvCorners();	
-			std::cout << "got all accurate corners" << std::endl;	
-			
-			
-			
-			auto it = ret_opencv_point_corner_tmp.begin();
-			
-			std::cout << "Found " << ret_opencv_point_corner_tmp.size() << " corners " << std::endl;			
-			//Find all the observations :
-			//**************** HACK: translate the corners now : **************//
-			for(it ; it != ret_opencv_point_corner_tmp.end() ; ++it){
-// 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
-				Eigen::Vector3d vec;
-				vec << it->x, it->y, 0;
-				
-				auto vec_out_se2 = _nodes_ndt[i]->estimate();
-
-				//Uses just added modified node
-				g2o::SE2 se2_tmp(vec);
-				vec_out_se2 = vec_out_se2 * se2_tmp;
-				Eigen::Vector3d vec_out = vec_out_se2.toVector();
-				
-				cv::Point2f p_out(vec_out(0), vec_out(1));
-				
-				Eigen::Vector2d real_obs; real_obs << p_out.x, p_out.y;
-				Eigen::Vector2d observation;
-				//Projecting real_obs into robot coordinate frame
-				Eigen::Vector2d trueObservation = robot_pos.inverse() * real_obs;
-				observation = trueObservation;
-
-				
-				std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
-				std::cout << "Position node " << robot_pos.toVector() << std::endl;
-				std::cout << " vec " << vec << std::endl;
-				std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
-				
-				//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
-// 				assert (robot_pos + vec == ndt_graph.getNode(i).T * vec);
-				
-// 				std::cout << "NEW POINT : "<< p_out << std::endl;
-				
-				NDTCornerGraphElement cor(p_out);
-				cor.addAllObserv(i, robot_ptr, observation);
-				corners_end.push_back(cor);
-				ret_opencv_point_corner.push_back(*it);
-				
-			}
-			//At this point, we have all the corners
-			assert(corners_end.size() - c_size == ret_opencv_point_corner_tmp.size());
-			assert(corners_end.size() == ret_opencv_point_corner.size());
-			c_size = corners_end.size();
 		}
 		//Save new number of nodes to update
 	
-		assert(corners_end.size() == ret_opencv_point_corner.size());
+// 		assert(corners_end.size() == ret_opencv_point_corner.size());
 // 		std::vector<AASS::acg::VertexLandmarkNDT*> all_new_landmarks;
 		
 		// ************ Add the landmarks that were added the corners_end ************************************//
 		
 		//Add stuff directly in the optimization graph : 
-		for(size_t i = 0 ; i < corners_end.size() ; ++i){
-			std::cout << "checking corner : " ;  corners_end[i].print() ; std::cout << std::endl;	
-			bool seen = false;
-			AASS::acg::VertexLandmarkNDT* ptr_landmark_seen = NULL;
-			for(size_t j = 0 ; j <_nodes_landmark.size() ; ++j){
-	// 			if(tmp[j] == _corners_position[i]){
-				g2o::Vector2D landmark = _nodes_landmark[j]->estimate();
-				cv::Point2f point_land(landmark(0), landmark(1));
-				
-				double res = cv::norm(point_land - corners_end[i].point);
-				
-	// 			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
-				
-				//If we found the landmark, we save the data
-				if( res < cell_size * 2){
-					seen = true;
-					ptr_landmark_seen = _nodes_landmark[j];
-				}
-			}
-			if(seen == false){
-				std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
-				assert(i < ret_opencv_point_corner.size());
-				g2o::Vector2D vec;
-				vec << corners_end[i].point.x, corners_end[i].point.y ;
-				AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_opencv_point_corner[i], 1);
-				
-				//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later
-				
-				/************************************************************/
-				
-				//Convert NDT MAP to image
-				cv::Mat ndt_img;
-				auto map_tmp = corners_end[i].getNodeLinkedPtr()[0]->getMap();
-				
-				double size_image_max = 500;
-				double min, max;
-				//TODO: super convoluted, get rid of NDTCornerGraphElement!
-				AASS::das::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
-				
-				//Use accurate CV point
-				//Get old position
-				std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
-				cv::Point2d center = AASS::das::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
-				std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
-				assert(center.x <= size_image_max);
-				assert(center.y <= size_image_max);
-				
-// 				cv::Mat copyy;
-// 				ndt_img.copyTo(copyy);
-// 				cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);			
-
-// 				cv::imshow("NDT_map", copyy);
-// 				cv::waitKey(0);
-				
-				double cx, cy, cz;
-				//Should it be in meters ?
-				map_tmp->getGridSizeInMeters(cx, cy, cz);
-				SIFTNdtLandmark(center, ndt_img, size_image_max, cx, ptr);
-			
-				/****************************************************************/
-			
-				
-	// 			AASS::acg::VertexLandmarkNDT* ptr;
-// 				all_new_landmarks.push_back(ptr);
-				//Adding all links
-				for(int no = 0 ; no < corners_end[i].getNodeLinked().size() ; ++no){
-	// 						addLandmarkObservation(corners_end[i].getObservations()[no], _nodes_ndt[corners_end[i].getNodeLinked()[no], ptr);
-					addLandmarkObservation(corners_end[i].getObservations()[no], corners_end[i].getNodeLinkedPtr()[no], ptr);
-				}
-			}
-			else{
-				std::cout << "Point seen " << std::endl;
-				for(int no = 0 ; no < corners_end[i].getNodeLinked().size() ; ++no){
-					addLandmarkObservation(corners_end[i].getObservations()[no], corners_end[i].getNodeLinkedPtr()[no], ptr_landmark_seen);
-				}				
-			}
-		}
+		
 	}
 	
 	_previous_number_of_node_in_ndtgraph = ndt_graph.getNbNodes();
@@ -1442,7 +1460,7 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 		age = _edge_interface_of_links[place].getAge();
 		
 		//Updating age: The step can go up and down it doesn't matter
-		std::cout << "Age at first " << age <<std::endl;
+// 		std::cout << "Age at first " << age <<std::endl;
 		if(step == true){
 			if(age + _age_step <= _max_age && age + _age_step >= _min_age || _max_age == -1){
 				_edge_interface_of_links[place].setAge(age + _age_step);
@@ -1464,7 +1482,7 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 		assert(_edge_interface_of_links.at(place).getAge() >= _min_age);
 		
 		//Keep going
-		std::cout << "kernel size : " << age << " age max " << _max_age << " start " << _age_start_value << std::endl;
+// 		std::cout << "kernel size : " << age << " age max " << _max_age << " start " << _age_start_value << std::endl;
 		e->robustKernel()->setDelta(age);
 		if(_max_age != -1){
 			assert(age <= _max_age);
@@ -1596,5 +1614,7 @@ void AASS::acg::AutoCompleteGraph::createDescriptorPrior(cv::Mat& desc)
 	assert(desc.rows == _nodes_prior.size());
 
 }
+
+
 
 

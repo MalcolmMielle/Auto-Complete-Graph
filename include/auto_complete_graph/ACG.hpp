@@ -212,58 +212,59 @@ private:
 				cv::Point2f point;
 			protected:
 				//TODO : change it to a set
-				std::vector<int> nodes_linked;
-				std::vector<AASS::acg::VertexSE2RobotPose*> nodes_linked_ptr;
-				std::vector<g2o::Vector2D> observations;
+// 				std::vector<int> nodes_linked;
+				AASS::acg::VertexSE2RobotPose* nodes_linked_ptr;
+				Eigen::Vector2d observations;
 				
 			public:
 				NDTCornerGraphElement(float x, float y) : point(x, y){};
 				NDTCornerGraphElement(const cv::Point2f& p) : point(p){};
 				
-				void addAllObserv(int i, AASS::acg::VertexSE2RobotPose* ptr, g2o::Vector2D obs){
-					nodes_linked.push_back(i);
-					observations.push_back(obs);
-					nodes_linked_ptr.push_back(ptr);
+				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs){
+// 					nodes_linked.push_back(i);
+					observations = obs;
+					nodes_linked_ptr = ptr;
 				}
 				
-				size_t size(){
-					assert(nodes_linked.size() == nodes_linked_ptr.size());
-					assert(nodes_linked.size() == observations.size());
-					return nodes_linked.size();
-				}
+				
+// 				size_t size(){
+// 					assert(nodes_linked.size() == nodes_linked_ptr.size());
+// 					assert(nodes_linked.size() == observations.size());
+// 					return observations.size();
+// 				}
 				
 		// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
-				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
-				const std::vector<AASS::acg::VertexSE2RobotPose*>& getNodeLinkedPtr() const {return nodes_linked_ptr;}
-				const std::vector<g2o::Vector2D>& getObservations() const {return observations;}
+// 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
+				AASS::acg::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
+				const Eigen::Vector2d& getObservations() const {return observations;}
 				
 		// 		void push_back(int i){nodes_linked.push_back(i);}
 				
 		// 		void addNode(int i){nodes_linked.push_back(i);}
 		// 		void addObservation(const g2o::Vector2D& obs){ observations.push_back(obs);}
 				
-				void fuse(const NDTCornerGraphElement& cor){
-					for(size_t i = 0 ; i < cor.getNodeLinked().size() ; ++i){
-						bool seen = false;
-						for(size_t j = 0 ; j < nodes_linked.size() ; ++j){
-							if(cor.getNodeLinked()[i] == nodes_linked[j]){
-								seen = true;
-							}
-						}
-						if(seen == false){
-							nodes_linked.push_back(cor.getNodeLinked()[i]);
-							observations.push_back(cor.getObservations()[i]);
-							nodes_linked_ptr.push_back(cor.getNodeLinkedPtr()[i]);
-						}
-					}
-				}
-				void print() const {std::cout << point << " nodes : ";
-					
-					for(size_t i = 0 ; i < nodes_linked.size()  ; ++i){
-						std::cout << nodes_linked[i] << " " ;
-					}
-					
-				}
+// 				void fuse(const NDTCornerGraphElement& cor){
+// 					for(size_t i = 0 ; i < cor.getNodeLinked().size() ; ++i){
+// 						bool seen = false;
+// 						for(size_t j = 0 ; j < nodes_linked.size() ; ++j){
+// 							if(cor.getNodeLinked()[i] == nodes_linked[j]){
+// 								seen = true;
+// 							}
+// 						}
+// 						if(seen == false){
+// 							nodes_linked.push_back(cor.getNodeLinked()[i]);
+// 							observations.push_back(cor.getObservations()[i]);
+// 							nodes_linked_ptr.push_back(cor.getNodeLinkedPtr()[i]);
+// 						}
+// 					}
+// 				}
+// 				void print() const {std::cout << point << " nodes : ";
+// 					
+// 					for(size_t i = 0 ; i < nodes_linked.size()  ; ++i){
+// 						std::cout << nodes_linked[i] << " " ;
+// 					}
+// 					
+// 				}
 				
 			};
 		
@@ -296,7 +297,7 @@ private:
 			virtual bool manuallySetAge(){return _flag_set_age;}
 			virtual double getAge(){return _malcolm_age;}
 			virtual bool setAge(double a){
-				std::cout << "Setting the age" << std::endl;
+// 				std::cout << "Setting the age" << std::endl;
 				_flag_set_age = true;  
 				assert(_flag_set_age == true); 
 				_malcolm_age = a; 
@@ -868,7 +869,7 @@ private:
 			
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-				std::cout << "Robust Kern" << std::endl;
+// 				std::cout << "Robust Kern" << std::endl;
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto huber = new g2o::RobustKernelHuber();
 				e->setRobustKernel(huber);
@@ -884,7 +885,7 @@ private:
 			
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-				std::cout << "Robust Kern" << std::endl;
+// 				std::cout << "Robust Kern" << std::endl;
 				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
 				auto dcs = new g2o::RobustKernelDCS();
 				e->setRobustKernel(dcs);
@@ -925,9 +926,14 @@ private:
 		bool linkAlreadyExist(AASS::acg::VertexLandmarkNDT* v_pt, AASS::acg::VertexSE2Prior* v_prior);
 		bool noDoubleLinks();
 		
+		Eigen::Vector3d getLastTransformation();
+		
 // 		getGridMap();
 		
 	public:
+		
+		std::shared_ptr< lslgeneric::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
+		void extractCornerNDTMap(const std::shared_ptr< lslgeneric::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
 		
 		void SIFTNdtLandmark(const cv::Point2f centre, const cv::Mat& img, double size_image_max, double cell_size, AASS::acg::VertexLandmarkNDT* vertex);
 		void createDescriptorNDT(cv::Mat& desc);
