@@ -153,8 +153,8 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	
 	
 // 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
-	std::ostringstream convert;   // stream used for the conversion
-	convert << graph.getNbNodes(); 
+// 	std::ostringstream convert;   // stream used for the conversion
+// 	convert << graph.getNbNodes(); 
 // 	file_out = file_out + convert.str();
 // 	file_out = file_out + "nodes.g2o";
 // 	oacg->getGraph().save(file_out.c_str());
@@ -163,7 +163,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	
 	/*** image****/
 // 	visu.updateRvizNoNDT();
-		if(was_init == true){
+// 		if(was_init == true){
 // 		int a;
 // 		std::cout << "PRESS ANYTHING NOT OPTIMISED YET" << std::endl;
 // 		std::cin >>a;
@@ -173,12 +173,12 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 		
 		//Prepare the graph : marginalize + initializeOpti
 		
-		if(was_init == true){
+// 		if(was_init == true){
 			oacg->setFirst();
 			oacg->prepare();
 			oacg->optimize();
 			count++;
-		}
+// 		}
 		
 		visu.updateRvizNoNDT();
 // 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
@@ -215,10 +215,10 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	// 	std::cout << "saved to " << file_out_after << std::endl;
 		
 	// 	exit(0);
-	}
-		else{
-			visu.updateRvizNoNDT();
-		}
+// 	}
+// 		else{
+// 			visu.updateRvizNoNDT();
+// 		}
 }
 
 

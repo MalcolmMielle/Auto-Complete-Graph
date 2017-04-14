@@ -25,6 +25,7 @@ namespace acg{
 		ros::Publisher _corner_ndt_node_pub;
 		ros::Publisher _link_pub;
 		ros::Publisher _ndtmap;
+		ros::Publisher _angles_pub;
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 		AutoCompleteGraph* _acg;
@@ -35,6 +36,7 @@ namespace acg{
 		visualization_msgs::Marker _prior_node_markers;
 		visualization_msgs::Marker _corner_ndt_node_markers;
 		visualization_msgs::Marker _link_markers;
+		visualization_msgs::Marker _angles_markers;
 		
 		double _resolution;
 		
@@ -51,6 +53,7 @@ namespace acg{
 			_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("ndt_nodes_marker", 10);
 			_prior_node_pub = _nh.advertise<visualization_msgs::Marker>("prior_nodes_marker", 10);
 			_corner_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("corner_ndt_marker", 10);
+			_angles_pub = _nh.advertise<visualization_msgs::Marker>("angles", 10);
 			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
 			_ndtmap = _nh.advertise<ndt_map::NDTVectorMapMsg>("ndt_map_msg_node", 10);
 			
@@ -101,6 +104,16 @@ namespace acg{
 			_link_markers.color.g = 1.0f;
 			_link_markers.color.r = 1.0f;
 			_link_markers.color.a = 1.0;
+			
+			_angles_markers.type = visualization_msgs::Marker::LINE_LIST;
+			_angles_markers.header.frame_id = "/world";
+			_angles_markers.ns = "acg";
+			_angles_markers.id = 4;
+			_angles_markers.scale.x = 0.2;
+			_angles_markers.scale.y = 0.2;
+			_angles_markers.color.g = 1.0f;
+			_angles_markers.color.r = 0.0f;
+			_angles_markers.color.a = 1.0;
 // 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
 // 		void toRviz(const AutoCompleteGraph& acg);
@@ -244,6 +257,7 @@ namespace acg{
 			
 			drawLinks();
 			
+			drawAngles();
 // 			_ndt_node_markers.points.clear();
 			
 // 			if(_nb_of_zone != _acg->getRobotNodes().size()){
@@ -501,6 +515,7 @@ namespace acg{
 		void drawPrior();
 		void drawLinks();
 		void drawCornersNdt();
+		void drawAngles();
 		
 		void saveImage(nav_msgs::OccupancyGrid::Ptr& msg);
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
@@ -704,6 +719,46 @@ namespace acg{
 
 	}
 
+
+	inline void VisuAutoCompleteGraph::drawAngles()
+	{
+		std::cout << "Getting the angles" << std::endl;
+		_angles_markers.header.stamp = ros::Time::now();
+		auto landmark = _acg->getLandmarkNodes();
+		std::cout << "Getting the angles" << landmark.size() << std::endl;
+// 		std::cout << "Getting the corners " << edges.size() << std::endl;
+		if(landmark.size() != _angles_markers.points.size()){
+			_angles_markers.points.clear();
+			auto it = landmark.begin();
+			for(it ; it != landmark.end() ; ++it){
+				
+				geometry_msgs::Point p;
+// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
+				auto vertex = (*it)->estimate();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+				p.x = vertex(0);
+				p.y = vertex(1);
+				p.z = 0;
+				_angles_markers.points.push_back(p);
+				
+				std::cout << "getting the angle" << std::endl;
+				
+				double angle = (*it)->getAngleGlobal();
+				
+				std::cout << "angle " << angle<< std::endl;
+				geometry_msgs::Point p2;
+				p2.x = p.x + (2 * std::cos(angle) );
+				p2.y = p.y + (2 * std::sin(angle) );
+				p2.z = 0;
+				_angles_markers.points.push_back(p2);
+				
+				std::cout << "Line " << p << " "<< p2 << std::endl;;
+				
+				
+			}
+		}
+		_angles_pub.publish(_angles_markers);
+	}
 
 	
 	

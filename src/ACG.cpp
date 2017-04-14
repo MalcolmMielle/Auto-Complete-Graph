@@ -736,7 +736,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 	std::cout << "gotall corner" << std::endl;
 	auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();	
 	std::cout << "got all accurate corners" << std::endl;	
-// 	auto angles = cornersExtractor.getAngles();
+	auto angles = cornersExtractor.getAngles();
 // 	std::cout << "got all angles" << std::endl;
 	
 	auto it = ret_opencv_point_corner.begin();
@@ -750,7 +750,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 	for(it ; it != ret_opencv_point_corner.end() ; ++it){
 // 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
 		Eigen::Vector3d vec;
-		vec << it->x, it->y, 0;
+		vec << it->x, it->y, angles[count_tmp].second;
 		
 // 		auto vec_out_se2 = _nodes_ndt[i]->estimate();
 
@@ -766,13 +766,30 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 		
 		//Pose of landmark in global reference
 		cv::Point2f p_out(vec_out(0), vec_out(1));
-		
+				
 		Eigen::Vector2d real_obs; real_obs << p_out.x, p_out.y;
-		Eigen::Vector2d observation;
+		Eigen::Vector2d observation2d_test;
 		//Projecting real_obs into robot coordinate frame
-		Eigen::Vector2d trueObservation = robot_pos.inverse() * real_obs;
-		observation = trueObservation;
-
+		
+		auto trueObservation_tmp = robot_pos.inverse() * vec_out_se2;
+		Eigen::Vector3d trueObservation = trueObservation_tmp.toVector();
+		Eigen::Vector2d observation; observation << trueObservation(0), trueObservation(1);
+		
+		//***************************Old version for testing***************************//
+		Eigen::Vector2d trueObservation2d = robot_pos.inverse() * real_obs;
+		std::cout << trueObservation(0) << " == " << trueObservation2d(0) << std::endl;
+// 		assert(trueObservation(0) == trueObservation2d(0));
+		std::cout << trueObservation(1) << " == " << trueObservation2d(1) << std::endl;
+// 		assert(trueObservation(1) == trueObservation2d(1));
+		observation2d_test = trueObservation2d;
+		std::cout << observation(0) << " == " << observation2d_test(0) << " minus " << observation(0) - observation2d_test(0) << std::endl;
+// 		assert(trueObservation(0) == trueObservation2d(0));
+		std::cout << observation(1) << " == " << observation2d_test(1) << " minus " << observation(1) - observation2d_test(1) << std::endl;
+// 		int a ;
+// 		std::cin >> a;
+		//******************************************************************************//
+		
+		double angle_landmark = trueObservation(2);
 		
 // 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
 		std::cout << "Position node " << robot_pos.toVector() << std::endl;
@@ -785,7 +802,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 // 				std::cout << "NEW POINT : "<< p_out << std::endl;
 		
 		NDTCornerGraphElement cor(p_out);
-		cor.addAllObserv(robot_ptr, observation);
+		cor.addAllObserv(robot_ptr, observation, angle_landmark, angles[count_tmp].first);
 		corners_end.push_back(cor);
 		count_tmp++;
 		
@@ -824,7 +841,8 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			g2o::Vector2D vec;
 			vec << corners_end[i].point.x, corners_end[i].point.y ;
 			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_opencv_point_corner[i], 1);
-			
+			ptr->addAngleDirection(corners_end[i].getAngleWidth(), corners_end[i].getDirection());
+			ptr->first_seen_from = robot_ptr;
 			//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later
 			
 			std::cout << "Descriptors" << std::endl;
@@ -848,15 +866,38 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			assert(center.x <= size_image_max);
 			assert(center.y <= size_image_max);
 			
+			std::cout << "getting the angle" << std::endl;
+			double angle = corners_end[i].getDirection();
+			double width = corners_end[i].getAngleWidth();
+			double plus_a = angle + (width/2);
+			double moins_a = angle - (width/2);
+			
+			
+			std::cout << "angle " << angle<< std::endl;
+			cv::Point2i p2;
+			p2.x = center.x + (50 * std::cos(angle) );
+			p2.y = center.y + (50 * std::sin(angle) );
+			cv::Point2i p2_p;
+			p2_p.x = center.x + (50 * std::cos(plus_a) );
+			p2_p.y = center.y + (50 * std::sin(plus_a) );
+			cv::Point2i p2_m;
+			p2_m.x = center.x + (50 * std::cos(moins_a) );
+			p2_m.y = center.y + (50 * std::sin(moins_a) );
+				
+			std::cout << "Line " << center << " "<< p2 << std::endl;;
+			
 // 			std::cout << "Angle" << angle.
 			
 			cv::Mat copyy;
 			ndt_img.copyTo(copyy);
-			cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);			
+			cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);
+			cv::line(copyy, center, p2, cv::Scalar(255, 255, 255), 1);	
+			cv::line(copyy, center, p2_p, cv::Scalar(255, 255, 255), 1);	
+			cv::line(copyy, center, p2_m, cv::Scalar(255, 255, 255), 1);			
 
 			cv::imshow("NDT_map", copyy);
 			cv::waitKey(0);
-			
+		
 			double cx, cy, cz;
 			//Should it be in meters ?
 			map_tmp->getGridSizeInMeters(cx, cy, cz);
@@ -865,6 +906,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			/****************************************************************/
 
 			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr);
+			
 			
 		}
 		else{

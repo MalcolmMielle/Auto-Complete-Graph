@@ -172,8 +172,21 @@ namespace acg{
 		cv::KeyPoint keypoint;
 // 		cv::Point2d position;
 		cv::Mat descriptor;
+		std::pair<double, double> angle_direction;
+		AASS::acg::VertexSE2RobotPose* first_seen_from;
 		
-		VertexLandmarkNDT() : g2o::VertexPointXY(){};
+		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXY(){};
+		
+		double getAngleFromRobot() const {return angle_direction.first;}
+		double getDirection() const {return angle_direction.second;}
+		void addAngleDirection(double a, double d){angle_direction = std::pair<double, double>(a, d);};
+		double getAngleGlobal() const {
+			assert(first_seen_from != NULL);
+			auto vec = first_seen_from->estimate().toVector();
+			std::cout << "Got estimate " << std::endl;
+			double angle = vec(2) + angle_direction.second;
+			return angle;
+		}
 
 	};
 	
@@ -215,15 +228,19 @@ private:
 // 				std::vector<int> nodes_linked;
 				AASS::acg::VertexSE2RobotPose* nodes_linked_ptr;
 				Eigen::Vector2d observations;
+				double _angle_observ;
+				double _angle_width;
 				
 			public:
 				NDTCornerGraphElement(float x, float y) : point(x, y){};
 				NDTCornerGraphElement(const cv::Point2f& p) : point(p){};
 				
-				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs){
+				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, double angle_direction, double a_width){
 // 					nodes_linked.push_back(i);
 					observations = obs;
 					nodes_linked_ptr = ptr;
+					_angle_observ = angle_direction;
+					_angle_width = a_width;
 				}
 				
 				
@@ -237,6 +254,8 @@ private:
 // 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
 				AASS::acg::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
 				const Eigen::Vector2d& getObservations() const {return observations;}
+				double getDirection() const {return _angle_observ;}
+				double getAngleWidth() const {return _angle_width;}
 				
 		// 		void push_back(int i){nodes_linked.push_back(i);}
 				
