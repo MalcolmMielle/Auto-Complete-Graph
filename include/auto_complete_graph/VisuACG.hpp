@@ -26,6 +26,7 @@ namespace acg{
 		ros::Publisher _link_pub;
 		ros::Publisher _ndtmap;
 		ros::Publisher _angles_pub;
+		ros::Publisher _angles_prior_pub;
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 		AutoCompleteGraph* _acg;
@@ -37,6 +38,7 @@ namespace acg{
 		visualization_msgs::Marker _corner_ndt_node_markers;
 		visualization_msgs::Marker _link_markers;
 		visualization_msgs::Marker _angles_markers;
+		visualization_msgs::Marker _angles_prior_markers;
 		
 		double _resolution;
 		
@@ -54,6 +56,7 @@ namespace acg{
 			_prior_node_pub = _nh.advertise<visualization_msgs::Marker>("prior_nodes_marker", 10);
 			_corner_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("corner_ndt_marker", 10);
 			_angles_pub = _nh.advertise<visualization_msgs::Marker>("angles", 10);
+			_angles_prior_pub = _nh.advertise<visualization_msgs::Marker>("angles_prior", 10);
 			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
 			_ndtmap = _nh.advertise<ndt_map::NDTVectorMapMsg>("ndt_map_msg_node", 10);
 			
@@ -114,6 +117,16 @@ namespace acg{
 			_angles_markers.color.g = 1.0f;
 			_angles_markers.color.r = 0.0f;
 			_angles_markers.color.a = 1.0;
+			
+			_angles_prior_markers.type = visualization_msgs::Marker::LINE_LIST;
+			_angles_prior_markers.header.frame_id = "/world";
+			_angles_prior_markers.ns = "acg";
+			_angles_prior_markers.id = 5;
+			_angles_prior_markers.scale.x = 0.2;
+			_angles_prior_markers.scale.y = 0.2;
+			_angles_prior_markers.color.g = 0.0f;
+			_angles_prior_markers.color.r = 0.5f;
+			_angles_prior_markers.color.a = 1.0;
 // 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
 // 		void toRviz(const AutoCompleteGraph& acg);
@@ -516,6 +529,7 @@ namespace acg{
 		void drawLinks();
 		void drawCornersNdt();
 		void drawAngles();
+		void drawPriorAngles(const AASS::acg::VertexSE2Prior& vertex_in);
 		
 		void saveImage(nav_msgs::OccupancyGrid::Ptr& msg);
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
@@ -593,6 +607,7 @@ namespace acg{
 		auto edges = _acg->getPriorEdges();
 		if(edges.size() != _prior_edge_markers.points.size()){
 			_prior_edge_markers.points.clear();
+			
 			auto it = edges.begin();
 			for(it ; it != edges.end() ; ++it){
 				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
@@ -609,6 +624,7 @@ namespace acg{
 			
 			auto prior_node = _acg->getPriorNodes();
 			_prior_node_markers.points.clear();
+			_angles_prior_markers.points.clear();
 			auto itt = prior_node.begin();
 			for(itt ; itt != prior_node.end() ; ++itt){
 				
@@ -621,10 +637,14 @@ namespace acg{
 				p.z = 0;
 				_prior_node_markers.points.push_back(p);
 				
+				std::cout << "Drawing angles landmark" << std::endl;
+				drawPriorAngles(*ptr);
+				
 			}
 		}
 		_marker_pub.publish(_prior_edge_markers);
 		_prior_node_pub.publish(_prior_node_markers);
+		_angles_prior_pub.publish(_angles_prior_markers);
 	}
 	
 	inline void VisuAutoCompleteGraph::drawLinks()
@@ -760,7 +780,44 @@ namespace acg{
 		_angles_pub.publish(_angles_markers);
 	}
 
-	
+	inline void VisuAutoCompleteGraph::drawPriorAngles(const VertexSE2Prior& vertex_in)
+	{
+		geometry_msgs::Point p;
+		std::cout << "getting the vector" << std::endl;
+// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
+		auto vertex = vertex_in.estimate().toVector();
+		//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+		p.x = vertex(0);
+		p.y = vertex(1);
+		p.z = 0;
+		
+		std::cout << "getting the angle" << std::endl;
+		auto angles = vertex_in.getAngleDirection();
+		std::cout << "getting the angle done" << std::endl;
+		
+		for(auto it = angles.begin() ; it !=angles.end(); ++it){
+			
+			std::cout << "getting the angle1" << std::endl;
+			_angles_prior_markers.points.push_back(p);
+			
+			std::cout << "getting the angle2" << std::endl;
+			
+			double angle = it->second;
+			
+			std::cout << "angle " << angle<< std::endl;
+			geometry_msgs::Point p2;
+			p2.x = p.x + (2 * std::cos(angle) );
+			p2.y = p.y + (2 * std::sin(angle) );
+			p2.z = 0;
+			_angles_prior_markers.points.push_back(p2);
+			
+			std::cout << "Line " << p << " "<< p2 << std::endl;
+		}
+		
+		std::cout << "oout" << std::endl;
+
+	}
+
 	
 }
 }

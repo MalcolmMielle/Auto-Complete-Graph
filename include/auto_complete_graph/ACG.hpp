@@ -70,21 +70,45 @@ namespace acg{
 		
 		std::vector<std::pair<double, double> > getAngleDirection() const {
 			std::vector<std::pair<double, double> > out;
+			std::cout << "edges " << std::endl;
 			auto edges = this->edges();
+			std::cout << "edges done " << std::endl;
 			std::vector<AASS::acg::EdgeSE2Prior_malcolm*> edges_prior; 
 			//Get only prior edges
-			for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-				AASS::acg::EdgeSE2Prior_malcolm* ptr = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
-				if(ptr != NULL){
-					edges_prior.push_back(ptr);
+			if(edges.size () > 1){
+				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
+	// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+					AASS::acg::EdgeSE2Prior_malcolm* ptr = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
+					if(ptr != NULL){
+						std::cout << " pushed edges " << std::endl;
+						edges_prior.push_back(ptr);
+						std::cout << "pushed edges done " << std::endl;
+					}
 				}
-			}
-			auto ite = edges_prior.begin();
-			auto ite_end = edges_prior.back();
-			out.push_back( angle( (*ite_end), *(*ite) ) );			
-			for ( auto ite = edges_prior.begin(); ite != edges_prior.end(); ++ite ){
-				out.push_back( angle( **ite, **(ite + 1) ) );
+				
+				auto comp = [this](AASS::acg::EdgeSE2Prior_malcolm* a, AASS::acg::EdgeSE2Prior_malcolm* b)
+					{ 
+						auto from_vec2d = this->getDirection2D(*a);
+						auto to_vec2d = this->getDirection2D(*b);
+						//Rotate
+						
+						double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
+						if (angle_from < 0) angle_from += 2 * M_PI;
+						double angle_to = atan2(to_vec2d(1), to_vec2d(0)) - atan2(0, 1);
+						if (angle_to < 0) angle_to += 2 * M_PI;
+						
+						return angle_from < angle_to;
+						
+					};
+					
+				std::sort( edges_prior.begin(), edges_prior.end(), comp );
+				
+				auto ite = edges_prior.begin();
+				auto ite_end = edges_prior.back();
+				out.push_back( angle( (*ite_end), *(*ite) ) );			
+				for ( auto ite = edges_prior.begin(); ite != edges_prior.end() - 1 ; ++ite ){
+					out.push_back( angle( **ite, **(ite + 1) ) );
+				}
 			}
 			return out;
 			
@@ -107,6 +131,10 @@ namespace acg{
 			if (angle_to < 0) angle_to += 2 * M_PI;
 			
 			double direction = (angle_to + angle_from) / 2;
+			assert(direction <= 2 * M_PI);
+			
+			if(angle_from > angle_to){direction = direction + M_PI;}
+			while (direction >= 2* M_PI){direction = direction - (2 * M_PI);}
 			
 			return std::pair<double, double>(angle_between, direction);
 		}

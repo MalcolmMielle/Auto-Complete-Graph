@@ -1048,7 +1048,7 @@ void AASS::acg::AutoCompleteGraph::updateLinks()
 int AASS::acg::AutoCompleteGraph::createNewLinks()
 {
 	int count = 0 ;
-	std::vector < std::pair < AASS::acg::VertexLandmarkNDT*, AASS::acg::VertexSE2Prior*> > links;
+// 	std::vector < std::pair < AASS::acg::VertexLandmarkNDT*, AASS::acg::VertexSE2Prior*> > links;
 	
 	std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
 	std::cout << "Prior " << _nodes_prior.size() << std::endl;
@@ -1080,7 +1080,7 @@ int AASS::acg::AutoCompleteGraph::createNewLinks()
 // 					norm = norm_tmp;
 					//Pushing the link
 // 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-					links.push_back(std::pair<AASS::acg::VertexLandmarkNDT*, AASS::acg::VertexSE2Prior*>(*it, *it_prior));
+// 					links.push_back(std::pair<AASS::acg::VertexLandmarkNDT*, AASS::acg::VertexSE2Prior*>(*it, *it_prior));
 					
 					g2o::Vector2D vec;
 					vec << 0, 0;
