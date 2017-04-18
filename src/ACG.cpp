@@ -1,5 +1,37 @@
 #include "auto_complete_graph/ACG.hpp"
 
+Eigen::Vector2d AASS::acg::EdgeSE2Prior_malcolm::getDirection2D(const AASS::acg::VertexSE2Prior& from) const
+{
+// 	std::cout << "From " << from.estimate().toVector(); 
+	AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(this->vertices()[0]);
+	AASS::acg::VertexSE2Prior* ptr2 = dynamic_cast<AASS::acg::VertexSE2Prior*>(this->vertices()[1]);
+	assert(ptr != NULL);
+	assert(ptr2 != NULL);
+	assert(ptr == &from || ptr2 == &from);
+	Eigen::Vector3d from_1;
+	Eigen::Vector3d toward;
+	if(ptr == &from){
+		from_1 = ptr->estimate().toVector();
+		toward = ptr2->estimate().toVector();
+	}
+	else if(ptr2 == &from){
+		from_1 = ptr2->estimate().toVector();
+		toward = ptr->estimate().toVector();
+	}
+	else{
+		assert(true == false && "Weird, the original vertex wasn't found before");
+	}
+	
+// 	std::cout << " toward " << toward << std::endl;
+	
+	Eigen::Vector3d pose_from1 = toward - from_1;
+	Eigen::Vector2d pose_prior; pose_prior << pose_from1(0), pose_from1(1);
+	return pose_prior;
+	
+}
+
+
+
 AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr< lslgeneric::NDTMap >& map){
 	
 	std::cout << "Adding the robot pose " << std::endl;
@@ -227,6 +259,10 @@ AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(cons
 	
 // 	EdgePriorAndInitialValue epiv(priorObservation, se2);
 	_edge_prior.push_back(priorObservation);
+	
+	std::cout << "After adding an edge" << std::endl;
+	checkNoRepeatingPriorEdge();
+	
 	return priorObservation;
 }
 
@@ -475,8 +511,8 @@ int AASS::acg::AutoCompleteGraph::findPriorNode(g2o::HyperGraph::Vertex* v){
 
 void AASS::acg::AutoCompleteGraph::addPriorGraph(const PriorLoaderInterface::PriorGraph& graph){
 	
-	std::pair< bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator, bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator > vp;
-	std::deque<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vec_deque;
+	std::pair< PriorLoaderInterface::PriorGraph::VertexIterator, PriorLoaderInterface::PriorGraph::VertexIterator > vp;
+	std::deque<PriorLoaderInterface::PriorGraph::Vertex> vec_deque;
 	std::vector<AASS::acg::VertexSE2Prior*> out_prior;
 	
 	std::cout << "NOOOOOOW" << _optimizable_graph.vertices().size() << std::endl << std::endl; 
@@ -507,18 +543,30 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const PriorLoaderInterface::Pri
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::EdgeIterator out_i, out_end;
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge e;
 		
+		std::vector<PriorLoaderInterface::PriorGraph::Vertex> tmp_for_double_edges;
+				
 		for (boost::tie(out_i, out_end) = boost::out_edges(v, (graph)); 
 			out_i != out_end; ++out_i) {
 			e = *out_i;
 // 			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex targ = boost::target(e, (graph));
 			auto targ = boost::target(e, (graph));
 		
+			//Avoiding double edge to the same vertex target but that is not a self loop!
+
 			int idx = -1;
 			for(size_t ii = count ; ii < vec_deque.size() ; ++ii){
 				if(targ == vec_deque[ii]){
 					idx = ii;
 				}
 			}
+			for(auto it_tmp_double = tmp_for_double_edges.begin() ; it_tmp_double != tmp_for_double_edges.end() ; ++it_tmp_double){
+				if(*it_tmp_double == targ){
+					//it's a double we cancel idx and add it to the self_lopp count
+					idx = count;
+				}
+			}
+			tmp_for_double_edges.push_back(targ);
+			
 			if(idx == -1){
 				//SKIP
 // 				throw std::runtime_error("Didn't find the vertex target :(");
@@ -560,6 +608,9 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const PriorLoaderInterface::Pri
 	assert( _nodes_prior.size() == graph.getNumVertices() );
 	//Self link / 2 because they are seen twice
 	assert( _edge_prior.size() == graph.getNumEdges() - (self_link / 2) );
+	
+	std::cout << "After update graph prior" << std::endl;
+	checkNoRepeatingPriorEdge();
 	
 }
 
@@ -888,15 +939,15 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			
 // 			std::cout << "Angle" << angle.
 			
-			cv::Mat copyy;
-			ndt_img.copyTo(copyy);
-			cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);
-			cv::line(copyy, center, p2, cv::Scalar(255, 255, 255), 1);	
-			cv::line(copyy, center, p2_p, cv::Scalar(255, 255, 255), 1);	
-			cv::line(copyy, center, p2_m, cv::Scalar(255, 255, 255), 1);			
-
-			cv::imshow("NDT_map", copyy);
-			cv::waitKey(0);
+// 			cv::Mat copyy;
+// 			ndt_img.copyTo(copyy);
+// 			cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);
+// 			cv::line(copyy, center, p2, cv::Scalar(255, 255, 255), 1);	
+// 			cv::line(copyy, center, p2_p, cv::Scalar(255, 255, 255), 1);	
+// 			cv::line(copyy, center, p2_m, cv::Scalar(255, 255, 255), 1);			
+// 
+// 			cv::imshow("NDT_map", copyy);
+// 			cv::waitKey(0);
 		
 			double cx, cy, cz;
 			//Should it be in meters ?
@@ -1579,7 +1630,7 @@ void AASS::acg::AutoCompleteGraph::matchLinks()
 
 }
 
-
+//UNUSUED
 void AASS::acg::AutoCompleteGraph::createDescriptorNDT(cv::Mat& desc)
 {
 	

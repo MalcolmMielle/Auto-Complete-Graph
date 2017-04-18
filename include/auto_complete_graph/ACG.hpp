@@ -49,13 +49,15 @@ namespace AASS {
 
 namespace acg{	
 	
-	 class EdgeSE2Prior_malcolm : public g2o::EdgeSE2
+	class VertexSE2Prior;
+	
+	class EdgeSE2Prior_malcolm : public g2o::EdgeSE2
 	{
-		public:
-			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-			g2o::EdgeInterfaceMalcolm interface;
-			
-			EdgeSE2Prior_malcolm() : g2o::EdgeSE2(){};
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		g2o::EdgeInterfaceMalcolm interface;
+		EdgeSE2Prior_malcolm() : g2o::EdgeSE2(){};
+		Eigen::Vector2d getDirection2D(const AASS::acg::VertexSE2Prior& from) const;
 
 	};
 	
@@ -69,10 +71,11 @@ namespace acg{
 		PriorAttr priorattr;
 		
 		std::vector<std::pair<double, double> > getAngleDirection() const {
+			
 			std::vector<std::pair<double, double> > out;
-			std::cout << "edges " << std::endl;
+// 			std::cout << "edges " << std::endl;
 			auto edges = this->edges();
-			std::cout << "edges done " << std::endl;
+// 			std::cout << "edges done " << std::endl;
 			std::vector<AASS::acg::EdgeSE2Prior_malcolm*> edges_prior; 
 			//Get only prior edges
 			if(edges.size () > 1){
@@ -80,16 +83,20 @@ namespace acg{
 	// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
 					AASS::acg::EdgeSE2Prior_malcolm* ptr = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
 					if(ptr != NULL){
-						std::cout << " pushed edges " << std::endl;
+						//Make sure not pushed twice
+						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
+							assert(ptr != *ite2);
+						}
+// 						std::cout << " pushed edges " << std::endl;
 						edges_prior.push_back(ptr);
-						std::cout << "pushed edges done " << std::endl;
+// 						std::cout << "pushed edges done " << std::endl;
 					}
 				}
 				
 				auto comp = [this](AASS::acg::EdgeSE2Prior_malcolm* a, AASS::acg::EdgeSE2Prior_malcolm* b)
 					{ 
-						auto from_vec2d = this->getDirection2D(*a);
-						auto to_vec2d = this->getDirection2D(*b);
+						auto from_vec2d = a->getDirection2D(*this);
+						auto to_vec2d = b->getDirection2D(*this);
 						//Rotate
 						
 						double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
@@ -105,9 +112,18 @@ namespace acg{
 				
 				auto ite = edges_prior.begin();
 				auto ite_end = edges_prior.back();
-				out.push_back( angle( (*ite_end), *(*ite) ) );			
+				out.push_back( angle( (*ite_end), *(*ite) ) );
+				assert(out.back().first >= 0.08);
+				assert(out.back().second >= 0);
+				assert(out.back().first <= 2 * M_PI);
+				assert(out.back().second <= 2 * M_PI);
+				
 				for ( auto ite = edges_prior.begin(); ite != edges_prior.end() - 1 ; ++ite ){
 					out.push_back( angle( **ite, **(ite + 1) ) );
+					assert(out.back().first >= 0.08);
+					assert(out.back().second >= 0);
+					assert(out.back().first <= 2 * M_PI);
+					assert(out.back().second <= 2 * M_PI);
 				}
 			}
 			return out;
@@ -117,12 +133,17 @@ namespace acg{
 	private:
 		std::pair<double, double> angle(const AASS::acg::EdgeSE2Prior_malcolm& from, const AASS::acg::EdgeSE2Prior_malcolm& to) const {
 			
-			auto from_vec2d = getDirection2D(from);
-			auto to_vec2d = getDirection2D(to);
+			
+			auto from_vec2d = from.getDirection2D(*this);
+			auto to_vec2d = to.getDirection2D(*this);
+			
+// 			std::cout << "from " << from_vec2d << " to " << to_vec2d << std::endl;
 			//Rotate
 // 			angle = atan2(vector2.y, vector2.x) - atan2(vector1.y, vector1.x);
 			double angle_between = atan2(to_vec2d(1), to_vec2d(0)) - atan2(from_vec2d(1), from_vec2d(0));
+// 			std::cout << "Angle between " << angle_between << std::endl;
 			if (angle_between < 0) angle_between += 2 * M_PI;
+// 			std::cout << "Angle between " << angle_between << std::endl;
 			
 			double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
 			if (angle_from < 0) angle_from += 2 * M_PI;
@@ -136,35 +157,44 @@ namespace acg{
 			if(angle_from > angle_to){direction = direction + M_PI;}
 			while (direction >= 2* M_PI){direction = direction - (2 * M_PI);}
 			
+			double width = std::abs(angle_to - angle_from);
+			
+// 			std::cout << "Angle " << width << std::endl;
+			assert(angle_between >= 0.08);
+			assert(direction >= 0);
+			assert(angle_between >= 0);
+			assert(direction <= 2 * M_PI);
+			assert(angle_between <= 2 * M_PI);
+			
 			return std::pair<double, double>(angle_between, direction);
 		}
 		
-		Eigen::Vector2d getDirection2D(const AASS::acg::EdgeSE2Prior_malcolm& from) const {
-			
-			AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[0]);
-			AASS::acg::VertexSE2Prior* ptr2 = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[1]);
-			assert(ptr != NULL);
-			assert(ptr2 != NULL);
-			assert(ptr == this || ptr2 == this);
-			Eigen::Vector3d from_1;
-			Eigen::Vector3d toward;
-			if(ptr == this){
-				from_1 = ptr->estimate().toVector();
-				toward = ptr2->estimate().toVector();
-			}
-			else if(ptr2 == this){
-				from_1 = ptr2->estimate().toVector();
-				toward = ptr->estimate().toVector();
-			}
-			else{
-				assert(true == false && "Weird, the original vertex wasn't found before");
-			}
-			
-			Eigen::Vector3d pose_from1 = toward - from_1;
-			Eigen::Vector2d pose_prior; pose_prior << pose_from1(0), pose_from1(1);
-			return pose_prior;
-			
-		}
+// 		Eigen::Vector2d getDirection2D(const AASS::acg::EdgeSE2Prior_malcolm& from) const {
+// 			
+// 			AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[0]);
+// 			AASS::acg::VertexSE2Prior* ptr2 = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[1]);
+// 			assert(ptr != NULL);
+// 			assert(ptr2 != NULL);
+// 			assert(ptr == this || ptr2 == this);
+// 			Eigen::Vector3d from_1;
+// 			Eigen::Vector3d toward;
+// 			if(ptr == this){
+// 				from_1 = ptr->estimate().toVector();
+// 				toward = ptr2->estimate().toVector();
+// 			}
+// 			else if(ptr2 == this){
+// 				from_1 = ptr2->estimate().toVector();
+// 				toward = ptr->estimate().toVector();
+// 			}
+// 			else{
+// 				assert(true == false && "Weird, the original vertex wasn't found before");
+// 			}
+// 			
+// 			Eigen::Vector3d pose_from1 = toward - from_1;
+// 			Eigen::Vector2d pose_prior; pose_prior << pose_from1(0), pose_from1(1);
+// 			return pose_prior;
+// 			
+// 		}
 
 	};
   
@@ -205,10 +235,13 @@ namespace acg{
 		
 		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXY(){};
 		
-		double getAngleFromRobot() const {return angle_direction.first;}
+		double getAngleWidth() const {return angle_direction.first;}
 		double getDirection() const {return angle_direction.second;}
-		void addAngleDirection(double a, double d){angle_direction = std::pair<double, double>(a, d);};
-		double getAngleGlobal() const {
+		void addAngleDirection(double a, double d){
+			if (a < 0) a += 2 * M_PI;
+			if (d < 0) d += 2 * M_PI;
+			angle_direction = std::pair<double, double>(a, d);};
+		double getDirectionGlobal() const {
 			assert(first_seen_from != NULL);
 			auto vec = first_seen_from->estimate().toVector();
 			std::cout << "Got estimate " << std::endl;
@@ -225,7 +258,7 @@ namespace acg{
 	class AutoCompleteGraph{
 		
 		
-private:
+	protected:
 		int _previous_number_of_node_in_ndtgraph;
 		
 		///@brief Minimum distance from a prior corner to a NDT corner. THe distance is given in meter and is fixed at 2m in the constuctor
@@ -829,7 +862,7 @@ private:
 		 * @brief actual optimization loop. Make sure setFirst and prepare are called before. Use Huber first and then DCS.
 		 * 
 		 */
-		void optimize(int iter = 10){
+		virtual void optimize(int iter = 10){
 			
 			_chi2s.clear();
 			
@@ -894,7 +927,7 @@ private:
 				std::cout << "Weird different detection" << std::endl;
 				throw std::runtime_error("ARF NOT GOOD COUNT");
 			}
-			overCheckLinks();
+// 			overCheckLinks();
 			
 			removeBadLinks();
 			std::cout << "AFTER THE OPTIMIZATION REMOVE" << std::endl;
@@ -987,10 +1020,10 @@ private:
 		void createDescriptorPrior(cv::Mat& desc);
 
 		///@brief do createNewLinks and removeBadLinks
-		void updateLinks();
+		virtual void updateLinks();
 		
 		///@brief create links between close by landmark and prior
-		int createNewLinks();
+		virtual int createNewLinks();
 		///@brief remove links between too far landmarks and prior
 		void removeBadLinks();
 		
@@ -1001,7 +1034,7 @@ private:
 		void testInfoNonNul(const std::string& before = "no data") const ;
 		
 		///@brief return true if ACG got more than or equal to 5 links. Make this better.
-		bool checkAbleToOptimize(){
+		virtual bool checkAbleToOptimize(){
 			std::cout << "edge link size: " << _edge_link.size() << std::endl;
 			if(_edge_link.size() >= 6){
 				return true;
@@ -1009,12 +1042,12 @@ private:
 			return false;
 		}
 		
-		void overCheckLinks(){
+		virtual void overCheckLinks(){
 			checkLinkNotForgotten();
 			checkLinkNotTooBig();
 		}
 		
-		void checkLinkNotForgotten(){
+		virtual void checkLinkNotForgotten(){
 		
 			std::cout << "check forgotten links" << std::endl;
 			auto it = _nodes_landmark.begin();
@@ -1109,6 +1142,40 @@ private:
 			}
 			
 			
+		}
+		
+		void checkNoRepeatingPriorEdge(){
+			for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
+				std::vector<std::pair<double, double> > out;
+	// 			std::cout << "edges " << std::endl;
+				auto edges = (*it_vertex)->edges();
+	// 			std::cout << "edges done " << std::endl;
+				std::vector<AASS::acg::EdgeSE2Prior_malcolm*> edges_prior; 
+				
+				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
+	// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+					AASS::acg::EdgeSE2Prior_malcolm* ptr = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
+					if(ptr != NULL){
+						//Make sure not pushed twice
+						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
+							assert(ptr != *ite2);
+						}
+	// 						std::cout << " pushed edges " << std::endl;
+						edges_prior.push_back(ptr);
+	// 						std::cout << "pushed edges done " << std::endl;
+					}
+				}
+				for(auto it = edges_prior.begin() ; it != edges_prior.end() ; ++it){
+					for(auto ite2 = it +1 ; ite2 != edges_prior.end() ; ++ite2 ){
+						assert((*it)->getDirection2D(**it_vertex) != (*ite2)->getDirection2D(**it_vertex));
+					}
+				}
+			}
+			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+				for(auto ite2 = it +1 ; ite2 != _edge_prior.end() ; ++ite2 ){
+					assert(it != ite2);
+				}
+			}
 		}
 	
 // 		void testNoNanInPrior();
