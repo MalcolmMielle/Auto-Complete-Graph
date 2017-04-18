@@ -146,61 +146,61 @@ namespace acg{
 // 		exit(0);
 		
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+		grids.push_back(ptr_prior_occ);
 		
-		
-		if(acg.getRobotNodes().size() != 0){
-			grids.push_back(ptr_prior_occ);
-				
-			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it;
-			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it_end;
-			std::cout <<"update the zones" << std::endl;
-			if(start < acg.getRobotNodes().size() && start >= 0){
-				it = acg.getRobotNodes().begin() + start;
-			}
-			else{
-				it = acg.getRobotNodes().begin();
-			}
-			
-			if(end < start && end != -1){
-				throw std::runtime_error("End pointer is before the start. Can draw zones backward in ACG_CONVERSION.hpp");
-			}
-			
-			if(end < acg.getRobotNodes().size() && end >= 0 && end >= start){
-				it_end = acg.getRobotNodes().begin() + end;
-			}
-			else{
-				it_end = acg.getRobotNodes().end();
-			}
-			
-			ACGNdtNodetoVecGrids(acg, it, it_end, grids);
-			
-// 			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
-// 			for(it ; it != acg.getRobotNodes().end() ; ++it){
-// // 				for(size_t i = 0 ; i < 1 ; ++i){
+// 		if(acg.getRobotNodes().size() != 0){
+// // 			grids.push_back(ptr_prior_occ);
 // 				
-// //Grid map test
-// 				std::cout << "Node" << std::endl;
-// 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
-// // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-// 				lslgeneric::toOccupancyGrid(it->getMap(), *omap, 0.1, "/world");
-// // 					auto pose = acg.getRobotNodes()[i].getPose();
-// 				auto node = it->getNode();
-// 				auto vertex = node->estimate().toIsometry();
-// // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
-// // 					std::cout << "Move : " << node.matrix() << std::endl;
-// // 					if(i == 2) exit(0);
-// 				
-// 				std::cout << "Move" << std::endl;
-// 				moveOccupancyMap(*omap, vertex);
-// 				omap->header.frame_id = "/world";
-// 				omap->header.stamp = ros::Time::now();
-// 
-// 				nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
-// 				grids.push_back(ptr);
-// 				
+// 			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it;
+// 			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it_end;
+// 			std::cout <<"update the zones" << std::endl;
+// 			if(start < acg.getRobotNodes().size() && start >= 0){
+// 				it = acg.getRobotNodes().begin() + start;
 // 			}
-			
-		}
+// 			else{
+// 				it = acg.getRobotNodes().begin();
+// 			}
+// 			
+// 			if(end < start && end != -1){
+// 				throw std::runtime_error("End pointer is before the start. Can draw zones backward in ACG_CONVERSION.hpp");
+// 			}
+// 			
+// 			if(end < acg.getRobotNodes().size() && end >= 0 && end >= start){
+// 				it_end = acg.getRobotNodes().begin() + end;
+// 			}
+// 			else{
+// 				it_end = acg.getRobotNodes().end();
+// 			}
+// 			
+// 			ACGNdtNodetoVecGrids(acg, it, it_end, grids);
+// 			
+// // 			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
+// // 			for(it ; it != acg.getRobotNodes().end() ; ++it){
+// // // 				for(size_t i = 0 ; i < 1 ; ++i){
+// // 				
+// // //Grid map test
+// // 				std::cout << "Node" << std::endl;
+// // 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
+// // // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+// // 				lslgeneric::toOccupancyGrid(it->getMap(), *omap, 0.1, "/world");
+// // // 					auto pose = acg.getRobotNodes()[i].getPose();
+// // 				auto node = it->getNode();
+// // 				auto vertex = node->estimate().toIsometry();
+// // // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
+// // // 					std::cout << "Move : " << node.matrix() << std::endl;
+// // // 					if(i == 2) exit(0);
+// // 				
+// // 				std::cout << "Move" << std::endl;
+// // 				moveOccupancyMap(*omap, vertex);
+// // 				omap->header.frame_id = "/world";
+// // 				omap->header.stamp = ros::Time::now();
+// // 
+// // 				nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
+// // 				grids.push_back(ptr);
+// // 				
+// // 			}
+// 			
+// 		}
 
 		std::cout << "Building the final thingy " << grids.size() << std::endl;
 		if(grids.size() > 0){
@@ -212,11 +212,11 @@ namespace acg{
 		}
 		std::cout << "Out" << std::endl;
 		
-		grid_map::GridMap gridMap({"all"});
-		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
-		cv::Mat originalImageP;
-		grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
-		cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
+// 		grid_map::GridMap gridMap({"all"});
+// 		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
+// 		cv::Mat originalImageP;
+// 		grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
+// 		cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
 		
 		
 		

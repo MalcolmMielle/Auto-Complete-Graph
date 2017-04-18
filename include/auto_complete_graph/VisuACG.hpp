@@ -194,6 +194,23 @@ namespace acg{
 			}
 		}
 		
+		void toOcc(){
+			drawPrior();
+			
+			drawCornersNdt();
+			
+			drawLinks();
+						
+			if(_nb_of_zone != _acg->getRobotNodes().size()){
+				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
+				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
+				ACGtoOccupancyGrid(*_acg, occ_outt);
+				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
+				
+				
+			}
+		}
+		
 		void updateRviz(){
 			
 			drawPrior();
@@ -637,7 +654,7 @@ namespace acg{
 				p.z = 0;
 				_prior_node_markers.points.push_back(p);
 				
-				std::cout << "Drawing angles landmark" << std::endl;
+// 				std::cout << "Drawing angles landmark" << std::endl;
 				drawPriorAngles(*ptr);
 				
 			}
@@ -742,10 +759,10 @@ namespace acg{
 
 	inline void VisuAutoCompleteGraph::drawAngles()
 	{
-		std::cout << "Getting the angles" << std::endl;
+// 		std::cout << "Getting the angles" << std::endl;
 		_angles_markers.header.stamp = ros::Time::now();
 		auto landmark = _acg->getLandmarkNodes();
-		std::cout << "Getting the angles" << landmark.size() << std::endl;
+// 		std::cout << "Getting the angles" << landmark.size() << std::endl;
 // 		std::cout << "Getting the corners " << edges.size() << std::endl;
 		if(landmark.size() != _angles_markers.points.size()){
 			_angles_markers.points.clear();
@@ -761,18 +778,33 @@ namespace acg{
 				p.z = 0;
 				_angles_markers.points.push_back(p);
 				
-				std::cout << "getting the angle" << std::endl;
+// 				std::cout << "getting the angle" << std::endl;
 				
-				double angle = (*it)->getAngleGlobal();
+				double angle = (*it)->getDirectionGlobal();
+				double anglew = (*it)->getAngleWidth();
 				
-				std::cout << "angle " << angle<< std::endl;
+// 				std::cout << "angle " << angle<< std::endl;
 				geometry_msgs::Point p2;
 				p2.x = p.x + (2 * std::cos(angle) );
 				p2.y = p.y + (2 * std::sin(angle) );
 				p2.z = 0;
 				_angles_markers.points.push_back(p2);
 				
-				std::cout << "Line " << p << " "<< p2 << std::endl;;
+// 				std::cout << "angle " << angle<< std::endl;
+				p2.x = p.x + (2 * std::cos(angle - (anglew/2)) );
+				p2.y = p.y + (2 * std::sin(angle - (anglew/2)) );
+				p2.z = 0;
+				_angles_markers.points.push_back(p);
+				_angles_markers.points.push_back(p2);
+				
+// 				std::cout << "angle " << angle<< std::endl;
+				p2.x = p.x + (2 * std::cos(angle + (anglew/2)) );
+				p2.y = p.y + (2 * std::sin(angle + (anglew/2)) );
+				p2.z = 0;
+				_angles_markers.points.push_back(p);
+				_angles_markers.points.push_back(p2);
+				
+// 				std::cout << "Line " << p << " "<< p2 << std::endl;;
 				
 				
 			}
@@ -783,7 +815,7 @@ namespace acg{
 	inline void VisuAutoCompleteGraph::drawPriorAngles(const VertexSE2Prior& vertex_in)
 	{
 		geometry_msgs::Point p;
-		std::cout << "getting the vector" << std::endl;
+// 		std::cout << "getting the vector" << std::endl;
 // 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
 		auto vertex = vertex_in.estimate().toVector();
 		//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
@@ -791,30 +823,45 @@ namespace acg{
 		p.y = vertex(1);
 		p.z = 0;
 		
-		std::cout << "getting the angle" << std::endl;
+// 		std::cout << "getting the angle" << std::endl;
 		auto angles = vertex_in.getAngleDirection();
-		std::cout << "getting the angle done" << std::endl;
+// 		std::cout << "getting the angle done" << std::endl;
 		
 		for(auto it = angles.begin() ; it !=angles.end(); ++it){
 			
-			std::cout << "getting the angle1" << std::endl;
+// 			std::cout << "getting the angle1" << std::endl;
 			_angles_prior_markers.points.push_back(p);
 			
-			std::cout << "getting the angle2" << std::endl;
+// 			std::cout << "getting the angle2" << std::endl;
 			
 			double angle = it->second;
+			double anglew = it->first;
 			
-			std::cout << "angle " << angle<< std::endl;
+// 			std::cout << "angle " << angle<< std::endl;
 			geometry_msgs::Point p2;
 			p2.x = p.x + (2 * std::cos(angle) );
 			p2.y = p.y + (2 * std::sin(angle) );
 			p2.z = 0;
 			_angles_prior_markers.points.push_back(p2);
 			
-			std::cout << "Line " << p << " "<< p2 << std::endl;
+// 			std::cout << "angle " << angle<< std::endl;
+			p2.x = p.x + (2 * std::cos(angle - (anglew/2)) );
+			p2.y = p.y + (2 * std::sin(angle - (anglew/2)) );
+			p2.z = 0;
+			_angles_prior_markers.points.push_back(p);
+			_angles_prior_markers.points.push_back(p2);
+			
+// 			std::cout << "angle " << angle<< std::endl;
+			p2.x = p.x + (2 * std::cos(angle + (anglew/2)) );
+			p2.y = p.y + (2 * std::sin(angle + (anglew/2)) );
+			p2.z = 0;
+			_angles_prior_markers.points.push_back(p);
+			_angles_prior_markers.points.push_back(p2);
+			
+// 			std::cout << "Line " << p << " "<< p2 << std::endl;
 		}
 		
-		std::cout << "oout" << std::endl;
+// 		std::cout << "oout" << std::endl;
 
 	}
 

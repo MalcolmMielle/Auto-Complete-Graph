@@ -2,7 +2,7 @@
 #include "ndt_feature/NDTGraphMsg.h"
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/ndtgraph_conversion.h"
-#include "auto_complete_graph/ACG.hpp"
+#include "auto_complete_graph/ACG_feature.hpp"
 #include "auto_complete_graph/OptimizableAutoCompleteGraph.hpp"
 #include "auto_complete_graph/Basement.hpp"
 #include "auto_complete_graph/BasementFull.hpp"
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraphFeature oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
 	
 	//ATTENTION
 	oacg.addPriorGraph(graph_prior);	
@@ -325,7 +325,7 @@ int main(int argc, char **argv)
 // 		visu.updateRvizV2();
 // 		std::cout << oacg.getLinkEdges().size()<< std::endl;
 		
-// 		ros::Time future = ros::Time::now();
+		ros::Time future = ros::Time::now();
 // 		std::cout << "future " << (future - timef).toSec() << " since " << oacg.getRobotNodes().size() << ">" << 5 << " "<< new_node << "==" << true  << " "<< was_init << "==" << true << std::endl;
 // 		exit(0);
 		
@@ -336,7 +336,7 @@ int main(int argc, char **argv)
 // 		// 	oacg->initializeOptimization();
 // 		// 	oacg->initialGuess();
 // 			//Prepare the graph : marginalize + initializeOpti
-// 			oacg.getGraph().setFirst();
+// // 			oacg.getGraph().setFirst();
 // 			oacg.prepare();
 // 			oacg.optimize();
 // 			count++;
@@ -347,11 +347,11 @@ int main(int argc, char **argv)
 // 			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
 // 			std::cout << "********************************************************" << std::endl << std::endl;
 // // 			flag = false;
-// 			
-// 			visu.updateRviz();
-// 						
+			
+// 			visu.toOcc();
+						
 // 			new_node = false;
-// 			
+			
 // 		}	
 		
 		visu.updateRviz();
