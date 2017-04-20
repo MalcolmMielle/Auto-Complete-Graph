@@ -43,6 +43,7 @@ AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const 
 	
 	robot->setMap(map);
 	robot->setPose(affine);
+	robot->initial_transfo = robot->estimate();
 	
 	_optimizable_graph.addVertex(robot);
 	
@@ -912,7 +913,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			//Use accurate CV point
 			//Get old position
 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
-			cv::Point2d center = AASS::das::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
+			cv::Point2i center = AASS::das::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
 			assert(center.x <= size_image_max);
 			assert(center.y <= size_image_max);

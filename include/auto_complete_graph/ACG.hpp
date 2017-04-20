@@ -208,6 +208,7 @@ namespace acg{
 		std::shared_ptr<lslgeneric::NDTMap> _map;
 		Eigen::Affine3d _T;
 	public:
+		g2o::SE2 initial_transfo;
 		cv::Mat img;
 		
 		std::shared_ptr<lslgeneric::NDTMap>& getMap(){return _map;}
@@ -877,10 +878,12 @@ namespace acg{
 			
 			if(_flag_optimize == true){
 				std::cout << "OPTIMIZE" << std::endl;
+				checkRobotPoseNotMoved("before opti");
 
 				if(_flag_use_robust_kernel){
 					setAgeingHuberKernel();
 				}
+				checkRobotPoseNotMoved("set age in huber kernel");
 				testNoNanInPrior("set age in huber kernel");
 				testInfoNonNul("set age in huber kernel");
 				
@@ -890,6 +893,7 @@ namespace acg{
 				//Avoid overshoot of the cov
 				for(size_t i = 0 ; i < iter ; ++i){
 					_optimizable_graph.optimize(1);
+					checkRobotPoseNotMoved("optimized with huber");
 					testNoNanInPrior("optimized with huber");
 					testInfoNonNul("optimized with huber");
 					//Update prior edge covariance
@@ -906,6 +910,7 @@ namespace acg{
 				
 				for(size_t i = 0 ; i < iter*2 ; ++i){
 					_optimizable_graph.optimize(1);
+					checkRobotPoseNotMoved("optimized with dcs");
 					testNoNanInPrior("optimized with dcs");
 					testInfoNonNul("optimized with dcs");
 					//Update prior edge covariance
@@ -934,7 +939,7 @@ namespace acg{
 			overCheckLinks();
 			
 			exportChi2s();
-			
+			checkRobotPoseNotMoved("after opti");
 // 			cv::Mat d;
 // 			createDescriptorNDT(d);
 			
@@ -1176,6 +1181,26 @@ namespace acg{
 					assert(it != ite2);
 				}
 			}
+		}
+		
+		
+		void checkRobotPoseNotMoved(const std::string& when){
+			std::cout << "testing after " << when << std::endl;
+			for(auto it = _nodes_ndt.begin() ; it != _nodes_ndt.end() ; ++it){
+				int init_x = (*it)->initial_transfo.toVector()(0) ;
+				int init_y = (*it)->initial_transfo.toVector()(1) ;
+				int init_z = (*it)->initial_transfo.toVector()(2) * 10;
+				
+				int update_x = (*it)->estimate().toVector()(0) ;
+				int update_y = (*it)->estimate().toVector()(1) ;
+				int update_z = (*it)->estimate().toVector()(2) * 10;
+				
+				if(init_x != update_x || init_y != update_y || init_z != update_z){
+					std::cout << " init "  << init_x << " "<< init_y << " "<< init_z <<  " == " << update_x << " "<< update_y << " "<< update_z <<  std::endl;
+				}
+				assert( init_x == update_x && init_y == update_y && init_z == update_z );
+			}
+			
 		}
 	
 // 		void testNoNanInPrior();

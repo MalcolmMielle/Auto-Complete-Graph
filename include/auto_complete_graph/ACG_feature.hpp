@@ -113,8 +113,17 @@ namespace acg{
 				std::cout << " Angles " << angle_width << " " << direction << " and " << landmark_angle << " " << landmark_direction << std::endl;
 				std::cout <<  direction << " <= " << landmark_direction + 0.785 << " && " << direction << " >= " << landmark_direction - 0.785 << " && " <<	angle_width << " <= " << landmark_angle + 0.785 << " && " << angle_width << " >= " << landmark_angle - 0.349 << std::endl;
 				
-				if( direction <= landmark_direction + 0.785 && direction >= landmark_direction - 0.785 &&
-					angle_width <= landmark_angle + 0.785 && angle_width >= landmark_angle - 0.785
+				double landmark_direction_over = landmark_direction + 0.785;
+				if (landmark_direction_over < 0) landmark_direction_over += 2 * M_PI;
+				double landmark_direction_under = landmark_direction - 0.785;
+				if (landmark_direction_under < 0) landmark_direction_under += 2 * M_PI;
+				double landmark_angle_under = landmark_angle - 0.349;
+				if (landmark_angle_under < 0) landmark_angle_under += 2 * M_PI;
+				double landmark_angle_over = landmark_angle + 0.785;
+				if (landmark_angle_over >= 2 * M_PI) landmark_angle_over -= 2 * M_PI;
+				
+				if( direction <= landmark_direction_over && direction >= landmark_direction_under &&
+					angle_width <= landmark_angle_over && angle_width >= landmark_angle_under
 				){
 // 				if( direction <= landmark_direction + 0.785 && direction >= landmark_direction - 0.785
 // 				){
@@ -140,6 +149,7 @@ namespace acg{
 			
 			std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;
 			overCheckLinks();
+			checkRobotPoseNotMoved("before");
 			
 			/********** HUBER kernel ***********/
 			
@@ -153,6 +163,7 @@ namespace acg{
 				if(_flag_use_robust_kernel){
 					setAgeingHuberKernel();
 				}
+				checkRobotPoseNotMoved("set age in huber kernel");
 				testNoNanInPrior("set age in huber kernel");
 				testInfoNonNul("set age in huber kernel");
 				
@@ -162,6 +173,7 @@ namespace acg{
 				//Avoid overshoot of the cov
 				for(size_t i = 0 ; i < iter ; ++i){
 					_optimizable_graph.optimize(1);
+					checkRobotPoseNotMoved("optimized with huber");
 					testNoNanInPrior("optimized with huber");
 					testInfoNonNul("optimized with huber");
 					//Update prior edge covariance
@@ -178,6 +190,7 @@ namespace acg{
 				
 				for(size_t i = 0 ; i < iter*2 ; ++i){
 					_optimizable_graph.optimize(1);
+					checkRobotPoseNotMoved("optimized with dcs");
 					testNoNanInPrior("optimized with dcs");
 					testInfoNonNul("optimized with dcs");
 					//Update prior edge covariance
@@ -206,6 +219,7 @@ namespace acg{
 			overCheckLinks();
 			
 			exportChi2s();
+			checkRobotPoseNotMoved("after");
 			
 // 			cv::Mat d;
 // 			createDescriptorNDT(d);
