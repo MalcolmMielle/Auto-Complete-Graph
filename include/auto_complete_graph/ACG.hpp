@@ -1197,8 +1197,8 @@ namespace acg{
 				
 				if(init_x != update_x || init_y != update_y || init_z != update_z){
 					std::cout << " init "  << init_x << " "<< init_y << " "<< init_z <<  " == " << update_x << " "<< update_y << " "<< update_z <<  std::endl;
+					throw std::runtime_error("MOVE BASE");
 				}
-				assert( init_x == update_x && init_y == update_y && init_z == update_z );
 			}
 			
 		}

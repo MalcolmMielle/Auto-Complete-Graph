@@ -134,91 +134,99 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 
 void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
+	try{
 	
-	
-	new_node = true;
-// 	abort_f = true;
-	std::cout << "Got a new graph " << std::endl;
-	
-	ros::Time start = ros::Time::now();
-	
-	ndt_feature::NDTFeatureGraph graph;
-	
-	std::string frame;
-	//ATTENTION: THE BAD GUY !
-	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
-	
+		new_node = true;
+	// 	abort_f = true;
+		std::cout << "Got a new graph " << std::endl;
+		
+		ros::Time start = ros::Time::now();
+		
+		ndt_feature::NDTFeatureGraph graph;
+		
+		std::string frame;
+		//ATTENTION: THE BAD GUY !
+		ndt_feature::msgToNDTGraph(*msg, graph, frame);	
+		
 
-	oacg->updateNDTGraph(graph);
-	
-	
-// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
-// 	std::ostringstream convert;   // stream used for the conversion
-// 	convert << graph.getNbNodes(); 
-// 	file_out = file_out + convert.str();
-// 	file_out = file_out + "nodes.g2o";
-// 	oacg->getGraph().save(file_out.c_str());
-// 	
-// 	std::cout << "saved to " << file_out << std::endl;
-	
-	/*** image****/
-// 	visu.updateRvizNoNDT();
-// 		if(was_init == true){
-// 		int a;
-// 		std::cout << "PRESS ANYTHING NOT OPTIMISED YET" << std::endl;
-// 		std::cin >>a;
+		oacg->updateNDTGraph(graph);
 		
-	// 	oacg->initializeOptimization();
-	// 	oacg->initialGuess();
 		
-		//Prepare the graph : marginalize + initializeOpti
-		
-// 		if(was_init == true){
-			oacg->setFirst();
-			oacg->prepare();
-			oacg->optimize();
-			count++;
-// 		}
-		
-		visu.updateRvizNoNDT();
-// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
-// 		std::cin >>a;
-		
-	// 	printImages(oacg);
-	// 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
-	// 	std::ostringstream convert_after;   // stream used for the conversion
-	// 	convert_after << graph.getNbNodes(); 
-	// 	file_out_after = file_out_after + convert.str();
-	// 	file_out_after = file_out_after + "nodes.g2o";
-	// 	oacg->getGraph().save(file_out_after.c_str());
-		
-	// 	visu.toRviz(*oacg);
-		
-	// 	visu.updateRviz();
-	// 	visu.updateRviz();
+	// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
+	// 	std::ostringstream convert;   // stream used for the conversion
+	// 	convert << graph.getNbNodes(); 
+	// 	file_out = file_out + convert.str();
+	// 	file_out = file_out + "nodes.g2o";
+	// 	oacg->getGraph().save(file_out.c_str());
 	// 	
+	// 	std::cout << "saved to " << file_out << std::endl;
+		
+		/*** image****/
+	// 	visu.updateRvizNoNDT();
+	// 		if(was_init == true){
+	// 		int a;
+	// 		std::cout << "PRESS ANYTHING NOT OPTIMISED YET" << std::endl;
+	// 		std::cin >>a;
+			
+		// 	oacg->initializeOptimization();
+		// 	oacg->initialGuess();
+			
+			//Prepare the graph : marginalize + initializeOpti
+			
+	// 		if(was_init == true){
+				oacg->setFirst();
+				oacg->prepare();
+				oacg->optimize();
+				count++;
+	// 		}
+			
+			visu.updateRvizNoNDT();
+	// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
+	// 		std::cin >>a;
+			
+		// 	printImages(oacg);
+		// 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
+		// 	std::ostringstream convert_after;   // stream used for the conversion
+		// 	convert_after << graph.getNbNodes(); 
+		// 	file_out_after = file_out_after + convert.str();
+		// 	file_out_after = file_out_after + "nodes.g2o";
+		// 	oacg->getGraph().save(file_out_after.c_str());
+			
+		// 	visu.toRviz(*oacg);
+			
+		// 	visu.updateRviz();
+		// 	visu.updateRviz();
+		// 	
 
-		timef = ros::Time::now();
-		
-		node_process_time = node_process_time + (timef - start).toSec();
-		all_node_times.push_back((timef - start).toSec());
-		cycles++;
-		
-	// 	nav_msgs::OccupancyGrid omap; 
-	// 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
-	// 	moveOccupancyMap(omap, graph.getT());
-	// 	
-	// 	map_pub_.publish(omap);
-		
-	// 	visu.updateRviz();
-		
-	// 	std::cout << "saved to " << file_out_after << std::endl;
-		
-	// 	exit(0);
-// 	}
-// 		else{
-// 			visu.updateRvizNoNDT();
-// 		}
+			timef = ros::Time::now();
+			
+			node_process_time = node_process_time + (timef - start).toSec();
+			all_node_times.push_back((timef - start).toSec());
+			cycles++;
+			
+		// 	nav_msgs::OccupancyGrid omap; 
+		// 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
+		// 	moveOccupancyMap(omap, graph.getT());
+		// 	
+		// 	map_pub_.publish(omap);
+			
+		// 	visu.updateRviz();
+			
+		// 	std::cout << "saved to " << file_out_after << std::endl;
+			
+		// 	exit(0);
+	// 	}
+	// 		else{
+	// 			visu.updateRvizNoNDT();
+	// 		}
+	
+	}
+	catch(...){
+		std::cout << "Error " << std::endl;
+		visu.updateRviz();
+		int a;
+		std::cin >> a;
+	}
 }
 
 
