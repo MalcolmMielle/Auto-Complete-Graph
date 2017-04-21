@@ -609,7 +609,7 @@ void AASS::acg::AutoCompleteGraph::addPriorGraph(const PriorLoaderInterface::Pri
 	assert( _nodes_prior.size() == graph.getNumVertices() );
 	//Self link / 2 because they are seen twice
 	assert( _edge_prior.size() == graph.getNumEdges() - (self_link / 2) );
-	
+		
 	std::cout << "After update graph prior" << std::endl;
 	checkNoRepeatingPriorEdge();
 	

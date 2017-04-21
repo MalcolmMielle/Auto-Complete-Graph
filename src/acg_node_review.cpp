@@ -224,8 +224,8 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	catch(...){
 		std::cout << "Error " << std::endl;
 		visu.updateRviz();
-		int a;
-		std::cin >> a;
+// 		int a;
+// 		std::cin >> a;
 	}
 }
 
@@ -293,7 +293,7 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraphFeature oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
 	
 	//ATTENTION
 	oacg.addPriorGraph(graph_prior);	

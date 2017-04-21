@@ -5,6 +5,7 @@
 #include "vodigrex/linefollower/SimpleNode.hpp"
 #include "das/CornerDetector.hpp"
 #include "KeypointPriorDetector.hpp"
+#include "bettergraph/conversion.hpp"
 
 namespace AASS{
 	namespace acg{
@@ -25,8 +26,8 @@ namespace AASS{
 		 */
 		class PriorLoaderInterface{
 		public : 
-			typedef typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge> PriorGraph;
-			typedef typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::GraphType PriorGraphType;
+			typedef typename bettergraph::SimpleGraph<PriorAttr, AASS::vodigrex::SimpleEdge> PriorGraph;
+			typedef typename bettergraph::SimpleGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::GraphType PriorGraphType;
 			typedef typename boost::graph_traits<PriorGraphType>::vertex_iterator PriorVertexIterator;
 			typedef typename boost::graph_traits<PriorGraphType>::vertex_descriptor PriorVertex;
 			typedef typename boost::graph_traits<PriorGraphType>::edge_descriptor PriorEdge;
@@ -38,7 +39,7 @@ namespace AASS{
 			std::vector<cv::Point2f> _same_point_prior;
 			std::vector<cv::Point2f> _same_point_slam;
 			std::vector<cv::Point2f> _corner_prior_matched;
-			bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge> _prior_graph;
+			PriorGraph _prior_graph;
 			cv::Mat _scale_transform_prior2ndt;
 			std::string _file;
 			AASS::das::CornerDetector _cornerDetect;
@@ -92,7 +93,13 @@ namespace AASS{
 				_corner_prior = _cornerDetect.getGraphPoint();
 				auto prior_graph = _cornerDetect.getGraph();
 				
-				extractKeypoints(prior_graph);
+				bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge> prior_out;
+				convertGraph(prior_graph, prior_out);
+				//Very convulted code TODO
+				AASS::acg::PriorLoaderInterface::PriorGraph simple_graph;
+				bettergraph::toSimpleGraph<PriorAttr, AASS::vodigrex::SimpleEdge>(prior_out, simple_graph);
+				
+				extractKeypoints(simple_graph);
 				
 // 				//PRINT
 // 				cv::Mat src = cv::imread( _file, CV_LOAD_IMAGE_COLOR ), src_gray;
@@ -312,7 +319,7 @@ namespace AASS{
 		
 			
 			
-			void extractKeypoints(const bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>& graph){
+			void extractKeypoints(const PriorGraph& graph){
 				
 				//vertices access all the vertix
 				//Classify them in order
@@ -325,7 +332,11 @@ namespace AASS{
 				std::cout << "Keypoints" << std::endl;
 				//Adding all the vertices
 				std::pair< AASS::das::CornerDetector::CornerVertexIterator, AASS::das::CornerDetector::CornerVertexIterator > vp;
+				int count = 0;
 				for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
+					
+// 					std::cout << "A vertices " << count << " " << graph.getNumVertices() << std::endl;
+					++count;
 					AASS::das::CornerDetector::CornerVertex v = *vp.first;
 					PriorVertex vertex_out;
 					PriorAttr nodeAttribute(graph[v]);
@@ -394,7 +405,6 @@ namespace AASS{
 				//Adding all the edges
 				auto es = boost::edges(graph);
 				for (auto eit = es.first; eit != es.second; ++eit) {
-				//Since we fuse the old zone in biggest we only need to link them to biggest
 					auto sour = boost::source(*eit, graph);			
 					auto targ = boost::target(*eit, graph);
 					PriorVertex source_p;
@@ -519,6 +529,204 @@ namespace AASS{
 				
 				
 			}
+			
+			
+			void noTwiceSameEdge(bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge> graph){
+	
+				std::cout << "No twice same edge" << std::endl;
+				std::pair< 
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator,
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator > vp;
+				
+				std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge> e_vec;
+				
+				for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
+					std::cout << "Vertex" << std::endl;
+			// 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::EdgeIterator out_i, out_end;
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge e;
+					
+					std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vertices_out_edge;
+					
+					std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge> edge_seen;
+					
+					std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+					std::cout << " v has " << graph.getNumEdges(v) << std::endl;
+					
+					for (boost::tie(out_i, out_end) = boost::out_edges(v, graph); 
+						out_i != out_end; ++out_i) {
+						std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+						std::cout << "Removing an edge test" << std::endl;
+						e = *out_i;
+					
+						for(std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge>::iterator it = edge_seen.begin() ; it != edge_seen.end() ; ++it){
+							if(e == *it){
+								std::cout << "EDGE seen on this node :(" << std::endl;
+								assert(true == false);
+							}
+						}
+						
+			// 			for(std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge>::iterator it = e_vec.begin() ; it != e_vec.end() ; ++it){
+			// 				if(e == *it){
+			// 					std::cout << "EDGE seen on another node :(" << std::endl;
+			// 					assert(true == false);
+			// 				}
+			// 			}
+						
+						e_vec.push_back(e);
+						edge_seen.push_back(e);
+					}
+				}
+				
+				std::cout << "So no twice for now! " << std::endl;
+				
+			}
+			
+			/**
+			 * remove eahc edges in between same vertex
+			 */
+			void toSimpleGraph(bettergraph::PseudoGraph <AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge >& prior){
+				
+				
+				noTwiceSameEdge(prior);
+				
+				std::pair< 
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator,
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator > vp;
+				std::deque<PriorLoaderInterface::PriorGraph::Vertex> vec_deque;
+				
+				std::cout << "prior" << prior.getNumVertices() << std::endl << std::endl; 
+				
+				int nb = prior.getNumVertices();
+								
+				for (vp = boost::vertices(prior); vp.first != vp.second; ++vp.first) {
+					std::cout << "Vertex" << std::endl;
+			// 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+					auto v = *vp.first;
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::EdgeIterator out_i, out_end;
+					bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge e;
+					
+					std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vertices_out_edge;
+					
+					std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge> edge_seen;
+					
+					std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+					std::cout << " v has " << prior.getNumEdges(v) << std::endl;
+					
+					for (boost::tie(out_i, out_end) = boost::out_edges(v, prior); 
+						out_i != out_end; ++out_i) {
+						std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+						std::cout << "Removing an edge test" << std::endl;
+						e = *out_i;
+					
+						for(auto it = edge_seen.begin() ; it != edge_seen.end() ; ++it){
+							if(e == *it){
+								std::cout << "EDGE seen :(" << std::endl;
+								assert(true == false);
+							}
+						}
+						
+						std::cout << "Vertiuce size " << vertices_out_edge.size() << " and edge " << e << std::endl;
+						edge_seen.push_back(e);
+					
+					
+						
+						std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+						
+			// 			bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex targ = boost::target(e, (graph));
+						auto targ = boost::target(e, prior);
+						std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+						for(auto it = vertices_out_edge.begin() ; it != vertices_out_edge.end() ; ++it){
+							if(targ == *it){
+								std::cout << "Removing an edge" << std::endl;
+								prior.removeEdge(e);
+								assert(nb == prior.getNumVertices());
+							}
+						}
+						std::cout << "Psuh back end targ " << std::endl;
+						vertices_out_edge.push_back(targ);
+						
+						
+					}
+					
+					std::cout << "Our for vertex" << std::endl;
+					
+				}
+				
+				
+				
+				
+			}
+			  
+			
+			void convertGraph(const bettergraph::PseudoGraph <AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge >& input, bettergraph::PseudoGraph <PriorAttr, AASS::vodigrex::SimpleEdge>& output){
+				
+				output.clear();
+				std::pair< 
+					typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator, 
+					typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge >::VertexIterator > vp;
+				
+				std::deque< typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::Vertex> vec_deque;
+				
+				std::deque< typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex> vec_deque_input;
+						
+				//Add all vertex
+				for (vp = boost::vertices(input); vp.first != vp.second; ++vp.first) {
+			// 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+					typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+					typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::Vertex vertex_out;
+					
+					PriorAttr priorattr(input[v]);
+					
+					output.addVertex(vertex_out, priorattr);
+					
+					vec_deque.push_back(vertex_out);
+					vec_deque_input.push_back(v);
+
+				}
+				
+				//Simply add all edges
+				int self_link = 0 ;
+				for (vp = boost::vertices(input); vp.first != vp.second; ++vp.first) {
+					typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
+					typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::EdgeIterator out_i, out_end;
+					typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge e;
+					
+					typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::Vertex output_src;
+					for(int i = 0 ; i < vec_deque.size() ; ++i){
+						if(vec_deque_input[i] == v){
+							output_src = vec_deque[i];
+						}
+					}
+					
+					for (boost::tie(out_i, out_end) = boost::out_edges(v, (input)); 
+						out_i != out_end; ++out_i) {
+						e = *out_i;
+						typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex targ = boost::target(e, input);
+						typename bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex src = boost::source(e, input);
+						typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::Vertex output_targ;
+						for(int i = 0 ; i < vec_deque.size() ; ++i){
+							if(vec_deque_input[i] == targ){
+								output_targ = vec_deque[i];
+							}
+							
+						}
+					
+						typename bettergraph::PseudoGraph<PriorAttr, AASS::vodigrex::SimpleEdge>::Edge e_out_output;
+						output.addEdge(e_out_output, output_src, output_targ, input[e]);
+					
+					}
+				}
+
+// 				assert(2 * output.getNumEdges() == input.getNumEdges());
+				assert(output.getNumVertices() == input.getNumVertices());
+				
+				
+				
+			}
+			
+			
 			
 		};
 		
