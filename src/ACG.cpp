@@ -1065,9 +1065,16 @@ void AASS::acg::AutoCompleteGraph::SIFTNdtLandmark(const cv::Point2f centre, con
 	std::vector<cv::KeyPoint> keypoint_v;
 	keypoint_v.push_back(keypoint);
 	
-	cv::Mat descriptors_1;
-	cv::SiftDescriptorExtractor extractor;
-	extractor.compute( img_tmp, keypoint_v, descriptors_1);
+    cv::Mat descriptors_1;
+#if CV_MAJOR_VERSION == 2
+    cv::SiftDescriptorExtractor extractor;
+    extractor.compute( img_tmp, keypoint_v, descriptors_1);
+#else
+    cv::Ptr<cv::Feature2D> extractor = cv::xfeatures2d::SURF::create();
+//    cv::xfeatures2d::SiftDescriptorExtractor extractor;
+    extractor->compute( img_tmp, keypoint_v, descriptors_1);
+#endif
+
 	
 	std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
 	assert(descriptors_1.rows == 1);

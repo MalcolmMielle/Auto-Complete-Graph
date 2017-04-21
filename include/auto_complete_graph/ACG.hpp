@@ -1,4 +1,4 @@
-#ifndef AUTOCOMPLETEGRAPH_ACG_15092016
+﻿#ifndef AUTOCOMPLETEGRAPH_ACG_15092016
 #define AUTOCOMPLETEGRAPH_ACG_15092016
 
 #include <ctime>
@@ -56,7 +56,7 @@ namespace acg{
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		g2o::EdgeInterfaceMalcolm interface;
-		EdgeSE2Prior_malcolm() : g2o::EdgeSE2(){};
+        EdgeSE2Prior_malcolm() : g2o::EdgeSE2(){}
 		Eigen::Vector2d getDirection2D(const AASS::acg::VertexSE2Prior& from) const;
 
 	};

@@ -16,7 +16,7 @@ namespace AASS{
 			cv::KeyPoint keypoint;
 			cv::Point2d position;
 			cv::Mat descriptor;
-			PriorAttr() : AASS::vodigrex::SimpleNode(){};
+            PriorAttr() : AASS::vodigrex::SimpleNode(){}
 			PriorAttr(const AASS::vodigrex::SimpleNode& inp) : AASS::vodigrex::SimpleNode(inp){}
 		};
 		
@@ -384,8 +384,15 @@ namespace AASS{
 					keypoint_v.push_back(keypoint);
 					
 					cv::Mat descriptors_1;
-					cv::SiftDescriptorExtractor extractor;
-					extractor.compute( _img_gray, keypoint_v, descriptors_1);
+#if CV_MAJOR_VERSION == 2
+                    cv::SiftDescriptorExtractor extractor;
+                    extractor.compute( _img_gray, keypoint_v, descriptors_1);
+#else
+                    cv::Ptr<cv::Feature2D> extractor = cv::xfeatures2d::SURF::create();
+//                    cv::xfeatures2d::SiftDescriptorExtractor extractor;
+                    extractor->compute( _img_gray, keypoint_v, descriptors_1);
+#endif
+
 					
 // 					std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
 					assert(descriptors_1.rows == 1);

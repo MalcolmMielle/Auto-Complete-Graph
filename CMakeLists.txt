@@ -144,6 +144,10 @@ include_directories(
   ${catkin_INCLUDE_DIRS} include
 )
 
+#This is only for QtCreator to see the .hpp files in prject
+FILE(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/include/auto_complete_graph/*.hpp")
+add_custom_target(headers SOURCES ${files})
+
 
 ## Declare a C++ library
 add_library(auto_complete_graph_lib
@@ -226,6 +230,17 @@ add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_review
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+)
+
+add_executable(acg_node_feature src/acg_node_feature.cpp)
+
+# Add cmake target dependencies of the executable
+# same as for the library above
+add_dependencies(acg_node_feature ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+# Specify libraries to link a library or executable target against
+target_link_libraries(acg_node_feature
   ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
 )
 

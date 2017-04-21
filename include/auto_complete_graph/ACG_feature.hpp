@@ -8,7 +8,7 @@ namespace AASS {
 
 namespace acg{	
 	
-	 class AutoCompleteGraphFeature : public AutoCompleteGraph
+	class AutoCompleteGraphFeature : public AutoCompleteGraph
 	{
 		public:
 		AutoCompleteGraphFeature(const g2o::SE2& sensoffset, const std::string& load_file) : AutoCompleteGraph(sensoffset, load_file){};
