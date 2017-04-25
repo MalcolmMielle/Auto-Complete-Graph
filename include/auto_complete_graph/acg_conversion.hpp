@@ -440,125 +440,84 @@ namespace acg{
 // 				throw std::runtime_error("FUCK 1 already");
 // 			}
 // 		}
-// 		
+
 		
-		grid_map::GridMap gridMaptmp({"all"});
-		gridMaptmp["all"].setZero();
+		if(acg.getRobotNodes().size() > 0){
+			grid_map::GridMap gridMaptmp({"all"});
+			gridMaptmp["all"].setZero();
+			
+	// 		auto node = acg.getRobotNodes()[0];
+	// 		auto vertex = node->estimate().toVector();
+			
+			gridMaptmp.setFrameId("/world");
+			gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(0.0, 0.0));
+	// 		gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(vertex(0), vertex(1)));
 		
-// 		auto node = acg.getRobotNodes()[0];
-// 		auto vertex = node->estimate().toVector();
-		
-		gridMaptmp.setFrameId("/world");
-		gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(0.0, 0.0));
-// 		gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(vertex(0), vertex(1)));
-// 				
-		nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
-		nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
-		
-		grid_map::GridMapRosConverter::toOccupancyGrid(gridMaptmp, "all", 0 ,1., *prior_occ);
-		
-		std::cout << "POsition " << prior_occ->info.origin.position << std::endl;
-		std::cout << "ORientation " << prior_occ->info.origin.orientation << std::endl;
-// 		exit(0);
-		
-		auto occ_out = ACGNDTtoOcc(acg, ptr_prior_occ, resol);
-		
-// 		grid_map::Matrix& data4 = map["prior"];
-// 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
-// 			const grid_map::Index index(*iterator);
-// 			if(std::isnan(data4(index(0), index(1)))){
-// 				throw std::runtime_error("FUCK before");
-// // 				data2(index(0), index(1)) = -1;
-// 			}
-// 		}
-		
-		grid_map::GridMap mapNDT;
-		//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
-        grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", mapNDT);
-		
-		grid_map::Matrix& data = mapNDT["ndt"];
-		for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
-			const grid_map::Index index(*iterator);
-			if(std::isnan(data(index(0), index(1)))){
-				data(index(0), index(1)) = -1;
+			nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
+			nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
+			
+			grid_map::GridMapRosConverter::toOccupancyGrid(gridMaptmp, "all", 0 ,1., *prior_occ);
+			
+			std::cout << "POsition " << prior_occ->info.origin.position << std::endl;
+			std::cout << "ORientation " << prior_occ->info.origin.orientation << std::endl;
+	// 		exit(0);
+			
+			auto occ_out = ACGNDTtoOcc(acg, ptr_prior_occ, resol);
+			
+	// 		grid_map::Matrix& data4 = map["prior"];
+	// 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+	// 			const grid_map::Index index(*iterator);
+	// 			if(std::isnan(data4(index(0), index(1)))){
+	// 				throw std::runtime_error("FUCK before");
+	// // 				data2(index(0), index(1)) = -1;
+	// 			}
+	// 		}
+			
+			grid_map::GridMap mapNDT;
+			//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
+			grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", mapNDT);
+			
+			grid_map::Matrix& data = mapNDT["ndt"];
+			for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
+				const grid_map::Index index(*iterator);
+				if(std::isnan(data(index(0), index(1)))){
+					data(index(0), index(1)) = -1;
+				}
 			}
+	// 		
+	// 		grid_map::Matrix& data2 = map["prior"];
+	// 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
+	// 			const grid_map::Index index(*iterator);
+	// 			if(std::isnan(data2(index(0), index(1)))){
+	// 				throw std::runtime_error("FUCK");
+	// // 				data2(index(0), index(1)) = -1;
+	// 			}
+	// 		}
+	// 		
+	// 		std::cout << map["prior"] << std::endl;
+			
+	// 		assert(map.getSize()(0) == mapNDT.getSize()(0) && map.getSize()(1) == mapNDT.getSize()(1));
+			
+	// 		map["all"] = map["prior"] + mapNDT["ndt"];
+			
+			std::cout << map.getSize()(0) << " " << mapNDT.getSize()(0) << " and " << map.getSize()(1) << " " << mapNDT.getSize()(1) << std::endl;
+			std::cout << map.getPosition()(0) << " " << mapNDT.getPosition()(0) << " and " << map.getPosition()(1) << " " << mapNDT.getPosition()(1) << std::endl;
+			//Moved because here it's not the same :S ?
+	// 		map["all"] = map["prior"].cwiseMax(map["ndt"]);
+			grid_map::GridMap gridtmptmp;
+	// 		mapNDT.setPosition(map.getPosition());
+			
+	// 		assert(map.getPosition()(0) == mapNDT.getPosition()(0) && map.getPosition()(1) == mapNDT.getPosition()(1));
+			fuseGridMap(mapNDT, map, gridtmptmp, "ndt", "prior");
+			
+	//		map = gridtmptmp;
+			map.add("all");
+			map["all"] = gridtmptmp["combined"];
 		}
-// 		
-// 		grid_map::Matrix& data2 = map["prior"];
-// 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
-// 			const grid_map::Index index(*iterator);
-// 			if(std::isnan(data2(index(0), index(1)))){
-// 				throw std::runtime_error("FUCK");
-// // 				data2(index(0), index(1)) = -1;
-// 			}
-// 		}
-// 		
-// 		std::cout << map["prior"] << std::endl;
-		
-// 		assert(map.getSize()(0) == mapNDT.getSize()(0) && map.getSize()(1) == mapNDT.getSize()(1));
-		
-// 		map["all"] = map["prior"] + mapNDT["ndt"];
-		
-		std::cout << map.getSize()(0) << " " << mapNDT.getSize()(0) << " and " << map.getSize()(1) << " " << mapNDT.getSize()(1) << std::endl;
-		std::cout << map.getPosition()(0) << " " << mapNDT.getPosition()(0) << " and " << map.getPosition()(1) << " " << mapNDT.getPosition()(1) << std::endl;
-		//Moved because here it's not the same :S ?
-		
-		
-		//Does not work ! None should be moved but should be fused depending on where they are... As in if I was superpositing them
-// 		map.move(mapNDT.getPosition());
-		
-// 		std::cout << map.getPosition()(0) << " " << mapNDT.getPosition()(0) << " and " << map.getPosition()(1) << " " << mapNDT.getPosition()(1) << std::endl;
-		
-// 		map["all"] = map["ndt"];
-		
-// 		map = mapNDT;
-// 		map.add("all");
-// 		map["all"] = map["ndt"];
-		
-// 		exit(0);
-// 		auto diff = map.getPosition() - mapNDT.getPosition();
-		
-		//Ugliest hack ever ! HACK
-		//HACK
-// 		map.move(mapNDT.getPosition());
-		
-// 		auto node = acg.getRobotNodes()[0].getNode();
-// 		auto vertex = node->estimate().toVector();
-// 		mapNDT.move(grid_map::Position(- vertex(0),  - vertex(1)));
-		
-
-		
-// 		grid_map::Index
-// 		grid_map::GridMap mapNDT_tmp;
-// 		mapNDT_tmp.setGeometry(grid_map::Length(map["prior"].getSize()(0), map["prior"].getSize()(1)), mapNDT.getResolution(), grid_map::Position(mapNDT.getPosition()(0), mapNDT.getPosition()(1)));
-		
-// 		map["all"] = map["prior"].cwiseMax(map["ndt"]);
-		grid_map::GridMap gridtmptmp;
-// 		mapNDT.setPosition(map.getPosition());
-		
-// 		assert(map.getPosition()(0) == mapNDT.getPosition()(0) && map.getPosition()(1) == mapNDT.getPosition()(1));
-		fuseGridMap(mapNDT, map, gridtmptmp, "ndt", "prior");
-		
-//		map = gridtmptmp;
-		map.add("all");
-        map["all"] = gridtmptmp["combined"];
-		
-		
-// 		
-// 		
-// // 		map.add("all");
-// // 		map["all"] = map["combined"];
-// 		
-// 		cv::Mat originalImageP;
-// 		grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridtmptmp, "combined", CV_16UC1, 0.0, 1, originalImageP);
-// 		cv::imwrite("/home/malcolm/gridtmptmp_all.png", originalImageP);
-// 		exit(0);
-// 		map.setPosition(grid_map::Position(vertex(0), vertex(1)));
-		
-		//HACK ???
-// 		mapNDT.move(map.getPosition());
-		
-
+		else{
+			map.add("all");
+			map["all"] = map["prior"];
+		}
 	
 	}
 

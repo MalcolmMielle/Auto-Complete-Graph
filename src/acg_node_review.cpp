@@ -1,4 +1,6 @@
 #include <ros/ros.h>
+#include <std_msgs/Bool.h>
+
 #include "ndt_feature/NDTGraphMsg.h"
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/ndtgraph_conversion.h"
@@ -13,6 +15,9 @@ bool abort_f = false;
 
 ros::Publisher map_pub_;
 ros::Publisher last_ndtmap_full;
+ros::Publisher occupancy_grid;
+ros::Publisher occ_send;
+
 ros::Time timef;
 
 std::vector<double> all_node_times;
@@ -226,7 +231,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 		std::cin >> a;
 	}
 	
-	visu.publishFullOccGrid();
+	
 	
 }
 
@@ -264,10 +269,25 @@ void initAll(AASS::acg::AutoCompleteGraph& oacg, AASS::acg::RvizPoints& initiali
 }
 
 
+void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
+	if(msg->data == true){
+		grid_map::GridMap gridMap;
+		AASS::acg::ACGToGridMap(*oacg, gridMap);
+		nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+		nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
+		grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+		
+		//Just to make sure
+		occ_send.publish<nav_msgs::OccupancyGrid>(*occ_out);
+	}
+}
+
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
+	ros::Subscriber call_for_publish_occ;
     ros::NodeHandle nh("~");
 	
 	double deviation = 0;
@@ -307,10 +327,11 @@ int main(int argc, char **argv)
 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
-	
+	occ_send = nh.advertise<nav_msgs::OccupancyGrid>("occ_send", 10, true);
 	
 	last_ndtmap_full = nh.advertise<nav_msgs::OccupancyGrid>("occ_grid_ndt", 10);
 	
