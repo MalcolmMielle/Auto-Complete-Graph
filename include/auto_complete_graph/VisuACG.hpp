@@ -239,6 +239,19 @@ namespace acg{
 				
 			}
 		}
+
+
+		void publishFullOccGrid(){
+			grid_map::GridMap gridMap;
+			ACGToGridMap(*_acg, gridMap);
+			nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+			nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
+			grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+			// auto node = _acg->getRobotNodes()[0];
+			// auto vertex = node->estimate().toIsometry();
+			// moveOccupancyMap(*occ_out, vertex);
+			_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_out);
+		}
 		
 		void updateRviz(){
 			
@@ -250,52 +263,8 @@ namespace acg{
 			
 // 			_ndt_node_markers.points.clear();
 			
+            // if(_acg->getRobotNodes().size() >= 1){
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
-// 				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
-// 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
-// 				ACGtoOccupancyGrid(*_acg, occ_outt);
-				
-// 				grid_map::GridMap gridMap;
-// 				ACGToGridMap(*_acg, gridMap);
-				
-// 				std::cout << "Going to publish" << std::endl;
-				
-// 				Eigen::Affine2d aff; aff.matrix() << 1, 0, 0, 0, 1, 0, 0, 0, 1;
-// 				moveOccupancyMap(*occ_out, aff);
-// 				
-// 				grid_map::GridMap gridMap({"all"});
-// 				grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "all", gridMap);
-				
-// 				std::cout << "To occ" << std::endl;
-// 				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
-// 				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
-// 				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
-				
-// 				std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
-// 				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
-				
-// 				exit(0);
-				
-// 				auto node = _acg->getRobotNodes()[0].getNode();
-// 				auto vertex = node->estimate().toIsometry();
-// 				moveOccupancyMap(*occ_out, vertex);
-				
-				
-// 				cv::Mat originalImageP;
-// 				grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
-// 				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
-				
-// 				std::cout << "Pub" << std::endl;
-// 				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
-// 				ndt_map::NDTVectorMapMsg msg;
-// 				(NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id
-// // 				lslgeneric::toMessage((*_acg).getRobotNodes()[(*_acg).getRobotNodes().size() - 1].getMap().get(), msg, "world");
-// 				_ndtmap.publish<ndt_map::NDTMapMsg>(msg);
-// 				saveImage(occ_out);
-// 				std::cout << "Image saved" << std::endl;
-				
-// 				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*occ_out);
-
 				ndt_map::NDTVectorMapMsg msg;
 				msg.header.frame_id = "/world";
 				msg.header.stamp=ros::Time::now();
@@ -305,7 +274,7 @@ namespace acg{
 				_nb_of_zone = _acg->getRobotNodes().size();
 // 				exit(0);
 				
-			}
+            }
 		}
 		
 		void updateRvizNoNDT(){

@@ -53,6 +53,56 @@ namespace acg{
 	}
 	
 	
+	inline nav_msgs::OccupancyGrid::Ptr ACGNDTtoOcc(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::ConstPtr& ptr_prior_occ, double resol){
+			
+		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
+        if(acg.getRobotNodes().size() != 0){
+            grids.push_back(ptr_prior_occ);
+				
+            std::cout <<"update the zones" << acg.getRobotNodes().size() << std::endl;
+			
+            for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
+// 				for(size_t i = 0 ; i < 1 ; ++i){
+				
+//Grid map test
+                std::cout << "Node" << std::endl;
+                nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
+// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+                lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i]->getMap().get(), *omap, resol, "/world");
+// 					auto pose = acg.getRobotNodes()[i].getPose();
+                auto node = acg.getRobotNodes()[i];
+                auto vertex = node->estimate().toIsometry();
+// 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
+// 					std::cout << "Move : " << node.matrix() << std::endl;
+// 					if(i == 2) exit(0);
+				
+                std::cout << "Move" << std::endl;
+                moveOccupancyMap(*omap, vertex);
+                omap->header.frame_id = "/world";
+                omap->header.stamp = ros::Time::now();
+
+                nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
+                grids.push_back(ptr);
+				
+            }
+			
+        }
+
+        nav_msgs::OccupancyGrid::Ptr occ_out;
+        std::cout << "Building the final thingy " << grids.size() << std::endl;
+        if(grids.size() > 0){
+            std::cout << "Combine " << grids.size() << std::endl;
+            occ_out = occupancy_grid_utils::combineGrids(grids);
+// 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
+            occ_out->header.frame_id = "/world";
+            occ_out->header.stamp = ros::Time::now();
+			
+        }
+		std::cout << "Out" << std::endl;
+		return occ_out;
+	}
+	
+	
 	
 	inline void ACGtoOccupancyGrid(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& occ_out, int start = 0, int end = -1){
 		//************* TODO : shorten this code !
@@ -280,6 +330,7 @@ namespace acg{
 				auto vertex = ptr->estimate().toVector();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
+                std::cout << "Pushing " << veve << std::endl;
 				points.push_back(veve);
 			}
 			
@@ -303,7 +354,7 @@ namespace acg{
 	//TODO : BROKEN FUNCTION FOR NOW
 	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& map){
 		
-		double resol = 0.1;
+        double resol = 1;
 		
 		//************* TODO : shorten this code !
 		//Get max sinze of prior
@@ -393,7 +444,7 @@ namespace acg{
 		gridMaptmp["all"].setZero();
 		
 		auto node = acg.getRobotNodes()[0];
-		auto vertex = node->estimate().toVector();
+// 		auto vertex = node->estimate().toVector();
 		
 		gridMaptmp.setFrameId("/world");
 		gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol, grid_map::Position(0.0, 0.0));
@@ -408,52 +459,7 @@ namespace acg{
 		std::cout << "ORientation " << prior_occ->info.origin.orientation << std::endl;
 // 		exit(0);
 		
-		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
-		
-		
-		if(acg.getRobotNodes().size() != 0){
-			grids.push_back(ptr_prior_occ);
-				
-			std::cout <<"update the zones" << acg.getRobotNodes().size() << std::endl;
-			
-			for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
-// 				for(size_t i = 0 ; i < 1 ; ++i){
-				
-//Grid map test
-				std::cout << "Node" << std::endl;
-				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
-// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i]->getMap().get(), *omap, resol, "/world");
-// 					auto pose = acg.getRobotNodes()[i].getPose();
-				auto node = acg.getRobotNodes()[i];
-				auto vertex = node->estimate().toIsometry();
-// 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
-// 					std::cout << "Move : " << node.matrix() << std::endl;
-// 					if(i == 2) exit(0);
-				
-				std::cout << "Move" << std::endl;
-				moveOccupancyMap(*omap, vertex);
-				omap->header.frame_id = "/world";
-				omap->header.stamp = ros::Time::now();
-
-				nav_msgs::OccupancyGrid::ConstPtr ptr(omap);
-				grids.push_back(ptr);
-				
-			}
-			
-		}
-
-		nav_msgs::OccupancyGrid::Ptr occ_out;
-		std::cout << "Building the final thingy " << grids.size() << std::endl;
-		if(grids.size() > 0){
-			std::cout << "Combine " << grids.size() << std::endl;
-			occ_out = occupancy_grid_utils::combineGrids(grids);
-// 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
-			occ_out->header.frame_id = "/world";
-			occ_out->header.stamp = ros::Time::now();
-			
-		}
-		std::cout << "Out" << std::endl;
+		auto occ_out = ACGNDTtoOcc(acg, ptr_prior_occ, resol);
 		
 // 		grid_map::Matrix& data4 = map["prior"];
 // 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
@@ -466,7 +472,7 @@ namespace acg{
 		
 		grid_map::GridMap mapNDT;
 		//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
-		grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", mapNDT);
+        grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt", mapNDT);
 		
 // 		grid_map::Matrix& data = mapNDT["ndt"];
 // 		for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
@@ -531,9 +537,9 @@ namespace acg{
 // 		assert(map.getPosition()(0) == mapNDT.getPosition()(0) && map.getPosition()(1) == mapNDT.getPosition()(1));
 		fuseGridMap(mapNDT, map, gridtmptmp, "ndt", "prior");
 		
-		map = gridtmptmp;
+//		map = gridtmptmp;
 		map.add("all");
-		map["all"] = map["combined"];
+        map["all"] = gridtmptmp["combined"];
 		
 		
 // 		

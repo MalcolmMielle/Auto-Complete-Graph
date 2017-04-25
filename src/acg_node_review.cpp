@@ -9,12 +9,10 @@
 #include "auto_complete_graph/VisuACG.hpp"
 #include "auto_complete_graph/GoodMatchings.hpp"
 
-
 bool abort_f = false;
 
 ros::Publisher map_pub_;
-
-
+ros::Publisher last_ndtmap_full;
 ros::Time timef;
 
 std::vector<double> all_node_times;
@@ -227,6 +225,9 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 		int a;
 // 		std::cin >> a;
 	}
+	
+	visu.publishFullOccGrid();
+	
 }
 
 
@@ -309,6 +310,9 @@ int main(int argc, char **argv)
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
+	
+	
+	last_ndtmap_full = nh.advertise<nav_msgs::OccupancyGrid>("occ_grid_ndt", 10);
 	
 // 	visu.updateRvizNoNDT();
 	

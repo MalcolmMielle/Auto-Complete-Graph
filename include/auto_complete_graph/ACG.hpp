@@ -1210,6 +1210,12 @@ namespace acg{
 			}
 			
 		}
+
+		/**
+		 * @rbief return the max on x and y of the prior
+		 *
+		 */
+		void getExtremaPrior(double& size_x, double& size_y) const;
 	
 // 		void testNoNanInPrior();
 		

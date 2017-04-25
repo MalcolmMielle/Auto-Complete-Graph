@@ -1717,5 +1717,60 @@ void AASS::acg::AutoCompleteGraph::createDescriptorPrior(cv::Mat& desc)
 }
 
 
+void AASS::acg::AutoCompleteGraph::getExtremaPrior(double& size_x, double& size_y) const{
+	auto edges = getPriorEdges();
+		
+	double max_x, min_x, max_y, min_y;
+	bool flag_init = false;
+	auto it = edges.begin();
+	for(it ; it != edges.end() ; ++it){
+		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+			geometry_msgs::Point p;
+			g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+			auto vertex = ptr->estimate().toVector();
+			if(flag_init == false){
+				flag_init = true;
+				max_x = vertex(0);
+				max_y = vertex(1);
+				min_x = vertex(0);
+				min_y = vertex(1);
+			}
+			else{
+				if(max_x < vertex(0)){
+					max_x = vertex(0);
+				}
+				if(max_y < vertex(1)){
+					max_y = vertex(1);
+				}
+				if(min_x > vertex(0)){
+					min_x = vertex(0);
+				}
+				if(min_y > vertex(1)){
+					min_y = vertex(1);
+				}
+			}
+			
+		}
+		
+	}
+	
+	max_x = std::abs(max_x);
+	max_y = std::abs(max_y);
+	min_x = std::abs(min_x);
+	min_y = std::abs(min_y);
+	
+	if(max_x > min_x){
+		size_x = max_x + 10;
+	}
+	else{
+		size_x = min_x + 10;
+	}
+	if(max_y > min_y){
+		size_y = max_y + 10;
+	}
+	else{
+		size_y = min_y + 10;
+	}	
+}
 
 
