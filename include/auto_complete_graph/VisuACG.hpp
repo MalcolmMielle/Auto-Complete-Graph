@@ -19,6 +19,7 @@ namespace acg{
 		ros::Publisher _last_ndtmap;
 		ros::Publisher _last_ndtmap2;
 		ros::Publisher _last_ndtmap_full;
+		ros::Publisher _prior_map_occ;
 		ros::Publisher _marker_pub;
 		ros::Publisher _ndt_node_pub;
 		ros::Publisher _prior_node_pub;
@@ -53,8 +54,8 @@ namespace acg{
 			_nh = nh;
 			_last_ndtmap = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg", 10);
 			_last_ndtmap2 = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2", 10);
-			_last_ndtmap_full = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg_full", 10);
-			
+			_last_ndtmap_full = _nh.advertise<nav_msgs::OccupancyGrid>("occ_full", 10);
+			_prior_map_occ = _nh.advertise<nav_msgs::OccupancyGrid>("occ_prior", 10);
 			_marker_pub = _nh.advertise<visualization_msgs::Marker>("prior_marker", 10);
 			_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("ndt_nodes_marker", 10);
 			_prior_node_pub = _nh.advertise<visualization_msgs::Marker>("prior_nodes_marker", 10);
@@ -251,6 +252,11 @@ namespace acg{
 			// auto vertex = node->estimate().toIsometry();
 			// moveOccupancyMap(*occ_out, vertex);
 			_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_out);
+			
+			nav_msgs::OccupancyGrid* omap_tmp_p = new nav_msgs::OccupancyGrid();
+			nav_msgs::OccupancyGrid::Ptr occ_out_p(omap_tmp_p);
+			grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "prior", 0, 1, *occ_out_p);
+			_prior_map_occ.publish<nav_msgs::OccupancyGrid>(*occ_out_p);
 		}
 		
 		void updateRviz(){
