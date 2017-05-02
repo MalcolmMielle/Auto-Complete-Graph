@@ -481,6 +481,7 @@ namespace acg{
 		void updateRvizOriginalSLAM(){
 			
 			drawPrior();
+			
 			drawLinks();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
@@ -734,6 +735,9 @@ namespace acg{
 				
 			}
 		}
+		
+		drawAngles();
+		
 		_corner_ndt_node_pub.publish(_corner_ndt_node_markers);
 	}
 	
