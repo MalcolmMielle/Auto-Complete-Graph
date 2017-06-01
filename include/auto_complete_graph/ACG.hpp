@@ -215,6 +215,7 @@ namespace acg{
 	protected:
 		std::shared_ptr<lslgeneric::NDTMap> _map;
 		Eigen::Affine3d _T;
+		double _time;
 	public:
 		g2o::SE2 initial_transfo;
 		cv::Mat img;
@@ -225,6 +226,8 @@ namespace acg{
 		Eigen::Affine3d getPose(){return _T;}
 		const Eigen::Affine3d& getPose() const {return _T;}
 		void setPose(const Eigen::Affine3d& T) {_T = T;}
+		void setTime(double t){_time = t;}
+		double getTime(){return _time;}
 
 
   };

@@ -975,7 +975,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
 
 	std::cout << "BEfore " << std::endl;
-	printCellsNum();
+// 	printCellsNum();
 	std::cout << "Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph << std::endl;
 	
 	//************* Add and create all new nodes, and extract the corners from the new NDT maps *********//
@@ -1023,6 +1023,8 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
 			//********************** Extract the corners *****************//
 			extractCornerNDTMap(map, robot_ptr, robot_pos);
+			//********************** Add the time stamp ******************//
+			robot_ptr->setTime(ndt_graph.getNode(i).time_last_update);
 			
 		}
 		//Save new number of nodes to update
@@ -1046,7 +1048,7 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 	noDoubleLinks();
 	
 	std::cout << "After " << std::endl;
-	printCellsNum();
+// 	printCellsNum();
 		
 }
 
