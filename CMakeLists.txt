@@ -28,6 +28,7 @@ set(CMAKE_CXX_STANDARD 11)
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED )
+find_package(vodigrex REQUIRED )
 
 add_subdirectory(cmake_modules)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
@@ -36,6 +37,7 @@ find_package(G2O REQUIRED)
 find_package(SUITESPARSE REQUIRED)
 INCLUDE_DIRECTORIES(${CSPARSE_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${G2O_INCLUDE_DIR})
+include_directories(${vodigrex_INCLUDE_DIRS})
 
 set(G2O_LIBS ${G2O_CORE_LIBRARY} ${G2O_SOLVER_CSPARSE}  ${CSPARSE_LIBRARY} ${G2O_STUFF_LIBRARY} ${CHOLMOD_LIBRARY}  ${G2O_SOLVER_CSPARSE_EXTENSION} ${G2O_SOLVER_SLAM2D_LINEAR} ${G2O_TYPES_SLAM2D})
 
@@ -230,7 +232,7 @@ add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_review
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
 )
 
 add_executable(acg_node_feature src/acg_node_feature.cpp)
@@ -241,7 +243,7 @@ add_dependencies(acg_node_feature ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_feature
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
 )
 
 
@@ -253,7 +255,7 @@ add_dependencies(acg_node_rviz_full_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_full_fast
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS}
+  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES} 
 )
 
 # add_executable(test_match tests/test_match.cpp)
