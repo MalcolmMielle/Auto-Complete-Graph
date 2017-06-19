@@ -215,6 +215,7 @@ namespace acg{
 	protected:
 		std::shared_ptr<lslgeneric::NDTMap> _map;
 		Eigen::Affine3d _T;
+		double _time;
 	public:
 		g2o::SE2 initial_transfo;
 		cv::Mat img;
@@ -225,6 +226,8 @@ namespace acg{
 		Eigen::Affine3d getPose(){return _T;}
 		const Eigen::Affine3d& getPose() const {return _T;}
 		void setPose(const Eigen::Affine3d& T) {_T = T;}
+		void setTime(double t){_time = t;}
+		double getTime(){return _time;}
 
 
   };
@@ -253,7 +256,7 @@ namespace acg{
 		double getDirectionGlobal() const {
 			assert(first_seen_from != NULL);
 			auto vec = first_seen_from->estimate().toVector();
-			std::cout << "Got estimate " << std::endl;
+// 			std::cout << "Got estimate " << std::endl;
 			double angle = vec(2) + angle_direction.second;
 			return angle;
 		}
@@ -492,7 +495,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -506,7 +509,7 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -517,7 +520,7 @@ namespace acg{
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(0), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
 			
 		
 			std::ifstream infile(load_file);
@@ -886,12 +889,12 @@ namespace acg{
 			
 			if(_flag_optimize == true){
 				std::cout << "OPTIMIZE" << std::endl;
-				checkRobotPoseNotMoved("before opti");
+// 				checkRobotPoseNotMoved("before opti");
 
 				if(_flag_use_robust_kernel){
 					setAgeingHuberKernel();
 				}
-				checkRobotPoseNotMoved("set age in huber kernel");
+// 				checkRobotPoseNotMoved("set age in huber kernel");
 				testNoNanInPrior("set age in huber kernel");
 				testInfoNonNul("set age in huber kernel");
 				
@@ -901,7 +904,7 @@ namespace acg{
 				//Avoid overshoot of the cov
 				for(size_t i = 0 ; i < iter ; ++i){
 					_optimizable_graph.optimize(1);
-					checkRobotPoseNotMoved("optimized with huber");
+// 					checkRobotPoseNotMoved("optimized with huber");
 					testNoNanInPrior("optimized with huber");
 					testInfoNonNul("optimized with huber");
 					//Update prior edge covariance
@@ -918,7 +921,7 @@ namespace acg{
 				
 				for(size_t i = 0 ; i < iter*2 ; ++i){
 					_optimizable_graph.optimize(1);
-					checkRobotPoseNotMoved("optimized with dcs");
+// 					checkRobotPoseNotMoved("optimized with dcs");
 					testNoNanInPrior("optimized with dcs");
 					testInfoNonNul("optimized with dcs");
 					//Update prior edge covariance
@@ -947,7 +950,7 @@ namespace acg{
 			overCheckLinks();
 			
 			exportChi2s();
-			checkRobotPoseNotMoved("after opti");
+// 			checkRobotPoseNotMoved("after opti");
 // 			cv::Mat d;
 // 			createDescriptorNDT(d);
 			
@@ -1218,6 +1221,16 @@ namespace acg{
 		void getExtremaPrior(double& size_x, double& size_y) const;
 	
 // 		void testNoNanInPrior();
+		
+		
+		void printCellsNum() const {
+			std::cout << "Cell numbers " << std::endl;
+			int  i = 0;
+			for(auto it = _nodes_ndt.begin() ; it != _nodes_ndt.end() ; ++it){
+				std::cout << "For node " << i << " : " << (*it)->getMap()->getAllCells().size() << std::endl;;
+			}
+			std::cin >> i;
+		}
 		
 	};
 }

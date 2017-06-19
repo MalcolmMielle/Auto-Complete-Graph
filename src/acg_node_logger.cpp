@@ -10,6 +10,7 @@
 #include "auto_complete_graph/BasementFull.hpp"
 #include "auto_complete_graph/VisuACG.hpp"
 #include "auto_complete_graph/GoodMatchings.hpp"
+#include "auto_complete_graph/ACG_logger.hpp"
 
 bool abort_f = false;
 
@@ -135,7 +136,7 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 
 
 
-void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
+void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraphLogger* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 	try{
 		new_node = true;
@@ -231,11 +232,14 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 		int a;
 // 		std::cin >> a;
 	}
+	
+	std::cout << "LOGish" << std::endl;
+	oacg->log();
 }
 
 
 
-void initAll(AASS::acg::AutoCompleteGraph& oacg, AASS::acg::RvizPoints& initialiser, AASS::acg::PriorLoaderInterface& priorloader){
+void initAll(AASS::acg::AutoCompleteGraphLogger& oacg, AASS::acg::RvizPoints& initialiser, AASS::acg::PriorLoaderInterface& priorloader){
 	
 	std::cout << "INIT ALL" << std::endl;
 	std::vector<cv::Point2f> slam_pt;
@@ -267,7 +271,7 @@ void initAll(AASS::acg::AutoCompleteGraph& oacg, AASS::acg::RvizPoints& initiali
 }
 
 
-void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
+void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLogger* oacg){
 	if(msg->data == true){
 		grid_map::GridMap gridMap;
 		AASS::acg::ACGToGridMap(*oacg, gridMap);
@@ -312,7 +316,7 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraphLogger oacg("/home/malcolm/Documents/log_fuser/log_acg.txt", g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
 	
 	//ATTENTION
 	oacg.addPriorGraph(graph_prior);	

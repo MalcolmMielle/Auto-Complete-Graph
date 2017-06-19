@@ -722,11 +722,8 @@ std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(
 	ndt_map::NDTMapMsg msg;
 // 			ATTENTION Frame shouldn't be fixed
 	bool good = lslgeneric::toMessage(map, msg, "/world");
-// 			lslgeneric::NDTMap* map_copy = new lslgeneric::NDTMap(new lslgeneric::LazyGrid(resolution));
-	
 	lslgeneric::NDTMap* map_copy;
 	lslgeneric::LazyGrid* lz;
-// 			bool good = lslgeneric::fromMessage(lz, fuser.map, m.map, frame);
 	std::string frame;
 	bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
 	std::shared_ptr<lslgeneric::NDTMap> shared_map(map_copy);
@@ -736,10 +733,13 @@ std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(
 	//Add Odometry if it is not the first node
 	if(element > 0 ){
 		std::cout << "adding the odometry" << std::endl;
+		
 		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
 		std::cout << " ref " << links[element-1].getRefIdx() << " and mov " << links[element-1].getMovIdx() << std::endl;
+		
 		assert( links[element-1].getRefIdx() < _nodes_ndt.size() );
 		assert( links[element-1].getMovIdx() < _nodes_ndt.size() );
+		
 		auto from = _nodes_ndt[ links[element-1].getRefIdx() ] ;
 		auto toward = _nodes_ndt[ links[element-1].getMovIdx() ] ;
 		
@@ -747,11 +747,13 @@ std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(
 		//TODO : transpose to 3d and use in odometry!
 		Eigen::MatrixXd cov = links[element - 1].cov_3d;
 		
+		std::cout << "COV " << cov << std::endl;
+		
 		std::cout << "Saving cov to 2d" << std::endl;
 		Eigen::Matrix3d cov_2d;
-		cov_2d << cov(0, 0), cov(0, 1), 0,
-					cov(1, 0), cov(1, 1), 0,
-					0, 		 0, 		cov(5, 5);
+		cov_2d << 	cov(0, 0), 	cov(0, 1), 	0,
+					cov(1, 0), 	cov(1, 1), 	0,
+					0, 		 	0, 			cov(5, 5);
 					
 		std::cout << "Saving information " << std::endl;
 		Eigen::Matrix3d information = cov_2d.inverse();
@@ -829,14 +831,14 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 		
 		//***************************Old version for testing***************************//
 		Eigen::Vector2d trueObservation2d = robot_pos.inverse() * real_obs;
-		std::cout << trueObservation(0) << " == " << trueObservation2d(0) << std::endl;
+// 		std::cout << trueObservation(0) << " == " << trueObservation2d(0) << std::endl;
 // 		assert(trueObservation(0) == trueObservation2d(0));
-		std::cout << trueObservation(1) << " == " << trueObservation2d(1) << std::endl;
+// 		std::cout << trueObservation(1) << " == " << trueObservation2d(1) << std::endl;
 // 		assert(trueObservation(1) == trueObservation2d(1));
 		observation2d_test = trueObservation2d;
-		std::cout << observation(0) << " == " << observation2d_test(0) << " minus " << observation(0) - observation2d_test(0) << std::endl;
+// 		std::cout << observation(0) << " == " << observation2d_test(0) << " minus " << observation(0) - observation2d_test(0) << std::endl;
 // 		assert(trueObservation(0) == trueObservation2d(0));
-		std::cout << observation(1) << " == " << observation2d_test(1) << " minus " << observation(1) - observation2d_test(1) << std::endl;
+// 		std::cout << observation(1) << " == " << observation2d_test(1) << " minus " << observation(1) - observation2d_test(1) << std::endl;
 // 		int a ;
 // 		std::cin >> a;
 		//******************************************************************************//
@@ -869,7 +871,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 	/***************** ADD THE CORNERS INTO THE GRAPH***********************/
 	
 	for(size_t i = 0 ; i < corners_end.size() ; ++i){
-		std::cout << "checking corner : " << _nodes_landmark.size() << std::endl ;  /*corners_end[i].print()*/ ; std::cout << std::endl;	
+// 		std::cout << "checking corner : " << _nodes_landmark.size() << std::endl ;  /*corners_end[i].print()*/ ; std::cout << std::endl;	
 		bool seen = false;
 		AASS::acg::VertexLandmarkNDT* ptr_landmark_seen = NULL;
 		for(size_t j = 0 ; j <_nodes_landmark.size() ; ++j){
@@ -879,7 +881,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			
 			double res = cv::norm(point_land - corners_end[i].point);
 			
-			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
+// 			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
 			
 			//If we found the landmark, we save the data
 			if( res < cell_size * 2){
@@ -888,7 +890,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			}
 		}
 		if(seen == false){
-			std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
+// 			std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
 			assert(i < ret_opencv_point_corner.size());
 			g2o::Vector2D vec;
 			vec << corners_end[i].point.x, corners_end[i].point.y ;
@@ -912,20 +914,20 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			
 			//Use accurate CV point
 			//Get old position
-			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
+// 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
 			cv::Point2i center = AASS::das::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
-			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
+// 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
 			assert(center.x <= size_image_max);
 			assert(center.y <= size_image_max);
 			
-			std::cout << "getting the angle" << std::endl;
+// 			std::cout << "getting the angle" << std::endl;
 			double angle = corners_end[i].getDirection();
 			double width = corners_end[i].getAngleWidth();
 			double plus_a = angle + (width/2);
 			double moins_a = angle - (width/2);
 			
 			
-			std::cout << "angle " << angle<< std::endl;
+// 			std::cout << "angle " << angle<< std::endl;
 			cv::Point2i p2;
 			p2.x = center.x + (50 * std::cos(angle) );
 			p2.y = center.y + (50 * std::sin(angle) );
@@ -936,7 +938,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			p2_m.x = center.x + (50 * std::cos(moins_a) );
 			p2_m.y = center.y + (50 * std::sin(moins_a) );
 				
-			std::cout << "Line " << center << " "<< p2 << std::endl;;
+// 			std::cout << "Line " << center << " "<< p2 << std::endl;;
 			
 // 			std::cout << "Angle" << angle.
 			
@@ -972,6 +974,8 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 
 void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
 
+	std::cout << "BEfore " << std::endl;
+// 	printCellsNum();
 	std::cout << "Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph << std::endl;
 	
 	//************* Add and create all new nodes, and extract the corners from the new NDT maps *********//
@@ -982,14 +986,16 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		
 		//TODO just get the links that are interesting for you instead of all of them !
 		//Doing the registration here myself
-		size_t i;
+		
 		auto links = ndt_graph.getOdometryLinks();
 		
 		//Update the link in all node not already added
 		
-		if(_previous_number_of_node_in_ndtgraph >= 1){
-			for (size_t i = _previous_number_of_node_in_ndtgraph - 1; i < links.size(); i++) {
-		//       std::cout << "updating link : " << i << " (size of links :" << links.size() << ")" << std::endl;
+		//Need at least three node to start considering link since the last one is garbage
+		if(_previous_number_of_node_in_ndtgraph >= 2){
+			//Ignore last link
+			for (size_t i = _previous_number_of_node_in_ndtgraph - 2; i < links.size() - 1; i++) {
+		      std::cout << "updating link : " << i << " (size of links :" << links.size() << ")" << std::endl;
 				ndt_graph.updateLinkUsingNDTRegistration(links[i], 10, true);
 			}
 		}
@@ -1002,11 +1008,13 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		//Calculate the original transformation of all 
 		
 		//Assume that all node in the NDT graph must been analysed
-		i = _previous_number_of_node_in_ndtgraph;
+		size_t i;
+		i = _previous_number_of_node_in_ndtgraph - 1;
 // 		std::vector<cv::Point2f> ret_opencv_point_corner;
 // 		std::vector<std::pair<double, double> > angles;
 				
-		for (i; i < ndt_graph.getNbNodes(); ++i) {
+		//ATTENTION Ignore the last node because it's not good usually !
+		for (i; i < ndt_graph.getNbNodes() - 1 ; ++i) {
 			
 			AASS::acg::VertexSE2RobotPose* robot_ptr;
 			g2o::SE2 robot_pos;
@@ -1015,6 +1023,8 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
 			//********************** Extract the corners *****************//
 			extractCornerNDTMap(map, robot_ptr, robot_pos);
+			//********************** Add the time stamp ******************//
+			robot_ptr->setTime(ndt_graph.getNode(i).time_last_update);
 			
 		}
 		//Save new number of nodes to update
@@ -1025,10 +1035,10 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 		// ************ Add the landmarks that were added the corners_end ************************************//
 		
 		//Add stuff directly in the optimization graph : 
-		
+		_previous_number_of_node_in_ndtgraph = ndt_graph.getNbNodes();
 	}
 	
-	_previous_number_of_node_in_ndtgraph = ndt_graph.getNbNodes();
+	
 	
 	//TODO, update links using the newly found landmarks. No need to update the rest obviously (<-HAHA that was so wrrrrongggg need to update it since they moved :P!)
 	
@@ -1036,6 +1046,9 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 
 	std::cout << "Test no double links" << std::endl;
 	noDoubleLinks();
+	
+	std::cout << "After " << std::endl;
+// 	printCellsNum();
 		
 }
 
