@@ -784,7 +784,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 	std::cout << "got all cell sized" << std::endl;
 	double cell_size = x2;
 	
-	AASS::das::NDTCorner cornersExtractor;
+	perception_oru::ndt_feature_finder::NDTCorner cornersExtractor;
 	std::cout << "hopidy" << std::endl;
 	auto ret_export = cornersExtractor.getAllCorners(*map);
 	std::cout << "gotall corner" << std::endl;
@@ -910,12 +910,12 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			double size_image_max = 500;
 			double min, max;
 			//TODO: super convoluted, get rid of NDTCornerGraphElement!
-			AASS::das::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
+			perception_oru::ndt_feature_finder::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
 			
 			//Use accurate CV point
 			//Get old position
 // 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
-			cv::Point2i center = AASS::das::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
+			cv::Point2i center = perception_oru::ndt_feature_finder::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
 // 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
 			assert(center.x <= size_image_max);
 			assert(center.y <= size_image_max);
@@ -1658,13 +1658,13 @@ void AASS::acg::AutoCompleteGraph::createDescriptorNDT(cv::Mat& desc)
 	//Convert to OpenCV
 	auto it = _nodes_ndt.begin();
 	cv::Mat ndt_img;
-	AASS::das::toCvMat(*((*it)->getMap().get()), ndt_img, 500);
+	perception_oru::ndt_feature_finder::toCvMat(*((*it)->getMap().get()), ndt_img, 500);
 	for(; it != _nodes_ndt.end() ; ++it){
 		cv::Mat tmp;
 		cv::Mat finl;
 		double max, min;
 		double size_image_max = 500;
-		AASS::das::toCvMat(*((*it)->getMap().get()), tmp, size_image_max, max, min);
+		perception_oru::ndt_feature_finder::toCvMat(*((*it)->getMap().get()), tmp, size_image_max, max, min);
 		std::cout << "MAX min " << max << " " << min << std::endl;
 		AASS::acg::VertexSE2RobotPose* v_ptr_ndt = *it;
 		
@@ -1694,7 +1694,7 @@ void AASS::acg::AutoCompleteGraph::createDescriptorNDT(cv::Mat& desc)
 			cv::Point2f p_out(vec_out(0), vec_out(1));
 			
 			std::cout << "Position " << p_out << std::endl;
-			cv::Point2d center = AASS::das::scalePoint(p_out, max, min, size_image_max);
+			cv::Point2d center = perception_oru::ndt_feature_finder::scalePoint(p_out, max, min, size_image_max);
 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
 			assert(center.x <= size_image_max);
 			assert(center.y <= size_image_max);

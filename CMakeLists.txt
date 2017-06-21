@@ -5,8 +5,9 @@ project(auto_complete_graph)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  das
+#   das
   ndt_feature
+  ndt_feature_finder
   flirtlib_ros 
   ndt_map
   roscpp
@@ -131,7 +132,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${G2O_LIBS}
 #  LIBRARIES auto_complete_graph
- CATKIN_DEPENDS message_runtime das ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv
+ CATKIN_DEPENDS message_runtime ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv
  DEPENDS system_lib eigen
 )
 

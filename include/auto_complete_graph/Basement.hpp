@@ -3,7 +3,7 @@
 
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
-#include "das/CornerDetector.hpp"
+// #include "das/CornerDetector.hpp"
 #include "PriorLoaderInterface.hpp"
 
 namespace AASS{

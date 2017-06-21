@@ -36,13 +36,14 @@
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
 
-#include "das/AssociationInterface.hpp"
-#include "das/NDTCorner.hpp"
+// #include "das/AssociationInterface.hpp"
+// #include "das/NDTCorner.hpp"
+#include "ndt_feature_finder/NDTCorner.hpp"
 #include "covariance.hpp"
 #include "conversion.hpp"
 #include "OptimizableAutoCompleteGraph.hpp"
 #include "PriorLoaderInterface.hpp"
-#include "das/conversion.hpp"
+#include "ndt_feature_finder/conversion.hpp"
 #include "utils.hpp"
 
 namespace AASS {
@@ -836,6 +837,9 @@ namespace acg{
 			_optimizable_graph.computeInitialGuess();
 		}
 		
+		/**
+		 * @brief save the error in the graph into _chi2s
+		 */
 		void saveErrorStep(){
 			
 			std::cout << "Get final score" << std::endl;
@@ -845,6 +849,9 @@ namespace acg{
 			
 		}
 		
+		/** Export the chi error into a file. " : " is written in between every error"
+		 * 
+		 */
 		void exportChi2s(){
 			std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/chi2s_";
 			std::ostringstream convert;   // stream used for the conversion
@@ -852,14 +859,14 @@ namespace acg{
 			file_out = file_out + convert.str();
 			file_out = file_out + ".txt";
 			std::ofstream infile(file_out);
-			int co = 0;
+// 			int co = 0;
 			for(auto it  = _chi2s.begin() ; it != _chi2s.end() ; ++it){
 				infile << *it; 
 				infile << " : " ;
-				++co;
-				if(co == 10){
-					infile << "\n" ;
-				}
+// 				++co;
+// 				if(co == 10){
+// 					infile << "\n" ;
+// 				}
 			}
 			infile.close();
 		}

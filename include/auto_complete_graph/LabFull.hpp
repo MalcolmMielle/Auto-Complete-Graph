@@ -5,7 +5,7 @@
 
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
-#include "das/CornerDetector.hpp"
+// #include "das/CornerDetector.hpp"
 #include "PriorLoaderInterface.hpp"
 
 namespace AASS{
@@ -19,8 +19,8 @@ namespace AASS{
 		public: 
 			LabFull(double deviation, double anglet, double scalet, cv::Point2f center) : PriorLoaderInterface("/home/malcolm/ros_catkin_ws/indigo_ws/src/auto_complete_graph/tests/lab_base.jpg"){
 				
-				this->_cornerDetect.setMinimumDeviationCorner( (85 * 3.14159) / 180 );
-				this->_cornerDetect.setMinNumberOfBoundingBox( 20 ); 
+// 				this->_cornerDetect.setMinimumDeviationCorner( (85 * 3.14159) / 180 );
+// 				this->_cornerDetect.setMinNumberOfBoundingBox( 20 ); 
 				
 				auto randomNoise = [](double mean, double deviationt) -> double {
 					std::default_random_engine engine{std::random_device()() };
