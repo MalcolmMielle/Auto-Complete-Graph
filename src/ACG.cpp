@@ -952,10 +952,10 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 // 			cv::imshow("NDT_map", copyy);
 // 			cv::waitKey(0);
 		
-			double cx, cy, cz;
-			//Should it be in meters ?
-			map_tmp->getGridSizeInMeters(cx, cy, cz);
-			SIFTNdtLandmark(center, ndt_img, size_image_max, cx, ptr);
+// 			double cx, cy, cz;
+// 			//Should it be in meters ?
+// 			map_tmp->getGridSizeInMeters(cx, cy, cz);
+// 			SIFTNdtLandmark(center, ndt_img, size_image_max, cx, ptr);
 		
 			/****************************************************************/
 
@@ -1051,52 +1051,6 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 // 	printCellsNum();
 		
 }
-
-
-void AASS::acg::AutoCompleteGraph::SIFTNdtLandmark(const cv::Point2f centre, const cv::Mat& img, double size_image_max, double cell_size, VertexLandmarkNDT* vertex)
-{
-	
-	
-	cv::Mat img_tmpp;
-	img.convertTo(img_tmpp, CV_8U);
-	cv::Mat img_tmp;
-	cv::cvtColor( img_tmpp, img_tmp, CV_BGR2GRAY );
-// 	cv::imshow("NDT_map_C", img_tmp);
-// 	cv::waitKey(0);
-	std::string type = type2str(img_tmp.type());
-	std::cout << ">Type " << type << std::endl;
-	assert(type == "8UC1");
-	//Creating a SIFT descriptor for eahc corner
-	cv::KeyPoint keypoint;
-	keypoint.pt = centre;
-	
-	double sizet = 2 * size_image_max / cell_size ;
-	keypoint.size = sizet ;
-	keypoint.angle = -1 ;
-	keypoint.octave = 1 ;
-	
-	std::vector<cv::KeyPoint> keypoint_v;
-	keypoint_v.push_back(keypoint);
-	
-    cv::Mat descriptors_1;
-#if CV_MAJOR_VERSION == 2
-    cv::SiftDescriptorExtractor extractor;
-    extractor.compute( img_tmp, keypoint_v, descriptors_1);
-#else
-    cv::Ptr<cv::Feature2D> extractor = cv::xfeatures2d::SURF::create();
-//    cv::xfeatures2d::SiftDescriptorExtractor extractor;
-    extractor->compute( img_tmp, keypoint_v, descriptors_1);
-#endif
-
-	
-	std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
-	assert(descriptors_1.rows == 1);
-	
-	vertex->descriptor = descriptors_1;
-	vertex->keypoint = keypoint;
-}
-
-
 
 
 
@@ -1638,96 +1592,8 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 }
 
 
-void AASS::acg::AutoCompleteGraph::matchLinks()
-{
-	cv::Mat desc_prior;
-	cv::Mat desc_ndt;
-	createDescriptorNDT(desc_ndt);
-	createDescriptorPrior(desc_prior);
-	
-	cv::FlannBasedMatcher matcher;
-	std::vector< cv::DMatch > matches;
-	matcher.match( desc_ndt, desc_prior, matches );
 
-}
 
-//UNUSUED
-void AASS::acg::AutoCompleteGraph::createDescriptorNDT(cv::Mat& desc)
-{
-	
-	//Convert to OpenCV
-	auto it = _nodes_ndt.begin();
-	cv::Mat ndt_img;
-	perception_oru::ndt_feature_finder::toCvMat(*((*it)->getMap().get()), ndt_img, 500);
-	for(; it != _nodes_ndt.end() ; ++it){
-		cv::Mat tmp;
-		cv::Mat finl;
-		double max, min;
-		double size_image_max = 500;
-		perception_oru::ndt_feature_finder::toCvMat(*((*it)->getMap().get()), tmp, size_image_max, max, min);
-		std::cout << "MAX min " << max << " " << min << std::endl;
-		AASS::acg::VertexSE2RobotPose* v_ptr_ndt = *it;
-		
-		for(auto it_edge = _edge_landmark.begin() ; it_edge != _edge_landmark.end() ; ++it_edge){
-			AASS::acg::VertexLandmarkNDT* v_ptr = dynamic_cast<AASS::acg::VertexLandmarkNDT*> ((*it_edge)->vertices()[1]);
-			std::cout << "Position : " << v_ptr->position << std::endl;
-// 			cv::Point2f p;
-			auto vertex = v_ptr->estimate();
-			//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-// 			p.x = vertex(0);
-// 			p.y = vertex(1);
-			
-			//Transforming corner into NDT_map coordinate system
-			//Corner pose
-			Eigen::Vector3d vec;
-			vec << vertex(0), vertex(1), 0;
-			
-			auto vec_out_se2 = v_ptr_ndt->estimate();
-
-			//Uses just added modified node
-			g2o::SE2 se2_tmp(vec);
-			//Obstacle pose - ndt_node pose
-			se2_tmp = se2_tmp * vec_out_se2.inverse();
-			
-			Eigen::Vector3d vec_out = se2_tmp.toVector();
-			
-			cv::Point2f p_out(vec_out(0), vec_out(1));
-			
-			std::cout << "Position " << p_out << std::endl;
-			cv::Point2d center = perception_oru::ndt_feature_finder::scalePoint(p_out, max, min, size_image_max);
-			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
-			assert(center.x <= size_image_max);
-			assert(center.y <= size_image_max);
-			cv::circle(tmp, center, 20, cv::Scalar(255, 255, 255), 5);			
-			
-		}
-		
-		cv::imshow("NDT_map", tmp);
-		cv::waitKey(0);
-		
-		
-		
-	}
-	
-	
-	
-
-}
-
-void AASS::acg::AutoCompleteGraph::createDescriptorPrior(cv::Mat& desc)
-{
-	cv::Mat m = cv::Mat::ones(4, 3, CV_64F);    // 3 cols, 4 rows
-	cv::Mat row = cv::Mat::ones(1, 3, CV_64F);  // 3 cols
-	m.push_back(row);                           // 3 cols, 5 rows
-	
-	auto it = _nodes_prior.begin();
-	desc = (*it)->priorattr.descriptor;
-	for( ; it != _nodes_prior.end() ; ++it){
-		desc.push_back((*it)->priorattr.descriptor);
-	}
-	assert(desc.rows == _nodes_prior.size());
-
-}
 
 
 void AASS::acg::AutoCompleteGraph::getExtremaPrior(double& size_x, double& size_y) const{

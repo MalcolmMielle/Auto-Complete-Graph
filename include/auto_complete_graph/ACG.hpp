@@ -703,10 +703,7 @@ namespace acg{
 		 * 
 		 */
 		void addPriorGraph(const PriorLoaderInterface::PriorGraph& graph);
-		
-
-		void matchLinks();
-		
+				
 		///@remove the prior and all link edges
 		void clearPrior(){
 			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
@@ -1037,10 +1034,6 @@ namespace acg{
 		
 		std::shared_ptr< lslgeneric::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
 		void extractCornerNDTMap(const std::shared_ptr< lslgeneric::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
-		
-		void SIFTNdtLandmark(const cv::Point2f centre, const cv::Mat& img, double size_image_max, double cell_size, AASS::acg::VertexLandmarkNDT* vertex);
-		void createDescriptorNDT(cv::Mat& desc);
-		void createDescriptorPrior(cv::Mat& desc);
 
 		///@brief do createNewLinks and removeBadLinks
 		virtual void updateLinks();
