@@ -34,6 +34,7 @@ namespace AASS{
 			typedef typename boost::graph_traits<PriorGraphType>::out_edge_iterator PriorEdgeIterator;
 			
 		protected:
+
 			cv::Mat _img_gray;
 // 			std::vector<cv::Point2f> _corner_prior;
 			std::vector<cv::Point2f> _same_point_prior;
@@ -56,6 +57,7 @@ namespace AASS{
 			}
 			
 			void extractSIFTFeature(bool ext){_extractKeypoints = ext;}
+			bool useFeatures(){return _extractKeypoints;}
 			
 			const PriorGraph getGraph() const {return _prior_graph;}
 			PriorGraph getGraph(){return _prior_graph;}

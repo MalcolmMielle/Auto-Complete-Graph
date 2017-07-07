@@ -511,7 +511,7 @@ int AASS::acg::AutoCompleteGraph::findPriorNode(g2o::HyperGraph::Vertex* v){
 }
 
 void AASS::acg::AutoCompleteGraph::addPriorGraph(const PriorLoaderInterface::PriorGraph& graph){
-	
+		
 	std::pair< PriorLoaderInterface::PriorGraph::VertexIterator, PriorLoaderInterface::PriorGraph::VertexIterator > vp;
 	std::deque<PriorLoaderInterface::PriorGraph::Vertex> vec_deque;
 	std::vector<AASS::acg::VertexSE2Prior*> out_prior;
@@ -899,44 +899,44 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			ptr->first_seen_from = robot_ptr;
 			//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later
 			
-			std::cout << "Descriptors" << std::endl;
-			/************************************************************/
-			
-			//Convert NDT MAP to image
-			cv::Mat ndt_img;
-			auto map_tmp = corners_end[i].getNodeLinkedPtr()->getMap();
-			
-			std::cout << "Descriptors" << std::endl;
-			double size_image_max = 500;
-			double min, max;
-			//TODO: super convoluted, get rid of NDTCornerGraphElement!
-			perception_oru::ndt_feature_finder::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
-			
-			//Use accurate CV point
-			//Get old position
-// 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
-			cv::Point2i center = perception_oru::ndt_feature_finder::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
-// 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
-			assert(center.x <= size_image_max);
-			assert(center.y <= size_image_max);
-			
-// 			std::cout << "getting the angle" << std::endl;
-			double angle = corners_end[i].getDirection();
-			double width = corners_end[i].getAngleWidth();
-			double plus_a = angle + (width/2);
-			double moins_a = angle - (width/2);
-			
-			
-// 			std::cout << "angle " << angle<< std::endl;
-			cv::Point2i p2;
-			p2.x = center.x + (50 * std::cos(angle) );
-			p2.y = center.y + (50 * std::sin(angle) );
-			cv::Point2i p2_p;
-			p2_p.x = center.x + (50 * std::cos(plus_a) );
-			p2_p.y = center.y + (50 * std::sin(plus_a) );
-			cv::Point2i p2_m;
-			p2_m.x = center.x + (50 * std::cos(moins_a) );
-			p2_m.y = center.y + (50 * std::sin(moins_a) );
+// 			std::cout << "Descriptors" << std::endl;
+// 			/************************************************************/
+// 			
+// 			//Convert NDT MAP to image
+// 			cv::Mat ndt_img;
+// 			auto map_tmp = corners_end[i].getNodeLinkedPtr()->getMap();
+// 			
+// 			std::cout << "Descriptors" << std::endl;
+// 			double size_image_max = 500;
+// 			double min, max;
+// 			//TODO: super convoluted, get rid of NDTCornerGraphElement!
+// 			perception_oru::ndt_feature_finder::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
+// 			
+// 			//Use accurate CV point
+// 			//Get old position
+// // 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
+// 			cv::Point2i center = perception_oru::ndt_feature_finder::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
+// // 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
+// 			assert(center.x <= size_image_max);
+// 			assert(center.y <= size_image_max);
+// 			
+// // 			std::cout << "getting the angle" << std::endl;
+// 			double angle = corners_end[i].getDirection();
+// 			double width = corners_end[i].getAngleWidth();
+// 			double plus_a = angle + (width/2);
+// 			double moins_a = angle - (width/2);
+// 			
+// 			
+// // 			std::cout << "angle " << angle<< std::endl;
+// 			cv::Point2i p2;
+// 			p2.x = center.x + (50 * std::cos(angle) );
+// 			p2.y = center.y + (50 * std::sin(angle) );
+// 			cv::Point2i p2_p;
+// 			p2_p.x = center.x + (50 * std::cos(plus_a) );
+// 			p2_p.y = center.y + (50 * std::sin(plus_a) );
+// 			cv::Point2i p2_m;
+// 			p2_m.x = center.x + (50 * std::cos(moins_a) );
+// 			p2_m.y = center.y + (50 * std::sin(moins_a) );
 				
 // 			std::cout << "Line " << center << " "<< p2 << std::endl;;
 			
