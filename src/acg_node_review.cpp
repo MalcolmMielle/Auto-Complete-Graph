@@ -87,30 +87,30 @@ inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Aff
 
 
 
-void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraph& visu){
-	std::cout << "Got a new graph " << std::endl;
-	
-	ndt_feature::NDTFeatureGraph graph;
-	
-	std::string frame;
-	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
-	
-
-	acg->updateNDTGraph(graph);
-	
-	
-	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_";
-	std::ostringstream convert;   // stream used for the conversion
-	convert << graph.getNbNodes(); 
-	file_out = file_out + convert.str();
-	file_out = file_out + "nodes.g2o";
-	acg->getGraph().save(file_out.c_str());
-	
-	std::cout << "saved to " << file_out << std::endl;
-	
-// 	exit(0);
-		
-}
+// void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraph& visu){
+// 	std::cout << "Got a new graph " << std::endl;
+// 	
+// 	ndt_feature::NDTFeatureGraph graph;
+// 	
+// 	std::string frame;
+// 	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
+// 	
+// 
+// 	acg->updateNDTGraph(graph);
+// 	
+// 	
+// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_";
+// 	std::ostringstream convert;   // stream used for the conversion
+// 	convert << graph.getNbNodes(); 
+// 	file_out = file_out + convert.str();
+// 	file_out = file_out + "nodes.g2o";
+// 	acg->getGraph().save(file_out.c_str());
+// 	
+// 	std::cout << "saved to " << file_out << std::endl;
+// 	
+// // 	exit(0);
+// 		
+// }
 
 
 void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
@@ -136,10 +136,8 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 
 
 void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
-// void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 	try{
 		new_node = true;
-	// 	abort_f = true;
 		std::cout << "Got a new graph " << std::endl;
 		
 		ros::Time start = ros::Time::now();
@@ -155,81 +153,26 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 		
 		if(oacg->getRobotNodes().size() > 0){
 		
-		
-		// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
-		// 	std::ostringstream convert;   // stream used for the conversion
-		// 	convert << graph.getNbNodes(); 
-		// 	file_out = file_out + convert.str();
-		// 	file_out = file_out + "nodes.g2o";
-		// 	oacg->getGraph().save(file_out.c_str());
-		// 	
-		// 	std::cout << "saved to " << file_out << std::endl;
+			oacg->setFirst();
+			oacg->prepare();
+			oacg->optimize();
+			count++;
 			
-			/*** image****/
-		// 	visu.updateRvizNoNDT();
-		// 		if(was_init == true){
-		// 		int a;
-		// 		std::cout << "PRESS ANYTHING NOT OPTIMISED YET" << std::endl;
-		// 		std::cin >>a;
-				
-			// 	oacg->initializeOptimization();
-			// 	oacg->initialGuess();
-				
-				//Prepare the graph : marginalize + initializeOpti
-				
-		// 		if(was_init == true){
-					oacg->setFirst();
-					oacg->prepare();
-					oacg->optimize();
-					count++;
-		// 		}
-				
-				visu.updateRviz();
-		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
-		// 		std::cin >>a;
-				
-			// 	printImages(oacg);
-			// 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
-			// 	std::ostringstream convert_after;   // stream used for the conversion
-			// 	convert_after << graph.getNbNodes(); 
-			// 	file_out_after = file_out_after + convert.str();
-			// 	file_out_after = file_out_after + "nodes.g2o";
-			// 	oacg->getGraph().save(file_out_after.c_str());
-				
-			// 	visu.toRviz(*oacg);
-				
-			// 	visu.updateRviz();
-			// 	visu.updateRviz();
-			// 	
+			visu.updateRviz();
 
-				timef = ros::Time::now();
+
+			timef = ros::Time::now();
+			
+			node_process_time = node_process_time + (timef - start).toSec();
+			all_node_times.push_back((timef - start).toSec());
+			cycles++;
 				
-				node_process_time = node_process_time + (timef - start).toSec();
-				all_node_times.push_back((timef - start).toSec());
-				cycles++;
-				
-			// 	nav_msgs::OccupancyGrid omap; 
-			// 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
-			// 	moveOccupancyMap(omap, graph.getT());
-			// 	
-			// 	map_pub_.publish(omap);
-				
-			// 	visu.updateRviz();
-				
-			// 	std::cout << "saved to " << file_out_after << std::endl;
-				
-			// 	exit(0);
-		// 	}
-		// 		else{
-		// 			visu.updateRvizNoNDT();
-		// 		}
+
 		}	
 	}
 	catch(...){
 		std::cout << "Error " << std::endl;
 		visu.updateRviz();
-// 		int a;
-// 		std::cin >> a;
 	}
 }
 
@@ -283,6 +226,9 @@ void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGra
 
 int main(int argc, char **argv)
 {
+	std::string parameters_for_ACG = "/home/malcolm/ACG_folder/param.txt";
+	std::string image_file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small";
+	
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
 	ros::Subscriber call_for_publish_occ;
@@ -312,7 +258,7 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), parameters_for_ACG);
 	
 	//ATTENTION
 	oacg.addPriorGraph(graph_prior);	
@@ -322,25 +268,20 @@ int main(int argc, char **argv)
 	
 	
 	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
-	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
+	visu.setImageFileNameOut(image_file_out);
 	
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
-// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
-// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	occ_send = nh.advertise<nav_msgs::OccupancyGrid>("/map", 10, true);
 	
 	last_ndtmap_full = nh.advertise<nav_msgs::OccupancyGrid>("occ_grid_ndt", 10);
-	
-// 	visu.updateRvizNoNDT();
-	
+		
 	timef = ros::Time::now();
 	ros::Time time_begin = ros::Time::now();
 	
 	bool flag = true;
 	while(ros::ok() && flag == true ){
-// 		std::cout <<"SPIN auto_complete" << std::endl;
 		ros::spinOnce();
 		
 		if(abort_f == true){
@@ -353,37 +294,7 @@ int main(int argc, char **argv)
 			visu.updateRvizNoNDT();
 		}
 		
-// 		visu.updateRvizV2();
-// 		std::cout << oacg.getLinkEdges().size()<< std::endl;
-		
 		ros::Time future = ros::Time::now();
-// 		std::cout << "future " << (future - timef).toSec() << " since " << oacg.getRobotNodes().size() << ">" << 5 << " "<< new_node << "==" << true  << " "<< was_init << "==" << true << std::endl;
-// 		exit(0);
-		
-// 		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true && was_init == true){
-// // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
-// // 			exit(0);
-// // 			visu.updateRvizNoNDT();	
-// 		// 	oacg->initializeOptimization();
-// 		// 	oacg->initialGuess();
-// 			//Prepare the graph : marginalize + initializeOpti
-// // 			oacg.getGraph().setFirst();
-// 			oacg.prepare();
-// 			oacg.optimize();
-// 			count++;
-// // 			printImages(&oacg);
-// 			
-// 			std::cout << "********************************************************" << std::endl << std::endl;
-// 			std::cout << "Final number of nodes : " << oacg.getGraph().vertices().size() << " time : " << (future - time_begin).toSec() << std::endl;
-// 			std::cout << "Mean time for processing a node " << node_process_time/cycles <<std::endl;
-// 			std::cout << "********************************************************" << std::endl << std::endl;
-// // 			flag = false;
-			
-// 			visu.toOcc();
-						
-// 			new_node = false;
-			
-// 		}	
 		
 		visu.updateRviz();
 		

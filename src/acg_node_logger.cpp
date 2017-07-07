@@ -287,6 +287,10 @@ void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGra
 
 int main(int argc, char **argv)
 {
+	std::string parameters_for_ACG = "/home/malcolm/ACG_folder/param.txt";
+	std::string logger_file = "/home/malcolm/Documents/log_fuser/log_acg.txt";
+	std::string image_file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small";
+	
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
 	ros::Subscriber call_for_publish_occ;
@@ -316,7 +320,7 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraphLogger oacg("/home/malcolm/Documents/log_fuser/log_acg.txt", g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraphLogger oacg(logger_file, g2o::SE2(0.2, 0.1, -0.1), parameters_for_ACG);
 	
 	//ATTENTION
 	oacg.addPriorGraph(graph_prior);	
@@ -326,7 +330,7 @@ int main(int argc, char **argv)
 	
 	
 	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
-	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
+	visu.setImageFileNameOut(image_file_out);
 	
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
