@@ -146,13 +146,9 @@ namespace acg{
 			auto from_vec2d = from.getDirection2D(*this);
 			auto to_vec2d = to.getDirection2D(*this);
 			
-// 			std::cout << "from " << from_vec2d << " , " << &from << " to " << to_vec2d << ", " << &to << std::endl;
 			//Rotate
-// 			angle = atan2(vector2.y, vector2.x) - atan2(vector1.y, vector1.x);
 			double angle_between = atan2(to_vec2d(1), to_vec2d(0)) - atan2(from_vec2d(1), from_vec2d(0));
-// 			std::cout << "Angle between " << angle_between << std::endl;
 			if (angle_between < 0) angle_between += 2 * M_PI;
-// 			std::cout << "Angle between " << angle_between << std::endl;
 			
 			double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
 			if (angle_from < 0) angle_from += 2 * M_PI;
@@ -177,33 +173,6 @@ namespace acg{
 			
 			return std::pair<double, double>(angle_between, direction);
 		}
-		
-// 		Eigen::Vector2d getDirection2D(const AASS::acg::EdgeSE2Prior_malcolm& from) const {
-// 			
-// 			AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[0]);
-// 			AASS::acg::VertexSE2Prior* ptr2 = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[1]);
-// 			assert(ptr != NULL);
-// 			assert(ptr2 != NULL);
-// 			assert(ptr == this || ptr2 == this);
-// 			Eigen::Vector3d from_1;
-// 			Eigen::Vector3d toward;
-// 			if(ptr == this){
-// 				from_1 = ptr->estimate().toVector();
-// 				toward = ptr2->estimate().toVector();
-// 			}
-// 			else if(ptr2 == this){
-// 				from_1 = ptr2->estimate().toVector();
-// 				toward = ptr->estimate().toVector();
-// 			}
-// 			else{
-// 				assert(true == false && "Weird, the original vertex wasn't found before");
-// 			}
-// 			
-// 			Eigen::Vector3d pose_from1 = toward - from_1;
-// 			Eigen::Vector2d pose_prior; pose_prior << pose_from1(0), pose_from1(1);
-// 			return pose_prior;
-// 			
-// 		}
 
 	};
   
@@ -317,47 +286,10 @@ namespace acg{
 					_angle_width = a_width;
 				}
 				
-				
-// 				size_t size(){
-// 					assert(nodes_linked.size() == nodes_linked_ptr.size());
-// 					assert(nodes_linked.size() == observations.size());
-// 					return observations.size();
-// 				}
-				
-		// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
-// 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
 				AASS::acg::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
 				const Eigen::Vector2d& getObservations() const {return observations;}
 				double getDirection() const {return _angle_observ;}
 				double getAngleWidth() const {return _angle_width;}
-				
-		// 		void push_back(int i){nodes_linked.push_back(i);}
-				
-		// 		void addNode(int i){nodes_linked.push_back(i);}
-		// 		void addObservation(const g2o::Vector2D& obs){ observations.push_back(obs);}
-				
-// 				void fuse(const NDTCornerGraphElement& cor){
-// 					for(size_t i = 0 ; i < cor.getNodeLinked().size() ; ++i){
-// 						bool seen = false;
-// 						for(size_t j = 0 ; j < nodes_linked.size() ; ++j){
-// 							if(cor.getNodeLinked()[i] == nodes_linked[j]){
-// 								seen = true;
-// 							}
-// 						}
-// 						if(seen == false){
-// 							nodes_linked.push_back(cor.getNodeLinked()[i]);
-// 							observations.push_back(cor.getObservations()[i]);
-// 							nodes_linked_ptr.push_back(cor.getNodeLinkedPtr()[i]);
-// 						}
-// 					}
-// 				}
-// 				void print() const {std::cout << point << " nodes : ";
-// 					
-// 					for(size_t i = 0 ; i < nodes_linked.size()  ; ++i){
-// 						std::cout << nodes_linked[i] << " " ;
-// 					}
-// 					
-// 				}
 				
 			};
 		
@@ -399,41 +331,7 @@ namespace acg{
 			
 
 		};
-		
-		
-	public:
-		/**
-		* @brief A class that old a NDT node pointer for the g2o graph, the associated NDTMap and the original affine transform (the one received when the NDTGraph was received)
-		*/
-// 		class NDTNodeAndMap{
-// 			g2o::VertexSE2* _node;
-// 			std::shared_ptr<lslgeneric::NDTMap> _map;
-// 			Eigen::Affine3d _T;
-// 		public:
-// 			
-// 			cv::Mat img;
-// 			
-// 			NDTNodeAndMap(g2o::VertexSE2* node, const std::shared_ptr<lslgeneric::NDTMap>& map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){
-// 				
-// 				AASS::das::toCvMat(*map, img, 500);
-// 				
-// 			};
-// 			
-// 	// 		~NDTNodeAndMap(){delete _map;}
-// 			
-// 			g2o::VertexSE2* getNode(){return _node;}
-// 			const g2o::VertexSE2* getNode() const {return _node;}
-// 			void setNode(g2o::VertexSE2* node){_node = node;}
-// 			std::shared_ptr<lslgeneric::NDTMap> getMap(){return _map;}
-// 			std::shared_ptr<lslgeneric::NDTMap> getMap() const {return _map;}
-// 			void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
-// 			Eigen::Affine3d getPose(){return _T;}
-// 			const Eigen::Affine3d& getPose() const {return _T;}
-// 			
-// 		};
-		
-		
-		
+	
 		
 	protected:
 		
@@ -588,17 +486,9 @@ namespace acg{
 		
 		virtual ~AutoCompleteGraph(){
 			
-// 			std::cout << "Calling ACG dest with size" << _nodes_ndt.size() << std::endl ;
 			delete _sensorOffset;
 			//The _optimizable_graph already delete the vertices in the destructor
-			
 // 			cleanup pointers in NODE
-			
-			for(size_t i = 0 ; i < _nodes_ndt.size() ; ++i){
-// 				std::cout << "Deleting the NDT maps" << std::endl;
-//  				delete _nodes_ndt[i].getMap();
-			}
-// 			std::cout << "OUT ACG dest " << std::endl ;
 			
 		}
 		
@@ -678,9 +568,6 @@ namespace acg{
 		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id);
 		
 		AASS::acg::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-// 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
-// 		void addEdgePrior(double x, double y, double theta, int from, int toward);
-		
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1);
 		
 		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id);
@@ -718,30 +605,13 @@ namespace acg{
 			
 			
 			for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ;){
-// 				auto it_tmp = it;
-// 				assert(*it_tmp == *it);
-// 				++it;
-// 				assert(*it_tmp != *it);
-// 				std::cout <<"removing the vertex " << *it << std::endl;
-// 				if (it != _nodes_prior.end()) {
-// 					std::cout <<"Done " << _nodes_prior.size() <<std::endl;
-					//DIESNT WORK :(
-// 					this->removeVertex(*it);
 					_optimizable_graph.removeVertex(*it, false);
 					it = _nodes_prior.erase(it);
-// 					std::cout <<"removed the vertex " << std::endl;
-// 				}
-// 				it = it_tmp;
-// 				++it;
 				
 			}
-// 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
-			assert(_nodes_prior.size() == 0);
 			
-// 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
-// 				_optimizable_graph.removeVertex(it, true);
-// 			}
-// 			std::cout <<"clearing the edges " << std::endl;
+			assert(_nodes_prior.size() == 0);
+
 			 _edge_prior.clear();
 			 _edge_link.clear();
 			 _edge_interface_of_links.clear();
@@ -753,13 +623,10 @@ namespace acg{
 				assert( dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) == NULL );
 				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
 			}		
-			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
-			std::cout << "DONE removing " << std::endl;
 		}
 		
 		
 		void clearLinks(){
-			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 			int i = 0;
 						
 			for(auto it = _edge_link.begin() ; it != _edge_link.end() ;){
@@ -768,13 +635,7 @@ namespace acg{
 				it = _edge_link.erase(it);
 				
 			}
-// 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
 			assert(_edge_link.size() == 0);
-			
-// 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
-// 				_optimizable_graph.removeVertex(it, true);
-// 			}
-// 			std::cout <<"clearing the edges " << std::endl;
 			 
 			//Making sure all edge prior were removed.
 			auto idmapedges = _optimizable_graph.edges();
@@ -782,8 +643,6 @@ namespace acg{
 // 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
 				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
 			}		
-			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
-			std::cout << "DONE removing " << std::endl;
 		}
 		
 		
@@ -796,17 +655,6 @@ namespace acg{
 			_ndt_graph = new ndt_feature::NDTFeatureGraph(ndt_graph);
 			
 		}
-		
-		
-// 		void clear(){
-// 			
-// 		}
-		
-		/**
-		 * @brief update the NDTGraph from 0 and add noise to the edges depending and noise_percentage
-		 * ATTENTION not needed! Just as to create a clear() function and add noise_percentage as an optionnal argument (default is 0)
-		 */
-// 		void updateFullNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, double noise_percentage){};
 		
 		/**
 		 * @brief Incrementally update the NDTGraph
@@ -856,14 +704,9 @@ namespace acg{
 			file_out = file_out + convert.str();
 			file_out = file_out + ".txt";
 			std::ofstream infile(file_out);
-// 			int co = 0;
 			for(auto it  = _chi2s.begin() ; it != _chi2s.end() ; ++it){
 				infile << *it; 
 				infile << " : " ;
-// 				++co;
-// 				if(co == 10){
-// 					infile << "\n" ;
-// 				}
 			}
 			infile.close();
 		}
@@ -962,11 +805,6 @@ namespace acg{
 		
 		void setAgeingHuberKernel(){
 			
-// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-// 				v->setMarginalized(false);
-// 			}		
-			
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
 // 				std::cout << "Robust Kern" << std::endl;
@@ -977,11 +815,7 @@ namespace acg{
 			}
 		}
 		
-		void setAgeingDCSKernel(){
-// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-// 				v->setMarginalized(false);
-// 			}		
+		void setAgeingDCSKernel(){	
 			
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){

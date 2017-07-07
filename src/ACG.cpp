@@ -66,7 +66,6 @@ AASS::acg::VertexLandmarkNDT* AASS::acg::AutoCompleteGraph::addLandmarkPose(cons
 	AASS::acg::VertexLandmarkNDT* landmark = new AASS::acg::VertexLandmarkNDT();
 	landmark->setId(new_id_);
 	++new_id_;
-// 	std::cout << "Setting the id " << _optimizable_graph.vertices().size() << std::endl;
 	landmark->setEstimate(pos);
 	landmark->position = pos_img;
 	_optimizable_graph.addVertex(landmark);
@@ -267,15 +266,6 @@ AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(cons
 	return priorObservation;
 }
 
-// void AASS::acg::AutoCompleteGraph::addEdgePrior(g2o::SE2 observ, int from, int toward){
-// 	std::tuple<g2o::SE2, int, int> obs1(observ, from, toward);
-// 	addEdgePrior(obs1);
-// }
-// void AASS::acg::AutoCompleteGraph::addEdgePrior(double x, double y, double theta, int from, int toward){
-// 	g2o::SE2 se2(x, y, theta);
-// 	addEdgePrior(se2, from, toward);
-// 	
-// }
 
 g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1){
 	std::cout << "Adding link" << std::endl;
@@ -313,18 +303,6 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 // 	std::cout << "Link cov7 " << _sensorOffset->id() << std::endl;
 	linkObservation->setParameterId(0, _sensorOffset->id());
 	
-// 	std::cout << "Adding edge!" << v2 << " and " << linkObservation->vertices()[0] << " at " << __LINE__ << " " << __FILE__<< "age start " << _age_start_value << " for " << /*linkObservation->interface->getAge() <<*/ std::endl;
-	//Adding the link age
-	
-	//ATTENTION NOT WORKING FOR I DON'T KNOW WHAT REASON
-// 	bool outout = false;   
-// 	std::cout << "Bool" << outout << std::endl;
-// 	outout = linkObservation->interface->setAge(_age_start_value);
-// 	std::cout << "Bool" << outout << std::endl;
-// 	assert(outout == 1);
-// 	std::cout << "Age set" << std::endl;
-// 	assert(linkObservation->interface->manuallySetAge() == true);
-	
 	//HACK REPLACEMENT
 	EdgeInterface edgeinter;
 // 	std::cout << "Setting age value" << std::endl;
@@ -354,18 +332,6 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 			throw std::runtime_error("Pointers are not of compatible type. First pointer should be prior while the second is not a PointXY while it should");
 		}
 	}
-// 	else{
-// 		ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(toward_ptr);
-// 		if(ptr != NULL){
-// 			ptr2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(from_ptr);
-// 			if(ptr2 == NULL){
-// 				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
-// 			}
-// 		}
-// 		else{
-// 			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
-// 		}
-// 	}
 	return addLinkBetweenMaps(pos, ptr, ptr2);
 }
 
@@ -439,40 +405,6 @@ void AASS::acg::AutoCompleteGraph::removeVertex(g2o::HyperGraph::Vertex* v1){
 	}
 	_optimizable_graph.removeVertex(v1, false);
 }
-
-// TODO
-// void AASS::acg::AutoCompleteGraph::removeEdge(g2o::HyperGraph::Edge* v1){
-// 	//Prior
-// 	g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(v1);
-// 	AASS::acg::EdgeSE2Prior_malcolm* ptr_se2 = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(v1);
-// 	g2o::EdgeOdometry_malcolm* ptr_se3 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(v1);
-// 	
-// 	if(ptr != NULL){
-// 		int index = findPriorNode(v1);
-// 		assert(index != -1);
-// 		auto which = _edge_landmark.begin() + index;
-// 		_nodes_prior.erase(which);
-// 	}
-// 	//Robot node
-// 	else if( ptr_se2 != NULL){
-// 		int index = findRobotNode(v1);
-// 		assert(index != -1);
-// 		auto which = _nodes_ndt.begin() + index;
-// 		_nodes_ndt.erase(which);
-// 		
-// 	}
-// 	//Landmark Node
-// 	else if( ptr_se3 != NULL){
-// 		int index = findLandmarkNode(v1);
-// 		assert(index != -1);
-// 		auto which = _nodes_landmark.begin() + index;
-// 		_nodes_landmark.erase(which);
-// 	}
-// 	else{
-// 		throw std::runtime_error("Vertex type not found in list");
-// 	}
-// 	_optimizable_graph.removeVertex(v1, true);
-// }
 
 int AASS::acg::AutoCompleteGraph::findRobotNode(g2o::HyperGraph::Vertex* v){
 	int pos = 0;
@@ -633,39 +565,6 @@ Eigen::Vector3d AASS::acg::AutoCompleteGraph::getLastTransformation()
 		auto original3d_vec = se2_tmptmp.toVector();
 		diff_vec = original3d_vec - shift_vec;
 		
-		/*****************************/
-		
-// 			auto shift = node->estimate().toIsometry();
-		
-		
-// 		double angle = atan2(shift.rotation()(1,0), shift.rotation()(0,0));//rot.angle();//acosa2d.rotation()(0,1)/a2d.rotation()(0,0);
-// 		auto shift3d = Eigen::Translation3d(shift.translation()(0), shift.translation()(1), 0.) * Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitZ());
-// 			auto getRobustYawFromAffine3d = [](const Eigen::Affine3d &a) -> double {
-// 				// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
-// 				Eigen::Vector3d v1(1,0,0);
-// 				Eigen::Vector3d v2 = a.rotation()*v1;
-// 				double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
-// 				double angle = acos(dot);
-// 				// Need to find the sign
-// 				if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
-// 					return angle;
-// 				return -angle;
-// 			};
-// 			
-		
-		
-// 			auto original2d = Eigen::Translation2d(original3d.translation().topRows<2>()) * Eigen::Rotation2D<double>(getRobustYawFromAffine3d(original3d));
-		
-// 			Eigen::Affine2d original2d;
-// 			original2d.matrix() << original3d(0, 0), original3d(0, 1), original3d(0, 3),
-// 								   original3d(1, 0), original3d(1, 1), original3d(1, 3),
-// 												  0,                0, original3d(2, 3);
-
-
-		
-// 			auto diff_affine = original2d.inverse() * shift;
-// 			diff.translation() = diff_affine.translation();
-// 			diff.linear() = diff_affine.rotation();
 	}
 
 	return diff_vec;
@@ -897,67 +796,6 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_opencv_point_corner[i], 1);
 			ptr->addAngleDirection(corners_end[i].getAngleWidth(), corners_end[i].getDirection());
 			ptr->first_seen_from = robot_ptr;
-			//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later
-			
-// 			std::cout << "Descriptors" << std::endl;
-// 			/************************************************************/
-// 			
-// 			//Convert NDT MAP to image
-// 			cv::Mat ndt_img;
-// 			auto map_tmp = corners_end[i].getNodeLinkedPtr()->getMap();
-// 			
-// 			std::cout << "Descriptors" << std::endl;
-// 			double size_image_max = 500;
-// 			double min, max;
-// 			//TODO: super convoluted, get rid of NDTCornerGraphElement!
-// 			perception_oru::ndt_feature_finder::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
-// 			
-// 			//Use accurate CV point
-// 			//Get old position
-// // 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
-// 			cv::Point2i center = perception_oru::ndt_feature_finder::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
-// // 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
-// 			assert(center.x <= size_image_max);
-// 			assert(center.y <= size_image_max);
-// 			
-// // 			std::cout << "getting the angle" << std::endl;
-// 			double angle = corners_end[i].getDirection();
-// 			double width = corners_end[i].getAngleWidth();
-// 			double plus_a = angle + (width/2);
-// 			double moins_a = angle - (width/2);
-// 			
-// 			
-// // 			std::cout << "angle " << angle<< std::endl;
-// 			cv::Point2i p2;
-// 			p2.x = center.x + (50 * std::cos(angle) );
-// 			p2.y = center.y + (50 * std::sin(angle) );
-// 			cv::Point2i p2_p;
-// 			p2_p.x = center.x + (50 * std::cos(plus_a) );
-// 			p2_p.y = center.y + (50 * std::sin(plus_a) );
-// 			cv::Point2i p2_m;
-// 			p2_m.x = center.x + (50 * std::cos(moins_a) );
-// 			p2_m.y = center.y + (50 * std::sin(moins_a) );
-				
-// 			std::cout << "Line " << center << " "<< p2 << std::endl;;
-			
-// 			std::cout << "Angle" << angle.
-			
-// 			cv::Mat copyy;
-// 			ndt_img.copyTo(copyy);
-// 			cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);
-// 			cv::line(copyy, center, p2, cv::Scalar(255, 255, 255), 1);	
-// 			cv::line(copyy, center, p2_p, cv::Scalar(255, 255, 255), 1);	
-// 			cv::line(copyy, center, p2_m, cv::Scalar(255, 255, 255), 1);			
-// 
-// 			cv::imshow("NDT_map", copyy);
-// 			cv::waitKey(0);
-		
-// 			double cx, cy, cz;
-// 			//Should it be in meters ?
-// 			map_tmp->getGridSizeInMeters(cx, cy, cz);
-// 			SIFTNdtLandmark(center, ndt_img, size_image_max, cx, ptr);
-		
-			/****************************************************************/
 
 			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr);
 			
@@ -1120,19 +958,7 @@ int AASS::acg::AutoCompleteGraph::createNewLinks()
 				std::cout << "Already exist" << std::endl;
 			}
 		}
-		//Pushing the link
-// 			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-// 			links.push_back(std::pair<AASS::acg::VertexLandmarkNDT*, AASS::acg::VertexSE2Prior*>(*it, ptr_closest));
 	}
-	
-// 	auto it_links = links.begin();
-// 	for(it_links ; it_links != links.end() ; it_links++){
-// 		g2o::Vector2D vec;
-// 		vec << 0, 0;
-// 		std::cout << "Creating " << it_links->second << " and " << it_links->first << std::endl;
-// 		addLinkBetweenMaps(vec, it_links->second, it_links->first);
-// 	}
-// 	}
 
 return count;
 	
@@ -1467,23 +1293,6 @@ bool AASS::acg::AutoCompleteGraph::noDoubleLinks()
 		if(ptr2 == NULL){
 			throw std::runtime_error("Links do not have the good vertex type. Landmark");
 		}
-		
-// 		for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-// 			AASS::acg::VertexSE2Prior* ptr_tmp = dynamic_cast<AASS::acg::VertexSE2Prior*>((*ite2));
-// 			AASS::acg::VertexLandmarkNDT* ptr2_tmp = dynamic_cast<AASS::acg::VertexLandmarkNDT*>((*ite2));
-// 			
-// 			if(ptr_tmp != NULL){
-// 				std::cout << "Got a VertexSE2" << std::endl;
-// 				ptr = ptr_tmp;
-// 			}
-// 			else if(ptr2_tmp != NULL){
-// 				std::cout << "Got a VertexPOINTXY" << std::endl;
-// 				ptr2 = ptr2_tmp;
-// 			}
-// 			else{
-// 				throw std::runtime_error("Links do not have the good vertex type");
-// 			}
-// 		}
 		
 		++it;
 		if( it != _edge_link.end()){

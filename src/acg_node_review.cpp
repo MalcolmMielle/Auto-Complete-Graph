@@ -4,7 +4,7 @@
 #include "ndt_feature/NDTGraphMsg.h"
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/ndtgraph_conversion.h"
-#include "auto_complete_graph/ACG_feature.hpp"
+#include "auto_complete_graph/ACG.hpp"
 #include "auto_complete_graph/OptimizableAutoCompleteGraph.hpp"
 #include "auto_complete_graph/Basement.hpp"
 #include "auto_complete_graph/BasementFull.hpp"
