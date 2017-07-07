@@ -29,6 +29,7 @@ The class `PriorLoaderInterface.hpp` is used to load prior image and detected co
 * [BetterGraph](https://github.com/MalcolmMielle/BetterGraph)
 * [VoDiGrEx](https://github.com/MalcolmMielle/VoDiGrEx)
 * [G2O](https://github.com/RainerKuemmerle/g2o)
+* [perception_oru](https://github.com/OrebroUniversity/perception_oru)
 * ndt_feature (coming soon)
 * OpenCV
 * Eigen
