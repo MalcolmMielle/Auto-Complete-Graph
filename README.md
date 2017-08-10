@@ -14,10 +14,6 @@ The goal of this porgram is described [in this blog post](https://malcolmmielle.
 The auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv.
 
 
-## Disclaimer
-
-This project is dependent on a package named `ndt_feature` which is not available yet due to some dependency on some proprietary code. I'm in the process of removing the proprietary code out of it and it should be available soon. In the meantime, this repo is here to allow anyone to check out the code.
-
 ## Run the code example
 
 This should all be soon ros parameters but for now here is how you can test the code:
@@ -40,7 +36,7 @@ The class `PriorLoaderInterface.hpp` is used to load prior image and detected co
 * [VoDiGrEx](https://github.com/MalcolmMielle/VoDiGrEx)
 * [G2O](https://github.com/RainerKuemmerle/g2o)
 * [perception_oru](https://github.com/OrebroUniversity/perception_oru)
-* ndt_feature (coming soon)
+* [ndt_feature](https://github.com/MalcolmMielle/ndt_feature_graph)
 * OpenCV
 * Eigen
 * Boost
