@@ -1,8 +1,18 @@
 # Auto Complete Graph (ACG).
 
+
+Using emergency maps to help robots save you in emergencies
+
+## Description
+
+The goal of this porgram is described [in this blog post](https://malcolmmielle.wordpress.com/2017/08/07/using-emergency-maps-to-help-robots-save-you-in-emergencies/) and can be summarised by this sentence:
+
+> a method to integrate an emergency map into a robot map, so that the robot can plan its way toward places it has not yet explored.
+
 ## Paper
 
-The auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087).
+The auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv.
+
 
 ## Run the code example
 
