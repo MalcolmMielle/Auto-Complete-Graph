@@ -12,7 +12,7 @@ namespace acg{
 	
 	
 	inline Eigen::Isometry2d Affine3d2Isometry2d(const Eigen::Affine3d& affine) {
-		Eigen::Affine2d affine2d = lslgeneric::eigenAffine3dTo2d(affine);
+		Eigen::Affine2d affine2d = ndt_feature::eigenAffine3dTo2d(affine);
 		Eigen::Isometry2d isometry2d;
 		isometry2d.translation() = affine2d.translation();
 		isometry2d.linear() = affine2d.rotation();
