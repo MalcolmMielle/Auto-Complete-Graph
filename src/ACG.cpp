@@ -101,7 +101,7 @@ AASS::acg::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(do
 }
 
 
-EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp){
 	
 	Eigen::Matrix3d information;
 	if(_use_user_robot_pose_cov == true){
@@ -132,17 +132,17 @@ EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& 
 	return odometry;
 }
 
-EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addOdometry(observ, from_ptr, toward_ptr, information);
 }
-EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information){
 	g2o::SE2 se2(x, y, theta);
 	return addOdometry(se2, from_id, toward_id, information);
 }
 
-EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 			
 	Eigen::Matrix3d covariance;
 	covariance.fill(0.);
@@ -156,17 +156,17 @@ EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& 
 
 
 
-EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addOdometry(observ, from_ptr, toward_ptr);
 }
-EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id){
 	g2o::SE2 se2(x, y, theta);
 	return addOdometry(se2, from_id, toward_id);
 }
 
-EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 	Eigen::Matrix2d covariance_landmark; 
 	covariance_landmark.fill(0.);
 	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
@@ -192,7 +192,7 @@ EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const
 	
 	return landmarkObservation;
 }
-EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id){
+AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addLandmarkObservation(pos, from_ptr, toward_ptr);
@@ -277,7 +277,7 @@ AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(cons
 // 	
 // }
 
-EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1){
+AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1){
 	std::cout << "Adding link" << std::endl;
 
 	
@@ -342,7 +342,7 @@ EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::
 // 	std::cout << "Done" << std::endl;
 	return linkObservation;
 }
-EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id){
+AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	

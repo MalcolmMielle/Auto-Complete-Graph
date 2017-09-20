@@ -69,7 +69,7 @@ namespace acg{
 };
 
 
-	 class EdgeOdometry_malcolm : public EdgeSE2
+	 class EdgeOdometry_malcolm : public g2o::EdgeSE2
   {
     public:
 		 EdgeInterfaceMalcolm interface;
@@ -83,7 +83,7 @@ namespace acg{
 };
 
 
-	class EdgeLandmark_malcolm : public EdgeSE2PointXY
+	class EdgeLandmark_malcolm : public g2o::EdgeSE2PointXY
   {
     public:
 		EdgeInterfaceMalcolm interface;
@@ -100,7 +100,7 @@ namespace acg{
 };
 
 
-	class EdgeLinkXY_malcolm : public EdgeSE2PointXY
+	class EdgeLinkXY_malcolm : public g2o::EdgeSE2PointXY
 	{
 	public:
 		EdgeInterfaceMalcolm interface;
