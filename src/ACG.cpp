@@ -100,7 +100,7 @@ AASS::acg::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(do
 }
 
 
-g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp){
 	
 	Eigen::Matrix3d information;
 	if(_use_user_robot_pose_cov == true){
@@ -118,7 +118,7 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::
 	
 	assert(information.isZero(1e-10) == false);
 	
-	g2o::EdgeOdometry_malcolm* odometry = new g2o::EdgeOdometry_malcolm;
+	EdgeOdometry_malcolm* odometry = new EdgeOdometry_malcolm;
 	odometry->vertices()[0] = v1 ;
 	odometry->vertices()[1] = v2 ;
 	odometry->setMeasurement(se2);
@@ -131,17 +131,17 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::
 	return odometry;
 }
 
-g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addOdometry(observ, from_ptr, toward_ptr, information);
 }
-g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information){
 	g2o::SE2 se2(x, y, theta);
 	return addOdometry(se2, from_id, toward_id, information);
 }
 
-g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 			
 	Eigen::Matrix3d covariance;
 	covariance.fill(0.);
@@ -155,17 +155,17 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::
 
 
 
-g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& observ, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addOdometry(observ, from_ptr, toward_ptr);
 }
-g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id){
+AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, double y, double theta, int from_id, int toward_id){
 	g2o::SE2 se2(x, y, theta);
 	return addOdometry(se2, from_id, toward_id);
 }
 
-g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 	Eigen::Matrix2d covariance_landmark; 
 	covariance_landmark.fill(0.);
 	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
@@ -173,7 +173,7 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 // 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
 	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 	
-	g2o::EdgeLandmark_malcolm* landmarkObservation =  new g2o::EdgeLandmark_malcolm;
+	EdgeLandmark_malcolm* landmarkObservation =  new EdgeLandmark_malcolm;
 	landmarkObservation->vertices()[0] = v1;
 	landmarkObservation->vertices()[1] = v2;
 	landmarkObservation->setMeasurement(pos);
@@ -191,7 +191,7 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 	
 	return landmarkObservation;
 }
-g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id){
+AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addLandmarkObservation(pos, from_ptr, toward_ptr);
@@ -267,7 +267,7 @@ AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(cons
 }
 
 
-g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1){
+AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1){
 	std::cout << "Adding link" << std::endl;
 
 	
@@ -284,7 +284,7 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 	assert(information_link.isZero(1e-10) == false);
 // 	std::cout << "Link cov2 " << covariance_link << std::endl;
 	
-	g2o::EdgeLinkXY_malcolm* linkObservation = new g2o::EdgeLinkXY_malcolm;
+	EdgeLinkXY_malcolm* linkObservation = new EdgeLinkXY_malcolm;
 	
 // 	std::cout << "Link cov3 " << covariance_link << std::endl;
 // 	g2o::HyperGraph::Vertex* from = dynamic_cast<g2o::HyperGraph::Vertex*>(v2);
@@ -320,7 +320,7 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 // 	std::cout << "Done" << std::endl;
 	return linkObservation;
 }
-g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id){
+AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2D& pos, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	
@@ -336,10 +336,10 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const 
 }
 
 
-std::vector <g2o::EdgeLinkXY_malcolm* >::iterator AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1)
+std::vector <AASS::acg::EdgeLinkXY_malcolm* >::iterator AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(EdgeLinkXY_malcolm* v1)
 {
 	
-	std::vector <g2o::EdgeLinkXY_malcolm* >::iterator next_el;
+	std::vector <EdgeLinkXY_malcolm* >::iterator next_el;
 	auto it = _edge_link.begin();
 	int size = _edge_link.size();
 	int place = 0;
@@ -1003,7 +1003,7 @@ void AASS::acg::AutoCompleteGraph::removeBadLinks()
 				
 // 		it_old_links++;
 				
-// 		std::vector <g2o::EdgeLinkXY_malcolm* >::iterator next_el = it_old_links;
+// 		std::vector <EdgeLinkXY_malcolm* >::iterator next_el = it_old_links;
 		
 		if(norm > _max_distance_for_link_in_meter ){
 			std::cout << "Removing a link" << std::endl;
@@ -1076,10 +1076,10 @@ void AASS::acg::AutoCompleteGraph::testInfoNonNul(const std::string& before) con
 	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
 		assert((*ite)->vertices().size() >= 1);
 		
-		g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(*ite);
+		EdgeLandmark_malcolm* ptr = dynamic_cast<EdgeLandmark_malcolm*>(*ite);
 		AASS::acg::EdgeSE2Prior_malcolm* ptr1 = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
-		g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(*ite);
-		g2o::EdgeLinkXY_malcolm* ptr3 = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite);
+		EdgeOdometry_malcolm* ptr2 = dynamic_cast<EdgeOdometry_malcolm*>(*ite);
+		EdgeLinkXY_malcolm* ptr3 = dynamic_cast<EdgeLinkXY_malcolm*>(*ite);
 		if(ptr != NULL){
 			assert(ptr->information().isZero(1e-10) == false);
 		}		
@@ -1246,7 +1246,7 @@ bool AASS::acg::AutoCompleteGraph::linkAlreadyExist(AASS::acg::VertexLandmarkNDT
 
 
 
-bool AASS::acg::AutoCompleteGraph::linkAlreadyExist(AASS::acg::VertexLandmarkNDT* v_pt, AASS::acg::VertexSE2Prior* v_prior, std::vector <g2o::EdgeLinkXY_malcolm* >::iterator& it)
+bool AASS::acg::AutoCompleteGraph::linkAlreadyExist(AASS::acg::VertexLandmarkNDT* v_pt, AASS::acg::VertexSE2Prior* v_prior, std::vector <EdgeLinkXY_malcolm* >::iterator& it)
 {
 // 	std::cout << "Testing links" << std::endl;
 	for (it ; it != _edge_link.end() ; ++it){
@@ -1309,10 +1309,10 @@ bool AASS::acg::AutoCompleteGraph::noDoubleLinks()
 
 void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step){
 			
-	g2o::EdgeLinkXY_malcolm* v_linkxy = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(e);
-	g2o::EdgeLandmark_malcolm* v_land = dynamic_cast<g2o::EdgeLandmark_malcolm*>(e);
+	EdgeLinkXY_malcolm* v_linkxy = dynamic_cast<EdgeLinkXY_malcolm*>(e);
+	EdgeLandmark_malcolm* v_land = dynamic_cast<EdgeLandmark_malcolm*>(e);
 	AASS::acg::EdgeSE2Prior_malcolm* v_prior = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(e);
-	g2o::EdgeOdometry_malcolm* v_odom = dynamic_cast<g2o::EdgeOdometry_malcolm*>(e);
+	EdgeOdometry_malcolm* v_odom = dynamic_cast<EdgeOdometry_malcolm*>(e);
 	double age = -1;
 	
 	assert(_min_age >= 0);

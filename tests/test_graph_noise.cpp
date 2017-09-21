@@ -77,9 +77,9 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	assert(land2 != NULL);
 	
 	g2o::Vector2D link; link << 0, 0;
-	g2o::EdgeLinkXY_malcolm* link0 = acg.addLinkBetweenMaps(link, prior0, land0);
-	g2o::EdgeLinkXY_malcolm* link1 = acg.addLinkBetweenMaps(link, prior1, land1);
-	g2o::EdgeLinkXY_malcolm* link2 = acg.addLinkBetweenMaps(link, prior2, land2);
+	AASS::acg::EdgeLinkXY_malcolm* link0 = acg.addLinkBetweenMaps(link, prior0, land0);
+	AASS::acg::EdgeLinkXY_malcolm* link1 = acg.addLinkBetweenMaps(link, prior1, land1);
+	AASS::acg::EdgeLinkXY_malcolm* link2 = acg.addLinkBetweenMaps(link, prior2, land2);
 	
 	std::cout << "Done adding the links" << std::endl;
 	
