@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
-  #occupancy_grid_utils
+  occupancy_grid_utils
   grid_map_core
   grid_map_ros
   grid_map_msgs

@@ -370,7 +370,7 @@ AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(
 }
 
 
-std::vector <EdgeLinkXY_malcolm* >::iterator AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(EdgeLinkXY_malcolm* v1)
+std::vector <AASS::acg::EdgeLinkXY_malcolm* >::iterator AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(EdgeLinkXY_malcolm* v1)
 {
 	
 	std::vector <EdgeLinkXY_malcolm* >::iterator next_el;
