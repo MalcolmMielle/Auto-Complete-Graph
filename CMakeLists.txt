@@ -155,7 +155,12 @@ add_custom_target(headers SOURCES ${files})
 ## Declare a C++ library
 add_library(auto_complete_graph_lib
   src/ACG.cpp
+  src/OptimizableAutoCompleteGraph.cpp
+  src/PriorLoaderInterface.cpp
+#   src/VisuACG.cpp
 )
+
+target_link_libraries(auto_complete_graph_lib ${catkin_LIBRARIES} ${G2O_LIBS} ${vodigrex_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -163,7 +168,7 @@ add_library(auto_complete_graph_lib
 # add_dependencies(auto_complete_graph ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## TODO : find a way to remove this by linking it where it should be in ndt_feature
-include_directories(/usr/local/include/flirtlib)
+# include_directories(/usr/local/include/flirtlib)
 
 
 add_executable(acg_node_review src/acg_node_review.cpp)
