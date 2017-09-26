@@ -47,13 +47,13 @@
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>message_generation</build_depend>
-  <build_depend>occupancy_grid_utils</build_depend>
   <build_depend>grid_map_core</build_depend>
   <build_depend>grid_map_ros </build_depend>
   <build_depend>grid_map_msgs</build_depend>
   <build_depend>grid_map_cv</build_depend>
   <build_depend>flirtlib_ros </build_depend>
   <build_depend>ndt_feature_finder </build_depend>
+  <build_depend>occupancy_grid_utils</build_depend>
   
   <run_depend>occupancy_grid_utils</run_depend>
   <run_depend>message_generation</run_depend>

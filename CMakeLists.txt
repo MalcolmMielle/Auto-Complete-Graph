@@ -132,7 +132,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${G2O_LIBS}
 #  LIBRARIES auto_complete_graph
- CATKIN_DEPENDS message_runtime ndt_feature ndt_map roscpp rospy std_msgs occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv
+ CATKIN_DEPENDS message_runtime ndt_feature ndt_map roscpp rospy std_msgs grid_map_core grid_map_ros grid_map_msgs grid_map_cv
  DEPENDS system_lib eigen
 )
 
@@ -165,9 +165,7 @@ add_library(auto_complete_graph_lib
 
 ## TODO : find a way to remove this by linking it where it should be in ndt_feature
 include_directories(/usr/local/include/flirtlib)
-set(NDT_FEATURE_LIBS -L/usr/local/lib/flirtlib -lfeature -lgeometry 
-#-lgui 
--lsensors -lsensorstream -lutils_flirt -lutils)
+
 
 ## Declare a C++ executable
 # # # # # # add_executable(acg_node src/acg_node.cpp)
@@ -233,7 +231,7 @@ add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_review
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
+  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
 )
 
 add_executable(acg_node_logger src/acg_node_logger.cpp)
@@ -244,7 +242,7 @@ add_dependencies(acg_node_logger ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_logger
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
+  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
 )
 
 add_executable(acg_node_feature src/acg_node_feature.cpp)
@@ -255,7 +253,7 @@ add_dependencies(acg_node_feature ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_feature
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
+  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
 )
 
 
@@ -267,7 +265,7 @@ add_dependencies(acg_node_rviz_full_fast ${${PROJECT_NAME}_EXPORTED_TARGETS} ${c
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_rviz_full_fast
-  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES} 
+  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES} 
 )
 
 # add_executable(test_match tests/test_match.cpp)
