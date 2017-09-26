@@ -157,6 +157,7 @@ add_library(auto_complete_graph_lib
   src/ACG.cpp
   src/OptimizableAutoCompleteGraph.cpp
   src/PriorLoaderInterface.cpp
+  src/ACG_feature.cpp
 #   src/VisuACG.cpp
 )
 
