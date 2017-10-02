@@ -5,7 +5,7 @@ Using emergency maps to help robots save you in emergencies
 
 ## Description
 
-The goal of this porgram is described [in this blog post](https://malcolmmielle.wordpress.com/2017/08/07/using-emergency-maps-to-help-robots-save-you-in-emergencies/) and can be summarised by this sentence:
+The goal of this program is described [in this blog post](https://malcolmmielle.wordpress.com/2017/08/07/using-emergency-maps-to-help-robots-save-you-in-emergencies/) and can be summarized by this sentence:
 
 > a method to integrate an emergency map into a robot map, so that the robot can plan its way toward places it has not yet explored.
 
@@ -24,11 +24,11 @@ This should all be soon ros parameters but for now here is how you can test the 
 
 * Use `rosrun auto_complete_graph acg_node_review` to run the algorithm.
 
-* In Rviz, one can give an approximation of the position of the prior compared to robot map using the Publish point button. Only two links are needed to initialise.
+* In Rviz, one can give an approximation of the position of the prior compared to robot map using the Publish point button. Only two links are needed to initialize.
 
 ### How to use your own prior
 
-The class `PriorLoaderInterface.hpp` is used to load prior image and detected corners. Just inherite from this class to create your own prior loader. See an example in the class `basementFull.hpp`. This only argument needed for PriorLoaderInterface is the name of the file image where the prior is.
+The class `PriorLoaderInterface.hpp` is used to load prior image and detected corners. Just inherit from this class to create your own prior loader. See an example in the class `basementFull.hpp`. This only argument needed for PriorLoaderInterface is the name of the file image where the prior is.
 
 ## Dependencies
 
