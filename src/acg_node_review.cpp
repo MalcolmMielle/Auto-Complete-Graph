@@ -1,6 +1,14 @@
 #include <ros/ros.h>
 #include <std_msgs/Bool.h>
 
+#include <sys/time.h>
+#include <sys/stat.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/filesystem/path.hpp>
+
+
 #include "ndt_feature/NDTGraphMsg.h"
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/ndtgraph_conversion.h"
@@ -20,14 +28,78 @@ ros::Publisher occ_send;
 
 ros::Time timef;
 
-std::vector<double> all_node_times;
-double node_process_time = 0;
-int cycles = 0;
-
 int count = 0;
 
 bool new_node = false;
 bool was_init = false;
+
+std::vector<double> time_extract_corner_ndt;
+std::vector<double> time_opti;
+std::vector<double> all_node_times;
+
+inline bool exists_test3 (const std::string& name) {
+	struct stat buffer;   
+	return (stat (name.c_str(), &buffer) == 0); 
+}
+
+
+inline void exportResultsGnuplot(const std::string& file_out){
+	
+		/*** TIMES ***/
+// 	std::vector<double> time_extract_corner_ndt;
+// 	std::vector<double> time_opti;
+// 	std::vector<double> all_node_times;
+	
+	boost::filesystem::path p(file_out);
+	std::string name = p.filename().stem().string();
+	
+	std::string result_file = file_out;
+	std::ofstream myfile;
+	myfile.open (result_file, std::ios::out | std::ios::app);
+	
+	if (myfile.is_open())
+	{
+		myfile << "Full time\n";
+		
+		double mean_times = 0 ;
+		for(auto it = all_node_times.begin() ; it != all_node_times.end() ; ++it){
+			mean_times += *it;
+			myfile << *it << "\n";
+		}
+		mean_times = mean_times / all_node_times.size();
+		
+		myfile << "\nExtract time\n";
+		
+		double mean_extract = 0 ;
+		for(auto it = time_extract_corner_ndt.begin() ; it != time_extract_corner_ndt.end() ; ++it){
+			mean_extract += *it;
+			myfile << *it << "\n";
+		}
+		mean_extract = mean_extract / time_extract_corner_ndt.size();
+		
+		myfile << "\nOpti time\n";
+		
+		double mean_opti = 0 ;
+		for(auto it = time_opti.begin() ; it != time_opti.end() ; ++it){
+			mean_opti += *it;
+			myfile << *it << "\n";
+		}
+		mean_opti = mean_opti / time_opti.size();
+		
+		myfile << "\nMean time, mean extract, mean opti\n" << mean_times << " " << mean_extract << " " << mean_opti << "\n";
+		myfile.close();
+	}
+	else std::cout << "Unable to open file";
+}
+
+inline double getTime() //in millisecond
+{
+	//assuming unix-type systems
+	//timezone tz;
+	timeval  tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec*1000000+tv.tv_usec)*1.0/1000;
+}
 
 inline void printImages(AASS::acg::AutoCompleteGraph* oacg){
 	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
@@ -150,8 +222,12 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 		//ATTENTION: THE BAD GUY !
 		ndt_feature::msgToNDTGraph(*msg, graph, frame);	
 		
-
+		
+		ros::Time start_corner = ros::Time::now();
 		oacg->updateNDTGraph(graph);
+		ros::Time end_corner = ros::Time::now();	
+		double corner_extract_tt = (start_corner - end_corner).toSec();
+		time_extract_corner_ndt.push_back(corner_extract_tt);
 		
 		if(oacg->getRobotNodes().size() > 0){
 		
@@ -177,11 +253,17 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 				
 				//Prepare the graph : marginalize + initializeOpti
 				
+				ros::Time start_opti = ros::Time::now();
+				oacg->setFirst();
+				oacg->prepare();
+				oacg->optimize();
+				ros::Time end_opti = ros::Time::now();	
+				double opti = (start_opti - end_opti).toSec();
+				time_opti.push_back(opti);
+				
+				count++;
 		// 		if(was_init == true){
-					oacg->setFirst();
-					oacg->prepare();
-					oacg->optimize();
-					count++;
+					
 		// 		}
 				
 				visu.updateRviz();
@@ -203,10 +285,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 			// 	
 
 				timef = ros::Time::now();
-				
-				node_process_time = node_process_time + (timef - start).toSec();
 				all_node_times.push_back((timef - start).toSec());
-				cycles++;
 				
 			// 	nav_msgs::OccupancyGrid omap; 
 			// 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
@@ -389,6 +468,7 @@ int main(int argc, char **argv)
 		
 	}
 	
+	exportResultsGnuplot("result.txt");
 
     return 0;
 }

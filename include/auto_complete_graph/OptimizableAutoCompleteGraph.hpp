@@ -274,22 +274,7 @@ namespace acg{
 		
 		private:
 		
-		void setRobustKernelAllEdges(g2o::RobustKernel* ptr = NULL, double width = 1){
-			
-			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-				v->setMarginalized(false);
-			}		
-			
-			auto idmapedges = this->edges();
-			if(ptr != NULL){
-				for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-					std::cout << "Robust Kern" << std::endl;
-					OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
-					e->setRobustKernel(ptr);
-					e->robustKernel()->setDelta(width);
-				}
-			}
+		void setRobustKernelAllEdges(g2o::RobustKernel* ptr = NULL, double width = 1);
 			
 			//Same as ficing it to null to remove kernel
 // 			else{
@@ -318,7 +303,7 @@ namespace acg{
 // 				}
 			}   */ 
 			
-		}
+// 		}
 		
 	};
 }
