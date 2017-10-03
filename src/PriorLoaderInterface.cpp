@@ -79,6 +79,7 @@ void AASS::acg::PriorLoaderInterface::transformOntoSLAM()
 
 void AASS::acg::PriorLoaderInterface::extractCornerPrior()
 {
+
 	
 	_prior_graph.clear();
 					
@@ -97,9 +98,9 @@ void AASS::acg::PriorLoaderInterface::extractCornerPrior()
 	//Very convulted code TODO
 	AASS::acg::PriorLoaderInterface::PriorGraph simple_graph;
 	bettergraph::toSimpleGraph<PriorAttr, AASS::vodigrex::SimpleEdge>(prior_out, simple_graph);
-	
-	
+
 	_prior_graph = simple_graph;
+
 	
 }
 
@@ -158,8 +159,9 @@ void AASS::acg::PriorLoaderInterface::initialize(const std::vector< cv::Point2f 
 	
 	_same_point_prior.push_back(pt_prior[1]);                   
 	_same_point_slam.push_back(slam_point);
-	
+
 }
+
 
 void AASS::acg::PriorLoaderInterface::rotateGraph(const cv::Mat& rot_mat)
 {	

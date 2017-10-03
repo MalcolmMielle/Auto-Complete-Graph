@@ -1,6 +1,8 @@
 #ifndef AUTOCOMPLETEGRAPH_PRIORLOADERINTERFACE_16112016
 #define AUTOCOMPLETEGRAPH_PRIORLOADERINTERFACE_16112016
 
+#include <random>
+
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
 #include "vodigrex/linefollower/LineFollowerGraphCorners.hpp"
@@ -98,10 +100,12 @@ namespace AASS{
 			 * @param[in] pt_slam : points from the robot slam map
 			 * @param[in] pt_prior : equivalent points from the robot slam map
 			 */
+
 			void initialize(const std::vector<cv::Point2f>& pt_slam, const std::vector<cv::Point2f>& pt_prior);			
 			
 		protected:
 			
+
 			void rotateGraph(const cv::Mat& rot_mat );
 			
 			void AffineTransformGraph(const cv::Mat& warp_transfo );
