@@ -361,6 +361,11 @@ namespace acg{
 		
 		std::deque<double> _chi2s;
 		
+		///@brief Threshold of error mean under which we stop the optimization because we arrived to a stable result.
+		double _error_threshold_stop_optimization;
+		///@brief Number of optimizatino for which the error needs ot be stable to be considered finished.
+		int _check_error_stable_over;
+		
 		/**
 		 * @brief : used in a function to update the NDTGraph
 		 * */
@@ -469,43 +474,7 @@ namespace acg{
 			
 
 		};
-		
-		
-	public:
-		/**
-		* @brief A class that old a NDT node pointer for the g2o graph, the associated NDTMap and the original affine transform (the one received when the NDTGraph was received)
-		*/
-// 		class NDTNodeAndMap{
-// 			g2o::VertexSE2* _node;
-// 			std::shared_ptr<lslgeneric::NDTMap> _map;
-// 			Eigen::Affine3d _T;
-// 		public:
-// 			
-// 			cv::Mat img;
-// 			
-// 			NDTNodeAndMap(g2o::VertexSE2* node, const std::shared_ptr<lslgeneric::NDTMap>& map, const Eigen::Affine3d& T) : _node(node), _map(map), _T(T){
-// 				
-// 				AASS::das::toCvMat(*map, img, 500);
-// 				
-// 			};
-// 			
-// 	// 		~NDTNodeAndMap(){delete _map;}
-// 			
-// 			g2o::VertexSE2* getNode(){return _node;}
-// 			const g2o::VertexSE2* getNode() const {return _node;}
-// 			void setNode(g2o::VertexSE2* node){_node = node;}
-// 			std::shared_ptr<lslgeneric::NDTMap> getMap(){return _map;}
-// 			std::shared_ptr<lslgeneric::NDTMap> getMap() const {return _map;}
-// 			void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
-// 			Eigen::Affine3d getPose(){return _T;}
-// 			const Eigen::Affine3d& getPose() const {return _T;}
-// 			
-// 		};
-		
-		
-		
-		
-	protected:
+
 		
 		//Needed system values
 		Eigen::Vector2d _transNoise;
@@ -566,7 +535,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10) {
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -580,7 +549,7 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -591,7 +560,7 @@ namespace acg{
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10){
 			
 		
 			std::ifstream infile(load_file);
@@ -711,6 +680,13 @@ namespace acg{
 		
 		double getStartAge(){return _age_start_value;}
 		void setAgeStartValue(double ss){ _age_start_value = ss;}
+		
+		void numberOfIterationsToCheckForStabilityOfError(int e){
+			_check_error_stable_over = e;
+		}
+		void errorUnderWhichWeStopTheOptimization(int min_error){
+			_error_threshold_stop_optimization = min_error;
+		}
 		
 		bool save(const std::string& file_outt){
 			_optimizable_graph.save(file_outt.c_str());
@@ -946,9 +922,10 @@ namespace acg{
 		
 		/**
 		 * @brief actual optimization loop. Make sure setFirst and prepare are called before. Use Huber first and then DCS.
+		 * @param[in] max_iter maximum number of iteration for huber and DCS. Default at 100. Needs to be more than 2.
 		 * 
 		 */
-		virtual void optimize(int iter = 10){
+		virtual void optimize(int max_iter = 100){
 			
 			_chi2s.clear();
 			
@@ -971,21 +948,21 @@ namespace acg{
 // 				checkRobotPoseNotMoved("set age in huber kernel");
 				testNoNanInPrior("set age in huber kernel");
 				testInfoNonNul("set age in huber kernel");
-				
-// 				updatePriorEdgeCovariance();
 				testNoNanInPrior("update prior edge cov");
 				
-				//Avoid overshoot of the cov
-				for(size_t i = 0 ; i < iter ; ++i){
-					_optimizable_graph.optimize(1);
-// 					checkRobotPoseNotMoved("optimized with huber");
-					testNoNanInPrior("optimized with huber");
-					testInfoNonNul("optimized with huber");
-					//Update prior edge covariance
-// 					updatePriorEdgeCovariance();
-					testNoNanInPrior("update prior edge cov after opti huber");
-					saveErrorStep();
-				}
+				optimize_simple(max_iter);
+				
+// 				//Avoid overshoot of the cov
+// 				for(size_t i = 0 ; i < iter ; ++i){
+// 					_optimizable_graph.optimize(1);
+// // 					checkRobotPoseNotMoved("optimized with huber");
+// 					testNoNanInPrior("optimized with huber");
+// 					testInfoNonNul("optimized with huber");
+// 					//Update prior edge covariance
+// // 					updatePriorEdgeCovariance();
+// 					testNoNanInPrior("update prior edge cov after opti huber");
+// 					saveErrorStep();
+// 				}
 				
 				/********** DCS kernel ***********/
 				if(_flag_use_robust_kernel){
@@ -993,16 +970,18 @@ namespace acg{
 				}
 				testNoNanInPrior("set age in DCS kernel");
 				
-				for(size_t i = 0 ; i < iter*2 ; ++i){
-					_optimizable_graph.optimize(1);
-// 					checkRobotPoseNotMoved("optimized with dcs");
-					testNoNanInPrior("optimized with dcs");
-					testInfoNonNul("optimized with dcs");
-					//Update prior edge covariance
-// 					updatePriorEdgeCovariance();
-					testNoNanInPrior("update prior edge cov after opti dcs");
-					saveErrorStep();
-				}
+				optimize_simple(max_iter);
+				
+// 				for(size_t i = 0 ; i < iter*2 ; ++i){
+// 					_optimizable_graph.optimize(1);
+// // 					checkRobotPoseNotMoved("optimized with dcs");
+// 					testNoNanInPrior("optimized with dcs");
+// 					testInfoNonNul("optimized with dcs");
+// 					//Update prior edge covariance
+// // 					updatePriorEdgeCovariance();
+// 					testNoNanInPrior("update prior edge cov after opti dcs");
+// 					saveErrorStep();
+// 				}
 			
 
 			}
@@ -1101,6 +1080,81 @@ namespace acg{
 // 		getGridMap();
 		
 	public:
+		
+		void optimize_simple(int max_iter){
+			int count = 0;
+			std::deque<double> _chi_kernel;
+			for ( ; count < max_iter && count < 2 ; ++count){
+				std::cout << "Optimizing because we need to " << std::endl;
+				_optimizable_graph.optimize(1);
+				_optimizable_graph.computeActiveErrors();
+				_chi_kernel.push_back(_optimizable_graph.chi2());
+				saveErrorStep();
+				
+				testNoNanInPrior("optimized with huber");
+				testInfoNonNul("optimized with huber");
+				testNoNanInPrior("update prior edge cov after opti huber");
+			}
+			if(max_iter >= 2){
+				while(ErrorStable(_chi_kernel) == false && count < max_iter){
+					count++;
+					std::cout << "Optimizing until error stops it " << std::endl;
+					_optimizable_graph.optimize(1);
+					_optimizable_graph.computeActiveErrors();
+					_chi_kernel.push_back(_optimizable_graph.chi2());
+					saveErrorStep();
+					
+					testNoNanInPrior("optimized with huber");
+					testInfoNonNul("optimized with huber");
+					testNoNanInPrior("update prior edge cov after opti huber");
+				}
+			}
+			int a;
+			std::cout << "Enter anything to pass " <<count << std::endl;
+			std::cin >> a;
+			
+		}
+		
+		/**
+		 * @brief Check if the error in the graph was stable over time
+		 * return true if it is and false if it was not
+		 */
+		bool ErrorStable(const std::deque<double>& _chi_kernel, int max_steps = 10){
+			if(_chi_kernel.size() < 2){
+				throw std::runtime_error("Cannot determine error difference with less than 2 optimization cycles.");
+			}
+			int max_steps_count = 0;
+			std::vector<double> error_diff;
+			double error_mean = 0;
+			auto it = _chi_kernel.rbegin();
+			++it;
+			for(; it != _chi_kernel.rend() ; ++it ){
+				if(max_steps_count == max_steps){
+					break;
+				}
+				error_diff.push_back(std::abs( *it - *(it - 1)) );
+				error_mean = error_mean + std::abs( (*it - *(it - 1)) );
+				++max_steps_count;
+			}
+			error_mean = error_mean / max_steps_count;
+			
+			it = _chi_kernel.rbegin();
+			++it;
+			max_steps_count = 0;
+			for(; it != _chi_kernel.rend() ; ++it ){
+				if(max_steps_count == max_steps){
+					break;
+				}
+				std::cout << std::abs( *it - *(it - 1) ) << " ";
+				++max_steps_count;
+			}
+			std::cout << std::endl;
+			std::cout << "Error is " << error_mean << "threshold is " << _error_threshold_stop_optimization << std::endl;
+			if(error_mean < _error_threshold_stop_optimization){
+				return true;
+			}
+			return false;
+		}
 		
 		std::shared_ptr< lslgeneric::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
 		void extractCornerNDTMap(const std::shared_ptr< lslgeneric::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
