@@ -25,8 +25,8 @@ namespace acg{
 		typedef g2o::LinearSolverCSparse<SlamBlockSolver::PoseMatrixType> SlamLinearSolver;
 	protected:
 // 		g2o::SparseOptimizer _optimizer;
-		std::unique_ptr<SlamLinearSolver> _linearSolver;
-		std::unique_ptr<SlamBlockSolver> _blockSolver;
+// 		std::unique_ptr<SlamLinearSolver> _linearSolver;
+// 		std::unique_ptr<SlamBlockSolver> _blockSolver;
 		//TODO : test with LevenbergMarquard instead (maybe doesn't scale as aggressively)
 		g2o::OptimizationAlgorithmGaussNewton* _solver;
 		g2o::SE2 _sensorOffsetTransf;
@@ -51,10 +51,10 @@ namespace acg{
 // 				const Eigen::Vector2d& linkn
 									) : _sensorOffsetTransf(sensoffset), _first(true){
 			
-			_linearSolver = g2o::make_unique<SlamLinearSolver>();
-			_linearSolver->setBlockOrdering(false);
-			_blockSolver = g2o::make_unique<SlamBlockSolver>(std::move(_linearSolver));
-			_solver = new g2o::OptimizationAlgorithmGaussNewton(std::move(_blockSolver));
+			auto linearSolver = g2o::make_unique<SlamLinearSolver>();
+			linearSolver->setBlockOrdering(false);
+			auto blockSolver = g2o::make_unique<SlamBlockSolver>(std::move(linearSolver));
+			_solver = new g2o::OptimizationAlgorithmGaussNewton(std::move(blockSolver));
 			//_linearSolver->setBlockOrdering(false);
 			this->setAlgorithm(_solver);
 			
@@ -114,8 +114,8 @@ namespace acg{
 		
 // 		AutoCompleteGraph* getGraph(){return _graph;}
 		g2o::ParameterSE2Offset* getSensorOffset(){return _sensorOffset;}
-		std::unique_ptr<SlamLinearSolver>& getLinearSolver(){ return _linearSolver;}
-		std::unique_ptr<SlamBlockSolver>& getBlockSolver(){ return _blockSolver;}
+// 		std::unique_ptr<SlamLinearSolver>& getLinearSolver(){ return _linearSolver;}
+// 		std::unique_ptr<SlamBlockSolver>& getBlockSolver(){ return _blockSolver;}
 // 		const g2o::SparseOptimizer& getoptimizer(){return _optimizer;}
 		g2o::OptimizationAlgorithmGaussNewton* getSolver() {return _solver;}
 		const g2o::SE2& getSensorOffsetTransfo(){return _sensorOffsetTransf;}
