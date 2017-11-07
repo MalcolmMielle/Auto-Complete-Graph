@@ -166,12 +166,9 @@ AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(doubl
 	return addOdometry(se2, from_id, toward_id);
 }
 
-AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
-	Eigen::Matrix2d covariance_landmark; 
-	covariance_landmark.fill(0.);
-	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
-	covariance_landmark(1, 1) = _landmarkNoise[1]*_landmarkNoise[1];
-// 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
+
+AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark){
+
 	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 	
 	EdgeLandmark_malcolm* landmarkObservation =  new EdgeLandmark_malcolm;
@@ -191,6 +188,16 @@ AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObserv
 	_edge_landmark.push_back(landmarkObservation);
 	
 	return landmarkObservation;
+}
+
+
+AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+	Eigen::Matrix2d covariance_landmark; 
+	covariance_landmark.fill(0.);
+	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
+	covariance_landmark(1, 1) = _landmarkNoise[1]*_landmarkNoise[1];
+// 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
+	return addLandmarkObservation(pos, v1, v2, covariance_landmark);
 }
 AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
@@ -771,6 +778,7 @@ std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(
 }
 
 
+//TODO: refactor this!
 void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
 {
 	
@@ -788,23 +796,24 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 	std::cout << "hopidy" << std::endl;
 	auto ret_export = cornersExtractor.getAllCorners(*map);
 	std::cout << "gotall corner" << std::endl;
-	auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();	
+// 	auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();	
 	std::cout << "got all accurate corners" << std::endl;	
-	auto angles = cornersExtractor.getAngles();
+// 	auto angles = cornersExtractor.getAngles();
 // 	std::cout << "got all angles" << std::endl;
 	
-	auto it = ret_opencv_point_corner.begin();
+	auto it = ret_export.begin();
 	
-	std::cout << "Found " << ret_opencv_point_corner.size() << " corners " << std::endl;			
+	std::cout << "Found " << ret_export.size() << " corners " << std::endl;			
 	//Find all the observations :
 	
 	//**************** HACK: translate the corners now : **************//
 	
 	int count_tmp = 0;
-	for(it ; it != ret_opencv_point_corner.end() ; ++it){
+	for(it ; it != ret_export.end() ; ++it){
 // 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
 		Eigen::Vector3d vec;
-		vec << it->x, it->y, angles[count_tmp].second;
+// 		vec << it->x, it->y, angles[count_tmp].second;
+		vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, ret_export[count_tmp].getDirection();
 		
 // 		auto vec_out_se2 = _nodes_ndt[i]->estimate();
 
@@ -856,14 +865,14 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 // 				std::cout << "NEW POINT : "<< p_out << std::endl;
 		
 		NDTCornerGraphElement cor(p_out);
-		cor.addAllObserv(robot_ptr, observation, angle_landmark, angles[count_tmp].first);
+		cor.addAllObserv(robot_ptr, observation, angle_landmark, ret_export[count_tmp].getAngle());
 		corners_end.push_back(cor);
 		count_tmp++;
 		
 	}
 	//At this point, we have all the corners
 // 	assert(corners_end.size() - c_size == ret_opencv_point_corner_tmp.size());
-	assert(corners_end.size() == ret_opencv_point_corner.size());
+	assert(corners_end.size() == ret_export.size());
 // 	assert(corners_end.size() - c_size == angles_tmp.size());
 // 	assert(corners_end.size() == angles.size());
 // 	c_size = corners_end.size();
@@ -891,12 +900,19 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 		}
 		if(seen == false){
 // 			std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
-			assert(i < ret_opencv_point_corner.size());
+			assert(i < ret_export.size());
 			g2o::Vector2D vec;
 			vec << corners_end[i].point.x, corners_end[i].point.y ;
-			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_opencv_point_corner[i], 1);
+			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
 			ptr->addAngleDirection(corners_end[i].getAngleWidth(), corners_end[i].getDirection());
 			ptr->first_seen_from = robot_ptr;
+			
+			//TESTING to visualise which cells gave the corner
+			ptr->cells_that_gave_it_1 = ret_export[i].getCells1();
+			ptr->cells_that_gave_it_2 = ret_export[i].getCells2();
+			ptr->gaussian_seen_from = robot_pos;
+			//END OF TEST
+			
 			//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later
 			
 // 			std::cout << "Descriptors" << std::endl;

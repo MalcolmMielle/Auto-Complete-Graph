@@ -38,7 +38,7 @@
 
 // #include "das/AssociationInterface.hpp"
 // #include "das/NDTCorner.hpp"
-#include "ndt_feature_finder/NDTCorner.hpp"
+#include "ndt_feature_finder/ndt_corner.hpp"
 #include "covariance.hpp"
 #include "conversion.hpp"
 #include "OptimizableAutoCompleteGraph.hpp"
@@ -85,7 +85,7 @@ namespace acg{
 
 	class EdgeLandmark_malcolm : public g2o::EdgeSE2PointXY
   {
-    public:
+    public:		
 		EdgeInterfaceMalcolm interface;
 // 	  g2o::SE2 _original_value;
 //       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -306,6 +306,15 @@ namespace acg{
 	class VertexLandmarkNDT: public g2o::VertexPointXY
 	{
 		public:
+			
+		//TESTING
+		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_1;
+		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_2;
+		g2o::SE2 gaussian_seen_from;
+		
+		//END OF TESTING
+			
+			
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		EdgeInterfaceMalcolm interface;
 
@@ -720,6 +729,7 @@ namespace acg{
 		EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
 		EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id);
 		
+		EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark);
 		EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 		EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2D& pos, int from_id, int toward_id);
 		

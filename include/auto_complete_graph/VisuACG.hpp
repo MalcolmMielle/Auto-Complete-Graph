@@ -5,6 +5,7 @@
 #include "occupancy_grid_utils/combine_grids.h"
 #include "ndt_map/NDTVectorMapMsg.h"
 #include "acg_conversion.hpp"
+#include "ndt_feature_finder/ndt_cell_2d_utils.hpp"
 
 
 namespace AASS {
@@ -30,6 +31,8 @@ namespace acg{
 		ros::Publisher _angles_prior_pub;
 		ros::Publisher _anglesw_pub;
 		ros::Publisher _anglesw_prior_pub;
+		ros::Publisher _gaussian_pub;
+		ros::Publisher _gaussian_pub2;
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 		AutoCompleteGraph* _acg;
@@ -44,6 +47,8 @@ namespace acg{
 		visualization_msgs::Marker _anglesw_markers;
 		visualization_msgs::Marker _angles_prior_markers;
 		visualization_msgs::Marker _anglesw_prior_markers;
+		visualization_msgs::Marker _gaussian_that_gave_corners;
+		visualization_msgs::Marker _gaussian_that_gave_corners2;
 		
 		double _resolution;
 		
@@ -66,6 +71,8 @@ namespace acg{
 			_anglesw_prior_pub = _nh.advertise<visualization_msgs::Marker>("angleswidth_prior", 10);
 			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
 			_ndtmap = _nh.advertise<ndt_map::NDTVectorMapMsg>("ndt_map_msg_node", 10);
+			_gaussian_pub = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners", 10);
+			_gaussian_pub2 = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners2", 10);
 			
 			_acg = acg;
 			
@@ -155,6 +162,28 @@ namespace acg{
 			_anglesw_prior_markers.color.g = 0.1f;
 			_anglesw_prior_markers.color.r = 0.5f;
 			_anglesw_prior_markers.color.a = 1.0;
+			
+			_gaussian_that_gave_corners.type = visualization_msgs::Marker::LINE_LIST;
+			_gaussian_that_gave_corners.header.frame_id = "/world";
+			_gaussian_that_gave_corners.ns = "acg";
+			_gaussian_that_gave_corners.id = 7;
+			_gaussian_that_gave_corners.scale.x = 0.2;
+			_gaussian_that_gave_corners.scale.y = 0.2;
+			_gaussian_that_gave_corners.color.g = 1.0f;
+			_gaussian_that_gave_corners.color.r = 0.5f;
+			_gaussian_that_gave_corners.color.a = 1.0;
+			
+			_gaussian_that_gave_corners2.type = visualization_msgs::Marker::LINE_LIST;
+			_gaussian_that_gave_corners2.header.frame_id = "/world";
+			_gaussian_that_gave_corners2.ns = "acg";
+			_gaussian_that_gave_corners2.id = 7;
+			_gaussian_that_gave_corners2.scale.x = 0.2;
+			_gaussian_that_gave_corners2.scale.y = 0.2;
+			_gaussian_that_gave_corners2.color.r = 1.0f;
+			_gaussian_that_gave_corners2.color.b = 1.0f;
+			_gaussian_that_gave_corners2.color.a = 1.0;
+			
+			
 // 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
 // 		void toRviz(const AutoCompleteGraph& acg);
@@ -266,6 +295,8 @@ namespace acg{
 			drawCornersNdt();
 			
 			drawLinks();
+			
+			drawGaussiansThatGaveCorners();
 			
 // 			_ndt_node_markers.points.clear();
 			
@@ -550,6 +581,7 @@ namespace acg{
 		void drawPrior();
 		void drawLinks();
 		void drawCornersNdt();
+		void drawGaussiansThatGaveCorners();
 		void drawAngles();
 		void drawPriorAngles(const AASS::acg::VertexSE2Prior& vertex_in);
 		
@@ -725,12 +757,21 @@ namespace acg{
 			for(it ; it != edges.end() ; ++it){
 				
 				geometry_msgs::Point p;
-				g2o::VertexPointXY* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
+				VertexLandmarkNDT* ptr = dynamic_cast<VertexLandmarkNDT*>((*it));
 				auto vertex = ptr->estimate();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
 				p.y = vertex(1);
 				p.z = 0;
+				
+				//TESTING
+				auto vertex_seen = (*it)->gaussian_seen_from.toVector();
+				auto point = ptr->position;
+				p.x = point.x + vertex_seen(0);
+				p.y = point.y + vertex_seen(1);
+				p.z = 0;
+				//END TESTING
+				
 				_corner_ndt_node_markers.points.push_back(p);
 				
 			}
@@ -740,6 +781,76 @@ namespace acg{
 		
 		_corner_ndt_node_pub.publish(_corner_ndt_node_markers);
 	}
+	
+	
+	//TODO
+	inline void VisuAutoCompleteGraph::drawGaussiansThatGaveCorners()
+	{
+// 		std::cout << "Drawing the gaussians " << std::endl;
+// 		int a ;
+// 		std::cin >> a;
+		
+		_gaussian_that_gave_corners.points.clear();
+		
+		_gaussian_that_gave_corners.header.stamp = ros::Time::now();
+		_gaussian_that_gave_corners.header.stamp = ros::Time::now();
+		
+		auto landmark = _acg->getLandmarkNodes();
+// 		std::cout << "Getting the angles" << landmark.size() << std::endl;
+// 		std::cout << "Getting the corners " << edges.size() << std::endl;
+			
+		for(auto it = landmark.begin() ; it != landmark.end() ; ++it){
+			
+			auto vertex = (*it)->gaussian_seen_from.toVector();
+			
+			for(auto it_ndt = (*it)->cells_that_gave_it_1.begin() ; it_ndt != (*it)->cells_that_gave_it_1.end() ; ++it_ndt){
+				
+				Eigen::Vector3d mean = (*it_ndt)->getMean();
+				auto angle = perception_oru::ndt_feature_finder::NDTCellAngle(**it_ndt);
+			
+				geometry_msgs::Point p2;
+				p2.x = vertex(0) + mean(0) + (0.5 * std::cos(angle) );
+				p2.y = vertex(1) + mean(1) + (0.5 * std::sin(angle) );
+				p2.z = 0;
+				geometry_msgs::Point p3;
+				p3.x = vertex(0) + mean(0) - (0.5 * std::cos(angle) );
+				p3.y = vertex(1) + mean(1) - (0.5 * std::sin(angle) );
+				p3.z = 0;
+				
+				_gaussian_that_gave_corners.points.push_back(p2);
+				_gaussian_that_gave_corners.points.push_back(p3);
+				
+				
+			}
+			
+			for(auto it_ndt = (*it)->cells_that_gave_it_2.begin() ; it_ndt != (*it)->cells_that_gave_it_2.end() ; ++it_ndt){
+				
+				Eigen::Vector3d mean = (*it_ndt)->getMean();
+				auto angle = perception_oru::ndt_feature_finder::NDTCellAngle(**it_ndt);
+			
+				geometry_msgs::Point p2;
+				p2.x = vertex(0) + mean(0) + (0.5 * std::cos(angle) );
+				p2.y = vertex(1) + mean(1) + (0.5 * std::sin(angle) );
+				p2.z = 0;
+				geometry_msgs::Point p3;
+				p3.x = vertex(0) + mean(0) - (0.5 * std::cos(angle) );
+				p3.y = vertex(1) + mean(1) - (0.5 * std::sin(angle) );
+				p3.z = 0;
+				
+				_gaussian_that_gave_corners2.points.push_back(p2);
+				_gaussian_that_gave_corners2.points.push_back(p3);
+				
+				
+			}
+						
+		}
+		
+// 		std::cout << "Size " << _gaussian_that_gave_corners.points.size() << std::endl;
+		
+		_gaussian_pub.publish(_gaussian_that_gave_corners);
+		_gaussian_pub2.publish(_gaussian_that_gave_corners2);
+	}
+
 	
 	
 	inline void VisuAutoCompleteGraph::saveImage(nav_msgs::OccupancyGrid::Ptr& msg)
