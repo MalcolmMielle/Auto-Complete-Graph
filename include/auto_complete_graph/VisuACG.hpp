@@ -6,6 +6,7 @@
 #include "ndt_map/NDTVectorMapMsg.h"
 #include "acg_conversion.hpp"
 #include "ndt_feature_finder/ndt_cell_2d_utils.hpp"
+#include "utils.hpp"
 
 
 namespace AASS {
@@ -290,18 +291,21 @@ namespace acg{
 		
 		void updateRviz(){
 			
-			drawPrior();
+			if(_nb_of_zone != _acg->getRobotNodes().size()){
 			
-			drawCornersNdt();
-			
-			drawLinks();
-			
-			drawGaussiansThatGaveCorners();
+				drawPrior();
+				
+				drawCornersNdt();
+				
+				drawLinks();
+				
+				drawGaussiansThatGaveCorners();
+				
+				drawRobotPoses();
 			
 // 			_ndt_node_markers.points.clear();
 			
             // if(_acg->getRobotNodes().size() >= 1){
-			if(_nb_of_zone != _acg->getRobotNodes().size()){
 				ndt_map::NDTVectorMapMsg msg;
 				msg.header.frame_id = "/world";
 				msg.header.stamp=ros::Time::now();
@@ -584,6 +588,7 @@ namespace acg{
 		void drawGaussiansThatGaveCorners();
 		void drawAngles();
 		void drawPriorAngles(const AASS::acg::VertexSE2Prior& vertex_in);
+		void drawRobotPoses();
 		
 		void saveImage(nav_msgs::OccupancyGrid::Ptr& msg);
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
@@ -765,11 +770,11 @@ namespace acg{
 				p.z = 0;
 				
 				//TESTING
-				auto vertex_seen = (*it)->gaussian_seen_from.toVector();
-				auto point = ptr->position;
-				p.x = point.x + vertex_seen(0);
-				p.y = point.y + vertex_seen(1);
-				p.z = 0;
+// 				auto vertex_seen = (*it)->gaussian_seen_from.toVector();
+// 				auto point = ptr->position;
+// 				p.x = point.x + vertex_seen(0);
+// 				p.y = point.y + vertex_seen(1);
+// 				p.z = 0;
 				//END TESTING
 				
 				_corner_ndt_node_markers.points.push_back(p);
@@ -801,20 +806,23 @@ namespace acg{
 			
 		for(auto it = landmark.begin() ; it != landmark.end() ; ++it){
 			
-			auto vertex = (*it)->gaussian_seen_from.toVector();
+			auto vertex = (*it)->first_seen_from->estimate().toVector();
 			
 			for(auto it_ndt = (*it)->cells_that_gave_it_1.begin() ; it_ndt != (*it)->cells_that_gave_it_1.end() ; ++it_ndt){
 				
 				Eigen::Vector3d mean = (*it_ndt)->getMean();
 				auto angle = perception_oru::ndt_feature_finder::NDTCellAngle(**it_ndt);
-			
+				mean(2) = angle;
+				Eigen::Vector3d robotframe_eigen;
+				translateFromRobotFrameToGlobalFrame(mean, vertex, robotframe_eigen);
+				
 				geometry_msgs::Point p2;
-				p2.x = vertex(0) + mean(0) + (0.5 * std::cos(angle) );
-				p2.y = vertex(1) + mean(1) + (0.5 * std::sin(angle) );
+				p2.x = robotframe_eigen(0) + (0.5 * std::cos(robotframe_eigen(2)) );
+				p2.y = robotframe_eigen(1) + (0.5 * std::sin(robotframe_eigen(2)) );
 				p2.z = 0;
 				geometry_msgs::Point p3;
-				p3.x = vertex(0) + mean(0) - (0.5 * std::cos(angle) );
-				p3.y = vertex(1) + mean(1) - (0.5 * std::sin(angle) );
+				p3.x = robotframe_eigen(0) - (0.5 * std::cos(robotframe_eigen(2)) );
+				p3.y = robotframe_eigen(1) - (0.5 * std::sin(robotframe_eigen(2)) );
 				p3.z = 0;
 				
 				_gaussian_that_gave_corners.points.push_back(p2);
@@ -827,14 +835,17 @@ namespace acg{
 				
 				Eigen::Vector3d mean = (*it_ndt)->getMean();
 				auto angle = perception_oru::ndt_feature_finder::NDTCellAngle(**it_ndt);
-			
+				mean(2) = angle;
+				Eigen::Vector3d robotframe_eigen;
+				translateFromRobotFrameToGlobalFrame(mean, vertex, robotframe_eigen);
+				
 				geometry_msgs::Point p2;
-				p2.x = vertex(0) + mean(0) + (0.5 * std::cos(angle) );
-				p2.y = vertex(1) + mean(1) + (0.5 * std::sin(angle) );
+				p2.x = robotframe_eigen(0) + (0.5 * std::cos(robotframe_eigen(2)) );
+				p2.y = robotframe_eigen(1) + (0.5 * std::sin(robotframe_eigen(2)) );
 				p2.z = 0;
 				geometry_msgs::Point p3;
-				p3.x = vertex(0) + mean(0) - (0.5 * std::cos(angle) );
-				p3.y = vertex(1) + mean(1) - (0.5 * std::sin(angle) );
+				p3.x = robotframe_eigen(0) - (0.5 * std::cos(robotframe_eigen(2)) );
+				p3.y = robotframe_eigen(1) - (0.5 * std::sin(robotframe_eigen(2)) );
 				p3.z = 0;
 				
 				_gaussian_that_gave_corners2.points.push_back(p2);
@@ -988,6 +999,31 @@ namespace acg{
 		}
 		
 // 		std::cout << "oout" << std::endl;
+
+	}
+
+	
+	inline void VisuAutoCompleteGraph::drawRobotPoses(){
+	
+// 		std::cout << "Drawgin robot poses " << std::endl;
+		_ndt_node_markers.points.clear();
+		_ndt_node_markers.header.stamp = ros::Time::now();
+		
+		for(size_t i = 0 ; i < _acg->getRobotNodes().size() ; ++i){
+
+			auto node = _acg->getRobotNodes()[i];
+			geometry_msgs::Point p;
+			auto vertex2 = node->estimate().toVector();
+			//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+			p.x = vertex2(0);
+			p.y = vertex2(1);
+			p.z = 0;
+			
+			_ndt_node_markers.points.push_back(p);
+			
+		}		
+
+		_ndt_node_pub.publish(_ndt_node_markers);
 
 	}
 

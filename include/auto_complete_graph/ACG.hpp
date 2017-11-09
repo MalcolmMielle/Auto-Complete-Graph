@@ -310,7 +310,7 @@ namespace acg{
 		//TESTING
 		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_1;
 		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_2;
-		g2o::SE2 gaussian_seen_from;
+		g2o::SE2 robotpose_seen_from;
 		
 		//END OF TESTING
 			

@@ -254,9 +254,9 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 				//Prepare the graph : marginalize + initializeOpti
 				
 				ros::Time start_opti = ros::Time::now();
-				oacg->setFirst();
-				oacg->prepare();
-				oacg->optimize();
+// 				oacg->setFirst();
+// 				oacg->prepare();
+// 				oacg->optimize();
 				ros::Time end_opti = ros::Time::now();	
 				double opti = (start_opti - end_opti).toSec();
 				time_opti.push_back(opti);

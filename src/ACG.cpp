@@ -815,36 +815,44 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 // 		vec << it->x, it->y, angles[count_tmp].second;
 		vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, ret_export[count_tmp].getDirection();
 		
+		cv::Point2f p_out;
+		Eigen::Vector3d landmark_robotframe;
+		translateFromRobotFrameToGlobalFrame(vec, robot_pos, landmark_robotframe);
+		
+		p_out.x = landmark_robotframe(0);
+		p_out.y = landmark_robotframe(1);
 // 		auto vec_out_se2 = _nodes_ndt[i]->estimate();
 
 		//Calculate obstacle position in global coordinates.
 		
-		//Node it beong to :
-		g2o::SE2 vec_out_se2 = g2o::SE2(robot_pos);
-		//Pose of landmajr
-		g2o::SE2 se2_tmp(vec);
-		//Composition
-		vec_out_se2 = vec_out_se2 * se2_tmp;
-		Eigen::Vector3d vec_out = vec_out_se2.toVector();
+// 		//Node it beong to :
+// 		g2o::SE2 vec_out_se2 = g2o::SE2(robot_pos);
+// 		//Pose of landmajr
+// 		g2o::SE2 se2_tmp(vec);
+// 		//Composition
+// 		vec_out_se2 = vec_out_se2 * se2_tmp;
+// 		Eigen::Vector3d vec_out = vec_out_se2.toVector();
+// 		
+// 		//Pose of landmark in global reference
+// 		cv::Point2f p_out(vec_out(0), vec_out(1));
+// 				
+// 		Eigen::Vector2d real_obs; real_obs << p_out.x, p_out.y;
+// 		Eigen::Vector2d observation2d_test;
+// 		//Projecting real_obs into robot coordinate frame
+// 		
+// 		auto trueObservation_tmp = robot_pos.inverse() * vec_out_se2;
+// 		Eigen::Vector3d trueObservation = trueObservation_tmp.toVector();
 		
-		//Pose of landmark in global reference
-		cv::Point2f p_out(vec_out(0), vec_out(1));
-				
-		Eigen::Vector2d real_obs; real_obs << p_out.x, p_out.y;
-		Eigen::Vector2d observation2d_test;
-		//Projecting real_obs into robot coordinate frame
 		
-		auto trueObservation_tmp = robot_pos.inverse() * vec_out_se2;
-		Eigen::Vector3d trueObservation = trueObservation_tmp.toVector();
-		Eigen::Vector2d observation; observation << trueObservation(0), trueObservation(1);
+		Eigen::Vector2d observation; observation << vec(0), vec(1);
 		
 		//***************************Old version for testing***************************//
-		Eigen::Vector2d trueObservation2d = robot_pos.inverse() * real_obs;
+// 		Eigen::Vector2d trueObservation2d = robot_pos.inverse() * real_obs;
 // 		std::cout << trueObservation(0) << " == " << trueObservation2d(0) << std::endl;
 // 		assert(trueObservation(0) == trueObservation2d(0));
 // 		std::cout << trueObservation(1) << " == " << trueObservation2d(1) << std::endl;
 // 		assert(trueObservation(1) == trueObservation2d(1));
-		observation2d_test = trueObservation2d;
+// 		observation2d_test = trueObservation2d;
 // 		std::cout << observation(0) << " == " << observation2d_test(0) << " minus " << observation(0) - observation2d_test(0) << std::endl;
 // 		assert(trueObservation(0) == trueObservation2d(0));
 // 		std::cout << observation(1) << " == " << observation2d_test(1) << " minus " << observation(1) - observation2d_test(1) << std::endl;
@@ -852,7 +860,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 // 		std::cin >> a;
 		//******************************************************************************//
 		
-		double angle_landmark = trueObservation(2);
+		double angle_landmark = vec(2);
 		
 // 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
 		std::cout << "Position node " << robot_pos.toVector() << std::endl;
@@ -910,7 +918,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			//TESTING to visualise which cells gave the corner
 			ptr->cells_that_gave_it_1 = ret_export[i].getCells1();
 			ptr->cells_that_gave_it_2 = ret_export[i].getCells2();
-			ptr->gaussian_seen_from = robot_pos;
+			ptr->robotpose_seen_from = robot_pos;
 			//END OF TEST
 			
 			//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later

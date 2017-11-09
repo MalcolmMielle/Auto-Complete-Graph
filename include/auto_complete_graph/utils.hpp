@@ -2,6 +2,8 @@
 #define AUTOCOMPLETEGRAPH_UTILS_11042017
 
 #include "opencv2/core/core.hpp"
+#include "Eigen/Core"
+#include "g2o/types/slam2d/se2.h"
 
 namespace AASS{
 	namespace acg{
@@ -27,6 +29,50 @@ namespace AASS{
 
 			return r;
 		}
+		
+		
+		/**
+		 * @param[in] vec_in : landmark pose in sub map position -> x, y, theta
+		 * @param[in] robot_pos : pose of the sub map in the global reference frame
+		 */
+		inline void translateFromRobotFrameToGlobalFrame(const Eigen::Vector3d& vec_input, const g2o::SE2& robot_frame_pose, Eigen::Vector3d& pose_inglobal_frame){
+			
+			//Node it beong to :
+			g2o::SE2 robot_frame_se2 = g2o::SE2(robot_frame_pose);
+			//Pose of landmark
+			g2o::SE2 landmark_se2(vec_input);
+			//Composition
+			g2o::SE2 landmark_robotframe = robot_frame_se2 * landmark_se2;
+			Eigen::Vector3d landmark_robotframe_vector = landmark_robotframe.toVector();
+			
+			
+			pose_inglobal_frame = landmark_robotframe.toVector();
+			//Pose of landmark in global reference
+// 			point_inglobal_frame.x = landmark_robotframe_vector(0);
+// 			point_inglobal_frame.y = landmark_robotframe_vector(1);
+					
+// 			Eigen::Vector2d real_obs; real_obs << point_inglobal_frame.x, point_inglobal_frame.y;
+			
+			//Projecting real_obs into robot coordinate frame
+			
+// 			auto trueObservation_tmp = robot_frame_pose.inverse() * landmark_robotframe;
+			
+// 			std::cout << trueObservation_tmp.toVector() << "\n\n" << landmark_se2.toVector() << std::endl;
+// 			assert(trueObservation_tmp.toVector() == landmark_se2.toVector());
+			
+// 			pose_inglobal_frame = trueObservation_tmp.toVector();
+// 			Eigen::Vector2d observation; observation << pose_inglobal_frame(0), pose_inglobal_frame(1);
+			
+// 			Eigen::Vector2d trueObservation2d = robot_frame_pose.inverse() * real_obs;
+// 			Eigen::Vector2d observation2d_test;
+// 			observation2d_test = trueObservation2d;	
+// 			double angle_landmark = pose_inglobal_frame(2);
+			
+// 			return vec_inglobal_frame;
+		}
+		
+		
+		
 	}
 }
 
