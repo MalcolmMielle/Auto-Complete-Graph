@@ -445,7 +445,7 @@ namespace acg{
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
+					perception_oru::toOccupancyGrid(_acg->getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
 // 					auto pose = _acg->getRobotNodes()[i].getPose();
 					auto node = _acg->getRobotNodes()[i];
 					auto vertex = node->estimate().toIsometry();
@@ -524,7 +524,7 @@ namespace acg{
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					lslgeneric::toOccupancyGrid(_acg->getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
+					perception_oru::toOccupancyGrid(_acg->getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
 					auto pose = _acg->getRobotNodes()[i]->getPose();
 // 					auto vertex = node->estimate().toVector();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
@@ -566,7 +566,7 @@ namespace acg{
 	private:
 		
 // 		bool fuseNDTMap(const AutoCompleteGraph& acg, nav_msgs::OccupancyGridPtr& final);
-// 		bool printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
+// 		bool printNDTMap(perception_oru::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
 // 		void printPrior(const std::vector<AASS::acg::VertexSE2Prior*>& prior_corners);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &pose_vec);
@@ -587,16 +587,16 @@ namespace acg{
 		
 		void saveImage(nav_msgs::OccupancyGrid::Ptr& msg);
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
-// 		bool toOccupancyGrid(lslgeneric::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
+// 		bool toOccupancyGrid(perception_oru::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
 		
 // 		void fuseOcc(nav_msgs::OccupancyGrid& source, nav_msgs::OccupancyGrid& dest);
 		
 	};
 	
 
-// 	inline bool AASS::acg::VisuAutoCompleteGraph::printNDTMap(lslgeneric::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg)
+// 	inline bool AASS::acg::VisuAutoCompleteGraph::printNDTMap(perception_oru::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg)
 // 	{
-// 		return lslgeneric::toMessage(map, mapmsg, frame_name);
+// 		return perception_oru::toMessage(map, mapmsg, frame_name);
 // 	}
 // 
 // 

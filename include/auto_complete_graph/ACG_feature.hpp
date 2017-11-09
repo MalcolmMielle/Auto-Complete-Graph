@@ -73,7 +73,7 @@ namespace acg{
 		
 		void matchLinks();
 		
-		void extractCornerNDTMap(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
+		void extractCornerNDTMap(const std::shared_ptr<perception_oru::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
 
 		
 

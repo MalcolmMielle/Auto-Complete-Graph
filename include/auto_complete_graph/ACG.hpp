@@ -284,16 +284,16 @@ namespace acg{
 		VertexSE2RobotPose() : g2o::VertexSE2(){}
 		
 	protected:
-		std::shared_ptr<lslgeneric::NDTMap> _map;
+		std::shared_ptr<perception_oru::NDTMap> _map;
 		Eigen::Affine3d _T;
 		double _time;
 	public:
 		g2o::SE2 initial_transfo;
 		cv::Mat img;
 		
-		std::shared_ptr<lslgeneric::NDTMap>& getMap(){return _map;}
-		const std::shared_ptr<lslgeneric::NDTMap>& getMap() const {return _map;}
-		void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
+		std::shared_ptr<perception_oru::NDTMap>& getMap(){return _map;}
+		const std::shared_ptr<perception_oru::NDTMap>& getMap() const {return _map;}
+		void setMap(const std::shared_ptr<perception_oru::NDTMap>& map){_map = map;}
 		Eigen::Affine3d getPose(){return _T;}
 		const Eigen::Affine3d& getPose() const {return _T;}
 		void setPose(const Eigen::Affine3d& T) {_T = T;}
@@ -308,8 +308,8 @@ namespace acg{
 		public:
 			
 		//TESTING
-		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_1;
-		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_2;
+		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_1;
+		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_2;
 		g2o::SE2 gaussian_seen_from;
 		
 		//END OF TESTING
@@ -709,9 +709,9 @@ namespace acg{
 		const AASS::acg::OptimizableAutoCompleteGraph& getGraph() const {return _optimizable_graph;}
 		
 		/***FUNCTIONS TO ADD THE NODES***/
-		AASS::acg::VertexSE2RobotPose* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
-		AASS::acg::VertexSE2RobotPose* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
-		AASS::acg::VertexSE2RobotPose* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
+		AASS::acg::VertexSE2RobotPose* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
+		AASS::acg::VertexSE2RobotPose* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
+		AASS::acg::VertexSE2RobotPose* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
 		
 		AASS::acg::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2D& pos, const cv::Point2f& pos_img, int strength = 1);
 		AASS::acg::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& pos_img, int strength = 1);
@@ -1166,8 +1166,8 @@ namespace acg{
 			return false;
 		}
 		
-		std::shared_ptr< lslgeneric::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
-		void extractCornerNDTMap(const std::shared_ptr< lslgeneric::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
+		std::shared_ptr< perception_oru::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
+		void extractCornerNDTMap(const std::shared_ptr< perception_oru::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
 
 		///@brief do createNewLinks and removeBadLinks
 		virtual void updateLinks();

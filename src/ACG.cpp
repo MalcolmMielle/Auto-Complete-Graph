@@ -32,7 +32,7 @@ Eigen::Vector2d AASS::acg::EdgeSE2Prior_malcolm::getDirection2D(const AASS::acg:
 
 
 
-AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr< lslgeneric::NDTMap >& map){
+AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr< perception_oru::NDTMap >& map){
 	
 	std::cout << "Adding the robot pose " << std::endl;
 	AASS::acg::VertexSE2RobotPose* robot =  new AASS::acg::VertexSE2RobotPose();
@@ -52,11 +52,11 @@ AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const 
 	_nodes_ndt.push_back(robot);
 	return robot;
 }
-AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr< lslgeneric::NDTMap >& map){
+AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr< perception_oru::NDTMap >& map){
 	g2o::SE2 se2(rob(0), rob(1), rob(2));
 	return addRobotPose(se2, affine, map);
 }
-AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr< lslgeneric::NDTMap >& map){
+AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr< perception_oru::NDTMap >& map){
 	Eigen::Vector3d robot1;
 	robot1 << x, y, theta;
 	return addRobotPose(robot1, affine, map);
@@ -680,7 +680,7 @@ Eigen::Vector3d AASS::acg::AutoCompleteGraph::getLastTransformation()
 
 
 
-std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
+std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
 {
 	
 	//Return Gaussian white noise
@@ -721,19 +721,19 @@ std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(
 	robot_pos = robot_pos * diff_vec_se2;
 	std::cout << "multiply" << std::endl;
 		
-	lslgeneric::NDTMap* map = ndt_graph.getMap(element);
+	perception_oru::NDTMap* map = ndt_graph.getMap(element);
 		
 	std::cout << "get res" << std::endl;
 // 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;
 // 			Use a a msg to copy to a new pointer so it doesn't get forgotten :|
 	ndt_map::NDTMapMsg msg;
 // 			ATTENTION Frame shouldn't be fixed
-	bool good = lslgeneric::toMessage(map, msg, "/world");
-	lslgeneric::NDTMap* map_copy;
-	lslgeneric::LazyGrid* lz;
+	bool good = perception_oru::toMessage(map, msg, "/world");
+	perception_oru::NDTMap* map_copy;
+	perception_oru::LazyGrid* lz;
 	std::string frame;
-	bool good2 = lslgeneric::fromMessage(lz, map_copy, msg, frame);
-	std::shared_ptr<lslgeneric::NDTMap> shared_map(map_copy);
+	bool good2 = perception_oru::fromMessage(lz, map_copy, msg, frame);
+	std::shared_ptr<perception_oru::NDTMap> shared_map(map_copy);
 
 	*robot_ptr = addRobotPose(robot_pos, affine, shared_map);
 	assert(*robot_ptr != NULL);
@@ -779,7 +779,7 @@ std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(
 
 
 //TODO: refactor this!
-void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
+void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<perception_oru::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
 {
 	
 	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;

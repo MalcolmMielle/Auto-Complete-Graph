@@ -14,7 +14,7 @@
 namespace AASS{
 namespace acg{
 
-	inline bool toGridMap(lslgeneric::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::__cxx11::string frame_id, std::string layer_name);
+	inline bool toGridMap(perception_oru::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::__cxx11::string frame_id, std::string layer_name);
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution);
 	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer = "combined", const std::string& layer2 = "combined", const std::string& final_layer = "combined");
 	
@@ -70,7 +70,7 @@ namespace acg{
                 std::cout << "Node" << std::endl;
                 nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-                lslgeneric::toOccupancyGrid(acg.getRobotNodes()[i]->getMap().get(), *omap, resol, "/world");
+                perception_oru::toOccupancyGrid(acg.getRobotNodes()[i]->getMap().get(), *omap, resol, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
                 auto node = acg.getRobotNodes()[i];
                 auto vertex = node->estimate().toIsometry();
@@ -234,7 +234,7 @@ namespace acg{
 // // 				std::cout << "Node" << std::endl;
 // // 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();			
 // // // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-// // 				lslgeneric::toOccupancyGrid(it->getMap(), *omap, 0.1, "/world");
+// // 				perception_oru::toOccupancyGrid(it->getMap(), *omap, 0.1, "/world");
 // // // 					auto pose = acg.getRobotNodes()[i].getPose();
 // // 				auto node = it->getNode();
 // // 				auto vertex = node->estimate().toIsometry();
@@ -291,7 +291,7 @@ namespace acg{
 			std::cout << "Node size" << (*it_start)->getMap()->getAllCellsShared().size() << std::endl;
 			assert((*it_start)->getMap()->getAllCellsShared().size() == (*it_start)->getMap().get()->getAllCellsShared().size());
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-			lslgeneric::toOccupancyGrid((*it_start)->getMap().get(), *omap, 0.3, "/world");
+			perception_oru::toOccupancyGrid((*it_start)->getMap().get(), *omap, 0.3, "/world");
 // 					auto pose = acg.getRobotNodes()[i].getPose();
 			auto node = *it_start;
 			auto vertex = node->estimate().toIsometry();
@@ -532,7 +532,7 @@ namespace acg{
 	* @param[in] name of cooridnation frame for the map (same as the NDT map has)
 	* 
 	*/
-	inline bool toGridMap(lslgeneric::NDTMap *ndt_map, grid_map::GridMap &map, double resolution,std::string frame_id, std::string layer_name){//works only for 2D case
+	inline bool toGridMap(perception_oru::NDTMap *ndt_map, grid_map::GridMap &map, double resolution,std::string frame_id, std::string layer_name){//works only for 2D case
 		double size_x, size_y, size_z;
 		int size_x_cell_count, size_y_cell_count;
 		double cen_x, cen_y, cen_z;
@@ -563,7 +563,7 @@ namespace acg{
 			
 			
 			pcl::PointXYZ pt(position(0), position(1), 0);
-			lslgeneric::NDTCell *cell;
+			perception_oru::NDTCell *cell;
 			if(!ndt_map->getCellAtPoint(pt, cell)){
 // 				occ_grid.data.push_back(-1);
 				map.at(layer_name, *it) = 0;
@@ -610,7 +610,7 @@ namespace acg{
 // 				double py = orig_y + resolution*iy + resolution*0.5;
 // 
 // 				pcl::PointXYZ pt(px,py,0);
-// 				lslgeneric::NDTCell *cell;
+// 				perception_oru::NDTCell *cell;
 // 				if(!ndt_map->getCellAtPoint(pt, cell)){
 // 					occ_grid.data.push_back(-1);
 // 				}
@@ -795,7 +795,7 @@ namespace acg{
 				std::cout << "ADDING A MAP" << std::endl;
 				///Copy map
 				ndt_map::NDTMapMsg msg;
-				bool good = lslgeneric::toMessage((*it)->getMap().get(), msg, "/world");
+				bool good = perception_oru::toMessage((*it)->getMap().get(), msg, "/world");
 	// 			
 				maps.maps.push_back(msg);
 				

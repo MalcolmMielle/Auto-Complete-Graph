@@ -1,6 +1,6 @@
 #include "auto_complete_graph/ACG_feature.hpp"
 
-void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(const std::shared_ptr< lslgeneric::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
+void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(const std::shared_ptr< perception_oru::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
 {
 			
 	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
