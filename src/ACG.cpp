@@ -30,21 +30,21 @@ AASS::acg::VertexSE2RobotPose* AASS::acg::AutoCompleteGraph::addRobotPose(double
 	return addRobotPose(robot1, affine, map);
 }
 
-AASS::acg::VertexLandmarkNDT* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vector2D& pos, const cv::Point2f& pos_img, int strength){
+AASS::acg::VertexLandmarkNDT* AASS::acg::AutoCompleteGraph::addLandmarkPose(const g2o::Vector2D& estimate, const cv::Point2f& position, int strength){
 	AASS::acg::VertexLandmarkNDT* landmark = new AASS::acg::VertexLandmarkNDT();
 	landmark->setId(new_id_);
 	++new_id_;
 // 	std::cout << "Setting the id " << _optimizable_graph.vertices().size() << std::endl;
-	landmark->setEstimate(pos);
-	landmark->position = pos_img;
+	landmark->setEstimate(estimate);
+	landmark->position = position;
 	_optimizable_graph.addVertex(landmark);
 	_nodes_landmark.push_back(landmark);
 	return landmark;
 }
-AASS::acg::VertexLandmarkNDT* AASS::acg::AutoCompleteGraph::addLandmarkPose(double x, double y, const cv::Point2f& pos_img, int strength){
+AASS::acg::VertexLandmarkNDT* AASS::acg::AutoCompleteGraph::addLandmarkPose(double x, double y, const cv::Point2f& position, int strength){
 	g2o::Vector2D lan;
 	lan << x, y;
-	return addLandmarkPose(lan, pos_img, strength);
+	return addLandmarkPose(lan, position, strength);
 }
 
 AASS::acg::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr){
@@ -746,19 +746,9 @@ std::shared_ptr<lslgeneric::NDTMap> AASS::acg::AutoCompleteGraph::addElementNDT(
 }
 
 
-//TODO: refactor this!
-void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
+void AASS::acg::AutoCompleteGraph::getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos, std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement>& corners_end)
 {
 	
-	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
-			
-	//HACK For now : we translate the Corner extracted and not the ndt-maps
-	auto cells = map->getAllCellsShared();
-	std::cout << "got all cell shared" << std::endl;
-	double x2, y2, z2;
-	map->getCellSizeInMeters(x2, y2, z2);
-	std::cout << "got all cell sized" << std::endl;
-	double cell_size = x2;
 	
 	perception_oru::ndt_feature_finder::NDTCorner cornersExtractor;
 	std::cout << "hopidy" << std::endl;
@@ -781,7 +771,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 // 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
 		Eigen::Vector3d vec;
 // 		vec << it->x, it->y, angles[count_tmp].second;
-		vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, ret_export[count_tmp].getDirection();
+		vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, ret_export[count_tmp].getOrientation();
 		
 		cv::Point2f p_out;
 		Eigen::Vector3d landmark_robotframe;
@@ -842,6 +832,8 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 		
 		NDTCornerGraphElement cor(p_out);
 		cor.addAllObserv(robot_ptr, observation, angle_landmark, ret_export[count_tmp].getAngle());
+		cor.cells1 = it->getCells1();
+		cor.cells2 = it->getCells2();
 		corners_end.push_back(cor);
 		count_tmp++;
 		
@@ -852,7 +844,24 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 // 	assert(corners_end.size() - c_size == angles_tmp.size());
 // 	assert(corners_end.size() == angles.size());
 // 	c_size = corners_end.size();
+
+}
+
+
+//TODO: refactor this!
+void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos)
+{
+	//HACK For now : we translate the Corner extracted and not the ndt-maps
+	auto cells = map->getAllCellsShared();
+	std::cout << "got all cell shared" << std::endl;
+	double x2, y2, z2;
+	map->getCellSizeInMeters(x2, y2, z2);
+	std::cout << "got all cell sized" << std::endl;
+	double cell_size = x2;
 	
+	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;	
+	getAllCornersNDTTranslatedToGlobalAndRobotFrame(map, robot_ptr, robot_pos, corners_end);
+
 	/***************** ADD THE CORNERS INTO THE GRAPH***********************/
 	
 	for(size_t i = 0 ; i < corners_end.size() ; ++i){
@@ -864,7 +873,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			g2o::Vector2D landmark = _nodes_landmark[j]->estimate();
 			cv::Point2f point_land(landmark(0), landmark(1));
 			
-			double res = cv::norm(point_land - corners_end[i].point);
+			double res = cv::norm(point_land - corners_end[i].position);
 			
 // 			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
 			
@@ -876,80 +885,24 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 		}
 		if(seen == false){
 // 			std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
-			assert(i < ret_export.size());
-			g2o::Vector2D vec;
-			vec << corners_end[i].point.x, corners_end[i].point.y ;
-			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
-			ptr->addAngleDirection(corners_end[i].getAngleWidth(), corners_end[i].getDirection());
+// 			assert(i < ret_export.size());
+			g2o::Vector2D position_globalframe;
+			position_globalframe << corners_end[i].position.x, corners_end[i].position.y ;
+// 			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
+			
+			cv::Point2f p_observation;
+			p_observation.x = corners_end[i].getObservations()(0);
+			p_observation.y = corners_end[i].getObservations()(1);
+			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(position_globalframe, p_observation, 1);
+			ptr->addAngleOrientation(corners_end[i].getAngleWidth(), corners_end[i].getOrientation());
 			ptr->first_seen_from = robot_ptr;
 			
 			//TESTING to visualise which cells gave the corner
-			ptr->cells_that_gave_it_1 = ret_export[i].getCells1();
-			ptr->cells_that_gave_it_2 = ret_export[i].getCells2();
+			ptr->cells_that_gave_it_1 = corners_end[i].cells1;
+			ptr->cells_that_gave_it_2 = corners_end[i].cells2;
 			ptr->robotpose_seen_from = robot_pos;
 			//END OF TEST
-			
-			//TODO IMPORTANT : Directly calculate SIft here so I don't have to do it again later
-			
-// 			std::cout << "Descriptors" << std::endl;
-// 			/************************************************************/
-// 			
-// 			//Convert NDT MAP to image
-// 			cv::Mat ndt_img;
-// 			auto map_tmp = corners_end[i].getNodeLinkedPtr()->getMap();
-// 			
-// 			std::cout << "Descriptors" << std::endl;
-// 			double size_image_max = 500;
-// 			double min, max;
-// 			//TODO: super convoluted, get rid of NDTCornerGraphElement!
-// 			perception_oru::ndt_feature_finder::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
-// 			
-// 			//Use accurate CV point
-// 			//Get old position
-// // 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
-// 			cv::Point2i center = perception_oru::ndt_feature_finder::scalePoint(ret_opencv_point_corner[i], max, min, size_image_max);
-// // 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;
-// 			assert(center.x <= size_image_max);
-// 			assert(center.y <= size_image_max);
-// 			
-// // 			std::cout << "getting the angle" << std::endl;
-// 			double angle = corners_end[i].getDirection();
-// 			double width = corners_end[i].getAngleWidth();
-// 			double plus_a = angle + (width/2);
-// 			double moins_a = angle - (width/2);
-// 			
-// 			
-// // 			std::cout << "angle " << angle<< std::endl;
-// 			cv::Point2i p2;
-// 			p2.x = center.x + (50 * std::cos(angle) );
-// 			p2.y = center.y + (50 * std::sin(angle) );
-// 			cv::Point2i p2_p;
-// 			p2_p.x = center.x + (50 * std::cos(plus_a) );
-// 			p2_p.y = center.y + (50 * std::sin(plus_a) );
-// 			cv::Point2i p2_m;
-// 			p2_m.x = center.x + (50 * std::cos(moins_a) );
-// 			p2_m.y = center.y + (50 * std::sin(moins_a) );
-				
-// 			std::cout << "Line " << center << " "<< p2 << std::endl;;
-			
-// 			std::cout << "Angle" << angle.
-			
-// 			cv::Mat copyy;
-// 			ndt_img.copyTo(copyy);
-// 			cv::circle(copyy, center, 20, cv::Scalar(255, 255, 255), 5);
-// 			cv::line(copyy, center, p2, cv::Scalar(255, 255, 255), 1);	
-// 			cv::line(copyy, center, p2_p, cv::Scalar(255, 255, 255), 1);	
-// 			cv::line(copyy, center, p2_m, cv::Scalar(255, 255, 255), 1);			
-// 
-// 			cv::imshow("NDT_map", copyy);
-// 			cv::waitKey(0);
-		
-// 			double cx, cy, cz;
-// 			//Should it be in meters ?
-// 			map_tmp->getGridSizeInMeters(cx, cy, cz);
-// 			SIFTNdtLandmark(center, ndt_img, size_image_max, cx, ptr);
-		
-			/****************************************************************/
+
 
 			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr);
 			
@@ -962,6 +915,9 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 	}
 
 }
+
+
+
 
 
 void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
@@ -1079,33 +1035,38 @@ int AASS::acg::AutoCompleteGraph::createNewLinks()
 		Eigen::Vector2d pose_landmark = (*it)->estimate();
 		auto it_prior = _nodes_prior.begin();
 		for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
-			
-			Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
-			Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
-			double norm_tmp = (pose_prior - pose_landmark).norm();
-			
-			
-			
+
 			//Don't add the same link twice
 			if(linkAlreadyExist(*it, *it_prior) == false){
 				
-// 				std::cout << "new" << std::endl;
 				
-				//Update the link
-				if(norm_tmp <= _min_distance_for_link_in_meter){
-					std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter << std::endl;
-// 					ptr_closest = *it_prior;
-// 					norm = norm_tmp;
-					//Pushing the link
-// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-// 					links.push_back(std::pair<AASS::acg::VertexLandmarkNDT*, AASS::acg::VertexSE2Prior*>(*it, *it_prior));
+				//TODO TEST IT
+				if(_flag_use_corner_orientation == false || (_flag_use_corner_orientation == true && (*it)->sameOrientation(**it_prior))){
+				
+					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+					double norm_tmp = (pose_prior - pose_landmark).norm();
+	// 				std::cout << "new" << std::endl;
 					
-					g2o::Vector2D vec;
-					vec << 0, 0;
-					addLinkBetweenMaps(vec, *it_prior, *it);
-					
-					++count;
-				}	
+					//Update the link
+					if(norm_tmp <= _min_distance_for_link_in_meter){
+						std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter << std::endl;
+	// 					ptr_closest = *it_prior;
+	// 					norm = norm_tmp;
+						//Pushing the link
+	// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+	// 					links.push_back(std::pair<AASS::acg::VertexLandmarkNDT*, AASS::acg::VertexSE2Prior*>(*it, *it_prior));
+						
+						g2o::Vector2D vec;
+						vec << 0, 0;
+						addLinkBetweenMaps(vec, *it_prior, *it);
+						
+						++count;
+					}
+				}
+				else{
+					std::cout << "Orientation check failed" << std::endl;
+				}
 			}
 			else{
 				

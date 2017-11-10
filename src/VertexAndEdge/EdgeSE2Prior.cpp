@@ -1,7 +1,7 @@
 #include "auto_complete_graph/VertexAndEdge/EdgeSE2Prior.hpp"
 #include "auto_complete_graph/VertexAndEdge/VertexSE2Prior.hpp"
 
-Eigen::Vector2d AASS::acg::EdgeSE2Prior_malcolm::getDirection2D(const AASS::acg::VertexSE2Prior& from) const
+Eigen::Vector2d AASS::acg::EdgeSE2Prior_malcolm::getOrientation2D(const AASS::acg::VertexSE2Prior& from) const
 {
 // 	std::cout << "From " << from.estimate().toVector(); 
 	AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(this->vertices()[0]);

@@ -37,17 +37,17 @@ namespace acg{
 			checkLinkNotTooBig();
 		}
 
-		///@brief Create new link based on the distance AND the angle of the corners
-		virtual int createNewLinks();
+		///@brief TODO Create new link based on the distance, the angle of the corners and the features
+// 		virtual int createNewLinks();
 		
 		
-		bool sameOrientation(const AASS::acg::VertexLandmarkNDT& landmark, const AASS::acg::VertexSE2Prior& prior_corner);
+// 		bool sameOrientation(const AASS::acg::VertexLandmarkNDT& landmark, const AASS::acg::VertexSE2Prior& prior_corner);
 		
-		virtual /**
-		 * @brief actual optimization loop. Make sure setFirst and prepare are called before. Use Huber first and then DCS.
-		 * 
-		 */
-		void optimize(int iter = 10);
+// 		virtual /**
+// 		 * @brief actual optimization loop. Make sure setFirst and prepare are called before. Use Huber first and then DCS.
+// 		 * 
+// 		 */
+// 		void optimize(int iter = 10);
 		
 		virtual void overCheckLinks(){
 			//Because not all link will be created

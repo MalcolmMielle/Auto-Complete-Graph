@@ -916,7 +916,7 @@ namespace acg{
 				
 // 				std::cout << "getting the angle" << std::endl;
 				
-				double angle = (*it)->getDirectionGlobal();
+				double angle = (*it)->getOrientationGlobal();
 				double anglew = (*it)->getAngleWidth();
 				
 // 				std::cout << "angle " << angle<< std::endl;
@@ -961,7 +961,7 @@ namespace acg{
 		p.z = 0;
 		
 // 		std::cout << "getting the angle" << std::endl;
-		auto angles = vertex_in.getAngleDirection();
+		auto angles = vertex_in.getAngleOrientation();
 // 		std::cout << "getting the angle done" << std::endl;
 		
 		for(auto it = angles.begin() ; it !=angles.end(); ++it){

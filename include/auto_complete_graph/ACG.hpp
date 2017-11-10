@@ -57,11 +57,6 @@ namespace AASS {
 
 namespace acg{	
 
-  
-  
-  
-	
-	
 	/**
 	 * @brief The graph class containing all elemnts from each map and the graph used in the g2o optimisation.
 	 * ATTENTION : _transNoise is not used anymore when update the NDT-graph for we used the registration. I should remove it but for now I'm leaving it only not to break everything.
@@ -87,6 +82,8 @@ namespace acg{
 		
 		bool _flag_use_robust_kernel;
 		
+		bool _flag_use_corner_orientation;
+		
 		std::deque<double> _chi2s;
 		
 		///@brief Threshold of error mean under which we stop the optimization because we arrived to a stable result.
@@ -99,24 +96,27 @@ namespace acg{
 		 * */
 		class NDTCornerGraphElement{
 			public:
-				cv::Point2f point;
+				cv::Point2f position;
 			protected:
 				//TODO : change it to a set
 // 				std::vector<int> nodes_linked;
 				AASS::acg::VertexSE2RobotPose* nodes_linked_ptr;
 				Eigen::Vector2d observations;
-				double _angle_observ;
+				double _angle_orientation;
 				double _angle_width;
 				
 			public:
-				NDTCornerGraphElement(float x, float y) : point(x, y){};
-				NDTCornerGraphElement(const cv::Point2f& p) : point(p){};
+				std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells1;
+				std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells2;
 				
-				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, double angle_direction, double a_width){
+				NDTCornerGraphElement(float x, float y) : position(x, y){};
+				NDTCornerGraphElement(const cv::Point2f& p) : position(p){};
+				
+				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, double angle_orientation, double a_width){
 // 					nodes_linked.push_back(i);
 					observations = obs;
 					nodes_linked_ptr = ptr;
-					_angle_observ = angle_direction;
+					_angle_orientation = angle_orientation;
 					_angle_width = a_width;
 				}
 				
@@ -131,7 +131,7 @@ namespace acg{
 // 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
 				AASS::acg::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
 				const Eigen::Vector2d& getObservations() const {return observations;}
-				double getDirection() const {return _angle_observ;}
+				double getOrientation() const {return _angle_orientation;}
 				double getAngleWidth() const {return _angle_width;}
 				
 		// 		void push_back(int i){nodes_linked.push_back(i);}
@@ -263,7 +263,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10) {
+  					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false) {
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -277,7 +277,7 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10){
+					) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
 						
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -288,7 +288,7 @@ namespace acg{
 					}
 					
 					
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
 			
 		
 			std::ifstream infile(load_file);
@@ -403,6 +403,9 @@ namespace acg{
 		void useUserCovForRobotPose(bool u){_use_user_robot_pose_cov = u;}
 		bool isUsingUserCovForRobotPose(){return _use_user_robot_pose_cov;}
 		
+		void useCornerOrientation(bool b){_flag_use_corner_orientation = b;}
+		bool isUsingCornerOrientation(){return _flag_use_corner_orientation;}
+		
 		double getStepAge(){return _age_step;}
 		void setStepAge(double ss){_age_step = ss;}
 		
@@ -432,8 +435,8 @@ namespace acg{
 		AASS::acg::VertexSE2RobotPose* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
 		AASS::acg::VertexSE2RobotPose* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<lslgeneric::NDTMap>& map);
 		
-		AASS::acg::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2D& pos, const cv::Point2f& pos_img, int strength = 1);
-		AASS::acg::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& pos_img, int strength = 1);
+		AASS::acg::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2D& estimate, const cv::Point2f& position, int strength = 1);
+		AASS::acg::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& position, int strength = 1);
 		
 		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr);
 		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr);
@@ -886,13 +889,15 @@ namespace acg{
 		}
 		
 		std::shared_ptr< lslgeneric::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
-		void extractCornerNDTMap(const std::shared_ptr< lslgeneric::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
+		
+		virtual void extractCornerNDTMap(const std::shared_ptr< lslgeneric::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
 
 		///@brief do createNewLinks and removeBadLinks
 		virtual void updateLinks();
 		
 		///@brief create links between close by landmark and prior
 		virtual int createNewLinks();
+		
 		///@brief remove links between too far landmarks and prior
 		void removeBadLinks();
 		
@@ -1036,7 +1041,7 @@ namespace acg{
 				}
 				for(auto it = edges_prior.begin() ; it != edges_prior.end() ; ++it){
 					for(auto ite2 = it +1 ; ite2 != edges_prior.end() ; ++ite2 ){
-						assert((*it)->getDirection2D(**it_vertex) != (*ite2)->getDirection2D(**it_vertex));
+						assert((*it)->getOrientation2D(**it_vertex) != (*ite2)->getOrientation2D(**it_vertex));
 					}
 				}
 			}
@@ -1084,6 +1089,12 @@ namespace acg{
 			}
 			std::cin >> i;
 		}
+		
+		
+		/**
+		 * Returns all the corner found in the NDT map in NDTCornerGraphElement. The corner positions are in the global frame while the obervation are in the robot pose frame, as in needed by g2o
+		 */
+		void getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<lslgeneric::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos, std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement>& corners_end);
 		
 	};
 }

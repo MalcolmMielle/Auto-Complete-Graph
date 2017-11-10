@@ -18,7 +18,7 @@ namespace acg{
 		VertexSE2Prior() : g2o::VertexSE2(){}
 		PriorAttr priorattr;
 		
-		std::vector<std::pair<double, double> > getAngleDirection() const {
+		std::vector<std::pair<double, double> > getAngleOrientation() const {
 			
 // 			std::cout << "New vert"<<std::endl;
 			
@@ -48,8 +48,8 @@ namespace acg{
 				if(edges_prior.size() > 1){
 					auto comp = [this](AASS::acg::EdgeSE2Prior_malcolm* a, AASS::acg::EdgeSE2Prior_malcolm* b)
 						{ 
-							auto from_vec2d = a->getDirection2D(*this);
-							auto to_vec2d = b->getDirection2D(*this);
+							auto from_vec2d = a->getOrientation2D(*this);
+							auto to_vec2d = b->getOrientation2D(*this);
 							//Rotate
 							
 							double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
@@ -90,8 +90,8 @@ namespace acg{
 		std::pair<double, double> angle(const AASS::acg::EdgeSE2Prior_malcolm& from, const AASS::acg::EdgeSE2Prior_malcolm& to) const {
 			
 			
-			auto from_vec2d = from.getDirection2D(*this);
-			auto to_vec2d = to.getDirection2D(*this);
+			auto from_vec2d = from.getOrientation2D(*this);
+			auto to_vec2d = to.getOrientation2D(*this);
 			
 // 			std::cout << "from " << from_vec2d << " , " << &from << " to " << to_vec2d << ", " << &to << std::endl;
 			//Rotate
@@ -125,32 +125,6 @@ namespace acg{
 			return std::pair<double, double>(angle_between, direction);
 		}
 		
-// 		Eigen::Vector2d getDirection2D(const AASS::acg::EdgeSE2Prior_malcolm& from) const {
-// 			
-// 			AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[0]);
-// 			AASS::acg::VertexSE2Prior* ptr2 = dynamic_cast<AASS::acg::VertexSE2Prior*>(from.vertices()[1]);
-// 			assert(ptr != NULL);
-// 			assert(ptr2 != NULL);
-// 			assert(ptr == this || ptr2 == this);
-// 			Eigen::Vector3d from_1;
-// 			Eigen::Vector3d toward;
-// 			if(ptr == this){
-// 				from_1 = ptr->estimate().toVector();
-// 				toward = ptr2->estimate().toVector();
-// 			}
-// 			else if(ptr2 == this){
-// 				from_1 = ptr2->estimate().toVector();
-// 				toward = ptr->estimate().toVector();
-// 			}
-// 			else{
-// 				assert(true == false && "Weird, the original vertex wasn't found before");
-// 			}
-// 			
-// 			Eigen::Vector3d pose_from1 = toward - from_1;
-// 			Eigen::Vector2d pose_prior; pose_prior << pose_from1(0), pose_from1(1);
-// 			return pose_prior;
-// 			
-// 		}
 
 	};
 
