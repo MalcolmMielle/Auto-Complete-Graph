@@ -291,13 +291,15 @@ namespace acg{
 		
 		void updateRviz(){
 			
+			drawPrior();
+				
+			drawCornersNdt();
+				
+			drawLinks();
+			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
 			
-				drawPrior();
 				
-				drawCornersNdt();
-				
-				drawLinks();
 				
 				drawGaussiansThatGaveCorners();
 				
