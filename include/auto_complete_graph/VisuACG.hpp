@@ -901,46 +901,55 @@ namespace acg{
 		auto landmark = _acg->getLandmarkNodes();
 // 		std::cout << "Getting the angles" << landmark.size() << std::endl;
 // 		std::cout << "Getting the corners " << edges.size() << std::endl;
+		//I think this line is useless
 		if(landmark.size() != _angles_markers.points.size()){
 			_angles_markers.points.clear();
 			_anglesw_markers.points.clear();
 			auto it = landmark.begin();
 			for(it ; it != landmark.end() ; ++it){
 				
-				geometry_msgs::Point p;
-// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
-				auto vertex = (*it)->estimate();
-				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-				p.x = vertex(0);
-				p.y = vertex(1);
-				p.z = 0;
-				_angles_markers.points.push_back(p);
+				for(int i = 0; i < (*it)->getAngleAndOrientation().size() ; ++i){
+					
+					geometry_msgs::Point p;
+	// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
+					auto vertex = (*it)->estimate();
+					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+					p.x = vertex(0);
+					p.y = vertex(1);
+					p.z = 0;
+					_angles_markers.points.push_back(p);
+					
+	// 				std::cout << "getting the angle" << std::endl;
+					
+					double angle = (*it)->getOrientationGlobal(i);
+					double anglew = (*it)->getAngleWidth(i);
+					
+	// 				std::cout << "angle " << angle<< std::endl;
+					geometry_msgs::Point p2;
+					p2.x = p.x + (2 * std::cos(angle) );
+					p2.y = p.y + (2 * std::sin(angle) );
+					p2.z = 0;
+					_angles_markers.points.push_back(p2);
+					
+	// 				std::cout << "angle " << angle<< std::endl;
+					p2.x = p.x + (2 * std::cos(angle - (anglew/2)) );
+					p2.y = p.y + (2 * std::sin(angle - (anglew/2)) );
+					p2.z = 0;
+					_anglesw_markers.points.push_back(p);
+					_anglesw_markers.points.push_back(p2);
+					
+	// 				std::cout << "angle " << angle<< std::endl;
+					p2.x = p.x + (2 * std::cos(angle + (anglew/2)) );
+					p2.y = p.y + (2 * std::sin(angle + (anglew/2)) );
+					p2.z = 0;
+					_anglesw_markers.points.push_back(p);
+					_anglesw_markers.points.push_back(p2);
+					
+					
+					
+				}
 				
-// 				std::cout << "getting the angle" << std::endl;
 				
-				double angle = (*it)->getOrientationGlobal();
-				double anglew = (*it)->getAngleWidth();
-				
-// 				std::cout << "angle " << angle<< std::endl;
-				geometry_msgs::Point p2;
-				p2.x = p.x + (2 * std::cos(angle) );
-				p2.y = p.y + (2 * std::sin(angle) );
-				p2.z = 0;
-				_angles_markers.points.push_back(p2);
-				
-// 				std::cout << "angle " << angle<< std::endl;
-				p2.x = p.x + (2 * std::cos(angle - (anglew/2)) );
-				p2.y = p.y + (2 * std::sin(angle - (anglew/2)) );
-				p2.z = 0;
-				_anglesw_markers.points.push_back(p);
-				_anglesw_markers.points.push_back(p2);
-				
-// 				std::cout << "angle " << angle<< std::endl;
-				p2.x = p.x + (2 * std::cos(angle + (anglew/2)) );
-				p2.y = p.y + (2 * std::sin(angle + (anglew/2)) );
-				p2.z = 0;
-				_anglesw_markers.points.push_back(p);
-				_anglesw_markers.points.push_back(p2);
 // 				
 // 				std::cout << "Line " << p << " "<< p2 << std::endl;;
 				

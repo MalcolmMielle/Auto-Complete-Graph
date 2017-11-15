@@ -102,8 +102,8 @@ namespace acg{
 // 				std::vector<int> nodes_linked;
 				AASS::acg::VertexSE2RobotPose* nodes_linked_ptr;
 				Eigen::Vector2d observations;
-				double _angle_orientation;
-				double _angle_width;
+				std::vector<double> _angle_orientation;
+				std::vector<double> _angle_width;
 				
 			public:
 				std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells1;
@@ -112,7 +112,7 @@ namespace acg{
 				NDTCornerGraphElement(float x, float y) : position(x, y){};
 				NDTCornerGraphElement(const cv::Point2f& p) : position(p){};
 				
-				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, double angle_orientation, double a_width){
+				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, const std::vector<double>& angle_orientation, const std::vector<double>& a_width){
 // 					nodes_linked.push_back(i);
 					observations = obs;
 					nodes_linked_ptr = ptr;
@@ -131,8 +131,8 @@ namespace acg{
 // 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
 				AASS::acg::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
 				const Eigen::Vector2d& getObservations() const {return observations;}
-				double getOrientation() const {return _angle_orientation;}
-				double getAngleWidth() const {return _angle_width;}
+				const std::vector<double>& getOrientations() const {return _angle_orientation;}
+				const std::vector<double>& getAngleWidths() const {return _angle_width;}
 				
 		// 		void push_back(int i){nodes_linked.push_back(i);}
 				

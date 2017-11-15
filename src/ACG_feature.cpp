@@ -46,7 +46,7 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(const std::shared_
 			p_observation.x = corners_end[i].getObservations()(0);
 			p_observation.y = corners_end[i].getObservations()(1);
 			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(position_globalframe, p_observation, 1);
-			ptr->addAngleOrientation(corners_end[i].getAngleWidth(), corners_end[i].getOrientation());
+			ptr->addAnglesOrientations(corners_end[i].getAngleWidths(), corners_end[i].getOrientations());
 			ptr->first_seen_from = robot_ptr;
 			
 			//TESTING to visualise which cells gave the corner
@@ -80,8 +80,8 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(const std::shared_
 			assert(center.y <= size_image_max);
 			
 // 			std::cout << "getting the angle" << std::endl;
-			double angle = corners_end[i].getOrientation();
-			double width = corners_end[i].getAngleWidth();
+			double angle = corners_end[i].getOrientations()[0];
+			double width = corners_end[i].getAngleWidths()[0];
 			double plus_a = angle + (width/2);
 			double moins_a = angle - (width/2);
 			

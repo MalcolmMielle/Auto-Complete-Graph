@@ -766,81 +766,107 @@ void AASS::acg::AutoCompleteGraph::getAllCornersNDTTranslatedToGlobalAndRobotFra
 	
 	//**************** HACK: translate the corners now : **************//
 	
-	int count_tmp = 0;
+// 	int count_tmp = 0;
 	for(it ; it != ret_export.end() ; ++it){
-// 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
-		Eigen::Vector3d vec;
-// 		vec << it->x, it->y, angles[count_tmp].second;
-		vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, ret_export[count_tmp].getOrientation();
-		
-		cv::Point2f p_out;
-		Eigen::Vector3d landmark_robotframe;
-		translateFromRobotFrameToGlobalFrame(vec, robot_pos, landmark_robotframe);
-		
-		p_out.x = landmark_robotframe(0);
-		p_out.y = landmark_robotframe(1);
-// 		auto vec_out_se2 = _nodes_ndt[i]->estimate();
+		std::cout << "Corner size " << it->getOrientations().size() << std::endl;	
+		//Limited to corners that possess an orientation.
+		if(it->getOrientations().size() > 0){
+			Eigen::Vector3d vec;
+	// 		vec << it->x, it->y, angles[count_tmp].second;
+			std::cout << "Corner size " << std::endl;	
+			vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, it->getOrientations()[0];
+			
+			std::cout << "Corner size " << std::endl;	
+			cv::Point2f p_out;
+			Eigen::Vector3d landmark_robotframe;
+			translateFromRobotFrameToGlobalFrame(vec, robot_pos, landmark_robotframe);
+			
+			std::cout << "Corner size " << std::endl;	
+			p_out.x = landmark_robotframe(0);
+			p_out.y = landmark_robotframe(1);
+			
+			Eigen::Vector2d observation; observation << vec(0), vec(1);
+			std::vector<double> orientations;
+			std::vector<double> angles_width;
+			
+			std::cout << "Corner size " << std::endl;	
+			double angle_landmark = vec(2);
+			
+			std::cout << "Corner size " << std::endl;	
+			for(auto it_orientation = it->getOrientations().begin() ; it_orientation != it->getOrientations().end() ; ++it_orientation){
+				std::cout << "Pushing back orientation" << std::endl;
+				orientations.push_back((*it_orientation));
+			}
+			for(auto it_angles = it->getAngles().begin() ; it_angles != it->getAngles().end() ; ++it_angles){
+				std::cout << "Pushing back angle" << std::endl;
+				angles_width.push_back((*it_angles));
+			}
+			
+	// 						std::cout << "MOVE : "<< it -> x << " " << it-> y << std::endl;
+			
+	// 		auto vec_out_se2 = _nodes_ndt[i]->estimate();
 
-		//Calculate obstacle position in global coordinates.
-		
-// 		//Node it beong to :
-// 		g2o::SE2 vec_out_se2 = g2o::SE2(robot_pos);
-// 		//Pose of landmajr
-// 		g2o::SE2 se2_tmp(vec);
-// 		//Composition
-// 		vec_out_se2 = vec_out_se2 * se2_tmp;
-// 		Eigen::Vector3d vec_out = vec_out_se2.toVector();
-// 		
-// 		//Pose of landmark in global reference
-// 		cv::Point2f p_out(vec_out(0), vec_out(1));
-// 				
-// 		Eigen::Vector2d real_obs; real_obs << p_out.x, p_out.y;
-// 		Eigen::Vector2d observation2d_test;
-// 		//Projecting real_obs into robot coordinate frame
-// 		
-// 		auto trueObservation_tmp = robot_pos.inverse() * vec_out_se2;
-// 		Eigen::Vector3d trueObservation = trueObservation_tmp.toVector();
-		
-		
-		Eigen::Vector2d observation; observation << vec(0), vec(1);
-		
-		//***************************Old version for testing***************************//
-// 		Eigen::Vector2d trueObservation2d = robot_pos.inverse() * real_obs;
-// 		std::cout << trueObservation(0) << " == " << trueObservation2d(0) << std::endl;
-// 		assert(trueObservation(0) == trueObservation2d(0));
-// 		std::cout << trueObservation(1) << " == " << trueObservation2d(1) << std::endl;
-// 		assert(trueObservation(1) == trueObservation2d(1));
-// 		observation2d_test = trueObservation2d;
-// 		std::cout << observation(0) << " == " << observation2d_test(0) << " minus " << observation(0) - observation2d_test(0) << std::endl;
-// 		assert(trueObservation(0) == trueObservation2d(0));
-// 		std::cout << observation(1) << " == " << observation2d_test(1) << " minus " << observation(1) - observation2d_test(1) << std::endl;
-// 		int a ;
-// 		std::cin >> a;
-		//******************************************************************************//
-		
-		double angle_landmark = vec(2);
-		
-// 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
-		std::cout << "Position node " << robot_pos.toVector() << std::endl;
-		std::cout << " vec " << vec << std::endl;
-// 		std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
-		
-		//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
-// 				assert (robot_pos + vec == ndt_graph.getNode(i).T * vec);
-		
-// 				std::cout << "NEW POINT : "<< p_out << std::endl;
-		
-		NDTCornerGraphElement cor(p_out);
-		cor.addAllObserv(robot_ptr, observation, angle_landmark, ret_export[count_tmp].getAngle());
-		cor.cells1 = it->getCells1();
-		cor.cells2 = it->getCells2();
-		corners_end.push_back(cor);
-		count_tmp++;
+			//Calculate obstacle position in global coordinates.
+			
+	// 		//Node it beong to :
+	// 		g2o::SE2 vec_out_se2 = g2o::SE2(robot_pos);
+	// 		//Pose of landmajr
+	// 		g2o::SE2 se2_tmp(vec);
+	// 		//Composition
+	// 		vec_out_se2 = vec_out_se2 * se2_tmp;
+	// 		Eigen::Vector3d vec_out = vec_out_se2.toVector();
+	// 		
+	// 		//Pose of landmark in global reference
+	// 		cv::Point2f p_out(vec_out(0), vec_out(1));
+	// 				
+	// 		Eigen::Vector2d real_obs; real_obs << p_out.x, p_out.y;
+	// 		Eigen::Vector2d observation2d_test;
+	// 		//Projecting real_obs into robot coordinate frame
+	// 		
+	// 		auto trueObservation_tmp = robot_pos.inverse() * vec_out_se2;
+	// 		Eigen::Vector3d trueObservation = trueObservation_tmp.toVector();
+			
+			
+			
+			
+			//***************************Old version for testing***************************//
+	// 		Eigen::Vector2d trueObservation2d = robot_pos.inverse() * real_obs;
+	// 		std::cout << trueObservation(0) << " == " << trueObservation2d(0) << std::endl;
+	// 		assert(trueObservation(0) == trueObservation2d(0));
+	// 		std::cout << trueObservation(1) << " == " << trueObservation2d(1) << std::endl;
+	// 		assert(trueObservation(1) == trueObservation2d(1));
+	// 		observation2d_test = trueObservation2d;
+	// 		std::cout << observation(0) << " == " << observation2d_test(0) << " minus " << observation(0) - observation2d_test(0) << std::endl;
+	// 		assert(trueObservation(0) == trueObservation2d(0));
+	// 		std::cout << observation(1) << " == " << observation2d_test(1) << " minus " << observation(1) - observation2d_test(1) << std::endl;
+	// 		int a ;
+	// 		std::cin >> a;
+			//******************************************************************************//
+			
+			
+			
+	// 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
+			std::cout << "Position node " << robot_pos.toVector() << std::endl;
+			std::cout << " vec " << vec << std::endl;
+	// 		std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
+			
+			//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
+	// 				assert (robot_pos + vec == ndt_graph.getNode(i).T * vec);
+			
+					std::cout << "NEW POINT : "<< p_out << std::endl;
+			
+			NDTCornerGraphElement cor(p_out);
+			cor.addAllObserv(robot_ptr, observation, orientations, angles_width);
+			cor.cells1 = it->getCells1();
+			cor.cells2 = it->getCells2();
+			corners_end.push_back(cor);
+	// 		count_tmp++;
+		}
 		
 	}
 	//At this point, we have all the corners
 // 	assert(corners_end.size() - c_size == ret_opencv_point_corner_tmp.size());
-	assert(corners_end.size() == ret_export.size());
+// 	assert(corners_end.size() == ret_export.size());
 // 	assert(corners_end.size() - c_size == angles_tmp.size());
 // 	assert(corners_end.size() == angles.size());
 // 	c_size = corners_end.size();
@@ -875,7 +901,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			
 			double res = cv::norm(point_land - corners_end[i].position);
 			
-// 			std::cout << "res : " << res << " points "  << point_land << " " << corners_end[i].point << "  cell size " << cell_size << std::endl;
+			std::cout << "res : " << std::endl;
 			
 			//If we found the landmark, we save the data
 			if( res < cell_size * 2){
@@ -884,17 +910,20 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			}
 		}
 		if(seen == false){
-// 			std::cout << "New point " << i << " " <<  ret_opencv_point_corner.size() << std::endl;
+			std::cout << "New point " << i << std::endl;
 // 			assert(i < ret_export.size());
 			g2o::Vector2D position_globalframe;
 			position_globalframe << corners_end[i].position.x, corners_end[i].position.y ;
 // 			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
 			
 			cv::Point2f p_observation;
+			std::cout << "New point " << i << std::endl;
 			p_observation.x = corners_end[i].getObservations()(0);
+			std::cout << "New point " << i << std::endl;
 			p_observation.y = corners_end[i].getObservations()(1);
+			std::cout << "New point " << i << std::endl;
 			AASS::acg::VertexLandmarkNDT* ptr = addLandmarkPose(position_globalframe, p_observation, 1);
-			ptr->addAngleOrientation(corners_end[i].getAngleWidth(), corners_end[i].getOrientation());
+			ptr->addAnglesOrientations(corners_end[i].getAngleWidths(), corners_end[i].getOrientations());
 			ptr->first_seen_from = robot_ptr;
 			
 			//TESTING to visualise which cells gave the corner
@@ -909,6 +938,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<lsl
 			
 		}
 		else{
+			//TODO
 			std::cout << "Point seen " << std::endl;
 			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr_landmark_seen);
 		}
