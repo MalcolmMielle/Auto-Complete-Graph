@@ -84,10 +84,12 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 					double landmark_angle_over = landmark_angle + 0.785;
 					if (landmark_angle_over >= 2 * M_PI) landmark_angle_over -= 2 * M_PI;
 					
-					if( orientation_v <= landmark_orientation_over && orientation_v >= landmark_orientation_under &&
-					angle_width_v <= landmark_angle_over && angle_width_v >= landmark_angle_under){
-						std::cout << "Good angle" << std::endl;
-						return true;
+					//BUG Those comparisons are wrong in some cases because the angles are modulo numbers.
+					if( orientation_v <= landmark_orientation_over && orientation_v >= landmark_orientation_under){
+// 						if (angle_width_v <= landmark_angle_over && angle_width_v >= landmark_angle_under){
+							std::cout << "Good angle" << std::endl;
+							return true;
+// 						}
 					}
 				}
 				
