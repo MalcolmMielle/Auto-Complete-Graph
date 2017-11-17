@@ -35,7 +35,7 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 		
 		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXY(){};
 		
-		const std::vector < std::pair<double, double> >& getAngleAndOrientation() const {return angle_orientation;}
+		const std::vector < std::pair<double, double> >& getAnglesAndOrientations() const {return angle_orientation;}
 		double getAngleWidth(int i){return angle_orientation[i].first;}
 		double getOrientation(int i){return angle_orientation[i].second;}
 // 		double getOrientation() const {return angle_orientation.second;}
@@ -59,6 +59,41 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 		}
 		
 		bool sameOrientation(const VertexSE2Prior& v){
+			
+			auto angles_orientations_v = v.getAnglesAndOrientations();
+			
+			for(auto it_ao_v = angles_orientations_v.begin(); it_ao_v != angles_orientations_v.end() ; ++it_ao_v){
+				double angle_width_v = it_ao_v->first;
+				double orientation_v = it_ao_v->second;
+				assert(angle_width_v >= 0.08);
+				for(int i_ao = 0; i_ao < getAnglesAndOrientations().size() ; ++i_ao){
+					double landmark_angle = getAngleWidth(i_ao);
+					double landmark_orientation = getOrientationGlobal(i_ao);
+					
+					//ATTENTION magic numbers here.
+					//Landmark orientation + 45deg
+					double landmark_orientation_over = landmark_orientation + 0.785;
+					if (landmark_orientation_over < 0) landmark_orientation_over += 2 * M_PI;
+					//Landmark orientation - 45deg
+					double landmark_orientation_under = landmark_orientation - 0.785;
+					if (landmark_orientation_under < 0) landmark_orientation_under += 2 * M_PI;
+					//Landmark angle - 20deg
+					double landmark_angle_under = landmark_angle - 0.349;
+					if (landmark_angle_under < 0) landmark_angle_under += 2 * M_PI;
+					//Landmark angle + 20deg
+					double landmark_angle_over = landmark_angle + 0.785;
+					if (landmark_angle_over >= 2 * M_PI) landmark_angle_over -= 2 * M_PI;
+					
+					if( orientation_v <= landmark_orientation_over && orientation_v >= landmark_orientation_under &&
+					angle_width_v <= landmark_angle_over && angle_width_v >= landmark_angle_under){
+						std::cout << "Good angle" << std::endl;
+						return true;
+					}
+				}
+				
+			}
+			return false;
+// 			}
 // 			double landmark_angle = getAngleWidth();
 // 			double landmark_direction = getOrientationGlobal();
 // 			

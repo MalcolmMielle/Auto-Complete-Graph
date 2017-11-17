@@ -908,7 +908,7 @@ namespace acg{
 			auto it = landmark.begin();
 			for(it ; it != landmark.end() ; ++it){
 				
-				for(int i = 0; i < (*it)->getAngleAndOrientation().size() ; ++i){
+				for(int i = 0; i < (*it)->getAnglesAndOrientations().size() ; ++i){
 					
 					geometry_msgs::Point p;
 	// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
@@ -972,7 +972,7 @@ namespace acg{
 		p.z = 0;
 		
 // 		std::cout << "getting the angle" << std::endl;
-		auto angles = vertex_in.getAngleOrientation();
+		auto angles = vertex_in.getAnglesAndOrientations();
 // 		std::cout << "getting the angle done" << std::endl;
 		
 		for(auto it = angles.begin() ; it !=angles.end(); ++it){

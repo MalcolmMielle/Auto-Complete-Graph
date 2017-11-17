@@ -18,7 +18,7 @@ namespace acg{
 		VertexSE2Prior() : g2o::VertexSE2(){}
 		PriorAttr priorattr;
 		
-		std::vector<std::pair<double, double> > getAngleOrientation() const {
+		std::vector<std::pair<double, double> > getAnglesAndOrientations() const {
 			
 // 			std::cout << "New vert"<<std::endl;
 			
