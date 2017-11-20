@@ -55,6 +55,12 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 			auto vec = first_seen_from->estimate().toVector();
 // 			std::cout << "Got estimate " << std::endl;
 			double angle = vec(2) + angle_orientation[i].second;
+			if(angle >= 2 * M_PI){
+				angle = angle - 2 * M_PI;
+			}
+			else if(angle < 0){
+				angle = angle + 2 * M_PI;
+			}
 			return angle;
 		}
 		
@@ -69,28 +75,47 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 				for(int i_ao = 0; i_ao < getAnglesAndOrientations().size() ; ++i_ao){
 					double landmark_angle = getAngleWidth(i_ao);
 					double landmark_orientation = getOrientationGlobal(i_ao);
+					assert(landmark_orientation >= 0);
+					assert(orientation_v >= 0);
+					assert(landmark_orientation < 2 * M_PI);
+					assert(orientation_v < 2 * M_PI);
+					
+					//Smallest angle difference
+					double orientation_diff = orientation_v - landmark_orientation;
+					orientation_diff = fmod( (orientation_diff + M_PI), (2 * M_PI) ) - M_PI;
+					
+					double angle_diff = std::abs(angle_width_v - landmark_angle);
+					
+					//They are close enough in orientation
+					if( orientation_diff <= M_PI / 4){
+						std::cout << "Same Orientation" << std::endl;
+						if(angle_diff <= M_PI / 4){
+							std::cout << "Good angle" << std::endl;
+							return true;
+						}
+					}
 					
 					//ATTENTION magic numbers here.
 					//Landmark orientation + 45deg
-					double landmark_orientation_over = landmark_orientation + 0.785;
-					if (landmark_orientation_over < 0) landmark_orientation_over += 2 * M_PI;
-					//Landmark orientation - 45deg
-					double landmark_orientation_under = landmark_orientation - 0.785;
-					if (landmark_orientation_under < 0) landmark_orientation_under += 2 * M_PI;
-					//Landmark angle - 20deg
-					double landmark_angle_under = landmark_angle - 0.349;
-					if (landmark_angle_under < 0) landmark_angle_under += 2 * M_PI;
-					//Landmark angle + 20deg
-					double landmark_angle_over = landmark_angle + 0.785;
-					if (landmark_angle_over >= 2 * M_PI) landmark_angle_over -= 2 * M_PI;
-					
-					//BUG Those comparisons are wrong in some cases because the angles are modulo numbers.
-					if( orientation_v <= landmark_orientation_over && orientation_v >= landmark_orientation_under){
-// 						if (angle_width_v <= landmark_angle_over && angle_width_v >= landmark_angle_under){
-							std::cout << "Good angle" << std::endl;
-							return true;
-// 						}
-					}
+// 					double landmark_orientation_over = landmark_orientation + 0.785;
+// 					if (landmark_orientation_over < 0) landmark_orientation_over += 2 * M_PI;
+// 					//Landmark orientation - 45deg
+// 					double landmark_orientation_under = landmark_orientation - 0.785;
+// 					if (landmark_orientation_under < 0) landmark_orientation_under += 2 * M_PI;
+// 					//Landmark angle - 20deg
+// 					double landmark_angle_under = landmark_angle - 0.349;
+// 					if (landmark_angle_under < 0) landmark_angle_under += 2 * M_PI;
+// 					//Landmark angle + 20deg
+// 					double landmark_angle_over = landmark_angle + 0.785;
+// 					if (landmark_angle_over >= 2 * M_PI) landmark_angle_over -= 2 * M_PI;
+// 					
+// 					//BUG Those comparisons are wrong in some cases because the angles are modulo numbers.
+// 					if( orientation_v <= landmark_orientation_over && orientation_v >= landmark_orientation_under){
+// // 						if (angle_width_v <= landmark_angle_over && angle_width_v >= landmark_angle_under){
+// 							std::cout << "Good angle" << std::endl;
+// 							return true;
+// // 						}
+// 					}
 				}
 				
 			}
