@@ -16,8 +16,8 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 		public:
 			
 		//TESTING
-		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_1;
-		std::vector<boost::shared_ptr< lslgeneric::NDTCell > > cells_that_gave_it_2;
+		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_1;
+		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_2;
 		g2o::SE2 robotpose_seen_from;
 		
 		//END OF TESTING

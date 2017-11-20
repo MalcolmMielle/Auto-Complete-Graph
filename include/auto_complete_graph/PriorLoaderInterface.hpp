@@ -1,6 +1,8 @@
 #ifndef AUTOCOMPLETEGRAPH_PRIORLOADERINTERFACE_16112016
 #define AUTOCOMPLETEGRAPH_PRIORLOADERINTERFACE_16112016
 
+#include <random>
+
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
 #include "vodigrex/linefollower/LineFollowerGraphCorners.hpp"

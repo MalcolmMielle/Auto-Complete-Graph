@@ -89,8 +89,8 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 
 void robotGraph(AASS::acg::AutoCompleteGraph& acg){
 	
-	lslgeneric::NDTMap* map = new lslgeneric::NDTMap();
-	std::shared_ptr<lslgeneric::NDTMap> smap(map);
+	perception_oru::NDTMap* map = new perception_oru::NDTMap();
+	std::shared_ptr<perception_oru::NDTMap> smap(map);
 	Eigen::Affine3d aff;
 	std::cout << "Making the robot" << std::endl;
 	g2o::SE2 rpose(1, 1, 0);

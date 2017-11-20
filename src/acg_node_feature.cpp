@@ -118,14 +118,14 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 	
 	ndt_map::NDTMapMsg msgio;
 // 			ATTENTION Frame shouldn't be fixed
-	bool good = lslgeneric::toMessage(graph.getNode(0).map->map, msgio, "/world");
-// 			lslgeneric::NDTMap* map_copy = new lslgeneric::NDTMap(new lslgeneric::LazyGrid(resolution));
+	bool good = perception_oru::toMessage(graph.getNode(0).map->map, msgio, "/world");
+// 			perception_oru::NDTMap* map_copy = new perception_oru::NDTMap(new perception_oru::LazyGrid(resolution));
 	
-	lslgeneric::NDTMap* map_copy;
-	lslgeneric::LazyGrid* lz;
-// 			bool good = lslgeneric::fromMessage(lz, fuser.map, m.map, frame);
-	bool good2 = lslgeneric::fromMessage(lz, map_copy, msgio, frame, true);
-	std::shared_ptr<lslgeneric::NDTMap> s(map_copy);
+	perception_oru::NDTMap* map_copy;
+	perception_oru::LazyGrid* lz;
+// 			bool good = perception_oru::fromMessage(lz, fuser.map, m.map, frame);
+	bool good2 = perception_oru::fromMessage(lz, map_copy, msgio, frame, true);
+	std::shared_ptr<perception_oru::NDTMap> s(map_copy);
 	
 // 	delete map_copy;
 }
@@ -205,7 +205,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 			cycles++;
 			
 		// 	nav_msgs::OccupancyGrid omap; 
-		// 	lslgeneric::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
+		// 	perception_oru::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
 		// 	moveOccupancyMap(omap, graph.getT());
 		// 	
 		// 	map_pub_.publish(omap);

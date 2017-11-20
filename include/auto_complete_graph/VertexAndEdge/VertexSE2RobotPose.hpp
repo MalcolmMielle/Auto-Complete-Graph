@@ -3,6 +3,7 @@
 
 #include "g2o/types/slam2d/vertex_se2.h"
 #include "EdgeInterfaceMalcolm.hpp"
+#include "opencv2/core/core.hpp"
 
 namespace AASS {
 namespace acg{	
@@ -14,16 +15,16 @@ class VertexSE2RobotPose : public g2o::VertexSE2
 		VertexSE2RobotPose() : g2o::VertexSE2(){}
 		
 	protected:
-		std::shared_ptr<lslgeneric::NDTMap> _map;
+		std::shared_ptr<perception_oru::NDTMap> _map;
 		Eigen::Affine3d _T;
 		double _time;
 	public:
 		g2o::SE2 initial_transfo;
 		cv::Mat img;
 		
-		std::shared_ptr<lslgeneric::NDTMap>& getMap(){return _map;}
-		const std::shared_ptr<lslgeneric::NDTMap>& getMap() const {return _map;}
-		void setMap(const std::shared_ptr<lslgeneric::NDTMap>& map){_map = map;}
+		std::shared_ptr<perception_oru::NDTMap>& getMap(){return _map;}
+		const std::shared_ptr<perception_oru::NDTMap>& getMap() const {return _map;}
+		void setMap(const std::shared_ptr<perception_oru::NDTMap>& map){_map = map;}
 		Eigen::Affine3d getPose(){return _T;}
 		const Eigen::Affine3d& getPose() const {return _T;}
 		void setPose(const Eigen::Affine3d& T) {_T = T;}
