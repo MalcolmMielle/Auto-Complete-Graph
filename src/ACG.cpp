@@ -1036,14 +1036,14 @@ void AASS::acg::AutoCompleteGraph::updateLinks()
 {
 
 	std::cout << "Create new links" << std::endl;
-	int count = countLinkToMake();
+// 	int count = countLinkToMake();
 	int count2 = createNewLinks();
-	if(count != count2){
-		std::cout << "Weird different detection" << std::endl;
-		throw std::runtime_error("ARF NOT GOOD COUNT in update link");
-	}
+// 	if(count != count2){
+// 		std::cout << "Weird different detection" << std::endl;
+// 		throw std::runtime_error("ARF NOT GOOD COUNT in update link");
+// 	}
 	std::cout << "updateLink no small forgotten" << std::endl;
-	checkLinkNotForgotten();
+// 	checkLinkNotForgotten();
 	removeBadLinks();
 	std::cout << "update link not too big" << std::endl;
 	checkLinkNotTooBig();

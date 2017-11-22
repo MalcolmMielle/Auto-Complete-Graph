@@ -209,7 +209,7 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 
 void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
-	try{
+// 	try{
 		new_node = true;
 	// 	abort_f = true;
 		std::cout << "Got a new graph " << std::endl;
@@ -254,9 +254,9 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 				//Prepare the graph : marginalize + initializeOpti
 				
 				ros::Time start_opti = ros::Time::now();
-// 				oacg->setFirst();
-// 				oacg->prepare();
-// 				oacg->optimize();
+				oacg->setFirst();
+				oacg->prepare();
+				oacg->optimize();
 				ros::Time end_opti = ros::Time::now();	
 				double opti = (start_opti - end_opti).toSec();
 				time_opti.push_back(opti);
@@ -303,13 +303,14 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 		// 			visu.updateRvizNoNDT();
 		// 		}
 		}	
-	}
-	catch(...){
-		std::cout << "Error " << std::endl;
-		visu.updateRviz();
-// 		int a;
-// 		std::cin >> a;
-	}
+// 	}
+// 	catch(...){
+// 		
+// 		std::cout << "Error " << std::endl;
+// 		visu.updateRviz();
+// // 		int a;
+// // 		std::cin >> a;
+// 	}
 }
 
 

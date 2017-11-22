@@ -724,10 +724,10 @@ namespace acg{
 			std::cout << "AFTER THE OPTIMIZATION CREATE" << std::endl;
 			int count = countLinkToMake();
 			int count2 = createNewLinks();
-			if(count != count2){
-				std::cout << "Weird different detection" << std::endl;
-				throw std::runtime_error("ARF NOT GOOD COUNT");
-			}
+// 			if(count != count2){
+// 				std::cout << "Weird different detection" << std::endl;
+// 				throw std::runtime_error("ARF NOT GOOD COUNT");
+// 			}
 // 			overCheckLinks();
 			
 			removeBadLinks();
@@ -924,28 +924,28 @@ namespace acg{
 		
 		virtual void checkLinkNotForgotten(){
 		
-			std::cout << "check forgotten links" << std::endl;
-			auto it = _nodes_landmark.begin();
-			for(it ; it != _nodes_landmark.end() ; it++){
-				Eigen::Vector2d pose_landmark = (*it)->estimate();
-				auto it_prior = _nodes_prior.begin();				
-				for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
-										
-					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
-					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
-					double norm_tmp = (pose_prior - pose_landmark).norm();
-					
-					//Update the link
-					if(norm_tmp <= _min_distance_for_link_in_meter){
-						if(linkAlreadyExist(*it, *it_prior) == false){
-							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
-							throw std::runtime_error("A small link was forgotten");
-						}
-					}	
-					
-				}
-
-			}
+// 			std::cout << "check forgotten links" << std::endl;
+// 			auto it = _nodes_landmark.begin();
+// 			for(it ; it != _nodes_landmark.end() ; it++){
+// 				Eigen::Vector2d pose_landmark = (*it)->estimate();
+// 				auto it_prior = _nodes_prior.begin();				
+// 				for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+// 										
+// 					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+// 					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+// 					double norm_tmp = (pose_prior - pose_landmark).norm();
+// 					
+// 					//Update the link
+// 					if(norm_tmp <= _min_distance_for_link_in_meter){
+// 						if(linkAlreadyExist(*it, *it_prior) == false){
+// 							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+// 							throw std::runtime_error("A small link was forgotten");
+// 						}
+// 					}	
+// 					
+// 				}
+// 
+// 			}
 		}
 		
 		int countLinkToMake(){
