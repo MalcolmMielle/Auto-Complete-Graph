@@ -333,7 +333,7 @@ namespace acg{
 				auto vertex = ptr->estimate().toVector();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
-                std::cout << "Pushing " << veve << std::endl;
+//                 std::cout << "Pushing " << veve << std::endl;
 				points.push_back(veve);
 			}
 			
@@ -341,11 +341,13 @@ namespace acg{
 			
 			for (grid_map::LineIterator iterator(gridMap, points[0], points[1]);
 				!iterator.isPastEnd(); ++iterator) {
+// 				std::cout << "Stuck" << std::endl;
 				gridMap.at("prior", *iterator) = 100;
 	// 			publish();
 	// 			ros::Duration duration(0.02);
 	// 			duration.sleep();
 			}
+// 			std::cout << "Or not" << std::endl;
 			
 		}
 
@@ -353,14 +355,8 @@ namespace acg{
 		
 	}
 	
-	
-	//TODO : BROKEN FUNCTION FOR NOW
-	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& map){
-		
-        double resol = 0.1;
-		
-		//************* TODO : shorten this code !
-		//Get max sinze of prior
+	///@brief return the biggest absolute value along x and y for the prior.
+	inline void getPriorSizes(const AASS::acg::AutoCompleteGraph& acg, double& size_x, double& size_y){
 		
 		auto edges = acg.getPriorEdges();
 		
@@ -403,7 +399,7 @@ namespace acg{
 		min_x = std::abs(min_x);
 		min_y = std::abs(min_y);
 		
-		double size_x, size_y;
+		
 		if(max_x > min_x){
 			size_x = max_x + 10;
 		}
@@ -416,6 +412,75 @@ namespace acg{
 		else{
 			size_y = min_y + 10;
 		}
+		
+		
+	}
+	
+	
+	//TODO : BROKEN FUNCTION FOR NOW
+	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& map){
+		
+        double resol = 0.1;
+		
+		//************* TODO : shorten this code !
+		//Get max sinze of prior
+		
+// 		auto edges = acg.getPriorEdges();
+// 		
+// 		double max_x, min_x, max_y, min_y;
+// 		bool flag_init = false;
+// 		auto it = edges.begin();
+// 		for(it ; it != edges.end() ; ++it){
+// 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+// 				geometry_msgs::Point p;
+// 				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+// 				auto vertex = ptr->estimate().toVector();
+// 				if(flag_init == false){
+// 					flag_init = true;
+// 					max_x = vertex(0);
+// 					max_y = vertex(1);
+// 					min_x = vertex(0);
+// 					min_y = vertex(1);
+// 				}
+// 				else{
+// 					if(max_x < vertex(0)){
+// 						max_x = vertex(0);
+// 					}
+// 					if(max_y < vertex(1)){
+// 						max_y = vertex(1);
+// 					}
+// 					if(min_x > vertex(0)){
+// 						min_x = vertex(0);
+// 					}
+// 					if(min_y > vertex(1)){
+// 						min_y = vertex(1);
+// 					}
+// 				}
+// 				
+// 			}
+// 			
+// 		}
+// 		
+// 		max_x = std::abs(max_x);
+// 		max_y = std::abs(max_y);
+// 		min_x = std::abs(min_x);
+// 		min_y = std::abs(min_y);
+		
+		double size_x, size_y;
+		getPriorSizes(acg, size_x, size_y);
+		
+// 		if(max_x > min_x){
+// 			size_x = max_x + 10;
+// 		}
+// 		else{
+// 			size_x = min_x + 10;
+// 		}
+// 		if(max_y > min_y){
+// 			size_y = max_y + 10;
+// 		}
+// 		else{
+// 			size_y = min_y + 10;
+// 		}
 
 		/***********************************/
 		
@@ -819,13 +884,24 @@ namespace acg{
 	}
 	
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
-	inline void ACGToSimpleACGMsg(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMaps mapmsg){
+	inline void ACGToACGMapsMsg(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMaps& mapmsg){
 		
+		mapmsg.header.stamp = ros::Time::now();
+		mapmsg.header.frame_id = "world";
+		
+// 		std::cout << "Vector Map" << std::endl;
 		ndt_map::NDTVectorMapMsg maps;
 		ACGToVectorMaps(acg, mapmsg.ndt_maps);
 		
+// 		std::cout << "Grid Map" << std::endl;
 		grid_map::GridMap gridMap;
-		double resolution = 0.5;
+		gridMap.setFrameId("/world");
+		double size_x, size_y;
+		getPriorSizes(acg, size_x, size_y);
+		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));
+		gridMap.add("prior"); 
+		gridMap["prior"].setZero(); 
+		double resolution = 0.1;
 		ACGPriortoGridMap(acg, gridMap, resolution);
 		grid_map::GridMapRosConverter converter;
 		grid_map_msgs::GridMap gridmapmsg;

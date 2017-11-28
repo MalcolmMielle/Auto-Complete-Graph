@@ -34,6 +34,8 @@ namespace acg{
 		ros::Publisher _anglesw_prior_pub;
 		ros::Publisher _gaussian_pub;
 		ros::Publisher _gaussian_pub2;
+		ros::Publisher _acg_gdim;
+		
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 		AutoCompleteGraph* _acg;
@@ -74,6 +76,7 @@ namespace acg{
 			_ndtmap = _nh.advertise<ndt_map::NDTVectorMapMsg>("ndt_map_msg_node", 10);
 			_gaussian_pub = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners", 10);
 			_gaussian_pub2 = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners2", 10);
+			_acg_gdim = _nh.advertise<auto_complete_graph::ACGMaps>("acg_maps", 10);
 			
 			_acg = acg;
 			
@@ -298,7 +301,6 @@ namespace acg{
 			drawLinks();
 			
 			if(_nb_of_zone != _acg->getRobotNodes().size()){
-			
 				
 				
 				drawGaussiansThatGaveCorners();
@@ -316,6 +318,12 @@ namespace acg{
 				
 				_nb_of_zone = _acg->getRobotNodes().size();
 // 				exit(0);
+				
+				//Puclish message for GDIM
+				auto_complete_graph::ACGMaps mapmsg;
+				std::cout << "PUSH acg maps message" << std::endl;
+				AASS::acg::ACGToACGMapsMsg(*_acg, mapmsg);
+				_acg_gdim.publish(mapmsg);
 				
             }
 		}
