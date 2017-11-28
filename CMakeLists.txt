@@ -19,6 +19,11 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map_ros
   grid_map_msgs
   grid_map_cv
+  
+  
+  message_generation
+  geometry_msgs
+  std_msgs
 )
 
 set(CMAKE_CXX_STANDARD 11)
@@ -71,12 +76,20 @@ set(G2O_LIBS ${G2O_CORE_LIBRARY} ${G2O_SOLVER_CSPARSE}  ${CSPARSE_LIBRARY} ${G2O
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  ACGMaps.msg
+#   ACG.msg
+#   VertexSE2RobotPoseMsg.msg
+#   VertexSE2Msg.msg
+#   VertexLandmarkNDTMsg.msg
+)
+
+generate_messages(
+  DEPENDENCIES 
+  geometry_msgs std_msgs ndt_map grid_map_msgs
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -132,7 +145,7 @@ catkin_package(
  INCLUDE_DIRS include
  LIBRARIES ${G2O_LIBS}
 #  LIBRARIES auto_complete_graph
- CATKIN_DEPENDS message_runtime ndt_feature ndt_map roscpp rospy std_msgs grid_map_core grid_map_ros grid_map_msgs grid_map_cv
+ CATKIN_DEPENDS message_runtime ndt_feature ndt_map roscpp rospy std_msgs grid_map_core grid_map_ros grid_map_msgs grid_map_cv geometry_msgs std_msgs
  DEPENDS system_lib eigen
 )
 
@@ -349,4 +362,3 @@ add_subdirectory(src)
 
 #useless commment
 add_subdirectory(tests)
-

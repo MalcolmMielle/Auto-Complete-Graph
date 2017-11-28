@@ -8,6 +8,7 @@
 #include "occupancy_grid_utils/combine_grids.h"
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_map/NDTVectorMapMsg.h"
+#include "auto_complete_graph/ACGMaps.h"
 
 #include "ACG.hpp"
 
@@ -817,6 +818,21 @@ namespace acg{
 		}
 	}
 	
+	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
+	inline void ACGToSimpleACGMsg(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMaps mapmsg){
+		
+		ndt_map::NDTVectorMapMsg maps;
+		ACGToVectorMaps(acg, mapmsg.ndt_maps);
+		
+		grid_map::GridMap gridMap;
+		double resolution = 0.5;
+		ACGPriortoGridMap(acg, gridMap, resolution);
+		grid_map::GridMapRosConverter converter;
+		grid_map_msgs::GridMap gridmapmsg;
+		converter.toMessage(gridMap, mapmsg.prior);
+		
+		
+	}
 	
 	
 }

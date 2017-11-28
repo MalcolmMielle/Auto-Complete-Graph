@@ -54,6 +54,8 @@
   <build_depend>flirtlib_ros </build_depend>
   <build_depend>ndt_feature_finder </build_depend>
   <build_depend>occupancy_grid_utils</build_depend>
+  <build_depend> geometry_msgs</build_depend>
+  <build_depend>std_msgs     </build_depend>
   
   <run_depend>occupancy_grid_utils</run_depend>
   <run_depend>message_generation</run_depend>
@@ -70,6 +72,8 @@
   <run_depend>grid_map_cv</run_depend>
   <run_depend>flirtlib_ros </run_depend>
   <run_depend>ndt_feature_finder </run_depend>
+  <run_depend> geometry_msgs</run_depend>
+  <run_depend>std_msgs     </run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

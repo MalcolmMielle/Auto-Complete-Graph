@@ -366,7 +366,9 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
 	ros::Subscriber call_for_publish_occ;
+	ros::Publisher oacg_gdim;
     ros::NodeHandle nh("~");
+	oacg_gdim = nh.advertise<auto_complete_graph::ACGMaps>("acg_maps", 10);
 	
 	double deviation = 0;
 	double angle = 0;
@@ -469,6 +471,11 @@ int main(int argc, char **argv)
 // 		}	
 		
 		visu.updateRviz();
+		
+		//Puclish message for GDIM
+		auto_complete_graph::ACGMaps mapmsg;
+		AASS::acg::ACGToSimpleACGMsg(oacg, mapmsg);
+		oacg_gdim.publish(mapmsg);
 		
 	}
 	
