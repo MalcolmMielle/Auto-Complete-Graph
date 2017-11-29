@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   
   message_generation
   geometry_msgs
+#   nav_msgs
   std_msgs
 )
 
@@ -80,6 +81,7 @@ set(G2O_LIBS ${G2O_CORE_LIBRARY} ${G2O_SOLVER_CSPARSE}  ${CSPARSE_LIBRARY} ${G2O
 add_message_files(
   FILES
   ACGMaps.msg
+  ACGMapsOM.msg
 #   ACG.msg
 #   VertexSE2RobotPoseMsg.msg
 #   VertexSE2Msg.msg
@@ -88,7 +90,8 @@ add_message_files(
 
 generate_messages(
   DEPENDENCIES 
-  geometry_msgs std_msgs ndt_map grid_map_msgs
+  geometry_msgs std_msgs ndt_map grid_map_msgs  
+  # nav_msgs
 )
 
 ## Generate services in the 'srv' folder

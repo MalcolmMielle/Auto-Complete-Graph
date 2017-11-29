@@ -9,6 +9,7 @@
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_map/NDTVectorMapMsg.h"
 #include "auto_complete_graph/ACGMaps.h"
+#include "auto_complete_graph/ACGMapsOM.h"
 
 #include "ACG.hpp"
 
@@ -477,7 +478,7 @@ namespace acg{
 // 		}
 // 		if(max_y > min_y){
 // 			size_y = max_y + 10;
-// 		}
+// 		} 
 // 		else{
 // 			size_y = min_y + 10;
 // 		}
@@ -892,6 +893,104 @@ namespace acg{
 // 		std::cout << "Vector Map" << std::endl;
 		ndt_map::NDTVectorMapMsg maps;
 		ACGToVectorMaps(acg, mapmsg.ndt_maps);
+		
+// 		std::cout << "Grid Map" << std::endl;
+		grid_map::GridMap gridMap;
+		gridMap.setFrameId("/world");
+		double size_x, size_y;
+		getPriorSizes(acg, size_x, size_y);
+		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));
+		gridMap.add("prior"); 
+		gridMap["prior"].setZero(); 
+		double resolution = 0.1;
+		ACGPriortoGridMap(acg, gridMap, resolution);
+		grid_map::GridMapRosConverter converter;
+		grid_map_msgs::GridMap gridmapmsg;
+		converter.toMessage(gridMap, mapmsg.prior);
+		
+		
+	}
+	
+	
+	inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1){
+		if(acg.getRobotNodes().size() != 0){
+			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
+				
+// 				grid_map::GridMap gridMaptmp({"ndt"});
+// 				gridMaptmp["ndt"].setZero();
+// 				
+// 		// 		auto node = acg.getRobotNodes()[0];
+// 		// 		auto vertex = node->estimate().toVector();
+// 				
+// 				gridMaptmp.setFrameId("/world");
+// 				double size_x, size_y;
+// 				getPriorSizes(acg, size_x, size_y);
+// 				gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resolution, grid_map::Position(0.0, 0.0));
+				
+				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
+// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+                perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, "/world");
+				
+				grid_map::GridMap mapNDT;
+				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
+				grid_map::GridMapRosConverter::fromOccupancyGrid(*omap, "ndt", mapNDT);
+				delete omap;
+				
+				grid_map::Matrix& data = mapNDT["ndt"];
+				for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
+					const grid_map::Index index(*iterator);
+					if(std::isnan(data(index(0), index(1)))){
+						data(index(0), index(1)) = -1;
+					}
+				}
+				
+// 				std::cout << "ADDING A MAP" << std::endl;
+// 				///Copy map
+// 				ndt_map::NDTMapMsg msg;
+// 				bool good = perception_oru::toMessage((*it)->getMap().get(), msg, "/world");
+				grid_map::GridMapRosConverter converter;
+				grid_map_msgs::GridMap gridmapmsg;
+				converter.toMessage(mapNDT, gridmapmsg);
+				
+// 				std::cout << "Layers " << std::endl;
+// 				for(int i  = 0; i < gridmapmsg.layers.size() ; ++i){
+// 					std::cout << gridmapmsg.layers[i] << std::endl;
+// 				}
+// 				
+// 				std::cout << "Layers Basic" << std::endl;
+// 				for(int i  = 0; i < gridmapmsg.basic_layers.size() ; ++i){
+// 					std::cout << gridmapmsg.basic_layers[i] << std::endl;
+// 				}
+	// 			
+				mapmsg.ndt_maps_om.push_back(gridmapmsg);
+				
+				auto pose = (*it)->estimate().toVector();
+				geometry_msgs::Transform transform;
+				transform.translation.x = pose(0);
+				transform.translation.y = pose(1);
+				transform.translation.z = 0;
+				
+				auto quat = tf::createQuaternionFromRPY(0, 0, pose(2));
+				transform.rotation.x = quat.getX();
+				transform.rotation.y = quat.getY();
+				transform.rotation.z = quat.getZ();
+				transform.rotation.w = quat.getW();
+				
+				mapmsg.robot_poses.push_back(transform);
+
+			}
+		}
+	}
+	
+	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
+	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMapsOM& mapmsg){
+		
+		mapmsg.header.stamp = ros::Time::now();
+		mapmsg.header.frame_id = "world";
+		
+// 		std::cout << "Vector Map" << std::endl;
+// 		ndt_map::NDTVectorMapMsg maps;
+		ACGToOccMaps(acg, mapmsg, 0.1);
 		
 // 		std::cout << "Grid Map" << std::endl;
 		grid_map::GridMap gridMap;

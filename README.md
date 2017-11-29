@@ -45,3 +45,28 @@ The class `PriorLoaderInterface.hpp` is used to load prior image and detected co
 * Eigen
 * Boost
 
+## ROS 
+
+### Topics
+
+The results of the ACG can be fetched on the topic `/auto_complete_graph_rviz_small_optimi/acg_maps`. The message format is as follow:
+
+```
+Header header #standard header information
+
+ndt_map/NDTVectorMapMsg ndt_maps #All robot submap and associated translations
+grid_map_msgs/GridMap prior #Prior map as a gridMap with resolution 0.1 and frame "/world"
+```
+Each ndt map is centered where the corresponding robot pose node is situated. The robot pose node can be found be adding all transformations.
+
+Another topic where one can find the results is `/auto_complete_graph_rviz_small_optimi/acg_maps_om`. The message format is as follow:
+
+```
+Header header #standard header information
+
+grid_map_msgs/GridMap[] ndt_maps_om #All robot submap as grid maps. The layer is name 'ndt'
+geometry_msgs/Pose[] robot_poses #transformation between the previous submap and the next.
+grid_map_msgs/GridMap prior #Prior map as a gridMap with resolution 0.1 and origin frame "/world"
+```
+Each ndt map is centered where the corresponding robot pose node is situated.
+

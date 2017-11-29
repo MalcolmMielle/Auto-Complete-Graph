@@ -35,6 +35,9 @@ namespace acg{
 		ros::Publisher _gaussian_pub;
 		ros::Publisher _gaussian_pub2;
 		ros::Publisher _acg_gdim;
+		ros::Publisher _acg_gdim_om;
+		
+		ros::Publisher _last_grid_map;
 		
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
@@ -77,6 +80,8 @@ namespace acg{
 			_gaussian_pub = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners", 10);
 			_gaussian_pub2 = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners2", 10);
 			_acg_gdim = _nh.advertise<auto_complete_graph::ACGMaps>("acg_maps", 10);
+			_acg_gdim_om = _nh.advertise<auto_complete_graph::ACGMapsOM>("acg_maps_om", 10);
+			_last_grid_map = _nh.advertise<grid_map_msgs::GridMap>("last_grid_map", 10);
 			
 			_acg = acg;
 			
@@ -324,6 +329,18 @@ namespace acg{
 				std::cout << "PUSH acg maps message" << std::endl;
 				AASS::acg::ACGToACGMapsMsg(*_acg, mapmsg);
 				_acg_gdim.publish(mapmsg);
+				
+				
+				auto_complete_graph::ACGMapsOM mapmsg_om;
+				AASS::acg::ACGToACGMapsOMMsg(*_acg, mapmsg_om);
+				_acg_gdim_om.publish(mapmsg_om);
+				
+				//Publish the last grid map as a message to make sure that they look like something
+				int size_g = mapmsg_om.ndt_maps_om.size();
+				_last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
+				
+				
+				
 				
             }
 		}
