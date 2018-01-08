@@ -6,7 +6,7 @@ add_library(auto_complete_graph_lib
   OptimizableAutoCompleteGraph.cpp
   PriorLoaderInterface.cpp
   ACG_feature.cpp
-  ACG_Localization.cpp
+  ACG_localization.cpp
 #   VisuACG.cpp
 )
 
