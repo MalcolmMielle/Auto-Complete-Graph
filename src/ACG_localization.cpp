@@ -56,6 +56,8 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const graph_map::G
 		size_t i;
 		i = _previous_number_of_node_in_ndtgraph - 1;
 		
+		assert(i >= 0);
+		
 		for (i; i < ndt_graph.nodes.size() - 1 ; ++i) {
 			
 			AASS::acg::VertexSE2RobotPose* robot_ptr;
@@ -80,7 +82,9 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const graph_map::G
 
 std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const graph_map::GraphMapMsg& ndt_graph, int element, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
 {
-	
+	///ATTENTION Indexes start at 1 instead of 0 :/
+	std::cout << "good indexes " << ndt_graph.nodes[element].id.data - 1 << " = " << element << " voilaaa " << std::endl;
+	assert(ndt_graph.nodes[element].id.data - 1 == element);
 	//Return Gaussian white noise
 // 	auto randomNoise = [](double mean, double deviationt) -> double {
 // 		std::default_random_engine engine{std::random_device()() };
@@ -157,36 +161,42 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 		
 		std::cout << " ref " << ndt_graph.factors[element-1].prev.data << " and mov " << ndt_graph.factors[element-1].next.data << std::endl;
 		
-// 		assert( links[element-1].getRefIdx() < _nodes_ndt.size() );
-// 		assert( links[element-1].getMovIdx() < _nodes_ndt.size() );
+		///ATTENTION Indexes of graph_map start at 1 instead of 0 :/
+		assert( ndt_graph.factors[element-1].prev.data - 1 < _nodes_ndt.size() );
+		assert( ndt_graph.factors[element-1].next.data - 1 < _nodes_ndt.size() );
 		
-		auto from = _nodes_ndt[ ndt_graph.factors[element-1].prev.data ] ;
-		auto toward = _nodes_ndt[ ndt_graph.factors[element-1].next.data ] ;
+		auto from = _nodes_ndt[ ndt_graph.factors[element-1].prev.data - 1 ] ;
+		auto toward = _nodes_ndt[ ndt_graph.factors[element-1].next.data - 1 ] ;
 		
 		std::cout << "Saving cov " << std::endl;
 		//TODO : transpose to 3d and use in odometry!
 		
 		auto cov_msg = ndt_graph.factors[element - 1].covariance;
+		
 		std::vector<double>::const_iterator it;
 		it=cov_msg.data.begin();
-// 		std::cout << "Cov size " << m.cov.data.size() << std::endl;
-		assert(cov_msg.data.size() == 9);
-		Eigen::Matrix3d cov;
-		cov <<  *it, *(it+1), *(it+2), 
-				*(it+3), *(it+4), *(it+5), 
-				*(it+6), *(it+7), *(it+8);
+		std::cout << "Cov size " << cov_msg.data.size() << std::endl;
+		assert(cov_msg.data.size() == 36); //6x6 matrix
 		
-// 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
+		std::vector<double>::const_iterator it_2;
+		it_2=cov_msg.data.begin();
+		std::cout << cov_msg.data.size() << std::endl;
+		assert(cov_msg.data.size() == 36);
 		
-		
-		std::cout << "COV " << cov << std::endl;
+		Eigen::MatrixXd cov_3d(6,6);
+		for(size_t i = 0; i < 6 ; ++i){
+			for(size_t j = 0 ; j < 6 ; ++j){
+				cov_3d(i, j) = cov_msg.data[ (6*i) + j];
+			}
+		}		
 		
 		std::cout << "Saving cov to 2d" << std::endl;
 		Eigen::Matrix3d cov_2d;
-		cov_2d << 	cov(0, 0), 	cov(0, 1), 	0,
-					cov(1, 0), 	cov(1, 1), 	0,
-					0, 		 	0, 			cov(5, 5);
-					
+		cov_2d << 	cov_3d(0, 0), 	cov_3d(0, 1), 	0,
+					cov_3d(1, 0), 	cov_3d(1, 1), 	0,
+					0, 		 	0, 			cov_3d(5, 5);
+		
+// 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
 		std::cout << "Saving information " << std::endl;
 		Eigen::Matrix3d information = cov_2d.inverse();
 		
@@ -194,8 +204,9 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 // 					odometry = odometry * noise_se2;
 // 				}
 		
-		std::cout << "Saving odometry " << std::endl;
+		std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward << " info " << information << " " << std::endl;
 		addOdometry(odometry, from, toward, information);
+		std::cout << ">Done" << std::endl;
 	}
 	
 	return shared_map;
