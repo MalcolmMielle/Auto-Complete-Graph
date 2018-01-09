@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map_msgs
   grid_map_cv
   
+  graph_map
   
   message_generation
   geometry_msgs
