@@ -19,8 +19,9 @@ namespace acg{
 	protected:
 		ros::NodeHandle _nh;
 		ros::Publisher _last_ndtmap;
-		ros::Publisher _last_ndtmap2;
-		ros::Publisher _last_ndtmap_full;
+		ros::Publisher _last_ndtmap_occ;
+		ros::Publisher _last_ndtmap2_occ;
+		ros::Publisher _last_ndtmap_full_occ;
 		ros::Publisher _prior_map_occ;
 		ros::Publisher _marker_pub;
 		ros::Publisher _ndt_node_pub;
@@ -63,9 +64,10 @@ namespace acg{
 	public:
 		VisuAutoCompleteGraph(AutoCompleteGraph* acg, ros::NodeHandle nh) : _nb_of_zone(0), _resolution(0.1){
 			_nh = nh;
-			_last_ndtmap = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg", 10);
-			_last_ndtmap2 = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2", 10);
-			_last_ndtmap_full = _nh.advertise<nav_msgs::OccupancyGrid>("occ_full", 10);
+			_last_ndtmap_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg_occ", 10);
+			_last_ndtmap = _nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
+			_last_ndtmap2_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2_occ", 10);
+			_last_ndtmap_full_occ = _nh.advertise<nav_msgs::OccupancyGrid>("occ_full", 10);
 			_prior_map_occ = _nh.advertise<nav_msgs::OccupancyGrid>("occ_prior", 10);
 			_marker_pub = _nh.advertise<visualization_msgs::Marker>("prior_marker", 10);
 			_ndt_node_pub = _nh.advertise<visualization_msgs::Marker>("ndt_nodes_marker", 10);
@@ -246,7 +248,7 @@ namespace acg{
 // 				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
 				
 				std::cout << "Pub" << std::endl;
-				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
+				_last_ndtmap_full_occ.publish<nav_msgs::OccupancyGrid>(*occ_outt);
 // 				saveImage(occ_out);
 // 				std::cout << "Image saved" << std::endl;
 				
@@ -273,7 +275,7 @@ namespace acg{
 				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
 				ACGtoOccupancyGrid(*_acg, occ_outt);
-				_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_outt);
+				_last_ndtmap_full_occ.publish<nav_msgs::OccupancyGrid>(*occ_outt);
 				
 				
 			}
@@ -289,7 +291,7 @@ namespace acg{
 			// auto node = _acg->getRobotNodes()[0];
 			// auto vertex = node->estimate().toIsometry();
 			// moveOccupancyMap(*occ_out, vertex);
-			_last_ndtmap_full.publish<nav_msgs::OccupancyGrid>(*occ_out);
+			_last_ndtmap_full_occ.publish<nav_msgs::OccupancyGrid>(*occ_out);
 			
 			nav_msgs::OccupancyGrid* omap_tmp_p = new nav_msgs::OccupancyGrid();
 			nav_msgs::OccupancyGrid::Ptr occ_out_p(omap_tmp_p);
@@ -332,11 +334,13 @@ namespace acg{
 				
 				
 				auto_complete_graph::ACGMapsOM mapmsg_om;
+				std::cout << "PUSH acg maps OM message" << std::endl;
 				AASS::acg::ACGToACGMapsOMMsg(*_acg, mapmsg_om);
 				_acg_gdim_om.publish(mapmsg_om);
 				
 				//Publish the last grid map as a message to make sure that they look like something
 				int size_g = mapmsg_om.ndt_maps_om.size();
+				std::cout << "Last grid map" << std::endl;
 				_last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
 				
 				//Publish last occ grid to make sure that they look like something
@@ -344,8 +348,10 @@ namespace acg{
 // 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
 //                 perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
+				std::cout << "Last ndtmap" << std::endl;
 				_last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o -1]);
 // 				delete omap;
+				std::cout << "Done" << std::endl;
 				
 				
 				
@@ -528,7 +534,7 @@ namespace acg{
 // 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
 				final->header.frame_id = "/world";
 				final->header.stamp = ros::Time::now();
-				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*final);
+				_last_ndtmap_occ.publish<nav_msgs::OccupancyGrid>(*final);
 				
 				_ndt_node_pub.publish(_ndt_node_markers);
 // 				if(_nb_of_zone != _acg->getRobotNodes().size()){
@@ -594,7 +600,7 @@ namespace acg{
 // 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
 				final->header.frame_id = "/world";
 				final->header.stamp = ros::Time::now();
-				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*final);
+				_last_ndtmap_occ.publish<nav_msgs::OccupancyGrid>(*final);
 			}
 			
 			
