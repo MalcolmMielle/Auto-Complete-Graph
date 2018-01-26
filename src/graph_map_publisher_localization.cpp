@@ -924,6 +924,13 @@ public:
 		}
 		
 		if(nb_of_node != nb_of_node_new){
+			
+			//Save the new pose associated with the node.
+			acg_localization->savePos();
+			
+			assert(acg_localization->getMeans().size() == nb_of_node_new); 
+			
+			
 			std::cout << "PUBLISH: now" << std::endl;
 			//Publish message
 			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
@@ -931,6 +938,8 @@ public:
 			perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, world_link_id);
 // 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
 // 			
+			graphmaplocalizationmsg.graph_map = graphmapmsg;
+			
 // 			graphmap_pub_.publish(graphmapmsg);
 // 			std::cout << "PUBLISHED" << std::endl;
 	// 		exit(0);

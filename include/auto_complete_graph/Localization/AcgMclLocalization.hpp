@@ -3,6 +3,10 @@
 
 #include <pcl/common/transforms.h>
 #include <ndt_mcl/particle_filter.hpp>
+#include <geometry_msgs/Point.h>
+#include <eigen_conversions/eigen_msg.h>
+
+#include "auto_complete_graph/GraphMapLocalizationMsg.h"
 
 namespace AASS {
 
@@ -13,6 +17,9 @@ namespace acg{
 		
 // 		boost::shared_ptr<perception_oru::particle_filter> _ndtmcl;
 		bool mcl_loaded_;
+		
+		std::vector<Eigen::Vector3d> _mean_saved;
+		std::vector<Eigen::Matrix3d> _cov_saved;
 		
 	public:
 		ACGMCLLocalization(std::string mapFile_, int particleCount_) : mcl_loaded_(false), perception_oru::particle_filter(mapFile_, particleCount_){};
@@ -55,6 +62,32 @@ namespace acg{
 			else{
 				std::cout << "You need to init MCL to start MCL localization" << std::endl;
 			}
+		}
+		
+		
+		void savePos(){
+			Eigen::Matrix3d cov;
+			Eigen::Vector3d mean;
+			GetPoseMeanAndVariance2D(mean, cov);
+			_mean_saved.push_back(mean);
+			_cov_saved.push_back(cov);
+			
+		}
+		
+		const std::vector<Eigen::Vector3d>& getMeans() const {return _mean_saved;}
+		const std::vector<Eigen::Matrix3d>& getCovs() const {return _cov_saved;}
+		
+		void toMessage(const auto_complete_graph::GraphMapLocalizationMsg& msg){
+			
+			std::vector<geometry_msgs::Point> points;
+			
+			for(auto it = _mean_saved.begin() ; it != _mean_saved.end() ; ++it){
+				geometry_msgs::Point m;
+				tf::pointEigenToMsg(*it, m);
+				points.push_back(m);
+			}
+			
+			assert(false);
 		}
 		
 	};
