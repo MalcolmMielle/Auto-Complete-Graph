@@ -18,14 +18,14 @@ void simpleGraph(AASS::acg::AutoCompleteGraph& acg){
 	
 	std::cout << "Making the landmarks" << std::endl;
 	//Adding robot poses
-	g2o::Vector2D se2; se2 << 1, 1;
+	g2o::Vector2 se2; se2 << 1, 1;
 	cv::Point2f p;
 	AASS::acg::VertexLandmarkNDT* out0 = acg.addLandmarkPose(se2, p);
 	out0->setId(0);
-	g2o::Vector2D se22; se22 << 2, 1.1;	
+	g2o::Vector2 se22; se22 << 2, 1.1;	
 	AASS::acg::VertexLandmarkNDT* out1 = acg.addLandmarkPose(se22, p);
 	out1->setId(1);
-	g2o::Vector2D se222; se222 << 3, 2;
+	g2o::Vector2 se222; se222 << 3, 2;
 	AASS::acg::VertexLandmarkNDT* out2 = acg.addLandmarkPose(se222, p);
 	out2->setId(2);
 	
@@ -76,7 +76,7 @@ void prior(AASS::acg::AutoCompleteGraph& acg){
 	assert(land1 != NULL);
 	assert(land2 != NULL);
 	
-	g2o::Vector2D link; link << 0, 0;
+	g2o::Vector2 link; link << 0, 0;
 	AASS::acg::EdgeLinkXY_malcolm* link0 = acg.addLinkBetweenMaps(link, prior0, land0);
 	AASS::acg::EdgeLinkXY_malcolm* link1 = acg.addLinkBetweenMaps(link, prior1, land1);
 	AASS::acg::EdgeLinkXY_malcolm* link2 = acg.addLinkBetweenMaps(link, prior2, land2);
