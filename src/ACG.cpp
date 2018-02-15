@@ -112,7 +112,7 @@ AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(doubl
 
 AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 
-	Eigen::Matrix3d covariance;   ygyuguygu
+    Eigen::Matrix3d covariance;
 	
 	covariance.fill(0.);
 	covariance(0, 0) = _transNoise[0]*_transNoise[0];
@@ -138,7 +138,7 @@ AASS::acg::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(doubl
 
 AASS::acg::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark){
 
-	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
+    Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 
 	EdgeLandmark_malcolm* landmarkObservation =  new EdgeLandmark_malcolm;
 	landmarkObservation->vertices()[0] = v1;
@@ -193,7 +193,7 @@ AASS::acg::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(cons
 
 // 	double test_newnorm = newnorm_old / 2;
 	//ATTENTION NOT A MAGIC NUMBER
-	double newnorm = (newnorm_old *  _priorNoise(0)) / 100;
+    double newnorm = (newnorm_old *  _priorNoise(0)) / 100;
 
 	int test_tt = newnorm * 100;
 	int test_ttt = newnorm_old * 100;

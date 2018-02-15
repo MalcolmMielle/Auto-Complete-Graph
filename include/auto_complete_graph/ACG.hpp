@@ -57,7 +57,7 @@
 namespace AASS {
 
 namespace acg{
-
+	
 	/**
 	 * @brief The graph class containing all elemnts from each map and the graph used in the g2o optimisation.
 	 * ATTENTION : _transNoise is not used anymore when update the NDT-graph for we used the registration. I should remove it but for now I'm leaving it only not to break everything.
