@@ -118,13 +118,13 @@ void AASS::acg::PriorLoaderInterface::extractCornerPrior()
 	AASS::acg::PriorLoaderInterface::PriorGraph simple_graph;
 	bettergraph::toSimpleGraph<PriorAttr, AASS::vodigrex::SimpleEdge>(prior_out, simple_graph);
 	
-	if(_extractKeypoints == true){
-		extractKeypoints(simple_graph);
-	}
-	else{
+// 	if(_extractKeypoints == true){
+// 		extractKeypoints(simple_graph);
+// 	}
+// 	else{
 // 					bettergraph::SimpleGraph<PriorAttr, AASS::vodigrex::SimpleEdge>
 		_prior_graph = simple_graph;
-	}
+// 	}
 	
 // 				//PRINT
 // 				cv::Mat src_gray;
@@ -234,126 +234,126 @@ void AASS::acg::PriorLoaderInterface::initialize(const std::vector< cv::Point2f 
 }
 
 
-void AASS::acg::PriorLoaderInterface::extractKeypoints(const AASS::acg::PriorLoaderInterface::PriorGraph& graph)
-{
-				
-	//vertices access all the vertix
-	//Classify them in order
-// 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;
-	int i = 0 ;
-	std::vector<PriorVertex> das_v;
-	std::vector<PriorVertex> prior_v;
-	
-	
-	std::cout << "Keypoints" << std::endl;
-	//Adding all the vertices
-	std::pair< PriorVertexIterator, PriorVertexIterator > vp;
-	int count = 0;
-	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
-		
-// 					std::cout << "A vertices " << count << " " << graph.getNumVertices() << std::endl;
-		++count;
-		PriorVertex v = *vp.first;
-		PriorVertex vertex_out;
-		PriorAttr nodeAttribute(graph[v]);
-		
-		
-		//Creating a SIFT descriptor for eahc corner
-		cv::KeyPoint keypoint;
-		keypoint.pt = cv::Point2f( nodeAttribute.getX(), nodeAttribute.getY() );
-		
-		//Calculate smallest edge size
-		std::deque<PriorVertex> out;
-		graph.getAllVertexLinked(v, out); 
-		double smallest = -1;
-		for(auto it = out.begin() ; it != out.end() ; ++it){
-			if(v != *it){
-				double tmp_size_x = (graph[v].getX() - graph[*it].getX());
-				double tmp_size_y = (graph[v].getY() - graph[*it].getY());
-				tmp_size_x = std::abs(tmp_size_x);
-				tmp_size_y = std::abs(tmp_size_y);
-				double tmp_size = (tmp_size_x * tmp_size_x) + (tmp_size_y * tmp_size_y);
-				if(smallest == -1 || smallest > tmp_size){
-					if(tmp_size >  0){
-// 									std::cout << "Smallest size " << tmp_size << std::endl;
-						smallest = tmp_size;
-					}
-					else{
-// 									std::cout << "Weird zero distance between points" <<std::endl;
-					}
-				}
-			}
-		}
-		
-		keypoint.size = std::sqrt(smallest) ;
-		keypoint.angle = -1 ;
-		keypoint.octave = 1 ;
-		
-// 					cv::Mat copy;
-// 					_img_gray.copyTo(copy);
-// 					cv::circle(copy, cv::Point2f( nodeAttribute.getX(), nodeAttribute.getY() ), keypoint.size, cv::Scalar(255), 1);
-// 					
-// 					cv::imshow("Keypoint", copy);
-// 					cv::waitKey(0);
-		
-		std::vector<cv::KeyPoint> keypoint_v;
-		keypoint_v.push_back(keypoint);
-		
-		cv::Mat descriptors_1;
-#if CV_MAJOR_VERSION == 2
-		cv::SiftDescriptorExtractor extractor;
-		extractor.compute( _img_gray, keypoint_v, descriptors_1);
-#else
-		cv::Ptr<cv::Feature2D> extractor = cv::xfeatures2d::SURF::create();
-//                    cv::xfeatures2d::SiftDescriptorExtractor extractor;
-		extractor->compute( _img_gray, keypoint_v, descriptors_1);
-#endif
-
-		
-// 					std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
-		assert(descriptors_1.rows == 1);
-		
-		nodeAttribute.keypoint = keypoint;
-		nodeAttribute.position = keypoint.pt;
-		nodeAttribute.descriptor = descriptors_1;
-		
-		_prior_graph.addVertex(vertex_out, nodeAttribute);
-		das_v.push_back(v);
-		prior_v.push_back(vertex_out);
-		
-	}
-	
-	std::cout << "Done" << std::endl;
-	
-	//Adding all the edges
-	auto es = boost::edges(graph);
-	for (auto eit = es.first; eit != es.second; ++eit) {
-		auto sour = boost::source(*eit, graph);			
-		auto targ = boost::target(*eit, graph);
-		PriorVertex source_p;
-		PriorVertex target_p;
-		bool flag_found_src = false;
-		bool flag_found_targ = false;
-		for(int i = 0 ; i < das_v.size() ; ++i){
-			if(das_v[i] == sour){
-				source_p = prior_v[i];
-				assert(flag_found_src == false);
-				flag_found_src = true;
-			}
-			if(das_v[i] == targ){
-				target_p = prior_v[i];
-				assert(flag_found_targ == false);
-				flag_found_targ = true;
-			}
-		}
-		assert(flag_found_src == true);
-		assert(flag_found_targ == true);
-		
-		PriorEdge out_edge;
-		_prior_graph.addEdge(out_edge, source_p, target_p, graph[*eit]);
-	}
-				
-}
+// void AASS::acg::PriorLoaderInterface::extractKeypoints(const AASS::acg::PriorLoaderInterface::PriorGraph& graph)
+// {
+// 				
+// 	//vertices access all the vertix
+// 	//Classify them in order
+// // 				std::cout << "Gph size : " << _graph.getNumVertices() << std::endl;
+// 	int i = 0 ;
+// 	std::vector<PriorVertex> das_v;
+// 	std::vector<PriorVertex> prior_v;
+// 	
+// 	
+// 	std::cout << "Keypoints" << std::endl;
+// 	//Adding all the vertices
+// 	std::pair< PriorVertexIterator, PriorVertexIterator > vp;
+// 	int count = 0;
+// 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
+// 		
+// // 					std::cout << "A vertices " << count << " " << graph.getNumVertices() << std::endl;
+// 		++count;
+// 		PriorVertex v = *vp.first;
+// 		PriorVertex vertex_out;
+// 		PriorAttr nodeAttribute(graph[v]);
+// 		
+// 		
+// 		//Creating a SIFT descriptor for eahc corner
+// 		cv::KeyPoint keypoint;
+// 		keypoint.pt = cv::Point2f( nodeAttribute.getX(), nodeAttribute.getY() );
+// 		
+// 		//Calculate smallest edge size
+// 		std::deque<PriorVertex> out;
+// 		graph.getAllVertexLinked(v, out); 
+// 		double smallest = -1;
+// 		for(auto it = out.begin() ; it != out.end() ; ++it){
+// 			if(v != *it){
+// 				double tmp_size_x = (graph[v].getX() - graph[*it].getX());
+// 				double tmp_size_y = (graph[v].getY() - graph[*it].getY());
+// 				tmp_size_x = std::abs(tmp_size_x);
+// 				tmp_size_y = std::abs(tmp_size_y);
+// 				double tmp_size = (tmp_size_x * tmp_size_x) + (tmp_size_y * tmp_size_y);
+// 				if(smallest == -1 || smallest > tmp_size){
+// 					if(tmp_size >  0){
+// // 									std::cout << "Smallest size " << tmp_size << std::endl;
+// 						smallest = tmp_size;
+// 					}
+// 					else{
+// // 									std::cout << "Weird zero distance between points" <<std::endl;
+// 					}
+// 				}
+// 			}
+// 		}
+// 		
+// 		keypoint.size = std::sqrt(smallest) ;
+// 		keypoint.angle = -1 ;
+// 		keypoint.octave = 1 ;
+// 		
+// // 					cv::Mat copy;
+// // 					_img_gray.copyTo(copy);
+// // 					cv::circle(copy, cv::Point2f( nodeAttribute.getX(), nodeAttribute.getY() ), keypoint.size, cv::Scalar(255), 1);
+// // 					
+// // 					cv::imshow("Keypoint", copy);
+// // 					cv::waitKey(0);
+// 		
+// 		std::vector<cv::KeyPoint> keypoint_v;
+// 		keypoint_v.push_back(keypoint);
+// 		
+// 		cv::Mat descriptors_1;
+// #if CV_MAJOR_VERSION == 2
+// 		cv::SiftDescriptorExtractor extractor;
+// 		extractor.compute( _img_gray, keypoint_v, descriptors_1);
+// #else
+// 		cv::Ptr<cv::Feature2D> extractor = cv::xfeatures2d::SURF::create();
+// //                    cv::xfeatures2d::SiftDescriptorExtractor extractor;
+// 		extractor->compute( _img_gray, keypoint_v, descriptors_1);
+// #endif
+// 
+// 		
+// // 					std::cout << descriptors_1.rows << " " << descriptors_1.cols << std::endl;
+// 		assert(descriptors_1.rows == 1);
+// 		
+// 		nodeAttribute.keypoint = keypoint;
+// 		nodeAttribute.position = keypoint.pt;
+// 		nodeAttribute.descriptor = descriptors_1;
+// 		
+// 		_prior_graph.addVertex(vertex_out, nodeAttribute);
+// 		das_v.push_back(v);
+// 		prior_v.push_back(vertex_out);
+// 		
+// 	}
+// 	
+// 	std::cout << "Done" << std::endl;
+// 	
+// 	//Adding all the edges
+// 	auto es = boost::edges(graph);
+// 	for (auto eit = es.first; eit != es.second; ++eit) {
+// 		auto sour = boost::source(*eit, graph);			
+// 		auto targ = boost::target(*eit, graph);
+// 		PriorVertex source_p;
+// 		PriorVertex target_p;
+// 		bool flag_found_src = false;
+// 		bool flag_found_targ = false;
+// 		for(int i = 0 ; i < das_v.size() ; ++i){
+// 			if(das_v[i] == sour){
+// 				source_p = prior_v[i];
+// 				assert(flag_found_src == false);
+// 				flag_found_src = true;
+// 			}
+// 			if(das_v[i] == targ){
+// 				target_p = prior_v[i];
+// 				assert(flag_found_targ == false);
+// 				flag_found_targ = true;
+// 			}
+// 		}
+// 		assert(flag_found_src == true);
+// 		assert(flag_found_targ == true);
+// 		
+// 		PriorEdge out_edge;
+// 		_prior_graph.addEdge(out_edge, source_p, target_p, graph[*eit]);
+// 	}
+// 				
+// }
 
 
 void AASS::acg::PriorLoaderInterface::rotateGraph(const cv::Mat& rot_mat)

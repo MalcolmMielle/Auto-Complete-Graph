@@ -6,7 +6,7 @@
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
 #include "vodigrex/linefollower/LineFollowerGraphCorners.hpp"
-#include "KeypointPriorDetector.hpp"
+// #include "KeypointPriorDetector.hpp"
 #include "bettergraph/conversion.hpp"
 
 namespace AASS{
@@ -50,16 +50,18 @@ namespace AASS{
 			double _scale;
 			cv::Point2f _center;
 			
-			KeypointPriorDetector _keypoints;
+// 			KeypointPriorDetector _keypoints;
 			
-			bool _extractKeypoints;
+// 			bool _extractKeypoints;
 			
 		public: 
-			PriorLoaderInterface(const std::string& file) : _file(file), _extractKeypoints(false){		
+			PriorLoaderInterface(const std::string& file) : _file(file)
+//             , _extractKeypoints(false)
+            {		
 			}
 			
-			void extractSIFTFeature(bool ext){_extractKeypoints = ext;}
-			bool useFeatures(){return _extractKeypoints;}
+// 			void extractSIFTFeature(bool ext){_extractKeypoints = ext;}
+// 			bool useFeatures(){return _extractKeypoints;}
 			
 			const PriorGraph getGraph() const {return _prior_graph;}
 			PriorGraph getGraph(){return _prior_graph;}

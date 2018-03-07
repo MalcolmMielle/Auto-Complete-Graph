@@ -5,7 +5,6 @@ add_library(auto_complete_graph_lib
   ACG.cpp
   OptimizableAutoCompleteGraph.cpp
   PriorLoaderInterface.cpp
-  ACG_feature.cpp
   ACG_localization.cpp
 #   VisuACG.cpp
 )
@@ -38,16 +37,16 @@ target_link_libraries(acg_node_logger
   ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
 )
 
-add_executable(acg_node_feature acg_node_feature.cpp)
-
-# Add cmake target dependencies of the executable
-# same as for the library above
-add_dependencies(acg_node_feature ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
-
-# Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_feature
-  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
-)
+# add_executable(acg_node_feature acg_node_feature.cpp)
+# 
+# # Add cmake target dependencies of the executable
+# # same as for the library above
+# add_dependencies(acg_node_feature ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
+# 
+# # Specify libraries to link a library or executable target against
+# target_link_libraries(acg_node_feature
+#   ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
+# )
 
 
 add_executable(acg_node_rviz_full_fast acg_node_rviz_full_fast.cpp)
