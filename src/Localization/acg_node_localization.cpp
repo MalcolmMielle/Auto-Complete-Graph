@@ -12,11 +12,11 @@
 #include "ndt_feature/NDTGraphMsg.h"
 #include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_feature/ndtgraph_conversion.h"
-#include "auto_complete_graph/ACG_localization.hpp"
+#include "auto_complete_graph/Localization/ACG_localization.hpp"
 #include "auto_complete_graph/OptimizableAutoCompleteGraph.hpp"
 #include "auto_complete_graph/Basement.hpp"
 #include "auto_complete_graph/BasementFull.hpp"
-#include "auto_complete_graph/VisuACG.hpp"
+#include "auto_complete_graph/Localization/VisuACGLocalization.hpp"
 #include "auto_complete_graph/GoodMatchings.hpp"
 
 bool abort_f = false;
@@ -207,7 +207,7 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 
 
 
-void gotGraphandOptimize(const graph_map::GraphMapMsg::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
+void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 // 	try{
 		new_node = true;
@@ -394,22 +394,24 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ros_catkin_ws/ros_lunar/auto_complete_graph/ACG_folder/param.txt");
 	
 	//Use corner orientation ?
 	oacg.useCornerOrientation(true);
 	
 	//ATTENTION
-	oacg.addPriorGraph(graph_prior);	
+	oacg.addPriorGraph(graph_prior);
+
+	oacg.setPriorReference();
 		
 	//Create initialiser
 	AASS::acg::RvizPoints initialiser(nh, &oacg);
 	
 	
-	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
+	AASS::acg::VisuAutoCompleteGraphLocalization visu(&oacg, nh);
 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
-	ndt_graph_sub = nh.subscribe<graph_map::GraphMapMsg>("/graph_map", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));

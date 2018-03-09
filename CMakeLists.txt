@@ -83,6 +83,7 @@ add_message_files(
   FILES
   ACGMaps.msg
   ACGMapsOM.msg
+  LocalizationMsg.msg
   GraphMapLocalizationMsg.msg
 #   ACG.msg
 #   VertexSE2RobotPoseMsg.msg
@@ -92,7 +93,7 @@ add_message_files(
 
 generate_messages(
   DEPENDENCIES 
-  geometry_msgs std_msgs ndt_map grid_map_msgs graph_map 
+  geometry_msgs std_msgs ndt_map grid_map_msgs graph_map auto_complete_graph
   # nav_msgs
 )
 

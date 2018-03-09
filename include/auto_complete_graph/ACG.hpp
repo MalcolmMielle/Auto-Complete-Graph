@@ -462,7 +462,7 @@ namespace acg{
 
 		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1);
 
-		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id);
+//		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id);
 
 		std::vector <EdgeLinkXY_malcolm* >::iterator removeLinkBetweenMaps(EdgeLinkXY_malcolm* v1);
 

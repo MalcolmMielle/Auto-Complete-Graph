@@ -926,9 +926,11 @@ public:
 		if(nb_of_node != nb_of_node_new){
 			
 			//Save the new pose associated with the node.
-			acg_localization->savePos();
+			assert(nb_of_node_new - 1 > 0);
+
+			acg_localization->savePos(nb_of_node_new - 1);
 			
-			assert(acg_localization->getMeans().size() == nb_of_node_new); 
+			assert(acg_localization->getLocalizations().size() == nb_of_node_new);
 			
 			
 			std::cout << "PUBLISH: now" << std::endl;
@@ -939,8 +941,12 @@ public:
 // 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
 // 			
 			graphmaplocalizationmsg.graph_map = graphmapmsg;
-			
-// 			graphmap_pub_.publish(graphmapmsg);
+
+			acg_localization->toMessage(graphmaplocalizationmsg);
+
+			//Export all localization information.
+
+ 			graphmap_pub_.publish(graphmapmsg);
 // 			std::cout << "PUBLISHED" << std::endl;
 	// 		exit(0);
 		}

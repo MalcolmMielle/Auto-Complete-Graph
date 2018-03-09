@@ -1,10 +1,11 @@
 ﻿#ifndef AUTOCOMPLETEGRAPH_ACG_LOCALIZATION_07012018
 #define AUTOCOMPLETEGRAPH_ACG_LOCALIZATION_07012018
 
-#include "ACG.hpp"
-#include "VertexAndEdge/EdgeLocalization.hpp"
+#include "auto_complete_graph/ACG.hpp"
+#include "auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp"
 //#include "graph_map/graph_map.h"
-#include "graph_map/GraphMapMsg.h"
+#include "auto_complete_graph/Localization/Localization.hpp"
+#include "auto_complete_graph/GraphMapLocalizationMsg.h"
 
 namespace AASS {
 
@@ -56,15 +57,30 @@ namespace acg{
 		/**@brief set the vertex in the prior that is going to be the reference point for the localization. return NULL if failed, otherwise return the pointer to the vertex that was chosen
 		**/
 		AASS::acg::VertexSE2Prior* setPriorReference();
-		
+
 		/**
 		 * @brief Incrementally update the NDTGraph UPDATED TO THE NEW VERSION :)
-		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
+		 * Localization and the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
 		 * Add NDT-corners and Robot poses.
 		 */
-		void updateNDTGraph(const graph_map::GraphMapMsg& ndt_graph);
+		void updateNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization);
 
-		std::shared_ptr<perception_oru::NDTMap> addElementNDT(const graph_map::GraphMapMsg& ndt_graph, int element, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
+		/**
+		 * @brief Incrementally update the NDTGraph UPDATED TO THE NEW VERSION :)
+		 * All new nodes and new localization are added to the graph. Old information is not touched.
+		 */
+		void addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization);
+
+
+		std::shared_ptr<perception_oru::NDTMap> addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
+
+		/**
+		 * Add all new localization edges
+		 * @param ndt_graph_localization
+		 * @param element
+		 * @param robot_ptr
+		 */
+		void addLocalizationEdges(const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose* robot_ptr);
 
     };
 

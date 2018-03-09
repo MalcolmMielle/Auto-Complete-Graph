@@ -1,4 +1,4 @@
-#include "auto_complete_graph/ACG_localization.hpp"
+#include "auto_complete_graph/Localization/ACG_localization.hpp"
 
 
 AASS::acg::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information)
@@ -38,18 +38,29 @@ AASS::acg::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocali
 
 AASS::acg::VertexSE2Prior* AASS::acg::AutoCompleteGraphLocalization::setPriorReference()
 {
-	assert(_nodes_prior.size() > 0);
-	_vertex_reference_for_montecarlo = _nodes_prior[0];
+	if(_nodes_prior.size() > 0) {
+		_vertex_reference_for_montecarlo = _nodes_prior[0];
+		return _vertex_reference_for_montecarlo;
+	}
+	return NULL;
 }
 
 
+void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization) {
 
-void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const graph_map::GraphMapMsg& ndt_graph)
+	addNDTGraph(ndt_graph_localization);
+
+//	updateLocalizationEdges(ndt_graph_localization);
+
+
+}
+
+void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization)
 {
 	
-	std::cout << "Node in graph " << ndt_graph.nodes.size() << std::endl;
+	std::cout << "Node in graph " << ndt_graph_localization.graph_map.nodes.size() << std::endl;
 	
-	if(_previous_number_of_node_in_ndtgraph != ndt_graph.nodes.size() ){
+	if(_previous_number_of_node_in_ndtgraph != ndt_graph_localization.graph_map.nodes.size() ){
 		
 // 		auto factors = ndt_graph.factors();
 		
@@ -58,11 +69,11 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const graph_map::G
 		
 		assert(i >= 0);
 		
-		for (i; i < ndt_graph.nodes.size() - 1 ; ++i) {
+		for (i; i < ndt_graph_localization.graph_map.nodes.size() - 1 ; ++i) {
 			
 			AASS::acg::VertexSE2RobotPose* robot_ptr;
 			g2o::SE2 robot_pos;
-			auto map = addElementNDT(ndt_graph, i, &robot_ptr, robot_pos);
+			auto map = addElementNDT(ndt_graph_localization, i, &robot_ptr, robot_pos);
 			assert(robot_ptr != NULL);
 			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
 			//********************** Extract the corners *****************//
@@ -72,7 +83,7 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const graph_map::G
 			
 		}
 		
-		_previous_number_of_node_in_ndtgraph = ndt_graph.nodes.size();
+		_previous_number_of_node_in_ndtgraph = ndt_graph_localization.graph_map.nodes.size();
 		
 	}
 	
@@ -80,11 +91,11 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const graph_map::G
 
 }
 
-std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const graph_map::GraphMapMsg& ndt_graph, int element, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
+std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
 {
 	///ATTENTION Indexes start at 1 instead of 0 :/
-	std::cout << "good indexes " << ndt_graph.nodes[element].id.data - 1 << " = " << element << " voilaaa " << std::endl;
-	assert(ndt_graph.nodes[element].id.data - 1 == element);
+	std::cout << "good indexes " << ndt_graph_localization.graph_map.nodes[element].id.data - 1 << " = " << element << " voilaaa " << std::endl;
+	assert(ndt_graph_localization.graph_map.nodes[element].id.data - 1 == element);
 	//Return Gaussian white noise
 // 	auto randomNoise = [](double mean, double deviationt) -> double {
 // 		std::default_random_engine engine{std::random_device()() };
@@ -102,7 +113,7 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 // 			ndt_feature::NDTFeatureNode& feature = dynamic_cast<ndt_feature::NDTFeatureNode&>(ndt_graph.getNodeInterface(i));
 	std::cout << "Copy feature" << std::endl;
 	
-	auto geometry_pose = ndt_graph.nodes[element].pose;
+	auto geometry_pose = ndt_graph_localization.graph_map.nodes[element].pose;
 	Eigen::Affine3d affine;
 	tf::poseMsgToEigen(geometry_pose, affine);
 // 			feature.copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
@@ -123,7 +134,7 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 	robot_pos = robot_pos * diff_vec_se2;
 	std::cout << "multiply" << std::endl;
 		
-	auto map_msg =  ndt_graph.nodes[element].ndt_map;
+	auto map_msg =  ndt_graph_localization.graph_map.nodes[element].ndt_map;
 	perception_oru::NDTMap* map;
 	perception_oru::NDTMap* map_copy;
 	perception_oru::LazyGrid* lz;
@@ -144,13 +155,16 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 // 	std::shared_ptr<perception_oru::NDTMap> shared_map(map_copy);
 
 	*robot_ptr = addRobotPose(robot_pos, affine, shared_map);
+
+	(**robot_ptr).setIndexGraphMap(ndt_graph_localization.graph_map.nodes[element].id.data);
+
 	assert(*robot_ptr != NULL);
 	//Add Odometry if it is not the first node
 	
 	if(element > 0 ){
 		std::cout << "adding the odometry" << std::endl;
 		
-		auto geometry_pose_factor = ndt_graph.factors[element - 1].diff;
+		auto geometry_pose_factor = ndt_graph_localization.graph_map.factors[element - 1].diff;
 		Eigen::Affine3d affine_factor;
 		tf::poseMsgToEigen(geometry_pose_factor, affine_factor);
 		Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(affine_factor);
@@ -159,19 +173,19 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 		g2o::SE2 odometry(isometry2d_odometry);
 // 		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
 		
-		std::cout << " ref " << ndt_graph.factors[element-1].prev.data << " and mov " << ndt_graph.factors[element-1].next.data << std::endl;
+		std::cout << " ref " << ndt_graph_localization.graph_map.factors[element-1].prev.data << " and mov " << ndt_graph_localization.graph_map.factors[element-1].next.data << std::endl;
 		
 		///ATTENTION Indexes of graph_map start at 1 instead of 0 :/
-		assert( ndt_graph.factors[element-1].prev.data - 1 < _nodes_ndt.size() );
-		assert( ndt_graph.factors[element-1].next.data - 1 < _nodes_ndt.size() );
+		assert( ndt_graph_localization.graph_map.factors[element-1].prev.data - 1 < _nodes_ndt.size() );
+		assert( ndt_graph_localization.graph_map.factors[element-1].next.data - 1 < _nodes_ndt.size() );
 		
-		auto from = _nodes_ndt[ ndt_graph.factors[element-1].prev.data - 1 ] ;
-		auto toward = _nodes_ndt[ ndt_graph.factors[element-1].next.data - 1 ] ;
+		auto from = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].prev.data - 1 ] ;
+		auto toward = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].next.data - 1 ] ;
 		
 		std::cout << "Saving cov " << std::endl;
 		//TODO : transpose to 3d and use in odometry!
 		
-		auto cov_msg = ndt_graph.factors[element - 1].covariance;
+		auto cov_msg = ndt_graph_localization.graph_map.factors[element - 1].covariance;
 		
 		std::vector<double>::const_iterator it;
 		it=cov_msg.data.begin();
@@ -208,8 +222,23 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 		addOdometry(odometry, from, toward, information);
 		std::cout << ">Done" << std::endl;
 	}
+
+
+	addLocalizationEdges(ndt_graph_localization, element, *robot_ptr);
+
 	
 	return shared_map;
+
+}
+
+void AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose* robot_ptr) {
+
+	auto localization_msg = ndt_graph_localization.localizations[element];
+	AASS::acg::Localization localization;
+	localization.fromMessage(localization_msg);
+	g2o::SE2 se2loc(localization.mean[0], localization.mean[1], localization.mean[2]);
+	addLocalization(se2loc, robot_ptr, localization.cov.inverse());
+
 
 }
 

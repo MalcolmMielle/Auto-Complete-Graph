@@ -3,23 +3,25 @@
 
 #include <pcl/common/transforms.h>
 #include <ndt_mcl/particle_filter.hpp>
-#include <geometry_msgs/Point.h>
-#include <eigen_conversions/eigen_msg.h>
 
+#include "auto_complete_graph/Localization/Localization.hpp"
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 
 namespace AASS {
 
 namespace acg{
-	
+
+	/**
+	 * A class doing the localization published in graph_map_publisher_localization.cpp
+	 */
 	class ACGMCLLocalization : public perception_oru::particle_filter{
+
 	protected:
 		
 // 		boost::shared_ptr<perception_oru::particle_filter> _ndtmcl;
 		bool mcl_loaded_;
 		
-		std::vector<Eigen::Vector3d> _mean_saved;
-		std::vector<Eigen::Matrix3d> _cov_saved;
+		std::vector<Localization> _localization;
 		
 	public:
 		ACGMCLLocalization(std::string mapFile_, int particleCount_) : mcl_loaded_(false), perception_oru::particle_filter(mapFile_, particleCount_){};
@@ -65,29 +67,36 @@ namespace acg{
 		}
 		
 		
-		void savePos(){
+		void savePos(int index = -1){
 			Eigen::Matrix3d cov;
 			Eigen::Vector3d mean;
 			GetPoseMeanAndVariance2D(mean, cov);
-			_mean_saved.push_back(mean);
-			_cov_saved.push_back(cov);
+			Localization loc;
+			loc.mean = mean;
+			loc.cov = cov;
+			loc.index = index;
+			_localization.push_back(loc);
+
+//			_mean_saved.push_back(mean);
+//			_cov_saved.push_back(cov);
+//			_indexes.push_back(index);
 			
 		}
 		
-		const std::vector<Eigen::Vector3d>& getMeans() const {return _mean_saved;}
-		const std::vector<Eigen::Matrix3d>& getCovs() const {return _cov_saved;}
+//		const std::vector<Eigen::Vector3d>& getMeans() const {return _mean_saved;}
+//		const std::vector<Eigen::Matrix3d>& getCovs() const {return _cov_saved;}
+
+		const std::vector<Localization>& getLocalizations() const {return _localization;}
+
 		
-		void toMessage(const auto_complete_graph::GraphMapLocalizationMsg& msg){
-			
-			std::vector<geometry_msgs::Point> points;
-			
-			for(auto it = _mean_saved.begin() ; it != _mean_saved.end() ; ++it){
-				geometry_msgs::Point m;
-				tf::pointEigenToMsg(*it, m);
-				points.push_back(m);
+		void toMessage(auto_complete_graph::GraphMapLocalizationMsg& msg){
+
+			for(auto const& localization : _localization) {
+				auto_complete_graph::LocalizationMsg loc_msg = localization.toMessage();
+				msg.localizations.push_back(loc_msg);
 			}
 			
-			assert(false);
+
 		}
 		
 	};

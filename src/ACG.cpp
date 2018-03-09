@@ -318,32 +318,34 @@ AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(
 // 	std::cout << "Done" << std::endl;
 	return linkObservation;
 }
-AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id){
-	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
-	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 
-	AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(from_ptr);
-	AASS::acg::VertexLandmarkNDT* ptr2;
-	if(ptr != NULL){
-		AASS::acg::VertexLandmarkNDT* ptr2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(toward_ptr);
-		if(ptr2 == NULL){
-			throw std::runtime_error("Pointers are not of compatible type. First pointer should be prior while the second is not a PointXY while it should");
-		}
-	}
-// 	else{
-// 		ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(toward_ptr);
-// 		if(ptr != NULL){
-// 			ptr2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(from_ptr);
-// 			if(ptr2 == NULL){
-// 				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
-// 			}
-// 		}
-// 		else{
-// 			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
-// 		}
-// 	}
-	return addLinkBetweenMaps(pos, ptr, ptr2);
-}
+
+//AASS::acg::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id){
+//	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
+//	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
+//
+//	AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(from_ptr);
+//	AASS::acg::VertexLandmarkNDT* ptr2;
+//	if(ptr != NULL){
+//		AASS::acg::VertexLandmarkNDT* ptr2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(toward_ptr);
+//		if(ptr2 == NULL){
+//			throw std::runtime_error("Pointers are not of compatible type. First pointer should be prior while the second is not a PointXY while it should");
+//		}
+//	}
+//// 	else{
+//// 		ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(toward_ptr);
+//// 		if(ptr != NULL){
+//// 			ptr2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>(from_ptr);
+//// 			if(ptr2 == NULL){
+//// 				throw std::runtime_error("Pointers are not of compatible type. Second pointer is a SE2 while the first is not a PointXY");
+//// 			}
+//// 		}
+//// 		else{
+//// 			throw std::runtime_error("Pointers are not of compatible type. No pointer point to a VertexSE2Prior");
+//// 		}
+//// 	}
+//	return addLinkBetweenMaps(pos, ptr, ptr2);
+//}
 
 
 std::vector <AASS::acg::EdgeLinkXY_malcolm* >::iterator AASS::acg::AutoCompleteGraph::removeLinkBetweenMaps(EdgeLinkXY_malcolm* v1)
