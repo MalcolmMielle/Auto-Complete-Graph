@@ -51,8 +51,8 @@ The class `PriorLoaderInterface.hpp` is used to load prior image and detected co
 
 * [BetterGraph](https://github.com/MalcolmMielle/BetterGraph)
 * [VoDiGrEx](https://github.com/MalcolmMielle/VoDiGrEx)
-* [G2O](https://github.com/RainerKuemmerle/g2o)
-* [perception_oru](https://github.com/OrebroUniversity/perception_oru)
+* [G2O](https://github.com/RainerKuemmerle/g2o) but please use my fork for now. G2O code base changed in the meantime.
+* [perception_oru](https://github.com/OrebroUniversity/perception_oru) Since the code here getting old and the new version is not available yet, I think this commit 5d6a7f6b6c9e04b4eaadce802c04c6ad8cf23084 should be where they are synchronised
 * [ndt_feature](https://github.com/MalcolmMielle/ndt_feature_graph)
 * [occupancy_grid_utils](https://github.com/clearpathrobotics/occupancy_grid_utils)
 * [grid_map](https://github.com/ethz-asl/grid_map)
