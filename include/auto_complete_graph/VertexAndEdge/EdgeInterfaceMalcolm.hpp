@@ -9,6 +9,7 @@ namespace acg{
 class EdgeInterfaceMalcolm
   {
     public:
+	  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	  g2o::SE2 _malcolm_original_value;
 	  double _malcolm_age;
 	  

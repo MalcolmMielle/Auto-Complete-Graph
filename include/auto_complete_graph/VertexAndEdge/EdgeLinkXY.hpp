@@ -10,6 +10,7 @@ namespace acg{
 class EdgeLinkXY_malcolm : public g2o::EdgeSE2PointXY
 {
 public:
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	EdgeInterfaceMalcolm interface;
 	//       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	EdgeLinkXY_malcolm() : EdgeSE2PointXY() {};

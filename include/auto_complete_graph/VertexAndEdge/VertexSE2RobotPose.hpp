@@ -11,7 +11,7 @@ namespace acg{
 class VertexSE2RobotPose : public g2o::VertexSE2
   {
 	public:
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 		VertexSE2RobotPose() :  _index_graphmap(-1), g2o::VertexSE2(){}
 		
 	protected:

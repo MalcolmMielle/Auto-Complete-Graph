@@ -14,6 +14,7 @@ namespace acg{
 class VertexLandmarkNDT: public g2o::VertexPointXY
 	{
 		public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 			
 		//TESTING
 		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_1;
@@ -21,9 +22,6 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 		g2o::SE2 robotpose_seen_from;
 		
 		//END OF TESTING
-			
-			
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		EdgeInterfaceMalcolm interface;
 
 		cv::Point2f position;

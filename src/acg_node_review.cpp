@@ -393,7 +393,7 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ros_catkin_ws/ros_lunar/src/auto_complete_graph/ACG_folder/param.txt");
 	
 	//Use corner orientation ?
 	oacg.useCornerOrientation(true);

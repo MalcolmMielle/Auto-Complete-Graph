@@ -14,7 +14,7 @@ namespace acg{
 	protected:
 
 	public:
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 		VertexSE2Prior() : g2o::VertexSE2(){}
 		PriorAttr priorattr;
 		

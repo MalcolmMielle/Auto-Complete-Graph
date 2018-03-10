@@ -12,7 +12,7 @@ class VertexSE2Prior;
 class EdgeSE2Prior_malcolm : public g2o::EdgeSE2
 {
 public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 	EdgeInterfaceMalcolm interface;
 	EdgeSE2Prior_malcolm() : g2o::EdgeSE2(){}
 	Eigen::Vector2d getOrientation2D(const AASS::acg::VertexSE2Prior& from) const;

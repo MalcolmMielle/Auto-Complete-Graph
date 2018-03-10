@@ -22,7 +22,7 @@ namespace AASS{
 
             BasementFull(double deviation, double anglet, double scalet, cv::Point2f center) :
 //		        PriorLoaderInterface("/home/malcolm/ros_catkin_ws/lunar_ws/src/auto_complete_graph/tests/Dortmund/topo_floor.png"){
- 			    PriorLoaderInterface("/home/malcolm/ros_catkin_ws/indigo_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png"){
+ 			    PriorLoaderInterface("/home/malcolm/ros_catkin_ws/lunar_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png"){
 
 			
 				

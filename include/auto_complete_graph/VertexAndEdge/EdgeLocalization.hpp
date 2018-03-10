@@ -10,6 +10,7 @@ namespace acg{
 	 class EdgeLocalization : public g2o::EdgeSE2
   {
     public:
+		 EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 		 EdgeInterfaceMalcolm interface;
 // 	  g2o::SE2 _original_value;
 //       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
