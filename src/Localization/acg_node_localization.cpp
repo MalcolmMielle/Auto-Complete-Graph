@@ -394,7 +394,7 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ros_catkin_ws/ros_lunar/auto_complete_graph/ACG_folder/param.txt");
+	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ros_catkin_ws/lunar_ws/src/auto_complete_graph/ACG_folder/param.txt");
 	
 	//Use corner orientation ?
 	oacg.useCornerOrientation(true);
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
 	
 	
 	AASS::acg::VisuAutoCompleteGraphLocalization visu(&oacg, nh);
-	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
+	visu.setImageFileNameOut("/home/malcolm/ros_catkin_ws/lunar_ws/src/auto_complete_graph/ACG_folder/ACG_IMAGE/optimization_rviz_small");
 	
 	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
