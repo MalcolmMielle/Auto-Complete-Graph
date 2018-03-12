@@ -101,7 +101,7 @@ namespace acg{
 			protected:
 				//TODO : change it to a set
 // 				std::vector<int> nodes_linked;
-				AASS::acg::VertexSE2RobotPose* nodes_linked_ptr;
+				g2o::VertexSE2RobotPose* nodes_linked_ptr;
 				Eigen::Vector2d observations;
 				std::vector<double> _angle_orientation;
 				std::vector<double> _angle_width;
@@ -113,7 +113,7 @@ namespace acg{
 				NDTCornerGraphElement(float x, float y) : position(x, y){};
 				NDTCornerGraphElement(const cv::Point2f& p) : position(p){};
 
-				void addAllObserv(AASS::acg::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, const std::vector<double>& angle_orientation, const std::vector<double>& a_width){
+				void addAllObserv(g2o::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, const std::vector<double>& angle_orientation, const std::vector<double>& a_width){
 // 					nodes_linked.push_back(i);
 					observations = obs;
 					nodes_linked_ptr = ptr;
@@ -130,7 +130,7 @@ namespace acg{
 
 		// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
 // 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
-				AASS::acg::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
+				g2o::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
 				const Eigen::Vector2d& getObservations() const {return observations;}
 				const std::vector<double>& getOrientations() const {return _angle_orientation;}
 				const std::vector<double>& getAngleWidths() const {return _angle_width;}
@@ -216,11 +216,11 @@ namespace acg{
 		g2o::SE2 _sensorOffsetTransf;
 
 		///@brief vector storing all node from the prior
-		std::vector<AASS::acg::VertexSE2Prior*> _nodes_prior;
+		std::vector<g2o::VertexSE2Prior*> _nodes_prior;
 		///@brief vector storing all node from the landarks
-		std::vector<AASS::acg::VertexLandmarkNDT*> _nodes_landmark;
+		std::vector<g2o::VertexLandmarkNDT*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
-		std::vector<AASS::acg::VertexSE2RobotPose*> _nodes_ndt;
+		std::vector<g2o::VertexSE2RobotPose*> _nodes_ndt;
 		///@brief vector storing all linking edges
 		std::vector<EdgeLinkXY_malcolm*> _edge_link;
 
@@ -371,14 +371,14 @@ namespace acg{
 		}
 
 		/** Accessor**/
-		std::vector<AASS::acg::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
-		const std::vector<AASS::acg::VertexSE2Prior*>& getPriorNodes() const {return _nodes_prior;}
+		std::vector<g2o::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
+		const std::vector<g2o::VertexSE2Prior*>& getPriorNodes() const {return _nodes_prior;}
 		///@brief vector storing all node from the prior
-		std::vector<AASS::acg::VertexLandmarkNDT*>& getLandmarkNodes(){return _nodes_landmark;}
-		const std::vector<AASS::acg::VertexLandmarkNDT*>& getLandmarkNodes() const {return _nodes_landmark;}
+		std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes(){return _nodes_landmark;}
+		const std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes() const {return _nodes_landmark;}
 		///@brief vector storing all node from the ndt ndt_feature_graph
-		std::vector<AASS::acg::VertexSE2RobotPose*>& getRobotNodes(){return _nodes_ndt;}
-		const std::vector<AASS::acg::VertexSE2RobotPose*>& getRobotNodes() const {return _nodes_ndt;}
+		std::vector<g2o::VertexSE2RobotPose*>& getRobotNodes(){return _nodes_ndt;}
+		const std::vector<g2o::VertexSE2RobotPose*>& getRobotNodes() const {return _nodes_ndt;}
 		///@brief vector storing all linking edges
 		std::vector<EdgeLinkXY_malcolm*>& getLinkEdges(){return _edge_link;}
 		const std::vector<EdgeLinkXY_malcolm*>& getLinkEdges() const {return _edge_link;}
@@ -432,16 +432,16 @@ namespace acg{
 		const AASS::acg::OptimizableAutoCompleteGraph& getGraph() const {return _optimizable_graph;}
 
 		/***FUNCTIONS TO ADD THE NODES***/
-		AASS::acg::VertexSE2RobotPose* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
-		AASS::acg::VertexSE2RobotPose* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
-		AASS::acg::VertexSE2RobotPose* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
+		g2o::VertexSE2RobotPose* addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
+		g2o::VertexSE2RobotPose* addRobotPose(const Eigen::Vector3d& rob, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
+		g2o::VertexSE2RobotPose* addRobotPose(double x, double y, double theta, const Eigen::Affine3d& affine, const std::shared_ptr<perception_oru::NDTMap>& map);
 
-		AASS::acg::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2& estimate, const cv::Point2f& position, int strength = 1);
-		AASS::acg::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& position, int strength = 1);
+		g2o::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2& estimate, const cv::Point2f& position, int strength = 1);
+		g2o::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& position, int strength = 1);
 
-		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr);
-		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr);
-		AASS::acg::VertexSE2Prior* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr);
+		g2o::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr);
+		g2o::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr);
+		g2o::VertexSE2Prior* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr);
 
 
 		/** FUNCTION TO ADD THE EGDES **/
@@ -460,7 +460,7 @@ namespace acg{
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 
-		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, AASS::acg::VertexSE2Prior* v2, AASS::acg::VertexLandmarkNDT* v1);
+		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1);
 
 //		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id);
 
@@ -804,8 +804,8 @@ namespace acg{
 
 
 		//Todo move in private
-		bool linkAlreadyExist(AASS::acg::VertexLandmarkNDT* v_pt, AASS::acg::VertexSE2Prior* v_prior, std::vector< EdgeLinkXY_malcolm* >::iterator& it);
-		bool linkAlreadyExist(AASS::acg::VertexLandmarkNDT* v_pt, AASS::acg::VertexSE2Prior* v_prior);
+		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< EdgeLinkXY_malcolm* >::iterator& it);
+		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior);
 		bool noDoubleLinks();
 
 		Eigen::Vector3d getLastTransformation();
@@ -889,9 +889,9 @@ namespace acg{
 			return false;
 		}
 
-		std::shared_ptr< perception_oru::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
+		std::shared_ptr< perception_oru::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
 
-		virtual void extractCornerNDTMap(const std::shared_ptr< perception_oru::NDTMap >& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
+		virtual void extractCornerNDTMap(const std::shared_ptr< perception_oru::NDTMap >& map, g2o::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
 
 
 		///@brief do createNewLinks and removeBadLinks
@@ -989,7 +989,7 @@ namespace acg{
 
 				assert((*it_old_links)->vertices().size() == 2);
 
-				AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
+				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
 				if(ptr == NULL){
 					std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
 					throw std::runtime_error("Links do not have the good vertex type. Prior");
@@ -997,7 +997,7 @@ namespace acg{
 				auto vertex = ptr->estimate().toVector();
 				vertex_out.push_back(vertex);
 
-				AASS::acg::VertexLandmarkNDT* ptr2 = dynamic_cast<AASS::acg::VertexLandmarkNDT*>((*it_old_links)->vertices()[1]);
+				g2o::VertexLandmarkNDT* ptr2 = dynamic_cast<g2o::VertexLandmarkNDT*>((*it_old_links)->vertices()[1]);
 				if(ptr2 == NULL){
 					throw std::runtime_error("Links do not have the good vertex type. Landmark");
 				}
@@ -1096,7 +1096,7 @@ namespace acg{
 		/**
 		 * Returns all the corner found in the NDT map in NDTCornerGraphElement. The corner positions are in the global frame while the obervation are in the robot pose frame, as in needed by g2o
 		 */
-		void getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, AASS::acg::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos, std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement>& corners_end);
+		void getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos, std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement>& corners_end);
 
 	};
 }

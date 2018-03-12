@@ -21,7 +21,7 @@ namespace acg{
 	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer = "combined", const std::string& layer2 = "combined", const std::string& final_layer = "combined");
 	
 	inline void ACGNdtNodetoVecGrids(
-		const AASS::acg::AutoCompleteGraph& acg, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_end,
+		const AASS::acg::AutoCompleteGraph& acg, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_end,
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out
 	);
 	
@@ -205,8 +205,8 @@ namespace acg{
 // 		if(acg.getRobotNodes().size() != 0){
 // // 			grids.push_back(ptr_prior_occ);
 // 				
-// 			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it;
-// 			std::vector<AASS::acg::VertexSE2RobotPose*>::const_iterator it_end;
+// 			std::vector<g2o::VertexSE2RobotPose*>::const_iterator it;
+// 			std::vector<g2o::VertexSE2RobotPose*>::const_iterator it_end;
 // 			std::cout <<"update the zones" << std::endl;
 // 			if(start < acg.getRobotNodes().size() && start >= 0){
 // 				it = acg.getRobotNodes().begin() + start;
@@ -279,7 +279,7 @@ namespace acg{
 	}
 	
 	
-	inline void ACGNdtNodetoVecGrids(const AASS::acg::AutoCompleteGraph& acg, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< AASS::acg::VertexSE2RobotPose* >::const_iterator& it_end, std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out){
+	inline void ACGNdtNodetoVecGrids(const AASS::acg::AutoCompleteGraph& acg, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_end, std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out){
 		
 		for(it_start ; it_start != it_end ; ++it_start){
 // 				for(size_t i = 0 ; i < 1 ; ++i){

@@ -1,11 +1,11 @@
 #include "auto_complete_graph/VertexAndEdge/EdgeSE2Prior.hpp"
 #include "auto_complete_graph/VertexAndEdge/VertexSE2Prior.hpp"
 
-Eigen::Vector2d AASS::acg::EdgeSE2Prior_malcolm::getOrientation2D(const AASS::acg::VertexSE2Prior& from) const
+Eigen::Vector2d AASS::acg::EdgeSE2Prior_malcolm::getOrientation2D(const g2o::VertexSE2Prior& from) const
 {
 // 	std::cout << "From " << from.estimate().toVector(); 
-	AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>(this->vertices()[0]);
-	AASS::acg::VertexSE2Prior* ptr2 = dynamic_cast<AASS::acg::VertexSE2Prior*>(this->vertices()[1]);
+	g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>(this->vertices()[0]);
+	g2o::VertexSE2Prior* ptr2 = dynamic_cast<g2o::VertexSE2Prior*>(this->vertices()[1]);
 	assert(ptr != NULL);
 	assert(ptr2 != NULL);
 	assert(ptr == &from || ptr2 == &from);

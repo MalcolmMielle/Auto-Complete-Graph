@@ -1,18 +1,18 @@
 #ifndef AUTOCOMPLETEGRAPH_VERTEXSE2ROBOTPOSE_10112017
 #define AUTOCOMPLETEGRAPH_VERTEXSE2ROBOTPOSE_10112017
 
-#include "g2o/types/slam2d/vertex_se2.h"
+#include "VertexSE2ACG.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 #include "opencv2/core/core.hpp"
+#include "ndt_map/ndt_map.h"
 
-namespace AASS {
-namespace acg{	
+namespace g2o{
 	
-class VertexSE2RobotPose : public g2o::VertexSE2
+class VertexSE2RobotPose : public g2o::VertexSE2ACG
   {
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-		VertexSE2RobotPose() :  _index_graphmap(-1), g2o::VertexSE2(){}
+		VertexSE2RobotPose() :  _index_graphmap(-1), g2o::VertexSE2ACG(){}
 		
 	protected:
 		std::shared_ptr<perception_oru::NDTMap> _map;
@@ -38,6 +38,6 @@ class VertexSE2RobotPose : public g2o::VertexSE2
 
   };
 
-}
+
 }
 #endif

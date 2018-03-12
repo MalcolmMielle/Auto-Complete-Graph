@@ -611,7 +611,7 @@ namespace acg{
 		
 // 		bool fuseNDTMap(const AutoCompleteGraph& acg, nav_msgs::OccupancyGridPtr& final);
 // 		bool printNDTMap(perception_oru::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
-// 		void printPrior(const std::vector<AASS::acg::VertexSE2Prior*>& prior_corners);
+// 		void printPrior(const std::vector<g2o::VertexSE2Prior*>& prior_corners);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &pose_vec);
 // 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Vector3d &pose_vec);
@@ -627,7 +627,7 @@ namespace acg{
 		void drawCornersNdt();
 		void drawGaussiansThatGaveCorners();
 		void drawAngles();
-		void drawPriorAngles(const AASS::acg::VertexSE2Prior& vertex_in);
+		void drawPriorAngles(const g2o::VertexSE2Prior& vertex_in);
 		void drawRobotPoses();
 		
 		void saveImage(nav_msgs::OccupancyGrid::Ptr& msg);
@@ -645,7 +645,7 @@ namespace acg{
 // 	}
 // 
 // 
-// 	inline void AASS::acg::VisuAutoCompleteGraph::printPrior(const std::vector< AASS::acg::VertexSE2Prior* >& prior_corners)
+// 	inline void AASS::acg::VisuAutoCompleteGraph::printPrior(const std::vector< g2o::VertexSE2Prior* >& prior_corners)
 // 	{
 // 
 // 	}
@@ -731,7 +731,7 @@ namespace acg{
 			for(itt ; itt != prior_node.end() ; ++itt){
 				
 				geometry_msgs::Point p;
-				AASS::acg::VertexSE2Prior* ptr = dynamic_cast<AASS::acg::VertexSE2Prior*>((*itt));
+				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*itt));
 				auto vertex = ptr->estimate().toVector();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
@@ -802,7 +802,7 @@ namespace acg{
 			for(it ; it != edges.end() ; ++it){
 				
 				geometry_msgs::Point p;
-				VertexLandmarkNDT* ptr = dynamic_cast<VertexLandmarkNDT*>((*it));
+				g2o::VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexLandmarkNDT*>((*it));
 				auto vertex = ptr->estimate();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
@@ -998,7 +998,7 @@ namespace acg{
 		_anglesw_pub.publish(_anglesw_markers);
 	}
 
-	inline void VisuAutoCompleteGraph::drawPriorAngles(const VertexSE2Prior& vertex_in)
+	inline void VisuAutoCompleteGraph::drawPriorAngles(const g2o::VertexSE2Prior& vertex_in)
 	{
 		geometry_msgs::Point p;
 // 		std::cout << "getting the vector" << std::endl;

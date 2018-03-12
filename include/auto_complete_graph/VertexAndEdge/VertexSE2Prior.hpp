@@ -1,22 +1,21 @@
 #ifndef AUTOCOMPLETEGRAPH_VERTEXSE2PRIOR_10112017
 #define AUTOCOMPLETEGRAPH_VERTEXSE2PRIOR_10112017
 
-#include "g2o/types/slam2d/vertex_se2.h"
+#include "VertexSE2ACG.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 #include "EdgeSE2Prior.hpp"
 #include "auto_complete_graph/PriorLoaderInterface.hpp"
 
-namespace AASS {
-namespace acg{	
+namespace g2o{
 	
-	class VertexSE2Prior : public g2o::VertexSE2
+	class VertexSE2Prior : public g2o::VertexSE2ACG
 	{
 	protected:
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-		VertexSE2Prior() : g2o::VertexSE2(){}
-		PriorAttr priorattr;
+		VertexSE2Prior() : g2o::VertexSE2ACG(){}
+		AASS::acg::PriorAttr priorattr;
 		
 		std::vector<std::pair<double, double> > getAnglesAndOrientations() const {
 			
@@ -128,6 +127,6 @@ namespace acg{
 
 	};
 
-}
+
 }
 #endif

@@ -2,16 +2,15 @@
 #define AUTOCOMPLETEGRAPH_VERTEXLANDMARKNDT_10112017
 
 #include "ndt_map/ndt_cell.h"
-#include "g2o/types/slam2d/vertex_point_xy.h"
+#include "VertexPointXYACG.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 #include "VertexSE2RobotPose.hpp"
 #include "opencv2/opencv.hpp"
 #include "VertexSE2Prior.hpp"
 
-namespace AASS {
-namespace acg{	
+namespace g2o{
 	
-class VertexLandmarkNDT: public g2o::VertexPointXY
+class VertexLandmarkNDT: public g2o::VertexPointXYACG
 	{
 		public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -22,16 +21,16 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 		g2o::SE2 robotpose_seen_from;
 		
 		//END OF TESTING
-		EdgeInterfaceMalcolm interface;
+		AASS::acg::EdgeInterfaceMalcolm interface;
 
 		cv::Point2f position;
 		cv::KeyPoint keypoint;
 // 		cv::Point2d position;
 		cv::Mat descriptor;
 		std::vector < std::pair<double, double> > angle_orientation;
-		AASS::acg::VertexSE2RobotPose* first_seen_from;
+		g2o::VertexSE2RobotPose* first_seen_from;
 		
-		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXY(){};
+		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXYACG(){};
 		
 		const std::vector < std::pair<double, double> >& getAnglesAndOrientations() const {return angle_orientation;}
 		double getAngleWidth(int i){return angle_orientation[i].first;}
@@ -160,6 +159,6 @@ class VertexLandmarkNDT: public g2o::VertexPointXY
 
 	};
 
-}
+
 }
 #endif

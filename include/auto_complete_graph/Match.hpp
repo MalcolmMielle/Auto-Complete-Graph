@@ -13,26 +13,26 @@ namespace acg{
 	protected:
 		cv::Point2f _prior;
 		cv::Point2f _landmark;
-		AASS::acg::VertexSE2Prior* _node_prior;
+		g2o::VertexSE2Prior* _node_prior;
 		///@brief vector storing all node from the landarks 
-		AASS::acg::VertexLandmarkNDT* _node_landmark;
+		g2o::VertexLandmarkNDT* _node_landmark;
 		
 	public:
 		Match(const cv::Point2f& p, cv::Point2f& r): _prior(p), _landmark(r){}
 		
 		cv::Point2f getPriorPoint(){return _prior;}
 		cv::Point2f getLandmarkPoint(){return _landmark;}
-		AASS::acg::VertexSE2Prior* getPriorNode(){return _node_prior;}
-		AASS::acg::VertexLandmarkNDT* getLandmarkNode(){return _node_landmark;}
+		g2o::VertexSE2Prior* getPriorNode(){return _node_prior;}
+		g2o::VertexLandmarkNDT* getLandmarkNode(){return _node_landmark;}
 		
 		void getNodes(const AutoCompleteGraph& acg){
 			
 			Eigen::Vector2d pose2d_p; pose2d_p << _prior.x, _prior.y;
-			std::vector<AASS::acg::VertexSE2Prior*> prior_nodes = acg.getPriorNodes();
+			std::vector<g2o::VertexSE2Prior*> prior_nodes = acg.getPriorNodes();
 			
 			double norm_p = -1;
 			
-			for(std::vector<AASS::acg::VertexSE2Prior*>::const_iterator prior_node_it_const = prior_nodes.begin();prior_node_it_const != prior_nodes.end(); prior_node_it_const++){
+			for(std::vector<g2o::VertexSE2Prior*>::const_iterator prior_node_it_const = prior_nodes.begin();prior_node_it_const != prior_nodes.end(); prior_node_it_const++){
 				
 				Eigen::Vector3d pose = (*prior_node_it_const)->estimate().toVector();
 				Eigen::Vector2d pose2d; pose2d << pose(0), pose(1);
@@ -44,12 +44,12 @@ namespace acg{
 				}				
 			}
 			
-			std::vector<AASS::acg::VertexLandmarkNDT*> landmark_nodes = acg.getLandmarkNodes();
+			std::vector<g2o::VertexLandmarkNDT*> landmark_nodes = acg.getLandmarkNodes();
 			
 			double norm_l = -1;
 			pose2d_p; pose2d_p << _landmark.x, _landmark.y;
 			
-			for(std::vector<AASS::acg::VertexLandmarkNDT*>::const_iterator landmark_node_it_const = landmark_nodes.begin();landmark_node_it_const != landmark_nodes.end(); landmark_node_it_const++){
+			for(std::vector<g2o::VertexLandmarkNDT*>::const_iterator landmark_node_it_const = landmark_nodes.begin();landmark_node_it_const != landmark_nodes.end(); landmark_node_it_const++){
 				
 				Eigen::Vector2d pose2d = (*landmark_node_it_const)->estimate();
 				double norm = (pose2d - pose2d_p).norm();
