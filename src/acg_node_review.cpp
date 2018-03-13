@@ -19,6 +19,9 @@
 #include "auto_complete_graph/VisuACG.hpp"
 #include "auto_complete_graph/GoodMatchings.hpp"
 
+#include <ros/package.h>
+
+
 bool abort_f = false;
 
 ros::Publisher map_pub_;
@@ -393,7 +396,11 @@ int main(int argc, char **argv)
 	auto graph_prior = basement.getGraph();
 	
 	//Create graph instance
-	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), "/home/malcolm/ros_catkin_ws/lunar_ws/src/auto_complete_graph/ACG_folder/param.txt");
+
+	std::string path_to_acg = ros::package::getPath("auto_complete_graph");
+	std::string param = path_to_acg + "/ACG_folder/param.txt";
+
+	AASS::acg::AutoCompleteGraph oacg(g2o::SE2(0.2, 0.1, -0.1), param);
 	
 	//Use corner orientation ?
 	oacg.useCornerOrientation(true);
@@ -406,7 +413,8 @@ int main(int argc, char **argv)
 	
 	
 	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
-	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
+	std::string path_images = path_to_acg + "/ACG_folder/Images";
+	visu.setImageFileNameOut(path_images);
 	
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));

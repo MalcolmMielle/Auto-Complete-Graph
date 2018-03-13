@@ -25,3 +25,8 @@ add_dependencies(graph_map_publisher_localization ${${PROJECT_NAME}_EXPORTED_TAR
 target_link_libraries(graph_map_publisher_localization
         ${catkin_LIBRARIES} auto_complete_graph_lib auto_complete_graph_localization_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
         )
+
+
+add_executable(ndtmap_pub_testing ndtmap_pub_testing.cpp)
+
+target_link_libraries(ndtmap_pub_testing ${catkin_LIBRARIES}  ${Boost_LIBRARIES})
