@@ -1,22 +1,20 @@
 #ifndef AUTOCOMPLETEGRAPH_EDGELINKXY_10112017
 #define AUTOCOMPLETEGRAPH_EDGELINKXY_10112017
 
-#include "g2o/types/slam2d/edge_se2_pointxy.h"
+#include "EdgeSE2PointXYACG.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 
-namespace AASS {
-namespace acg{	
+namespace g2o{
 	
-class EdgeLinkXY_malcolm : public g2o::EdgeSE2PointXY
+class EdgeLinkXY_malcolm : public g2o::EdgeSE2PointXYACG
 {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	EdgeInterfaceMalcolm interface;
+	AASS::acg::EdgeInterfaceMalcolm interface;
 	//       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	EdgeLinkXY_malcolm() : EdgeSE2PointXY() {};
+	EdgeLinkXY_malcolm() : EdgeSE2PointXYACG() {};
 
 };
 
-}
 }
 #endif

@@ -31,6 +31,12 @@
 #include <auto_complete_graph/VertexAndEdge/VertexSE2RobotPose.hpp>
 #include <auto_complete_graph/VertexAndEdge/VertexLandmarkNDT.hpp>
 #include <auto_complete_graph/VertexAndEdge/VertexSE2Prior.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgeInterfaceMalcolm.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgeOdometry.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgeSE2Prior.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgeLinkXY.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgeLandmark.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp>
 
 
 #endif

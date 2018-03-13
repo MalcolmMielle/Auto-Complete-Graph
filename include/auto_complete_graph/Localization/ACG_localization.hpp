@@ -15,8 +15,8 @@ namespace acg{
         protected:
         
         
-		std::vector<EdgeLocalization*> _edges_localization;
-		AASS::acg::VertexSE2Prior* _vertex_reference_for_montecarlo;
+		std::vector<g2o::EdgeLocalization*> _edges_localization;
+		g2o::VertexSE2Prior* _vertex_reference_for_montecarlo;
         
         
         public:
@@ -42,21 +42,21 @@ namespace acg{
 		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : AutoCompleteGraph(sensoffset, load_file){}
         
         
-		std::vector<AASS::acg::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
-		const std::vector<AASS::acg::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
+		std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
+		const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
 		
 		
 		/** FUNCTION TO ADD THE EGDES **/
-		EdgeLocalization* addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information);
-		EdgeLocalization* addLocalization(const g2o::SE2& localization, int from_id, const Eigen::Matrix3d& information);
-		EdgeLocalization* addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information);
-// 		EdgeLocalization* addLocalization(const g2o::SE2& observ, int from_id);
-// 		EdgeLocalization* addLocalization(double x, double y, double theta, int from_id);
+		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information);
+		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, int from_id, const Eigen::Matrix3d& information);
+		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information);
+// 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& observ, int from_id);
+// 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id);
 		
 		/** Others **/
 		/**@brief set the vertex in the prior that is going to be the reference point for the localization. return NULL if failed, otherwise return the pointer to the vertex that was chosen
 		**/
-		AASS::acg::VertexSE2Prior* setPriorReference();
+		g2o::VertexSE2Prior* setPriorReference();
 
 		/**
 		 * @brief Incrementally update the NDTGraph UPDATED TO THE NEW VERSION :)
@@ -72,7 +72,7 @@ namespace acg{
 		void addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization);
 
 
-		std::shared_ptr<perception_oru::NDTMap> addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
+		std::shared_ptr<perception_oru::NDTMap> addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
 
 		/**
 		 * Add all new localization edges
@@ -80,7 +80,7 @@ namespace acg{
 		 * @param element
 		 * @param robot_ptr
 		 */
-		void addLocalizationEdges(const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose* robot_ptr);
+		void addLocalizationEdges(const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, g2o::VertexSE2RobotPose* robot_ptr);
 
     };
 

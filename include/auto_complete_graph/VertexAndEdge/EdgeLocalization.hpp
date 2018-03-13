@@ -1,26 +1,25 @@
 #ifndef AUTOCOMPLETEGRAPH_EDGELOCALIZATION_07012018
 #define AUTOCOMPLETEGRAPH_EDGELOCALIZATION_07012018
 
-#include "g2o/types/slam2d/edge_se2.h"
+#include "EdgeSE2ACG.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 
-namespace AASS {
-namespace acg{
+namespace g2o{
 
-	 class EdgeLocalization : public g2o::EdgeSE2
+	 class EdgeLocalization : public g2o::EdgeSE2ACG
   {
     public:
 		 EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-		 EdgeInterfaceMalcolm interface;
+		 AASS::acg::EdgeInterfaceMalcolm interface;
 // 	  g2o::SE2 _original_value;
 //       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	EdgeLocalization() : g2o::EdgeSE2(){};
+	EdgeLocalization() : g2o::EdgeSE2ACG(){};
 // 	  g2o::SE2 getOriginalValue(){return _original_value;}
 // 	  void setOriginalValue(const g2o::SE2& orig_val){_original_value = orig_val;}
 	  
 
 };
 
-}
+
 }
 #endif

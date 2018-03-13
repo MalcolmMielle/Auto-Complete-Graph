@@ -67,8 +67,8 @@ namespace AASS {
 
 						geometry_msgs::Point p;
 
-						g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
-						g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+						g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+						g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
 
 						if(ptr != NULL){
 // 						std::cout << "Got a VertexSE2" << std::endl;

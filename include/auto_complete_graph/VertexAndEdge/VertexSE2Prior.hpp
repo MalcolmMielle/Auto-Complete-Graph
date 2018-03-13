@@ -25,12 +25,12 @@ namespace g2o{
 // 			std::cout << "edges " << std::endl;
 			auto edges = this->edges();
 // 			std::cout << "edges done " << std::endl;
-			std::vector<AASS::acg::EdgeSE2Prior_malcolm*> edges_prior; 
+			std::vector<g2o::EdgeSE2Prior_malcolm*> edges_prior; 
 			//Get only prior edges
 			if(edges.size() > 1){
 				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-	// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-					AASS::acg::EdgeSE2Prior_malcolm* ptr = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
+	// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+					g2o::EdgeSE2Prior_malcolm* ptr = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
 					if(ptr != NULL){
 						
 						//Make sure not pushed twice
@@ -45,7 +45,7 @@ namespace g2o{
 				}
 				
 				if(edges_prior.size() > 1){
-					auto comp = [this](AASS::acg::EdgeSE2Prior_malcolm* a, AASS::acg::EdgeSE2Prior_malcolm* b)
+					auto comp = [this](g2o::EdgeSE2Prior_malcolm* a, g2o::EdgeSE2Prior_malcolm* b)
 						{ 
 							auto from_vec2d = a->getOrientation2D(*this);
 							auto to_vec2d = b->getOrientation2D(*this);
@@ -86,7 +86,7 @@ namespace g2o{
 		}
 		
 	private:
-		std::pair<double, double> angle(const AASS::acg::EdgeSE2Prior_malcolm& from, const AASS::acg::EdgeSE2Prior_malcolm& to) const {
+		std::pair<double, double> angle(const g2o::EdgeSE2Prior_malcolm& from, const g2o::EdgeSE2Prior_malcolm& to) const {
 			
 			
 			auto from_vec2d = from.getOrientation2D(*this);

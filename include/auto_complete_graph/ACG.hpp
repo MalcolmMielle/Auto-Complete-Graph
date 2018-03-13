@@ -168,13 +168,13 @@ namespace acg{
 		//ATTENTION Already useless
 		class EdgePriorAndInitialValue{
 		protected:
-			AASS::acg::EdgeSE2Prior_malcolm* _edge;
+			g2o::EdgeSE2Prior_malcolm* _edge;
 			g2o::SE2 _original_value;
 
 		public:
-			EdgePriorAndInitialValue(AASS::acg::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
+			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
 
-			AASS::acg::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
+			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
 			g2o::SE2 getOriginalValue(){return _original_value;}
 		};
 
@@ -222,17 +222,17 @@ namespace acg{
 		///@brief vector storing all node from the ndt ndt_feature_graph
 		std::vector<g2o::VertexSE2RobotPose*> _nodes_ndt;
 		///@brief vector storing all linking edges
-		std::vector<EdgeLinkXY_malcolm*> _edge_link;
+		std::vector<g2o::EdgeLinkXY_malcolm*> _edge_link;
 
 		//TODO: hack because fuck g2o node they don't work
 		std::vector<EdgeInterface> _edge_interface_of_links;
 
 		///@brief vector storing all edges between a landmark and the robot
-		std::vector<EdgeLandmark_malcolm*> _edge_landmark;
+		std::vector<g2o::EdgeLandmark_malcolm*> _edge_landmark;
 		///@brief vector storing all edge between the prior nodes
-		std::vector<AASS::acg::EdgeSE2Prior_malcolm*> _edge_prior;
+		std::vector<g2o::EdgeSE2Prior_malcolm*> _edge_prior;
 		///@brief vector storing the odometry
-		std::vector<EdgeOdometry_malcolm*> _edge_odometry;
+		std::vector<g2o::EdgeOdometry_malcolm*> _edge_odometry;
 
 		///@brief the main dish : the graph
 // 		g2o::OptimizableGraph _optimizable_graph;
@@ -380,17 +380,17 @@ namespace acg{
 		std::vector<g2o::VertexSE2RobotPose*>& getRobotNodes(){return _nodes_ndt;}
 		const std::vector<g2o::VertexSE2RobotPose*>& getRobotNodes() const {return _nodes_ndt;}
 		///@brief vector storing all linking edges
-		std::vector<EdgeLinkXY_malcolm*>& getLinkEdges(){return _edge_link;}
-		const std::vector<EdgeLinkXY_malcolm*>& getLinkEdges() const {return _edge_link;}
+		std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges(){return _edge_link;}
+		const std::vector<g2o::EdgeLinkXY_malcolm*>& getLinkEdges() const {return _edge_link;}
 		///@brief vector storing all edges between a landmark and the robot
-		std::vector<EdgeLandmark_malcolm*>& getLandmarkEdges(){return _edge_landmark;}
-		const std::vector<EdgeLandmark_malcolm*>& getLandmarkEdges() const {return _edge_landmark;}
+		std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges(){return _edge_landmark;}
+		const std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges() const {return _edge_landmark;}
 		///@brief vector storing all edge between the prior nodes
-		std::vector<AASS::acg::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
-		const std::vector<AASS::acg::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
+		std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
+		const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
 		///@brief vector storing the odometry
-		std::vector<EdgeOdometry_malcolm*>& getOdometryEdges(){return _edge_odometry;}
-		const std::vector<EdgeOdometry_malcolm*>& getOdometryEdges() const {return _edge_odometry;}
+		std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges(){return _edge_odometry;}
+		const std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges() const {return _edge_odometry;}
 
 		void setMinDistanceForLinksInMeters(double inpu){_min_distance_for_link_in_meter = inpu;}
 		double getMinDistanceForLinksInMeters(){return _min_distance_for_link_in_meter;}
@@ -445,26 +445,26 @@ namespace acg{
 
 
 		/** FUNCTION TO ADD THE EGDES **/
-		EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp);
-		EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information);
-		EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information);
-		EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
-		EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id, const Eigen::Matrix3d& information);
+		g2o::EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id, const Eigen::Matrix3d& information);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeOdometry_malcolm* addOdometry(const g2o::SE2& observ, int from_id, int toward_id);
+		g2o::EdgeOdometry_malcolm* addOdometry(double x, double y, double theta, int from_id, int toward_id);
 
-		EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark);
-		EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
-		EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, int from_id, int toward_id);
+		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark);
+		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, int from_id, int toward_id);
 
-		AASS::acg::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		g2o::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 
-		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1);
+		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1);
 
-//		EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id);
+//		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id);
 
-		std::vector <EdgeLinkXY_malcolm* >::iterator removeLinkBetweenMaps(EdgeLinkXY_malcolm* v1);
+		std::vector <g2o::EdgeLinkXY_malcolm* >::iterator removeLinkBetweenMaps(g2o::EdgeLinkXY_malcolm* v1);
 
 		//FUNCTION TO REMOVE A VERTEX
 		void removeVertex(g2o::HyperGraph::Vertex* v1);
@@ -528,9 +528,9 @@ namespace acg{
 			//Making sure all edge prior were removed.
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-				assert( dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) == NULL );
-				assert( dynamic_cast<EdgeLinkXY_malcolm*>(*ite) == NULL );
+// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+				assert( dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) == NULL );
+				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
 			}
 			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 			std::cout << "DONE removing " << std::endl;
@@ -558,8 +558,8 @@ namespace acg{
 			//Making sure all edge prior were removed.
 			auto idmapedges = _optimizable_graph.edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-				assert( dynamic_cast<EdgeLinkXY_malcolm*>(*ite) == NULL );
+// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
 			}
 			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 			std::cout << "DONE removing " << std::endl;
@@ -804,7 +804,7 @@ namespace acg{
 
 
 		//Todo move in private
-		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< EdgeLinkXY_malcolm* >::iterator& it);
+		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
 		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior);
 		bool noDoubleLinks();
 
@@ -1026,11 +1026,11 @@ namespace acg{
 	// 			std::cout << "edges " << std::endl;
 				auto edges = (*it_vertex)->edges();
 	// 			std::cout << "edges done " << std::endl;
-				std::vector<AASS::acg::EdgeSE2Prior_malcolm*> edges_prior;
+				std::vector<g2o::EdgeSE2Prior_malcolm*> edges_prior;
 
 				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-	// 				std::cout << "pointer " << dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-					AASS::acg::EdgeSE2Prior_malcolm* ptr = dynamic_cast<AASS::acg::EdgeSE2Prior_malcolm*>(*ite);
+	// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
+					g2o::EdgeSE2Prior_malcolm* ptr = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
 					if(ptr != NULL){
 						//Make sure not pushed twice
 						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){

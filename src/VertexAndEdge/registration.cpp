@@ -41,4 +41,11 @@ namespace g2o {
 	G2O_REGISTER_TYPE(VERTEX_SE2_PRIOR, VertexSE2Prior);
 	G2O_REGISTER_TYPE(VERTEX_SE2_LANDMARK, VertexLandmarkNDT);
 
+
+	G2O_REGISTER_TYPE(EDGE_SE2_PRIOR, EdgeSE2Prior_malcolm);
+	G2O_REGISTER_TYPE(EDGE_LANDMARK, EdgeLandmark_malcolm);
+	G2O_REGISTER_TYPE(EDGE_LINK, EdgeLinkXY_malcolm);
+	G2O_REGISTER_TYPE(EDGE_LOCALIZATION, EdgeLocalization);
+	G2O_REGISTER_TYPE(EDGE_ODOMETRY, EdgeOdometry_malcolm);
+
 } // end namespace

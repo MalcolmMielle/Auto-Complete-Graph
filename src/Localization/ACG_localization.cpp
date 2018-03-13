@@ -1,14 +1,14 @@
 #include "auto_complete_graph/Localization/ACG_localization.hpp"
 
 
-AASS::acg::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information)
+g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information)
 {
 	g2o::SE2 se2(x, y, theta);
 	return addLocalization(se2, from_id, information);
 
 }
 
-AASS::acg::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(const g2o::SE2& localization, int from_id, const Eigen::Matrix3d& information)
+g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(const g2o::SE2& localization, int from_id, const Eigen::Matrix3d& information)
 {
 	
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
@@ -16,12 +16,12 @@ AASS::acg::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocali
 
 }
 
-AASS::acg::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information)
+g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information)
 {
 	
 	assert(information.isZero(1e-10) == false);
 	
-	EdgeLocalization* edge_loc = new EdgeLocalization;
+	g2o::EdgeLocalization* edge_loc = new g2o::EdgeLocalization;
 	edge_loc->vertices()[0] = v1 ;
 	edge_loc->vertices()[1] = _vertex_reference_for_montecarlo;
 	edge_loc->setMeasurement(localization);
@@ -36,7 +36,7 @@ AASS::acg::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocali
 }
 
 
-AASS::acg::VertexSE2Prior* AASS::acg::AutoCompleteGraphLocalization::setPriorReference()
+g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphLocalization::setPriorReference()
 {
 	if(_nodes_prior.size() > 0) {
 		_vertex_reference_for_montecarlo = _nodes_prior[0];
@@ -71,7 +71,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 		
 		for (i; i < ndt_graph_localization.graph_map.nodes.size() - 1 ; ++i) {
 			
-			AASS::acg::VertexSE2RobotPose* robot_ptr;
+			g2o::VertexSE2RobotPose* robot_ptr;
 			g2o::SE2 robot_pos;
 			auto map = addElementNDT(ndt_graph_localization, i, &robot_ptr, robot_pos);
 			assert(robot_ptr != NULL);
@@ -91,7 +91,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 
 }
 
-std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
+std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
 {
 	///ATTENTION Indexes start at 1 instead of 0 :/
 	std::cout << "good indexes " << ndt_graph_localization.graph_map.nodes[element].id.data - 1 << " = " << element << " voilaaa " << std::endl;
@@ -231,7 +231,7 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 
 }
 
-void AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, AASS::acg::VertexSE2RobotPose* robot_ptr) {
+void AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, g2o::VertexSE2RobotPose* robot_ptr) {
 
 	auto localization_msg = ndt_graph_localization.localizations[element];
 	AASS::acg::Localization localization;

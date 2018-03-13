@@ -24,66 +24,61 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOCOMPLETEGRAPH_VERTEXSE2ACG_12032018
-#define AUTOCOMPLETEGRAPH_VERTEXSE2ACG_12032018
+#ifndef G2O_EDGE_SE2_POINT_XY_H
+#define G2O_EDGE_SE2_POINT_XY_H
 
 #include "g2o/config.h"
-#include "g2o/core/base_vertex.h"
-#include "g2o/core/hyper_graph_action.h"
-#include "g2o/types/slam2d/se2.h"
+#include "VertexSE2ACG.hpp"
+#include "VertexPointXYACG.hpp"
+#include "g2o/core/base_binary_edge.h"
 //#include "g2o/types/slam2d/g2o_types_slam2d_api.h"
 
 namespace g2o {
 
-	/**
-	 * \brief 2D pose Vertex, (x,y,theta)
-	 */
-	class VertexSE2ACG : public g2o::BaseVertex<3, SE2>
+	class EdgeSE2PointXYACG : public BaseBinaryEdge<2, Vector2, VertexSE2ACG, VertexPointXYACG>
 {
 	public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	VertexSE2ACG();
+	EdgeSE2PointXYACG();
 
-	virtual void setToOriginImpl() {
-		_estimate = SE2();
-	}
-
-	virtual void oplusImpl(const number_t* update)
+	void computeError()
 	{
-		Vector2 t=_estimate.translation();
-		t+=Eigen::Map<const Vector2>(update);
-		number_t angle=normalize_theta(_estimate.rotation().angle() + update[2]);
-		_estimate.setTranslation(t);
-		_estimate.setRotation(Rotation2D(angle));
+		const VertexSE2ACG* v1 = static_cast<const VertexSE2ACG*>(_vertices[0]);
+		const VertexPointXYACG* l2 = static_cast<const VertexPointXYACG*>(_vertices[1]);
+		_error = (v1->estimate().inverse() * l2->estimate()) - _measurement;
 	}
 
-	virtual bool setEstimateDataImpl(const number_t* est){
-		_estimate=SE2(est[0], est[1], est[2]);
+	virtual bool setMeasurementData(const number_t* d){
+		_measurement[0]=d[0];
+		_measurement[1]=d[1];
 		return true;
 	}
 
-	virtual bool getEstimateData(number_t* est) const {
-		Eigen::Map<Vector3> v(est);
-		v = _estimate.toVector();
+	virtual bool getMeasurementData(number_t* d) const{
+		d[0] = _measurement[0];
+		d[1] = _measurement[1];
 		return true;
 	}
 
-	virtual int estimateDimension() const { return 3; }
+	virtual int measurementDimension() const {return 2;}
 
-	virtual bool setMinimalEstimateDataImpl(const number_t* est){
-		return setEstimateData(est);
+	virtual bool setMeasurementFromState(){
+		const VertexSE2ACG* v1 = static_cast<const VertexSE2ACG*>(_vertices[0]);
+		const VertexPointXYACG* l2 = static_cast<const VertexPointXYACG*>(_vertices[1]);
+		_measurement = v1->estimate().inverse() * l2->estimate();
+		return true;
 	}
-
-	virtual bool getMinimalEstimateData(number_t* est) const {
-		return getEstimateData(est);
-	}
-
-	virtual int minimalEstimateDimension() const { return 3; }
 
 	virtual bool read(std::istream& is);
 	virtual bool write(std::ostream& os) const;
 
+	virtual void initialEstimate(const OptimizableGraph::VertexSet& from, OptimizableGraph::Vertex* to);
+	virtual number_t initialEstimatePossible(const OptimizableGraph::VertexSet& from, OptimizableGraph::Vertex* to) { (void) to; return (from.count(_vertices[0]) == 1 ? 1.0 : -1.0);}
+#ifndef NUMERIC_JACOBIAN_TWO_D_TYPES
+	virtual void linearizeOplus();
+#endif
 };
+
 
 
 } // end namespace

@@ -711,7 +711,7 @@ namespace acg{
 			for(it ; it != edges.end() ; ++it){
 				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
 					geometry_msgs::Point p;
-					g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+					g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
 					auto vertex = ptr->estimate().toVector();
 					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 					p.x = vertex(0);
@@ -762,8 +762,8 @@ namespace acg{
 					
 					geometry_msgs::Point p;
 				
-					g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
-					g2o::VertexPointXY* ptr2 = dynamic_cast<g2o::VertexPointXY*>((*ite2));
+					g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+					g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
 					
 					if(ptr != NULL){
 // 						std::cout << "Got a VertexSE2" << std::endl;
@@ -949,7 +949,7 @@ namespace acg{
 				for(int i = 0; i < (*it)->getAnglesAndOrientations().size() ; ++i){
 					
 					geometry_msgs::Point p;
-	// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
+	// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXYACG*>((*it));
 					auto vertex = (*it)->estimate();
 					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 					p.x = vertex(0);
@@ -1002,7 +1002,7 @@ namespace acg{
 	{
 		geometry_msgs::Point p;
 // 		std::cout << "getting the vector" << std::endl;
-// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXY*>((*it));
+// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXYACG*>((*it));
 		auto vertex = vertex_in.estimate().toVector();
 		//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 		p.x = vertex(0);
