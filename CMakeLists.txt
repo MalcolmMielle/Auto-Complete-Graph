@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(auto_complete_graph)
 
+#set(CMAKE_BUILD_TYPE debug)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -52,9 +54,9 @@ foreach (_variableName ${_variableNames})
     message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
 
-#DEBUG MODE
+##DEBUG MODE
 #set(G2O_LIBS ${G2O_CORE_LIBRARY_DEBUG} ${G2O_SOLVER_CSPARSE_DEBUG}  ${CSPARSE_LIBRARY} ${G2O_STUFF_LIBRARY_DEBUG} ${CHOLMOD_LIBRARY_DEBUG}  ${G2O_SOLVER_CSPARSE_EXTENSION_DEBUG} ${G2O_SOLVER_SLAM2D_LINEAR_DEBUG} ${G2O_TYPES_SLAM2D_DEBUG})
-#NON DEBUG MODE
+##NON DEBUG MODE
 set(G2O_LIBS ${G2O_CORE_LIBRARY} ${G2O_SOLVER_CSPARSE}  ${CSPARSE_LIBRARY} ${G2O_STUFF_LIBRARY} ${CHOLMOD_LIBRARY}  ${G2O_SOLVER_CSPARSE_EXTENSION} ${G2O_SOLVER_SLAM2D_LINEAR} ${G2O_TYPES_SLAM2D})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -160,7 +162,7 @@ catkin_package(
  LIBRARIES ${G2O_LIBS}
 #  LIBRARIES auto_complete_graph
  CATKIN_DEPENDS message_runtime ndt_feature ndt_map roscpp rospy std_msgs grid_map_core grid_map_ros grid_map_msgs grid_map_cv geometry_msgs std_msgs
- DEPENDS system_lib eigen
+ DEPENDS eigen3
 )
 
 ###########

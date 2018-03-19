@@ -26,7 +26,7 @@ add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(acg_node_review
-  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES} 
+  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
 )
 
 add_executable(acg_node_logger acg_node_logger.cpp)
