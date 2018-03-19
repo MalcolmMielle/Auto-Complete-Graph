@@ -34,11 +34,13 @@
 
 #include <boost/foreach.hpp>
 #include <ndt_map/NDTMapMsg.h>
+#include <ndt_map/NDTVectorMapMsg.h>
 
 #include "graph_map/lidarUtils/lidar_utilities.h"
 
 // #include "graph_map/GraphMapMsg.h"
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
+#include "ndt_map/NDTVectorMapMsg.h"
 #include "graph_map/graph_map_conversion.h"
 
 #include "auto_complete_graph/Localization/AcgMclLocalization.hpp"
@@ -201,7 +203,7 @@ protected:
   message_filters::Synchronizer< PointsPoseSync > *sync_pp_;
   ros::ServiceServer save_map_;
   ros::Time time_now,time_last_itr;
-  ros::Publisher map_publisher_,laser_publisher_,point2_publisher_,odom_publisher_,adjusted_odom_publisher_,fuser_odom_publisher_;
+  ros::Publisher map_publisher_,laser_publisher_,point2_publisher_,odom_publisher_,adjusted_odom_publisher_,fuser_odom_publisher_, graph_map_vector_;
   nav_msgs::Odometry fuser_odom,adjusted_odom_msg;
   Eigen::Affine3d last_odom, this_odom,last_gt_pose;
 
@@ -220,9 +222,11 @@ protected:
   
 public:
   // Constructor
-  GraphMapFuserNode(ros::NodeHandle param_nh) : frame_nr_(0), mcl_loaded_(false), init_fuser_(false)
+  GraphMapFuserNode(ros::NodeHandle param_nh) : frame_nr_(0), mcl_loaded_(false), init_fuser_(false), fuser_(NULL)
   {
-	 
+
+
+	  assert(fuser_ == NULL);
     ///if we want to build map reading scans directly from bagfile
 
 
@@ -379,7 +383,7 @@ public:
 
     tf::poseEigenToTF(sensorPose_,tf_sensor_pose_);
 
-    if(!initPoseFromGT){
+    if(!initPoseFromGT && !init_pose_tf_){
       pose_ =  Eigen::Translation<double,3>(pose_init_x,pose_init_y,pose_init_z)*
           Eigen::AngleAxis<double>(pose_init_r,Eigen::Vector3d::UnitX()) *
           Eigen::AngleAxis<double>(pose_init_p,Eigen::Vector3d::UnitY()) *
@@ -454,7 +458,8 @@ public:
 		
 		//Publisher of graph_map message
 		
-		graphmap_pub_ =param_nh.advertise<auto_complete_graph::GraphMapLocalizationMsg>("graph_map",50);
+	  graphmap_pub_ = param_nh.advertise<graph_map::GraphMapMsg>("graph_map",50);
+	  graph_map_vector_ = param_nh.advertise<ndt_map::NDTVectorMapMsg>("graph_map_vector",50);
 	
 	
 	if(use_mcl_){
@@ -852,12 +857,13 @@ public:
 			
 				std::cout << "\n\nSENSOR actuel " << sensorPose_.matrix() << std::endl;
 	// 			exit(0);
-			
+			std::cout << "Fuser " << fuser_ << std::endl;
 			assert(fuser_ == NULL);
 			fuser_=new GraphMapFuser(map_type_name,reg_type_name,pose_,sensorPose_);
 			cout<<"----------------------------FUSER------------------------"<<endl;
 			cout<<fuser_->ToString()<<endl;
 			fuser_->Visualize(visualize,plot_marker);
+			fuser_->SetFuserOptions(false, false);
 			cout<<"---------------------------------------------------------"<<endl;
 			initPoseSet = true;
 			init_fuser_ = true;
@@ -914,7 +920,10 @@ public:
 
 		tf::poseEigenToMsg( pose_,fuser_odom.pose.pose);
 		fuser_odom_publisher_.publish(fuser_odom);
-		
+
+		 ndt_map::NDTVectorMapMsg vector_maps;
+		 perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
+		 graph_map_vector_.publish(vector_maps);
 		
 		
 		int nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
@@ -928,22 +937,21 @@ public:
 			//Save the new pose associated with the node.
 			assert(nb_of_node_new - 1 > 0);
 
-			acg_localization->savePos(nb_of_node_new - 1);
+//			acg_localization->savePos(nb_of_node_new - 1);
 			
-			assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+//			assert(acg_localization->getLocalizations().size() == nb_of_node_new);
 			
 			
 			std::cout << "PUBLISH: now" << std::endl;
 			//Publish message
-			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
 			graph_map::GraphMapMsg graphmapmsg;
 			perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, world_link_id);
 // 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
-// 			
-			graphmaplocalizationmsg.graph_map = graphmapmsg;
+//
 
-			acg_localization->toMessage(graphmaplocalizationmsg);
-
+//			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
+//			graphmaplocalizationmsg.graph_map = graphmapmsg;
+//			acg_localization->toMessage(graphmaplocalizationmsg);
 			//Export all localization information.
 
  			graphmap_pub_.publish(graphmapmsg);
@@ -1176,6 +1184,7 @@ public:
   void gt_callback(const nav_msgs::Odometry::ConstPtr& msg_in)//This callback is used to set initial pose from GT data.
   {
 cout<<"gt callback"<<endl;
+	  exit(0);
     Eigen::Affine3d gt_pose;
     tf::poseMsgToEigen(msg_in->pose.pose,gt_pose);
 
