@@ -6,6 +6,7 @@
 
 #include "auto_complete_graph/Localization/Localization.hpp"
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
+#include "auto_complete_graph/Localization/LocalizationConvertion.hpp"
 
 namespace AASS {
 
@@ -92,7 +93,7 @@ namespace acg{
 		void toMessage(auto_complete_graph::GraphMapLocalizationMsg& msg){
 
 			for(auto const& localization : _localization) {
-				auto_complete_graph::LocalizationMsg loc_msg = localization.toMessage();
+				auto_complete_graph::LocalizationMsg loc_msg = AASS::acg::toMessage(localization);
 				msg.localizations.push_back(loc_msg);
 			}
 			

@@ -77,7 +77,7 @@ void getAngles(const std::string& base_frame, const std::string& to_frame, doubl
 	double x = transform.getOrigin().x();
 	double y = transform.getOrigin().y();
 	double z = 0;
-	
+
 	transform.getBasis().getRPY(roll, pitch, yaw);
 }
 
@@ -101,31 +101,31 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 
 
 Eigen::Affine3d getPose(const std::string& base_frame, const std::string& to_frame, ros::Time time=ros::Time(0)){
-	
+
 	auto transform = getPoseTFTransform(base_frame, to_frame, time);
-	
+
 	double x = transform.getOrigin().x();
 	double y = transform.getOrigin().y();
 	double z = 0;
-	
+
 	//TEST
 // 	x = 16.6;
 // 	y = 3.0;
 	std::cout << "Between " << base_frame << " and " << to_frame << x << " " << y << " " << z << " at " << transform.stamp_ << std::endl;
 	double roll, pitch, yaw;
 	transform.getBasis().getRPY(roll, pitch, yaw);
-	
+
 	Eigen::Affine3d pose_sensor = Eigen::Translation<double,3>(x,y,z)*
 	Eigen::AngleAxis<double>(roll,Eigen::Vector3d::UnitX()) *
 	Eigen::AngleAxis<double>(pitch,Eigen::Vector3d::UnitY()) *
 	Eigen::AngleAxis<double>(yaw,Eigen::Vector3d::UnitZ()) ;
-	
+
 	std::cout << "pose " << pose_sensor.matrix() << std::endl;
 // 		exit(0);
 // 	}
 // 	exit(0);
 	return pose_sensor;
-	
+
 }
 
 
@@ -144,13 +144,13 @@ typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2
 class GraphMapFuserNode {
 
 protected:
-	
-  
-	
+
+
+
 //   boost::shared_ptr<perception_oru::particle_filter> ndtmcl_;
 //   boost::shared_ptr<NDTMCL> ndtmcl_;
-	
-	
+
+
   // Our NodeHandle
   ros::NodeHandle nh_;
   GraphMapFuser *fuser_;
@@ -161,7 +161,7 @@ protected:
 
   message_filters::Subscriber<nav_msgs::Odometry> *gt_fuser_sub_;
   ros::Subscriber gt_sub,points2OdomTfSub;
-  
+
   ros::Subscriber ndt_mcl_map;
 
   // Components for publishing
@@ -192,7 +192,7 @@ protected:
   double sensor_offset_t_, fraction, cutoff, initVar;
 
   bool use_graph_map_registration_;
-  
+
   bool init_fuser_;
   laser_geometry::LaserProjection projector_;
   message_filters::Synchronizer< LaserOdomSync > *sync_lo_;
@@ -212,14 +212,14 @@ protected:
   perception_oru::MotionModel2d::Params motion_params;
   boost::mutex m;
   bool use_mcl_;
-  
+
   bool mcl_loaded_ = false;
   ros::Publisher mcl_pub_, laser_point_cloud_pub_, mcl_local_map_, mcl_map_pub_;
   ros::Publisher particlePub_;
   double cov_x_mcl, cov_y_mcl, cov_yaw_mcl, scale_gaussian_mcl;
-  
+
   boost::shared_ptr<AASS::acg::ACGMCLLocalization> acg_localization;
-  
+
 public:
   // Constructor
   GraphMapFuserNode(ros::NodeHandle param_nh) : frame_nr_(0), mcl_loaded_(false), init_fuser_(false), fuser_(NULL)
@@ -271,7 +271,7 @@ public:
     param_nh.param<std::string>("map_type",map_type_name,"default_map");
     param_nh.param<std::string>("file_format_map",file_format_map,".JFF");
 
-	
+
     param_nh.param("resolution",resolution,1.);
 
     ///initial pose of the vehicle with respect to the map
@@ -342,16 +342,16 @@ public:
 
     initPoseSet = false;
     param_nh.param<bool>("do_soft_constraints", do_soft_constraints, false);
-	
-	
+
+
     param_nh.param("init_pose_tf",init_pose_tf_,false);
     param_nh.param<std::string>("robot_frame",robot_frame,"/base_link");
-	
-	
+
+
 	param_nh.param("use_mcl",use_mcl_,true);
 	param_nh.param("use_graph_map_registration",use_graph_map_registration_,true);
 	param_nh.param<double>("zfilter_min",zfilter_min_,0);
-	
+
     fuser_odom.header.frame_id=world_link_id;
     adjusted_odom_msg.header.frame_id=world_link_id;
     laser_publisher_ =param_nh.advertise<sensor_msgs::LaserScan>("laserscan_in_fuser_frame",50);
@@ -359,7 +359,7 @@ public:
     point2_publisher_ =param_nh.advertise<sensor_msgs::PointCloud2>("point2_fuser",15);
     fuser_odom_publisher_=param_nh.advertise<nav_msgs::Odometry>("fuser",50);
     adjusted_odom_publisher_=param_nh.advertise<nav_msgs::Odometry>("odom_gt_init",50);
-	
+
     param_nh.param<double>("fraction", fraction, 1.0);
     param_nh.param<double>("cutoff", cutoff, -10);
     param_nh.param<double>("init_var", initVar, 0.5);
@@ -375,7 +375,7 @@ public:
       use_tf_listener_= use_tf_listener_ && odometry_link_id != std::string("");// check if odometry topic exists
 
 	std::cout << "SHould init from tf ? " << init_pose_tf_ << std::endl;
-	
+
 	sensorPose_ =  Eigen::Translation<double,3>(sensor_pose_x,sensor_pose_y,sensor_pose_z)*
         Eigen::AngleAxis<double>(sensor_pose_r,Eigen::Vector3d::UnitX()) *
         Eigen::AngleAxis<double>(sensor_pose_p,Eigen::Vector3d::UnitY()) *
@@ -395,7 +395,7 @@ public:
       fuser_->Visualize(visualize);
 
     }
-	
+
 
     cout<<"node: initial pose =\n"<<pose_.translation()<<endl;
 
@@ -455,16 +455,16 @@ public:
 		}
 		save_map_ = param_nh.advertiseService("save_map", &GraphMapFuserNode::save_map_callback, this);
 		cout<<"init done"<<endl;
-		
+
 		//Publisher of graph_map message
-		
+
 	  graphmap_pub_ = param_nh.advertise<graph_map::GraphMapMsg>("graph_map",50);
 	  graph_map_vector_ = param_nh.advertise<ndt_map::NDTVectorMapMsg>("graph_map_vector",50);
-	
-	
+
+
 	if(use_mcl_){
-		
-		
+
+
 		//TEST
 // // 		std::string file = "/home/malcolm/Documents/basement2d_map.jff";
 // // 	// 	map.loadFromJFF(file.c_str());
@@ -475,36 +475,36 @@ public:
 // // 			std::cout << "File didn't load" << std::endl;
 // // 		std::cout << "File loaded" << std::endl;
 // // 		mcl_loaded_ = true;
-		
-	
+
+
 	// 	mcl
 	// 	perception_oru::NDTMap ndtmap;
 		std::cout << "new mcl" << std::endl;
 // 		NDTMCL* ndtmcl = new NDTMCL(resolution, map, -0.5);
-		
+
 // 		NDTMCL* ndtmcl = new NDTMCL();
 // 		std::cout << "new mcl done" << std::endl;
 // 		ndtmcl_ = boost::shared_ptr<NDTMCL>(ndtmcl);
 		ndt_mcl_map = nh_.subscribe<ndt_map::NDTMapMsg>("ndt_map_init_mcl", 10, &GraphMapFuserNode::loadNDTMap, this);
-		
+
 		mcl_pub_ = nh_.advertise<nav_msgs::Odometry>("ndt_mcl",10);
-		
+
 		laser_point_cloud_pub_ =param_nh.advertise<sensor_msgs::PointCloud2>("mcl_point_cloud",50);
-		
+
 		mcl_local_map_ = param_nh.advertise<ndt_map::NDTMapMsg>("local_mcl_map",50);
 		mcl_map_pub_ = param_nh.advertise<ndt_map::NDTMapMsg>("mcl_map_internal",50);
 		particlePub_ = param_nh.advertise<geometry_msgs::PoseArray>("particles", 1);
-		
+
 		std::cout << "Init mcl done" << std::endl;
 	}
 	else{
 		std::cout << "ATTENTION NO MCL" << std::endl;
 	}
-	std::cout << "All init done" << std::endl;
-	
+	std::cout << "All init done 1" << std::endl;
+
   }
-  
-  
+
+
 	geometry_msgs::PoseArray ParticlesToMsg(std::vector<perception_oru::particle> particles){
 		//ROS_INFO("publishing particles");
 		geometry_msgs::PoseArray ret;
@@ -522,64 +522,64 @@ public:
 		ret.header.frame_id = world_link_id;
 		return ret;
 	}
-  
+
 	void loadNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
-		
+
 		double numPart = 250;
 		bool forceSIR = true;
-		
+
 		std::cout << "INIT MCL FROM TF" << std::endl;
 		auto init_pose = getPoseTFTransform(world_link_id, laser_link_id);
 		std::cout << "Pose found " << pose_.matrix() << std::endl;
-		
+
 		perception_oru::NDTMap* map;
 		perception_oru::LazyGrid* lz;
 		std::string frame;
 		perception_oru::fromMessage(lz, map, *mapmsg, frame, false, false);
-		
+
 // 		ndtmcl_->changeMapAndInitializeFilter(*map, x, y, yaw, v_x, v_y, v_yaw, numPart);
-		
+
 		double xx = init_pose.getOrigin().x();
 		double yy = init_pose.getOrigin().y();
 		double zz = init_pose.getOrigin().z();
 		double roll, pitch, yaw;
 		init_pose.getBasis().getRPY(roll, pitch, yaw);
-		
+
 		AASS::acg::ACGMCLLocalization* pMCL = new AASS::acg::ACGMCLLocalization(map, numPart, true, forceSIR);
 		acg_localization = boost::shared_ptr<AASS::acg::ACGMCLLocalization>(pMCL);
-		
+
 		acg_localization->init(map, xx, yy, yaw, initVar, cov_x_mcl, cov_y_mcl, cov_yaw_mcl, scale_gaussian_mcl, numPart, forceSIR);
-		
-		
+
+
 // 		perception_oru::particle_filter* pMCL = new perception_oru::particle_filter(map, numPart, true, forceSIR);
 // 		ndtmcl_ = boost::shared_ptr<perception_oru::particle_filter>(pMCL);
-		
+
 // 		ndtmcl_->setMotionModelCovX(cov_x_mcl);
 // 		ndtmcl_->setMotionModelCovY(cov_y_mcl);
 // 		ndtmcl_->setMotionModelCovYaw(cov_yaw_mcl);
 // 		ndtmcl_->setScalingFactorGaussian(scale_gaussian_mcl);
-		
+
 // 		std::cout << "Init at " << xx << " " << yy << " " << zz << std::endl; exit(0);
 // 		ndtmcl_->InitializeNormal(xx, yy, yaw, initVar);
-		
+
 //         ndtmcl_->changeMapAndInitializeFilter(*map, resolution, zfilter_min_, xx, yy, yaw, x_va, y_va, yaw_va, numPart);
 		mcl_loaded_ = true;
-		
+
 		//ATTENTION MEMORY LEAK :(. But if I delete it it's deleted from the particule filter...
 // 		delete map;
-		
+
 		std::cout << "MAP LOADED SUCCESSFULLY :)" << std::endl;
-		
+
 	}
 
 	///Laser scan to PointCloud expressed in the base frame
 	std::tuple<Eigen::Vector3d, Eigen::Matrix3d> localization( const Eigen::Affine3d& Tmotion, const pcl::PointCloud<pcl::PointXYZ>& cloud, ros::Time time = ros::Time::now()){
-		
+
 
 		if(mcl_loaded_ = true){
-			
+
 			std::cout << "MCL Localization" << std::endl;
-			
+
 			auto sensorpose_tmp = getPoseTFTransform(robot_frame, laser_link_id);
 			//Only do the rotation:
 			double x = 0;
@@ -591,121 +591,121 @@ public:
 		// 	y = 3.0;
 			double roll, pitch, yaw;
 			sensorpose_tmp.getBasis().getRPY(roll, pitch, yaw);
-			
+
 			Eigen::Affine3d sensorpose = Eigen::Translation<double,3>(x,y,z)*
 			Eigen::AngleAxis<double>(roll,Eigen::Vector3d::UnitX()) *
 			Eigen::AngleAxis<double>(pitch,Eigen::Vector3d::UnitY()) *
 			Eigen::AngleAxis<double>(yaw,Eigen::Vector3d::UnitZ()) ;
-			
+
 			Eigen::Matrix3d cov;
 			Eigen::Vector3d mean;
-			
+
 			std::tie(mean, cov) = acg_localization->localization(Tmotion, cloud, sensorpose, fraction, cutoff);
-			
+
 			pcl::PointCloud<pcl::PointXYZ> transformed_cloud;
 			pcl::transformPointCloud(cloud, transformed_cloud, sensorpose);
-// 			
+//
 // // 			sensor_msgs::PointCloud2 pcloudmsg;
 // // 			pcl::toROSMsg(transformed_cloud, pcloudmsg);
 // // 			pcloudmsg.header.frame_id = world_link_id;
 // // 			pcloudmsg.header.stamp = ros::Time::now();
-// // 			laser_point_cloud_pub_.publish(pcloudmsg);			
-// 			
+// // 			laser_point_cloud_pub_.publish(pcloudmsg);
+//
 // 			std::cout << "Resolution should be 0.2 : " << resolution << std::endl;
 // 			double cellx, celly, cellz;
 // 			bool out = ndtmcl_->getReferenceMapCellSizes(cellx, celly, cellz);
-// 			
+//
 // 			std::cout << "Got size" << out << std::endl;
-// 			
+//
 // 			std::cout << "Cells size " << cellx << " " << celly << " " << cellz << std::endl;
-// 			
+//
 // 			assert(cellx == celly);
 // 			assert(celly == cellz);
-// 			
+//
 // 			if(cellx != celly) exit(0);
 // 			if(celly != cellz) exit(0);
-// 			
+//
 // 			//Cellx/celly/cellz represent the resolution of the internal map of the localization if they are all equal.
-// 			
+//
 // 			perception_oru::NDTMap *localMap = new perception_oru::NDTMap(new perception_oru::LazyGrid(cellx));
 // 			localMap->loadPointCloud(transformed_cloud);
 // 			localMap->computeNDTCells(CELL_UPDATE_MODE_SAMPLE_VARIANCE);
-// 			
+//
 // 			ndt_map::NDTMapMsg mapmsgndt;
 // 			perception_oru::toMessage(localMap, mapmsgndt, world_link_id);
 // 			mcl_local_map_.publish(mapmsgndt);
-// 			
+//
 // 			ndt_map::NDTMapMsg mapmsgndt2;
 // 			perception_oru::toMessage(ndtmcl_->getMap(), mapmsgndt2, world_link_id);
 // 			mcl_map_pub_.publish(mapmsgndt2);
-			
+
 // 			cloud.clear();
 // 			transformed_cloud->clear();
-				
+
 // 			auto pose_of_a_mcl_particule = ndtmcl_->UpdateAndPredictEff(Tmotion, localMap, fraction, cutoff);
 			// MCL->UpdateAndPredict(tMotion, localMap);
-				
+
 // 			delete localMap;
-			
+
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			/// Now we have the sensor origin and pointcloud -- Lets do MCL
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 			ndtmcl_->updateAndPredict(Tmotion, cloud); ///<predicts, updates and resamples if necessary (ndt_mcl.hpp)
 // 			std::cout << "update and predicted" << std::endl;
-			
+
 // 			Eigen::Vector3d dm = ndtmcl_->getMean(); ///Maximum aposteriori pose
 // 			Eigen::Matrix3d cov = ndtmcl_->pf.getDistributionVariances(); ///Pose covariance
-			
-			
+
+
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 		isFirstLoad = false;
 			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			
+
 			nav_msgs::Odometry mcl_pose;
 // 			Eigen::Vector3d mean_pose=ndtmcl_->GetMeanPose2D();
-			
+
 // 			ROS_INFO_STREAM(mean_pose);
-			
+
 // 			Pose2DToTF(mean_pose,time,T);
 			//ROS_INFO_STREAM(T);
 // 			ndtmcl_->GetPoseMeanAndVariance2D(mean, cov);
 			mcl_pose = Pose2DToMsg(mean, cov, time, T);
-			
+
 			mcl_pose.header.stamp = time;
 			mcl_pub_.publish(mcl_pose);
-			
-			
-			
+
+
+
 			Eigen::Affine3d sensorpose2 = Eigen::Translation<double,3>(mean(0),mean(1),z)*
 			Eigen::AngleAxis<double>(0,Eigen::Vector3d::UnitX()) *
 			Eigen::AngleAxis<double>(0,Eigen::Vector3d::UnitY()) *
 			Eigen::AngleAxis<double>(mean[2],Eigen::Vector3d::UnitZ()) ;
-			
+
 			pcl::PointCloud<pcl::PointXYZ> transformed_cloud2;
 
 			pcl::transformPointCloud(transformed_cloud, transformed_cloud2, sensorpose2);
-			
+
 			sensor_msgs::PointCloud2 pcloudmsg;
 			pcl::toROSMsg(transformed_cloud2, pcloudmsg);
 			pcloudmsg.header.frame_id = world_link_id;
 			pcloudmsg.header.stamp = ros::Time::now();
-			laser_point_cloud_pub_.publish(pcloudmsg);	
-			
-			
+			laser_point_cloud_pub_.publish(pcloudmsg);
+
+
 			particlePub_.publish(ParticlesToMsg(acg_localization->particleCloud));
-			
+
 		// 	if(counter%50==0){
 		// 		sendMapToRviz(ndtmcl->map);
 		// 	}
-			
+
 			return std::make_tuple(mean, cov);
-		// 	
+		//
 		}
 		else{
 			std::cout << "You need to init MCL to start MCL localization" << std::endl;
 		}
 	}
-	
+
 	void Pose2DToTF(Eigen::Vector3d mean, ros::Time ts, Eigen::Affine3d Todometry){
 		static tf::TransformBroadcaster br, br_mapOdom;
 		tf::Transform transform;
@@ -726,7 +726,7 @@ public:
 		// // /// broadcast TF
 		//br_mapOdom.sendTransform(tf::StampedTransform(tf_map_odo, ts + ros::Duration(0.3), rootTF, odomTF));
 	}
-	
+
 	nav_msgs::Odometry Pose2DToMsg(Eigen::Vector3d mean, Eigen::Matrix3d cov, ros::Time ts, Eigen::Affine3d Todometry){
 		nav_msgs::Odometry O;
 		static int seq = 0;
@@ -807,7 +807,7 @@ public:
 // 		tf_.sendTransform(tf::StampedTransform(tf_map_odo, ts, world_link_id, "mcl_tf"));
 		return O;
 	}
-	
+
 	Eigen::Affine3d getAsAffine(float x, float y, float yaw ){
 		Eigen::Matrix3d m;
 
@@ -820,9 +820,9 @@ public:
 	}
 
   void processFrame(pcl::PointCloud<pcl::PointXYZ> &cloud, Eigen::Affine3d Tmotion) {
-	  
+
 	  std::cout << "MOTION !!! " << Tmotion.matrix() << std::endl;
-	  
+
 	 Eigen::Vector3d mcl_mean;
 	 Eigen::Matrix3d mcl_cov;
 	 if(use_mcl_ && mcl_loaded_){
@@ -831,30 +831,30 @@ public:
 		 }
 		 std::tie(mcl_mean, mcl_cov) = localization(Tmotion, cloud);
 	 }
-	  
+
 	 if(use_graph_map_registration_ == true){
 		if(init_pose_tf_ == true && init_fuser_ == false){
 			std::cout << "INIT FROM TF" << std::endl;
 	// 		sensorPose_ = getPose(robot_frame, laser_link_id);
-			
+
 			/////USED FOR BASEMENT BAG FILES
 	// 		//Probably need this because the sensor is too hight above the map otherwise. Or something equally weird.
 			double roll = 0, pitch = 0, yaw = 3.1415;
 	// 		getAngles(robot_frame, laser_link_id, roll, pitch, yaw);
-			
+
 			sensorPose_ = Eigen::Translation<double,3>(0,0,0)*
 				Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX()) *
 				Eigen::AngleAxis<double>(pitch, Eigen::Vector3d::UnitY()) *
 				Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ()) ;
-				
+
 				std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
-			
+
 			tf::poseEigenToTF(sensorPose_,tf_sensor_pose_);
-				
+
 			pose_ = getPose(world_link_id, robot_frame);
 			std::cout << "Pose found " << pose_.matrix() << std::endl;
 			sensorPose_ = getPose(robot_frame, laser_link_id);
-			
+
 				std::cout << "\n\nSENSOR actuel " << sensorPose_.matrix() << std::endl;
 	// 			exit(0);
 			std::cout << "Fuser " << fuser_ << std::endl;
@@ -867,15 +867,15 @@ public:
 			cout<<"---------------------------------------------------------"<<endl;
 			initPoseSet = true;
 			init_fuser_ = true;
-			
+
 			std::cout << "Pose " << pose_.matrix() << std::endl;
 			std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
-			
+
 	// 		int a;
 	// 		std::cin >> a ;
-			
+
 	// 		exit(0);
-			
+
 		}
 
 
@@ -888,14 +888,14 @@ public:
 	//       return;
 		}
 		(void)ResetInvalidMotion(Tmotion);
-		
+
 		std::cout << "Last pose " << fuser_->GetPoseLastFuse().matrix() << std::endl << std::endl;
 		std::cout << "From this " << fuser_->GetPoseLastFuse().inverse().matrix() << " * " << pose_.matrix() << std::endl;
 
 		cout<<"frame="<<frame_nr_<<"movement="<<(fuser_->GetPoseLastFuse().inverse()*pose_).translation().norm()<<endl;
 
-		int nb_of_node = fuser_->GetGraphMap()->GetNodes().size();
-		
+		auto nb_of_node = fuser_->GetGraphMap()->GetNodes().size();
+
 		ros::Time tplot=ros::Time::now();
 		plotPointcloud2(cloud,tplot);
 		m.lock();
@@ -904,11 +904,11 @@ public:
 		fuser_->PlotMapType();
 		tf::Transform Transform;
 		tf::transformEigenToTF(pose_,Transform);
-		
+
 	// 	std::cout << "POSE NOW" << pose_.matrix() << std::endl;
 	// 	std::cout << "Transform " << Transform.getOrigin().getX() << " " << Transform.getOrigin().getY() << " " << Transform.getOrigin().getZ() << " between " << world_link_id << " " << fuser_base_link_id << std::endl;
-		
-		
+
+
 		tf_.sendTransform(tf::StampedTransform(Transform, tplot, world_link_id, fuser_base_link_id));
 	// 	auto pose_tmp = getPose(world_link_id, fuser_base_link_id, tplot);
 	// 	std::cout << "Trans NOW" << pose_tmp.matrix() << std::endl;
@@ -921,27 +921,30 @@ public:
 		tf::poseEigenToMsg( pose_,fuser_odom.pose.pose);
 		fuser_odom_publisher_.publish(fuser_odom);
 
-		 ndt_map::NDTVectorMapMsg vector_maps;
-		 perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
-		 graph_map_vector_.publish(vector_maps);
-		
-		
-		int nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
+
+
+
+		auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
 	// 	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[0]->GetId() << std::endl;
 		for(int i = 0 ; i < nb_of_node_new ; ++i){
 			std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[i]->GetId() << std::endl;
 		}
-		
+
 		if(nb_of_node != nb_of_node_new){
-			
+
+			std::cout << "Publishing"  << std::endl;
+		    ndt_map::NDTVectorMapMsg vector_maps;
+		    perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
+		    graph_map_vector_.publish(vector_maps);
+
 			//Save the new pose associated with the node.
 			assert(nb_of_node_new - 1 > 0);
 
 //			acg_localization->savePos(nb_of_node_new - 1);
-			
+
 //			assert(acg_localization->getLocalizations().size() == nb_of_node_new);
-			
-			
+
+
 			std::cout << "PUBLISH: now" << std::endl;
 			//Publish message
 			graph_map::GraphMapMsg graphmapmsg;
@@ -960,7 +963,7 @@ public:
 		}
 
 	 }
-	
+
   }
 
 
@@ -1059,7 +1062,7 @@ public:
       Tm.setIdentity();
     }
     else{
-		
+
       Tm = last_odom.inverse()*this_odom;
 		std::cout << "new Tmotion: " <<frame_nr_  << "\n"<< Tm.matrix() << std::endl;
 	}
@@ -1220,8 +1223,8 @@ int main(int argc, char **argv)
   ros::NodeHandle param("~");
 	/*while( (int)ros::Time(0).toSec() == 0 and ros::ok()){
 		std::cout << "Not good " << ros::Time(0) << std::endl;
-	}*/	
-		
+	}*/
+
   GraphMapFuserNode t(param);
 	while(ros::ok()){
 		ros::spinOnce();

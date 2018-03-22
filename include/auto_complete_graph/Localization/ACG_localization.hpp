@@ -5,6 +5,9 @@
 #include "auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp"
 //#include "graph_map/graph_map.h"
 #include "auto_complete_graph/Localization/Localization.hpp"
+#include "auto_complete_graph/Localization/LocalizationConvertion.hpp"
+
+
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 
 namespace AASS {

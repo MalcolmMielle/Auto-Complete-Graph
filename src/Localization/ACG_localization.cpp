@@ -235,7 +235,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_
 
 	auto localization_msg = ndt_graph_localization.localizations[element];
 	AASS::acg::Localization localization;
-	localization.fromMessage(localization_msg);
+	AASS::acg::fromMessage(localization_msg, localization);
 	g2o::SE2 se2loc(localization.mean[0], localization.mean[1], localization.mean[2]);
 	addLocalization(se2loc, robot_ptr, localization.cov.inverse());
 
