@@ -21,18 +21,18 @@ add_executable(graph_map_publisher_localization_ac graph_map_publisher_localizat
 add_dependencies(graph_map_publisher_localization_ac ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
 
 # Specify libraries to link a library or executable target against
-target_link_libraries(graph_map_publisher_localization
+target_link_libraries(graph_map_publisher_localization_ac
         ${catkin_LIBRARIES}
         )
 
 
-add_executable(graph_map_fuser_node graph_map_fuser_node.cpp)
+add_executable(graph_map_fuser_node_ac graph_map_fuser_node.cpp)
 # Add cmake target dependencies of the executable
 # same as for the library above
-#add_dependencies(graph_map_fuser_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
+#add_dependencies(graph_map_fuser_node_ac ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
 
 # Specify libraries to link a library or executable target against
-target_link_libraries(graph_map_fuser_node
+target_link_libraries(graph_map_fuser_node_ac
         ${catkin_LIBRARIES}
         )
 
