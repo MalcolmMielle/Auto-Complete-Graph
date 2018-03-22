@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(auto_complete_graph)
 
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 #set(CMAKE_BUILD_TYPE debug)
 
