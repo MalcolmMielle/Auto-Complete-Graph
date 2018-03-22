@@ -12,6 +12,8 @@ namespace acg{
 		std::string _file;
 		
 	public:
+
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		
 		AutoCompleteGraphLogger(const std::string& logfile, const g2o::SE2& sensoffset, const std::string& load_file) : AutoCompleteGraph(sensoffset, load_file), _file(logfile){}
 		

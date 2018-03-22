@@ -1,13 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(auto_complete_graph)
 
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
+
 #set(CMAKE_BUILD_TYPE debug)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-#   das
   ndt_feature
   ndt_feature_finder
   flirtlib_ros 
@@ -26,22 +28,42 @@ find_package(catkin REQUIRED COMPONENTS
   
   message_generation
   geometry_msgs
-#   nav_msgs
+   nav_msgs
   std_msgs
 )
 
 set(CMAKE_CXX_STANDARD 11)
 
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(PCL REQUIRED)
+add_definitions(${PCL_DEFINITIONS})
+
+
+###########
+## Build ##
+###########
+
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+# include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS} include
+)
+
+
+
+
+
+
+# System dependencies are found with CMake's conventions
+ find_package(Boost REQUIRED COMPONENTS system)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Boost REQUIRED )
 find_package(vodigrex REQUIRED )
 
+
 add_subdirectory(cmake_modules)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
 find_package(G2O REQUIRED)
 find_package(SUITESPARSE REQUIRED)
@@ -49,10 +71,10 @@ INCLUDE_DIRECTORIES(${CSPARSE_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${G2O_INCLUDE_DIR})
 include_directories(${vodigrex_INCLUDE_DIRS})
 
-get_cmake_property(_variableNames VARIABLES)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
 
 ##DEBUG MODE
 #set(G2O_LIBS ${G2O_CORE_LIBRARY_DEBUG} ${G2O_SOLVER_CSPARSE_DEBUG}  ${CSPARSE_LIBRARY} ${G2O_STUFF_LIBRARY_DEBUG} ${CHOLMOD_LIBRARY_DEBUG}  ${G2O_SOLVER_CSPARSE_EXTENSION_DEBUG} ${G2O_SOLVER_SLAM2D_LINEAR_DEBUG} ${G2O_TYPES_SLAM2D_DEBUG})
@@ -102,7 +124,7 @@ add_message_files(
 )
 
 generate_messages(
-  DEPENDENCIES 
+  DEPENDENCIES
   geometry_msgs std_msgs ndt_map grid_map_msgs graph_map auto_complete_graph
   # nav_msgs
 )
@@ -147,40 +169,12 @@ generate_messages(
 #   cfg/DynReconf2.cfg
 # )
 
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## INCLUDE_DIRS: uncomment this if you package contains header files
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-
- INCLUDE_DIRS include
- LIBRARIES ${G2O_LIBS}
-#  LIBRARIES auto_complete_graph
- CATKIN_DEPENDS message_runtime ndt_feature ndt_map roscpp rospy std_msgs grid_map_core grid_map_ros grid_map_msgs grid_map_cv geometry_msgs std_msgs
- DEPENDS eigen3
-)
-
-###########
-## Build ##
-###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-# include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS} include
-)
 
 #This is only for QtCreator to see the .hpp files in prject
-FILE(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/include/auto_complete_graph/*.hpp")
-add_custom_target(headers SOURCES ${files})
+#FILE(GLOB files "${CMAKE_CURRENT_SOURCE_DIR}/include/auto_complete_graph/*.hpp")
+#add_custom_target(headers SOURCES ${files})
 
-add_subdirectory(src)
+
 
 
 ## Declare a C++ library
@@ -377,5 +371,48 @@ add_subdirectory(src)
 # catkin_add_nosetests(test)
 
 #useless commment
+
+#
+#
+#add_executable(graph_map_publisher_localization src/Localization/graph_map_publisher_localization.cpp)
+#
+## Add cmake target dependencies of the executable
+## same as for the library above
+#add_dependencies(graph_map_publisher_localization auto_complete_graph_generate_messages_cpp)
+#
+## Specify libraries to link a library or executable target against
+#target_link_libraries(graph_map_publisher_localization
+#        ${catkin_LIBRARIES}
+#        )
+
+
+
+
+
+
+
+add_subdirectory(src)
 add_subdirectory(tests)
-add_subdirectory(include/auto_complete_graph/Localization)
+#add_subdirectory(include/auto_complete_graph/Localization)
+
+
+
+###################################
+## catkin specific configuration ##
+###################################
+## The catkin_package macro generates cmake config files for your package
+## Declare things to be passed to dependent projects
+## INCLUDE_DIRS: uncomment this if you package contains header files
+## LIBRARIES: libraries you create in this project that dependent projects also need
+## CATKIN_DEPENDS: catkin_packages dependent projects also need
+## DEPENDS: system dependencies of this project that dependent projects also need
+catkin_package(
+
+        INCLUDE_DIRS include
+        LIBRARIES ${G2O_LIBS} ${vodigrex_LIBRARIES} auto_complete_graph_lib auto_complete_graph_vertexedges_lib auto_complete_graph_localization_lib
+        #  LIBRARIES auto_complete_graph
+        CATKIN_DEPENDS message_runtime ndt_feature ndt_feature_finder flirtlib_ros ndt_map roscpp rospy std_msgs message_generation occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv graph_map message_generation geometry_msgs std_msgs
+        DEPENDS EIGEN OpenCV Boost vodigrex
+)
+
+

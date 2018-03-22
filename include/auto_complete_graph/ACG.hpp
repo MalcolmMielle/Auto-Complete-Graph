@@ -256,6 +256,8 @@ namespace acg{
 
 	public:
 
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 		AutoCompleteGraph(const g2o::SE2& sensoffset,
 						const Eigen::Vector2d& tn,
 						double rn,

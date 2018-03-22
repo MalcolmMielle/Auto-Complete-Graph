@@ -76,3 +76,16 @@
 #target_link_libraries(test_transfo
 #  ${catkin_LIBRARIES} ${NDT_FEATURE_LIBS} auto_complete_graph_lib -lboost_unit_test_framework ${G2O_LIBS}
 #)
+
+
+add_executable(test_graph_map test_graph_map.cpp)
+
+# Add cmake target dependencies of the executable
+# same as for the library above
+
+# Specify libraries to link a library or executable target against
+target_link_libraries(test_graph_map
+        ${catkin_LIBRARIES}
+        )
+
+
