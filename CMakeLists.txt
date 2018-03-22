@@ -41,7 +41,7 @@ find_package(Boost REQUIRED )
 find_package(vodigrex REQUIRED )
 
 add_subdirectory(cmake_modules)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake_modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
 find_package(G2O REQUIRED)
 find_package(SUITESPARSE REQUIRED)
