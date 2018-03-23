@@ -4,7 +4,7 @@ add_library(auto_complete_graph_localization_lib
 
 target_link_libraries(auto_complete_graph_localization_lib auto_complete_graph_vertexedges_lib ${catkin_LIBRARIES} ${vodigrex_LIBRARIES})
 
-add_dependencies(auto_complete_graph_localization_lib auto_complete_graph_generate_messages_cpp)
+add_dependencies(auto_complete_graph_localization_lib auto_complete_graph_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 
 add_executable(acg_node_localization acg_node_localization.cpp)
