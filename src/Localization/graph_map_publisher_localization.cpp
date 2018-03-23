@@ -74,9 +74,9 @@ void getAngles(const std::string& base_frame, const std::string& to_frame, doubl
 		ROS_ERROR("%s",ex.what());
 			exit(0);
 	}
-	double x = transform.getOrigin().x();
-	double y = transform.getOrigin().y();
-	double z = 0;
+//	double x = transform.getOrigin().x();
+//	double y = transform.getOrigin().y();
+//	double z = 0;
 
 	transform.getBasis().getRPY(roll, pitch, yaw);
 }
@@ -106,12 +106,12 @@ Eigen::Affine3d getPose(const std::string& base_frame, const std::string& to_fra
 
 	double x = transform.getOrigin().x();
 	double y = transform.getOrigin().y();
-	double z = 0;
+	double z = transform.getOrigin().z();
 
 	//TEST
 // 	x = 16.6;
 // 	y = 3.0;
-	std::cout << "Between " << base_frame << " and " << to_frame << x << " " << y << " " << z << " at " << transform.stamp_ << std::endl;
+	std::cout << "Between " << base_frame << " and well " << to_frame << " " << x << " " << y << " " << z << " at " << transform.stamp_ << std::endl;
 	double roll, pitch, yaw;
 	transform.getBasis().getRPY(roll, pitch, yaw);
 
