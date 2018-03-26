@@ -367,7 +367,7 @@ public:
     param_nh.param<double>("cov_x_mcl", cov_x_mcl, 0.5);
     param_nh.param<double>("cov_y_mcl", cov_y_mcl, 0.5);
     param_nh.param<double>("cov_yaw_mcl", cov_yaw_mcl, 0.5);
-    param_nh.param<double>("scale_gaussian_mcl", scale_gaussian_mcl, 0.5);
+    param_nh.param<double>("scale_gaussian_mcl", scale_gaussian_mcl, 0.005);
 
     if(gt_mapping)
       use_tf_listener_= use_tf_listener_ && state_base_link_id != std::string("");// check if odometry topic exists
@@ -505,7 +505,7 @@ public:
   }
 
 
-	geometry_msgs::PoseArray ParticlesToMsg(std::vector<perception_oru::particle> particles){
+	geometry_msgs::PoseArray ParticlesToMsg(std::vector<perception_oru::particle, Eigen::aligned_allocator<perception_oru::particle> > particles){
 		//ROS_INFO("publishing particles");
 		geometry_msgs::PoseArray ret;
 		for(int i = 0; i < particles.size(); i++){
@@ -537,6 +537,8 @@ public:
 		std::string frame;
 		perception_oru::fromMessage(lz, map, *mapmsg, frame, false, false);
 
+		std::cout << "GOT MAP FROM MESSAGE" << std::endl;
+
 // 		ndtmcl_->changeMapAndInitializeFilter(*map, x, y, yaw, v_x, v_y, v_yaw, numPart);
 
 		double xx = init_pose.getOrigin().x();
@@ -548,7 +550,7 @@ public:
 		AASS::acg::ACGMCLLocalization* pMCL = new AASS::acg::ACGMCLLocalization(map, numPart, true, forceSIR);
 		acg_localization = boost::shared_ptr<AASS::acg::ACGMCLLocalization>(pMCL);
 
-		acg_localization->init(map, xx, yy, yaw, initVar, cov_x_mcl, cov_y_mcl, cov_yaw_mcl, scale_gaussian_mcl, numPart, forceSIR);
+		acg_localization->init(xx, yy, yaw, initVar, cov_x_mcl, cov_y_mcl, cov_yaw_mcl, scale_gaussian_mcl, numPart, forceSIR);
 
 
 // 		perception_oru::particle_filter* pMCL = new perception_oru::particle_filter(map, numPart, true, forceSIR);
@@ -578,14 +580,14 @@ public:
 
 		if(mcl_loaded_ = true){
 
-			std::cout << "MCL Localization" << std::endl;
+			std::cout << "MCL Localization. Sensor frame between : " <<  robot_frame << " , " << laser_link_id << std::endl;
 
 			auto sensorpose_tmp = getPoseTFTransform(robot_frame, laser_link_id);
 			//Only do the rotation:
-			double x = 0;
-			double y = 0;
-			double z = sensorpose_tmp.getOrigin()[2];
-			std::cout << "z : " << z << std::endl;
+			double x = sensorpose_tmp.getOrigin().getX();
+			double y = sensorpose_tmp.getOrigin().getY();
+			double z = sensorpose_tmp.getOrigin().getZ();
+			std::cout << "xyz : " << x << " " << y << " " << z << std::endl;
 			//TEST
 		// 	x = 16.6;
 		// 	y = 3.0;
@@ -627,7 +629,7 @@ public:
 //
 // 			//Cellx/celly/cellz represent the resolution of the internal map of the localization if they are all equal.
 //
-// 			perception_oru::NDTMap *localMap = new perception_oru::NDTMap(new perception_oru::LazyGrid(cellx));
+// 			perception_oru::NDTMap *localMap = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
 // 			localMap->loadPointCloud(transformed_cloud);
 // 			localMap->computeNDTCells(CELL_UPDATE_MODE_SAMPLE_VARIANCE);
 //
@@ -676,10 +678,10 @@ public:
 
 
 
-			Eigen::Affine3d sensorpose2 = Eigen::Translation<double,3>(mean(0),mean(1),z)*
+			Eigen::Affine3d sensorpose2 = Eigen::Translation<double,3>(mean(0),mean(1),0)*
 			Eigen::AngleAxis<double>(0,Eigen::Vector3d::UnitX()) *
 			Eigen::AngleAxis<double>(0,Eigen::Vector3d::UnitY()) *
-			Eigen::AngleAxis<double>(mean[2],Eigen::Vector3d::UnitZ()) ;
+			Eigen::AngleAxis<double>(mean(2),Eigen::Vector3d::UnitZ()) ;
 
 			pcl::PointCloud<pcl::PointXYZ> transformed_cloud2;
 
@@ -690,6 +692,15 @@ public:
 			pcloudmsg.header.frame_id = world_link_id;
 			pcloudmsg.header.stamp = ros::Time::now();
 			laser_point_cloud_pub_.publish(pcloudmsg);
+
+
+//			perception_oru::NDTMap *localMap = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
+//			localMap->loadPointCloud(transformed_cloud);
+//			localMap->computeNDTCells(CELL_UPDATE_MODE_SAMPLE_VARIANCE);
+//
+//
+//
+//			delete localMap;
 
 
 			particlePub_.publish(ParticlesToMsg(acg_localization->particleCloud));
