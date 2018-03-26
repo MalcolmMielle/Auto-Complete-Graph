@@ -168,7 +168,7 @@ protected:
   tf::TransformBroadcaster tf_;
   tf::TransformListener tf_listener_;
   ros::Publisher output_pub_;
-  ros::Publisher graphmap_pub_;
+  ros::Publisher graphmap_pub_, graphmap_localization_pub;
   Eigen::Affine3d pose_, T, sensorPose_;
 
 
@@ -460,7 +460,7 @@ public:
 
 	  graphmap_pub_ = param_nh.advertise<graph_map::GraphMapMsg>("graph_map",50);
 	  graph_map_vector_ = param_nh.advertise<ndt_map::NDTVectorMapMsg>("graph_map_vector",50);
-
+	  graphmap_localization_pub = param_nh.advertise<auto_complete_graph::GraphMapLocalizationMsg>("graph_map_localization", 50);
 
 	if(use_mcl_){
 
@@ -844,134 +844,159 @@ public:
 	 }
 
 	 if(use_graph_map_registration_ == true){
-		if(init_pose_tf_ == true && init_fuser_ == false){
-			std::cout << "INIT FROM TF" << std::endl;
-	// 		sensorPose_ = getPose(robot_frame, laser_link_id);
 
-			/////USED FOR BASEMENT BAG FILES
-	// 		//Probably need this because the sensor is too hight above the map otherwise. Or something equally weird.
-			double roll = 0, pitch = 0, yaw = 3.1415;
-	// 		getAngles(robot_frame, laser_link_id, roll, pitch, yaw);
+		 if(!use_mcl_ || (use_mcl_ && mcl_loaded_) ) {
 
-			sensorPose_ = Eigen::Translation<double,3>(0,0,0)*
-				Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX()) *
-				Eigen::AngleAxis<double>(pitch, Eigen::Vector3d::UnitY()) *
-				Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ()) ;
+			 if (init_pose_tf_ == true && init_fuser_ == false) {
+				 std::cout << "INIT FROM TF" << std::endl;
+				 // 		sensorPose_ = getPose(robot_frame, laser_link_id);
 
-				std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
+				 /////USED FOR BASEMENT BAG FILES
+				 // 		//Probably need this because the sensor is too hight above the map otherwise. Or something equally weird.
+				 double roll = 0, pitch = 0, yaw = 3.1415;
+				 // 		getAngles(robot_frame, laser_link_id, roll, pitch, yaw);
 
-			tf::poseEigenToTF(sensorPose_,tf_sensor_pose_);
+				 sensorPose_ = Eigen::Translation<double, 3>(0, 0, 0) *
+				               Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX()) *
+				               Eigen::AngleAxis<double>(pitch, Eigen::Vector3d::UnitY()) *
+				               Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ());
 
-			pose_ = getPose(world_link_id, robot_frame);
-			std::cout << "Pose found " << pose_.matrix() << std::endl;
-			sensorPose_ = getPose(robot_frame, laser_link_id);
+				 std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
 
-				std::cout << "\n\nSENSOR actuel " << sensorPose_.matrix() << std::endl;
-	// 			exit(0);
-			std::cout << "Fuser " << fuser_ << std::endl;
-			assert(fuser_ == NULL);
-			fuser_=new GraphMapFuser(map_type_name,reg_type_name,pose_,sensorPose_);
-			cout<<"----------------------------FUSER------------------------"<<endl;
-			cout<<fuser_->ToString()<<endl;
-			fuser_->Visualize(visualize,plot_marker);
-			fuser_->SetFuserOptions(false, false);
-			cout<<"---------------------------------------------------------"<<endl;
-			initPoseSet = true;
-			init_fuser_ = true;
+				 tf::poseEigenToTF(sensorPose_, tf_sensor_pose_);
 
-			std::cout << "Pose " << pose_.matrix() << std::endl;
-			std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
+				 pose_ = getPose(world_link_id, robot_frame);
+				 std::cout << "Pose found " << pose_.matrix() << std::endl;
+				 sensorPose_ = getPose(robot_frame, laser_link_id);
 
-	// 		int a;
-	// 		std::cin >> a ;
+				 std::cout << "\n\nSENSOR actuel " << sensorPose_.matrix() << std::endl;
+				 // 			exit(0);
+				 std::cout << "Fuser " << fuser_ << std::endl;
+				 assert(fuser_ == NULL);
+				 fuser_ = new GraphMapFuser(map_type_name, reg_type_name, pose_, sensorPose_);
+				 cout << "----------------------------FUSER------------------------" << endl;
+				 cout << fuser_->ToString() << endl;
+				 fuser_->Visualize(visualize, plot_marker);
+				 fuser_->SetFuserOptions(false, false);
+				 cout << "---------------------------------------------------------" << endl;
+				 initPoseSet = true;
+				 init_fuser_ = true;
 
-	// 		exit(0);
+				 std::cout << "Pose " << pose_.matrix() << std::endl;
+				 std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
 
-		}
+				 // 		int a;
+				 // 		std::cin >> a ;
 
+				 // 		exit(0);
 
-		if(!initPoseSet)
-		return;
-
-		frame_nr_++;
-		cout<<"frame nr="<<frame_nr_<<endl;
-		if((Tmotion.translation().norm() <0.005 && Tmotion.rotation().eulerAngles(0,1,2).norm()< 0.005) && useOdometry) {    //sanity check for odometry
-	//       return;
-		}
-		(void)ResetInvalidMotion(Tmotion);
-
-		std::cout << "Last pose " << fuser_->GetPoseLastFuse().matrix() << std::endl << std::endl;
-		std::cout << "From this " << fuser_->GetPoseLastFuse().inverse().matrix() << " * " << pose_.matrix() << std::endl;
-
-		cout<<"frame="<<frame_nr_<<"movement="<<(fuser_->GetPoseLastFuse().inverse()*pose_).translation().norm()<<endl;
-
-		auto nb_of_node = fuser_->GetGraphMap()->GetNodes().size();
-
-		ros::Time tplot=ros::Time::now();
-		plotPointcloud2(cloud,tplot);
-		m.lock();
-		fuser_->ProcessFrame<pcl::PointXYZ>(cloud,pose_,Tmotion);
-		m.unlock();
-		fuser_->PlotMapType();
-		tf::Transform Transform;
-		tf::transformEigenToTF(pose_,Transform);
-
-	// 	std::cout << "POSE NOW" << pose_.matrix() << std::endl;
-	// 	std::cout << "Transform " << Transform.getOrigin().getX() << " " << Transform.getOrigin().getY() << " " << Transform.getOrigin().getZ() << " between " << world_link_id << " " << fuser_base_link_id << std::endl;
+			 }
 
 
-		tf_.sendTransform(tf::StampedTransform(Transform, tplot, world_link_id, fuser_base_link_id));
-	// 	auto pose_tmp = getPose(world_link_id, fuser_base_link_id, tplot);
-	// 	std::cout << "Trans NOW" << pose_tmp.matrix() << std::endl;
-	// 	assert(pose_tmp == pose_);
-	// 	exit(0);
-		//I'm not sure why this transformation is published :/
-	//     tf_.sendTransform(tf::StampedTransform(tf_sensor_pose_, tplot, fuser_base_link_id, "/fuser_laser_link"));
-		fuser_odom.header.stamp=tplot;
+			 if (!initPoseSet)
+				 return;
 
-		tf::poseEigenToMsg( pose_,fuser_odom.pose.pose);
-		fuser_odom_publisher_.publish(fuser_odom);
+			 frame_nr_++;
+			 cout << "frame nr=" << frame_nr_ << endl;
+			 if ((Tmotion.translation().norm() < 0.005 && Tmotion.rotation().eulerAngles(0, 1, 2).norm() < 0.005) &&
+			     useOdometry) {    //sanity check for odometry
+				 //       return;
+			 }
+			 (void) ResetInvalidMotion(Tmotion);
 
+			 std::cout << "Last pose " << fuser_->GetPoseLastFuse().matrix() << std::endl << std::endl;
+			 std::cout << "From this " << fuser_->GetPoseLastFuse().inverse().matrix() << " * " << pose_.matrix()
+			           << std::endl;
 
+			 cout << "frame=" << frame_nr_ << "movement="
+			      << (fuser_->GetPoseLastFuse().inverse() * pose_).translation().norm() << endl;
 
+			 auto nb_of_node = fuser_->GetGraphMap()->GetNodes().size();
 
-		auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
-	// 	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[0]->GetId() << std::endl;
-		for(int i = 0 ; i < nb_of_node_new ; ++i){
-			std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[i]->GetId() << std::endl;
-		}
+			 ros::Time tplot = ros::Time::now();
+			 plotPointcloud2(cloud, tplot);
+			 m.lock();
+			 fuser_->ProcessFrame<pcl::PointXYZ>(cloud, pose_, Tmotion);
+			 m.unlock();
+			 fuser_->PlotMapType();
+			 tf::Transform Transform;
+			 tf::transformEigenToTF(pose_, Transform);
 
-		if(nb_of_node != nb_of_node_new){
-
-			std::cout << "Publishing"  << std::endl;
-		    ndt_map::NDTVectorMapMsg vector_maps;
-		    perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
-		    graph_map_vector_.publish(vector_maps);
-
-			//Save the new pose associated with the node.
-			assert(nb_of_node_new - 1 > 0);
-
-//			acg_localization->savePos(nb_of_node_new - 1);
-
-//			assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+			 // 	std::cout << "POSE NOW" << pose_.matrix() << std::endl;
+			 // 	std::cout << "Transform " << Transform.getOrigin().getX() << " " << Transform.getOrigin().getY() << " " << Transform.getOrigin().getZ() << " between " << world_link_id << " " << fuser_base_link_id << std::endl;
 
 
-			std::cout << "PUBLISH: now" << std::endl;
-			//Publish message
-			graph_map::GraphMapMsg graphmapmsg;
-			perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, world_link_id);
-// 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
-//
+			 tf_.sendTransform(tf::StampedTransform(Transform, tplot, world_link_id, fuser_base_link_id));
+			 // 	auto pose_tmp = getPose(world_link_id, fuser_base_link_id, tplot);
+			 // 	std::cout << "Trans NOW" << pose_tmp.matrix() << std::endl;
+			 // 	assert(pose_tmp == pose_);
+			 // 	exit(0);
+			 //I'm not sure why this transformation is published :/
+			 //     tf_.sendTransform(tf::StampedTransform(tf_sensor_pose_, tplot, fuser_base_link_id, "/fuser_laser_link"));
+			 fuser_odom.header.stamp = tplot;
 
-//			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
-//			graphmaplocalizationmsg.graph_map = graphmapmsg;
-//			acg_localization->toMessage(graphmaplocalizationmsg);
-			//Export all localization information.
+			 tf::poseEigenToMsg(pose_, fuser_odom.pose.pose);
+			 fuser_odom_publisher_.publish(fuser_odom);
 
- 			graphmap_pub_.publish(graphmapmsg);
-// 			std::cout << "PUBLISHED" << std::endl;
-	// 		exit(0);
-		}
+
+			 auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
+			 // 	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[0]->GetId() << std::endl;
+			 for (int i = 0; i < nb_of_node_new; ++i) {
+				 std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id "
+				           << fuser_->GetGraphMap()->GetNodes()[i]->GetId() << std::endl;
+			 }
+
+			 //If a new node was added, we save the location.
+			 if(acg_localization->getLocalizations().size() != nb_of_node_new){
+				 std::cout << " saving pose " << std::endl;
+				 acg_localization->savePos(nb_of_node_new - 1);
+				 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+			 }
+
+
+			 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+
+
+			 if (nb_of_node != nb_of_node_new) {
+
+				 std::cout << "Publishing" << std::endl;
+				 ndt_map::NDTVectorMapMsg vector_maps;
+				 perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
+				 graph_map_vector_.publish(vector_maps);
+
+				 //Save the new pose associated with the node.
+				 assert(nb_of_node_new - 1 > 0);
+
+//				 acg_localization->savePos(nb_of_node_new - 1);
+
+				 std::cout << acg_localization->getLocalizations().size() << " == " <<  nb_of_node_new << std::endl;
+
+				 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+
+
+				 std::cout << "PUBLISH: now" << std::endl;
+				 //Publish message
+				 graph_map::GraphMapMsg graphmapmsg;
+				 perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, world_link_id);
+				 // 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
+				 //
+				 if (use_mcl_ && mcl_loaded_) {
+
+					 auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
+					 graphmaplocalizationmsg.graph_map = graphmapmsg;
+					 acg_localization->toMessage(graphmaplocalizationmsg);
+					 graphmap_localization_pub.publish(graphmaplocalizationmsg);
+					 //Export all localization information.
+				 }
+
+				 graphmap_pub_.publish(graphmapmsg);
+				 // 			std::cout << "PUBLISHED" << std::endl;
+				 // 		exit(0);
+			 }
+		 }
+		 else{
+			 std::cout << "NDT MCL needs to be init for the registration to start if you want to use both MCL and registration" << std::endl;
+		 }
 
 	 }
 
