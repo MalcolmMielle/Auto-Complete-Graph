@@ -94,8 +94,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
 {
 	///ATTENTION Indexes start at 1 instead of 0 :/
-	std::cout << "good indexes " << ndt_graph_localization.graph_map.nodes[element].id.data - 1 << " = " << element << " voilaaa " << std::endl;
-	assert(ndt_graph_localization.graph_map.nodes[element].id.data - 1 == element);
+	std::cout << "good indexes " << ndt_graph_localization.graph_map.nodes[element].id.data << " = " << element << " voilaaa " << std::endl;
+	assert(ndt_graph_localization.graph_map.nodes[element].id.data == element);
 	//Return Gaussian white noise
 // 	auto randomNoise = [](double mean, double deviationt) -> double {
 // 		std::default_random_engine engine{std::random_device()() };
@@ -135,12 +135,18 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 	std::cout << "multiply" << std::endl;
 		
 	auto map_msg =  ndt_graph_localization.graph_map.nodes[element].ndt_map;
+
 	perception_oru::NDTMap* map;
 	perception_oru::NDTMap* map_copy;
 	perception_oru::LazyGrid* lz;
 	std::string frame;
 	bool good2 = perception_oru::fromMessage(lz, map_copy, map_msg, frame);
 	std::shared_ptr<perception_oru::NDTMap> shared_map(map_copy);
+
+
+
+	assert(shared_map->getAllInitializedCells().size() != 0);
+	assert(shared_map->getAllInitializedCells().size() == map_msg.cells.size());
 		
 // 	std::cout << "get res" << std::endl;
 // // 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;

@@ -228,6 +228,8 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		ros::Time start_corner = ros::Time::now();
 		oacg->updateNDTGraph(*msg);
 		ros::Time end_corner = ros::Time::now();
+
+		std::cout << "MAP UPDATED in main" << std::endl;
 		
 		double corner_extract_tt = (start_corner - end_corner).toSec();
 		time_extract_corner_ndt.push_back(corner_extract_tt);
@@ -268,8 +270,10 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		// 		if(was_init == true){
 					
 		// 		}
-				
+
+				std::cout << "RVIZ " << std::endl;
 				visu.updateRviz();
+				std::cout << "RVIZ DONE" << std::endl;
 		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
 		// 		std::cin >>a;
 				
@@ -417,7 +421,7 @@ int main(int argc, char **argv)
 	std::string path_images = path_to_acg + "/ACG_folder/Images";
 	visu.setImageFileNameOut(path_images);
 	
-	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
+	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_node/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
