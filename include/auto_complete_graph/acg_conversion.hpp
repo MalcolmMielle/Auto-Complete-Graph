@@ -120,7 +120,7 @@ namespace acg{
 		for(it ; it != edges.end() ; ++it){
 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
 				geometry_msgs::Point p;
-				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
 				auto vertex = ptr->estimate().toVector();
 				if(flag_init == false){
 					flag_init = true;
@@ -330,7 +330,7 @@ namespace acg{
 			
 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
 				geometry_msgs::Point p;
-				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
 				auto vertex = ptr->estimate().toVector();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
@@ -367,7 +367,8 @@ namespace acg{
 		for(it ; it != edges.end() ; ++it){
 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
 				geometry_msgs::Point p;
-				g2o::VertexSE2* ptr = dynamic_cast<g2o::VertexSE2*>((*ite2));
+				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+				assert(ptr != NULL);
 				auto vertex = ptr->estimate().toVector();
 				if(flag_init == false){
 					flag_init = true;

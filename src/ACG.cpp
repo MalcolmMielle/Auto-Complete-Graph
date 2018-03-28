@@ -882,7 +882,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<per
 {
 	//HACK For now : we translate the Corner extracted and not the ndt-maps
 	auto cells = map->getAllCellsShared();
-	std::cout << "got all cell shared" << std::endl;
+	std::cout << "got all cell shared " <<  cells.size() << std::endl;
 	double x2, y2, z2;
 	map->getCellSizeInMeters(x2, y2, z2);
 	std::cout << "got all cell sized" << std::endl;

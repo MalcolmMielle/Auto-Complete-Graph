@@ -5,38 +5,11 @@
 #include <ctime>
 #include <fstream>
 #include <random>
-
-// #include "g2o/types/slam2d/vertex_se2.h"
-// #include "g2o/types/slam2d/vertex_point_xy.h"
 #include "g2o/types/slam2d/parameter_se2_offset.h"
-// #include "g2o/types/slam2d/edge_se2_prior.h"
-//#include "g2o/types/slam2d/edge_se2_link.h"
-// #include "g2o/types/slam2d/edge_landmark_se2.h"
-//#include "g2o/types/slam2d/edge_link_xy.h"
-// #include "g2o/types/slam2d/vertex_se2_prior.h"
-//#include "g2o/types/slam2d/edge_landmark_malcolm.h"
-//#include "g2o/types/slam2d/edge_odometry_malcolm.h"
-// #include "types_tutorial_slam2d.h"
-
-
-
-// #include "g2o/core/sparse_optimizer.h"
-// #include "g2o/core/block_solver.h"
-// #include "g2o/core/factory.h"
-// #include "g2o/core/optimization_algorithm_factory.h"
-// #include "g2o/core/optimization_algorithm_gauss_newton.h"
-// #include "g2o/solvers/csparse/linear_solver_csparse.h"
-
 #include "ndt_feature/ndt_feature_graph.h"
-// #include "ndt_feature/utils.h"
-
 #include "Eigen/Core"
-
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
-
-// #include "das/AssociationInterface.hpp"
-// #include "das/NDTCorner.hpp"
 #include "ndt_feature_finder/ndt_corner.hpp"
 #include "covariance.hpp"
 #include "conversion.hpp"
@@ -44,7 +17,6 @@
 #include "PriorLoaderInterface.hpp"
 #include "ndt_feature_finder/conversion.hpp"
 #include "utils.hpp"
-
 #include "VertexAndEdge/EdgeInterfaceMalcolm.hpp"
 #include "VertexAndEdge/EdgeOdometry.hpp"
 #include "VertexAndEdge/EdgeLandmark.hpp"
@@ -53,6 +25,7 @@
 #include "VertexAndEdge/VertexLandmarkNDT.hpp"
 #include "VertexAndEdge/VertexSE2Prior.hpp"
 #include "VertexAndEdge/VertexSE2RobotPose.hpp"
+
 
 namespace AASS {
 

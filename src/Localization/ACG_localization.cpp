@@ -179,14 +179,16 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 		g2o::SE2 odometry(isometry2d_odometry);
 // 		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
 		
-		std::cout << " ref " << ndt_graph_localization.graph_map.factors[element-1].prev.data << " and mov " << ndt_graph_localization.graph_map.factors[element-1].next.data << std::endl;
+		std::cout << " ref " << ndt_graph_localization.graph_map.factors[element-1].prev.data << " and mov " << ndt_graph_localization.graph_map.factors[element-1].next.data << " ndt node size " << _nodes_ndt.size() << std::endl;
 		
 		///ATTENTION Indexes of graph_map start at 1 instead of 0 :/
-		assert( ndt_graph_localization.graph_map.factors[element-1].prev.data - 1 < _nodes_ndt.size() );
-		assert( ndt_graph_localization.graph_map.factors[element-1].next.data - 1 < _nodes_ndt.size() );
+		assert( ndt_graph_localization.graph_map.factors[element-1].prev.data < _nodes_ndt.size() );
+		assert( ndt_graph_localization.graph_map.factors[element-1].next.data < _nodes_ndt.size() );
+		assert( ndt_graph_localization.graph_map.factors[element-1].prev.data >= 0 );
+		assert( ndt_graph_localization.graph_map.factors[element-1].next.data >= 0 );
 		
-		auto from = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].prev.data - 1 ] ;
-		auto toward = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].next.data - 1 ] ;
+		auto from = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].prev.data ] ;
+		auto toward = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].next.data ] ;
 		
 		std::cout << "Saving cov " << std::endl;
 		//TODO : transpose to 3d and use in odometry!
