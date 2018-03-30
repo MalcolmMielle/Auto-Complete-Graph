@@ -946,15 +946,17 @@ public:
 				           << fuser_->GetGraphMap()->GetNodes()[i]->GetId() << std::endl;
 			 }
 
-			 //If a new node was added, we save the location.
-			 if(acg_localization->getLocalizations().size() != nb_of_node_new){
-				 std::cout << " saving pose " << std::endl;
-				 acg_localization->savePos(nb_of_node_new - 1);
+			 if (use_mcl_ && mcl_loaded_) {
+				 //If a new node was added, we save the location.
+				 if (acg_localization->getLocalizations().size() != nb_of_node_new) {
+					 std::cout << " saving pose " << std::endl;
+					 acg_localization->savePos(nb_of_node_new - 1);
+					 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+				 }
 				 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
 			 }
 
 
-			 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
 
 
 			 if (nb_of_node != nb_of_node_new) {
@@ -969,9 +971,6 @@ public:
 
 //				 acg_localization->savePos(nb_of_node_new - 1);
 
-				 std::cout << acg_localization->getLocalizations().size() << " == " <<  nb_of_node_new << std::endl;
-
-				 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
 
 
 				 std::cout << "PUBLISH: now" << std::endl;
@@ -982,11 +981,30 @@ public:
 				 //
 				 if (use_mcl_ && mcl_loaded_) {
 
+					 std::cout << acg_localization->getLocalizations().size() << " == " <<  nb_of_node_new << std::endl;
+					 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+
 					 auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
 					 graphmaplocalizationmsg.graph_map = graphmapmsg;
 					 acg_localization->toMessage(graphmaplocalizationmsg);
 					 graphmap_localization_pub.publish(graphmaplocalizationmsg);
 					 //Export all localization information.
+				 }
+				 else{
+
+					 auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
+					 graphmaplocalizationmsg.graph_map = graphmapmsg;
+					 mockLocalizationMessage(graphmaplocalizationmsg, nb_of_node_new);
+					 graphmap_localization_pub.publish(graphmaplocalizationmsg);
+
+//					 bool unstop = true;
+//					 while(nb_of_node_new >= 6 && unstop){
+//						 std::cout << "Keep publishing ? " << std::endl;
+//						 std::cin >> unstop;
+//						 graphmap_localization_pub.publish(graphmaplocalizationmsg);
+//
+//					 }
+
 				 }
 
 				 graphmap_pub_.publish(graphmapmsg);
@@ -1002,6 +1020,17 @@ public:
 
   }
 
+
+	void mockLocalizationMessage(auto_complete_graph::GraphMapLocalizationMsg& msg, int how_many){
+
+		for(int i = 0; i < how_many ; ++i) {
+			AASS::acg::Localization loc;
+			auto_complete_graph::LocalizationMsg loc_msg = AASS::acg::toMessage(loc);
+			msg.localizations.push_back(loc_msg);
+		}
+
+
+	}
 
   //bool save_map_callback(std_srvs::Empty::Request  &req,std_srvs::Empty::Response &res )
   bool ResetInvalidMotion(Eigen::Affine3d &Tmotion){

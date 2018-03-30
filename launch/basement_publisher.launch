@@ -19,7 +19,7 @@
 <node pkg="auto_complete_graph" type="graph_map_publisher_localization_ac" name="graph_node" output="screen">
 
 <!-- 	MCL -->
-	<param name="use_mcl" value="true" />
+	<param name="use_mcl" value="false" />
 	<param name="use_graph_map_registration" value="true" />
 	<param name="zfilter_min" value="-1000" />
 	<param name="fraction" value="1" />
@@ -34,7 +34,7 @@
 	
 <!-- 		Fuser param -->
       <param name="use_keyframe" value="true" />
-      <param name="min_keyframe_dist" value="0.1" />
+      <param name="min_keyframe_dist" value="0.2" />
       <param name="min_keyframe_rot_deg" value="5.0" />
 	
 	  
@@ -49,7 +49,7 @@
 
       <param name="use_submap" value="true" />
 <!-- 	  How far to travel before new node -->
-      <param name="interchange_radius" value="1" /> 
+      <param name="interchange_radius" value="2" />
 <!-- 	  Move ndt cell close to new submap from old to new -->
       <param name="compound_radius" value="0.5" />
 

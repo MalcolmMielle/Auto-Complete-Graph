@@ -459,97 +459,9 @@ namespace acg{
 		void addPriorGraph(const PriorLoaderInterface::PriorGraph& graph);
 
 		///@remove the prior and all link edges
-		void clearPrior(){
-			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
-			int i = 0;
-			for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ; ++it){
+		void clearPrior();
 
-				for(auto it1 = it + 1 ; it1 != _nodes_prior.end() ;++it1){
-					assert(*it != *it1);
-					++i;
-				}
-			}
-
-
-			for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ;){
-// 				auto it_tmp = it;
-// 				assert(*it_tmp == *it);
-// 				++it;
-// 				assert(*it_tmp != *it);
-// 				std::cout <<"removing the vertex " << *it << std::endl;
-// 				if (it != _nodes_prior.end()) {
-// 					std::cout <<"Done " << _nodes_prior.size() <<std::endl;
-					//DIESNT WORK :(
-// 					this->removeVertex(*it);
-					_optimizable_graph.removeVertex(*it, false);
-					it = _nodes_prior.erase(it);
-// 					std::cout <<"removed the vertex " << std::endl;
-// 				}
-// 				it = it_tmp;
-// 				++it;
-
-			}
-// 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
-			assert(_nodes_prior.size() == 0);
-
-// 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
-// 				_optimizable_graph.removeVertex(it, true);
-// 			}
-// 			std::cout <<"clearing the edges " << std::endl;
-			 _edge_prior.clear();
-			 _edge_link.clear();
-			 _edge_interface_of_links.clear();
-
-			//Making sure all edge prior were removed.
-			auto idmapedges = _optimizable_graph.edges();
-			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-				assert( dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) == NULL );
-				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
-			}
-			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
-			std::cout << "DONE removing " << std::endl;
-		}
-
-
-		void clearLinks(){
-			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
-			int i = 0;
-
-			for(auto it = _edge_link.begin() ; it != _edge_link.end() ;){
-
-				_optimizable_graph.removeEdge(*it);
-				it = _edge_link.erase(it);
-
-			}
-// 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
-			assert(_edge_link.size() == 0);
-
-// 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
-// 				_optimizable_graph.removeVertex(it, true);
-// 			}
-// 			std::cout <<"clearing the edges " << std::endl;
-
-			//Making sure all edge prior were removed.
-			auto idmapedges = _optimizable_graph.edges();
-			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-				assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
-			}
-			std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
-			std::cout << "DONE removing " << std::endl;
-		}
-
-
-		void copyNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph){
-			assert(true == false && " do not use");
-			//ATTENTION : Might crash
-			if(_ndt_graph->wasInit()){
-				delete _ndt_graph;
-			}
-			_ndt_graph = new ndt_feature::NDTFeatureGraph(ndt_graph);
-
-		}
+		void clearLinks();
 
 
 // 		void clear(){
@@ -633,127 +545,11 @@ namespace acg{
 		 * @param[in] max_iter maximum number of iteration for huber and DCS. Default at 100. Needs to be more than 2.
 		 *
 		 */
-		virtual void optimize(int max_iter = 100){
+		virtual void optimize(int max_iter = 100);
 
-			_chi2s.clear();
+		void setAgeingHuberKernel();
 
-			std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;
-			overCheckLinks();
-
-			/********** HUBER kernel ***********/
-
-// 			_optimizable_graph.setHuberKernel();
-
-			_flag_optimize = checkAbleToOptimize();
-
-			if(_flag_optimize == true){
-				std::cout << "OPTIMIZE" << std::endl;
-// 				checkRobotPoseNotMoved("before opti");
-
-				if(_flag_use_robust_kernel){
-					setAgeingHuberKernel();
-				}
-// 				checkRobotPoseNotMoved("set age in huber kernel");
-				testNoNanInPrior("set age in huber kernel");
-				testInfoNonNul("set age in huber kernel");
-				testNoNanInPrior("update prior edge cov");
-
-				optimize_simple(max_iter);
-
-// 				//Avoid overshoot of the cov
-// 				for(size_t i = 0 ; i < iter ; ++i){
-// 					_optimizable_graph.optimize(1);
-// // 					checkRobotPoseNotMoved("optimized with huber");
-// 					testNoNanInPrior("optimized with huber");
-// 					testInfoNonNul("optimized with huber");
-// 					//Update prior edge covariance
-// // 					updatePriorEdgeCovariance();
-// 					testNoNanInPrior("update prior edge cov after opti huber");
-// 					saveErrorStep();
-// 				}
-
-				/********** DCS kernel ***********/
-				if(_flag_use_robust_kernel){
-					setAgeingDCSKernel();
-				}
-				testNoNanInPrior("set age in DCS kernel");
-
-				optimize_simple(max_iter);
-
-// 				for(size_t i = 0 ; i < iter*2 ; ++i){
-// 					_optimizable_graph.optimize(1);
-// // 					checkRobotPoseNotMoved("optimized with dcs");
-// 					testNoNanInPrior("optimized with dcs");
-// 					testInfoNonNul("optimized with dcs");
-// 					//Update prior edge covariance
-// // 					updatePriorEdgeCovariance();
-// 					testNoNanInPrior("update prior edge cov after opti dcs");
-// 					saveErrorStep();
-// 				}
-
-
-			}
-			else{
-				std::cout << "No Optimization :(" << std::endl;
-			}
-
-			std::cout << "AFTER THE OPTIMIZATION CREATE" << std::endl;
-			int count = countLinkToMake();
-			int count2 = createNewLinks();
-// 			if(count != count2){
-// 				std::cout << "Weird different detection" << std::endl;
-// 				throw std::runtime_error("ARF NOT GOOD COUNT");
-// 			}
-// 			overCheckLinks();
-
-			removeBadLinks();
-			std::cout << "AFTER THE OPTIMIZATION REMOVE" << std::endl;
-			overCheckLinks();
-
-			exportChi2s();
-// 			checkRobotPoseNotMoved("after opti");
-// 			cv::Mat d;
-// 			createDescriptorNDT(d);
-
-		}
-
-		void setAgeingHuberKernel(){
-
-// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-// 				v->setMarginalized(false);
-// 			}
-
-			auto idmapedges = _optimizable_graph.edges();
-			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-// 				std::cout << "Robust Kern" << std::endl;
-				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
-				auto huber = new g2o::RobustKernelHuber();
-				e->setRobustKernel(huber);
-				setKernelSizeDependingOnAge(e, true);
-			}
-		}
-
-		void setAgeingDCSKernel(){
-// 			for (SparseOptimizer::VertexIDMap::const_iterator it = this->vertices().begin(); it != this->vertices().end(); ++it) {
-// 				OptimizableGraph::Vertex* v = static_cast<OptimizableGraph::Vertex*>(it->second);
-// 				v->setMarginalized(false);
-// 			}
-
-			auto idmapedges = _optimizable_graph.edges();
-			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-// 				std::cout << "Robust Kern" << std::endl;
-				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*ite);
-				auto dcs = new g2o::RobustKernelDCS();
-				e->setRobustKernel(dcs);
-				setKernelSizeDependingOnAge(e, false);
-			}
-		}
-
-		///@brief Set Marginalized to false and do initializeOptimization
-		void prepare(){
-			_optimizable_graph.prepare();
-		}
+		void setAgeingDCSKernel();
 
 
 		/*******************' TESTING FUNCTION ********************/
@@ -783,86 +579,22 @@ namespace acg{
 		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior);
 		bool noDoubleLinks();
 
+		///@brief return the vector corresponding to the shift due to the optimization.
 		Eigen::Vector3d getLastTransformation();
 
 // 		getGridMap();
 
 	public:
 
-		void optimize_simple(int max_iter){
-			int count = 0;
-			std::deque<double> _chi_kernel;
-			for ( ; count < max_iter && count < 2 ; ++count){
-				std::cout << "Optimizing because we need to " << std::endl;
-				_optimizable_graph.optimize(1);
-				_optimizable_graph.computeActiveErrors();
-				_chi_kernel.push_back(_optimizable_graph.chi2());
-				saveErrorStep();
+		void prepare();
 
-				testNoNanInPrior("optimized with huber");
-				testInfoNonNul("optimized with huber");
-				testNoNanInPrior("update prior edge cov after opti huber");
-			}
-			if(max_iter >= 2){
-				while(ErrorStable(_chi_kernel) == false && count < max_iter){
-					count++;
-					std::cout << "Optimizing until error stops it " << std::endl;
-					_optimizable_graph.optimize(1);
-					_optimizable_graph.computeActiveErrors();
-					_chi_kernel.push_back(_optimizable_graph.chi2());
-					saveErrorStep();
-
-					testNoNanInPrior("optimized with huber");
-					testInfoNonNul("optimized with huber");
-					testNoNanInPrior("update prior edge cov after opti huber");
-				}
-			}
-			int a;
-			std::cout << "Enter anything to pass " <<count << std::endl;
-			std::cin >> a;
-
-		}
+		void optimize_simple(int max_iter);
 
 		/**
 		 * @brief Check if the error in the graph was stable over time
 		 * return true if it is and false if it was not
 		 */
-		bool ErrorStable(const std::deque<double>& _chi_kernel, int max_steps = 10){
-			if(_chi_kernel.size() < 2){
-				throw std::runtime_error("Cannot determine error difference with less than 2 optimization cycles.");
-			}
-			int max_steps_count = 0;
-			std::vector<double> error_diff;
-			double error_mean = 0;
-			auto it = _chi_kernel.rbegin();
-			++it;
-			for(; it != _chi_kernel.rend() ; ++it ){
-				if(max_steps_count == max_steps){
-					break;
-				}
-				error_diff.push_back(std::abs( *it - *(it - 1)) );
-				error_mean = error_mean + std::abs( (*it - *(it - 1)) );
-				++max_steps_count;
-			}
-			error_mean = error_mean / max_steps_count;
-
-			it = _chi_kernel.rbegin();
-			++it;
-			max_steps_count = 0;
-			for(; it != _chi_kernel.rend() ; ++it ){
-				if(max_steps_count == max_steps){
-					break;
-				}
-				std::cout << std::abs( *it - *(it - 1) ) << " ";
-				++max_steps_count;
-			}
-			std::cout << std::endl;
-			std::cout << "Error is " << error_mean << "threshold is " << _error_threshold_stop_optimization << std::endl;
-			if(error_mean < _error_threshold_stop_optimization){
-				return true;
-			}
-			return false;
-		}
+		bool ErrorStable(const std::deque<double>& _chi_kernel, int max_steps = 10);
 
 		std::shared_ptr< perception_oru::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
 
@@ -882,12 +614,12 @@ namespace acg{
 		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step);
 
 		void testNoNanInPrior(const std::string& before = "no data") const ;
-		void testInfoNonNul(const std::string& before = "no data") const ;
+		virtual void testInfoNonNul(const std::string& before = "no data") const ;
 
 		///@brief return true if ACG got more than or equal to 5 links. Make this better.
 		virtual bool checkAbleToOptimize(){
 			std::cout << "edge link size: " << _edge_link.size() << std::endl;
-			if(_edge_link.size() >= 6){
+			if(_nodes_ndt.size() > 4){
 				return true;
 			}
 			return false;
@@ -924,130 +656,14 @@ namespace acg{
 // 			}
 		}
 
-		int countLinkToMake(){
+		int countLinkToMake();
 
-			int count = 0;
-			std::cout << "check forgotten links" << std::endl;
-			auto it = _nodes_landmark.begin();
-			for(it ; it != _nodes_landmark.end() ; it++){
-				Eigen::Vector2d pose_landmark = (*it)->estimate();
-				auto it_prior = _nodes_prior.begin();
-				for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+		void checkLinkNotTooBig();
 
-					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
-					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
-					double norm_tmp = (pose_prior - pose_landmark).norm();
-
-					//Update the link
-					if(norm_tmp <= _min_distance_for_link_in_meter){
-						if(linkAlreadyExist(*it, *it_prior) == false){
-							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
-							count++;
-						}
-					}
-
-				}
-
-			}
-
-			return count;
-		}
-
-		void checkLinkNotTooBig(){
-			std::cout << "check no big links" << std::endl;
-			//Check if no small links are ledft out
-
-			//Check if the link are not too big
-			for(auto it_old_links = _edge_link.begin(); it_old_links != _edge_link.end() ;it_old_links++){
-
-				std::vector<Eigen::Vector3d> vertex_out;
-
-				assert((*it_old_links)->vertices().size() == 2);
-
-				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
-				if(ptr == NULL){
-					std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
-					throw std::runtime_error("Links do not have the good vertex type. Prior");
-				}
-				auto vertex = ptr->estimate().toVector();
-				vertex_out.push_back(vertex);
-
-				g2o::VertexLandmarkNDT* ptr2 = dynamic_cast<g2o::VertexLandmarkNDT*>((*it_old_links)->vertices()[1]);
-				if(ptr2 == NULL){
-					throw std::runtime_error("Links do not have the good vertex type. Landmark");
-				}
-				auto vertex2 = ptr2->estimate();
-				Eigen::Vector3d pose_prior; pose_prior << vertex2(0), vertex2(1), 0;
-				vertex_out.push_back(pose_prior);
+		void checkNoRepeatingPriorEdge();
 
 
-				assert(vertex_out.size() == 2);
-				double norm = (vertex_out[0] - vertex_out[1]).norm();
-				//Attention magic number
-				if(norm > _max_distance_for_link_in_meter ){
-					if(linkAlreadyExist(ptr2, ptr) == false){
-						std::cout << "NORM" << norm << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
-						throw std::runtime_error("Big link still present :O");
-					}
-				}
-			}
-
-
-		}
-
-		void checkNoRepeatingPriorEdge(){
-			for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
-				std::vector<std::pair<double, double> > out;
-	// 			std::cout << "edges " << std::endl;
-				auto edges = (*it_vertex)->edges();
-	// 			std::cout << "edges done " << std::endl;
-				std::vector<g2o::EdgeSE2Prior_malcolm*> edges_prior;
-
-				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-	// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-					g2o::EdgeSE2Prior_malcolm* ptr = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
-					if(ptr != NULL){
-						//Make sure not pushed twice
-						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
-							assert(ptr != *ite2);
-						}
-	// 						std::cout << " pushed edges " << std::endl;
-						edges_prior.push_back(ptr);
-	// 						std::cout << "pushed edges done " << std::endl;
-					}
-				}
-				for(auto it = edges_prior.begin() ; it != edges_prior.end() ; ++it){
-					for(auto ite2 = it +1 ; ite2 != edges_prior.end() ; ++ite2 ){
-						assert((*it)->getOrientation2D(**it_vertex) != (*ite2)->getOrientation2D(**it_vertex));
-					}
-				}
-			}
-			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
-				for(auto ite2 = it +1 ; ite2 != _edge_prior.end() ; ++ite2 ){
-					assert(it != ite2);
-				}
-			}
-		}
-
-
-		void checkRobotPoseNotMoved(const std::string& when){
-			std::cout << "testing after " << when << std::endl;
-			for(auto it = _nodes_ndt.begin() ; it != _nodes_ndt.end() ; ++it){
-				int init_x = (*it)->initial_transfo.toVector()(0) ;
-				int init_y = (*it)->initial_transfo.toVector()(1) ;
-				int init_z = (*it)->initial_transfo.toVector()(2) * 10;
-
-				int update_x = (*it)->estimate().toVector()(0) ;
-				int update_y = (*it)->estimate().toVector()(1) ;
-				int update_z = (*it)->estimate().toVector()(2) * 10;
-
-				if(init_x != update_x || init_y != update_y || init_z != update_z){
-					std::cout << " init "  << init_x << " "<< init_y << " "<< init_z <<  " == " << update_x << " "<< update_y << " "<< update_z <<  std::endl;
-					throw std::runtime_error("MOVE BASE");
-				}
-			}
-
-		}
+		void checkRobotPoseNotMoved(const std::string& when);
 
 		/**
 		 * @rbief return the max on x and y of the prior

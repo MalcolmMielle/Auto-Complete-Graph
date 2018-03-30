@@ -33,7 +33,7 @@ class VertexSE2RobotPose : public g2o::VertexSE2ACG
 		double getTime(){return _time;}
 
 		void setIndexGraphMap(int i){_index_graphmap = i;}
-		int getIndexGraphMap(int i){return _index_graphmap;}
+		int getIndexGraphMap() const {return _index_graphmap;}
 
 
   };

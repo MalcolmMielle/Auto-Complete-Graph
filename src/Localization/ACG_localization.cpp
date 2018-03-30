@@ -86,6 +86,13 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 		_previous_number_of_node_in_ndtgraph = ndt_graph_localization.graph_map.nodes.size();
 		
 	}
+
+	updateLinks();
+
+	std::cout << "Test no double links" << std::endl;
+	noDoubleLinks();
+
+	std::cout << "After " << std::endl;
 	
 	
 
@@ -131,6 +138,8 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 // 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
 	g2o::SE2 diff_vec_se2(diff_vec);
 // 			std::cout << "diff vec done" << diff_vec << std::endl;
+
+	///WARNING trying to change this to fit GraphMap model. Node are at the exact pose so no need to translate them AND factor I don't know yet
 	robot_pos = robot_pos * diff_vec_se2;
 	std::cout << "multiply" << std::endl;
 		
@@ -169,14 +178,37 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 	
 	if(element > 0 ){
 		std::cout << "adding the odometry" << std::endl;
-		
+
+		//The factors are expressed as transformation between the node expressed in the world frame. They need to be translated to the robot frame I believe?
 		auto geometry_pose_factor = ndt_graph_localization.graph_map.factors[element - 1].diff;
 		Eigen::Affine3d affine_factor;
 		tf::poseMsgToEigen(geometry_pose_factor, affine_factor);
 		Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(affine_factor);
+
+		////////OLD VERSION
 // 		double x = cumulated_translation(0, 3);
 // 		double y = cumulated_translation(1, 3);
 		g2o::SE2 odometry(isometry2d_odometry);
+
+		////////NEW VERSION
+		//We need to transform the odometry into he robot pose coordinate frame see https://en.wikipedia.org/wiki/Change_of_basis#Change_of_coordinates_of_a_vector
+
+		//Find the matrix describing the rotation and left multiply the odometry by the inverse of it.
+//		double angle = robot_pos.toVector()[2];
+//		Eigen::Matrix2d rot;
+//		rot << std::cos(angle), - std::sin(angle),
+//			   std::sin(angle),   std::cos(angle);
+//		Eigen::Vector2d odom_2d_translation = isometry2d_odometry.translation();
+//		Eigen::Vector2d odom_2d_translation_robot_frame = rot.inverse() * odom_2d_translation;
+//		Eigen::Vector3d odom_3d_translation_robot_frame;
+//		odom_3d_translation_robot_frame << odom_2d_translation_robot_frame[0], odom_2d_translation_robot_frame[1], 0;
+//		g2o::SE2 odometry(odom_3d_translation_robot_frame);
+//
+//		std::cout << "Odom " << odom_2d_translation_robot_frame[0] << " " << odom_2d_translation_robot_frame[1] << std::endl;
+
+		std::cout << "ODOM " << odometry.toVector() << std::endl;
+//		exit(0);
+
 // 		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
 		
 		std::cout << " ref " << ndt_graph_localization.graph_map.factors[element-1].prev.data << " and mov " << ndt_graph_localization.graph_map.factors[element-1].next.data << " ndt node size " << _nodes_ndt.size() << std::endl;
@@ -189,8 +221,21 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 		
 		auto from = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].prev.data ] ;
 		auto toward = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].next.data ] ;
-		
-		std::cout << "Saving cov " << std::endl;
+
+		assert(from->getIndexGraphMap() == ndt_graph_localization.graph_map.factors[element-1].prev.data);
+		assert(toward->getIndexGraphMap() == ndt_graph_localization.graph_map.factors[element-1].next.data);
+
+		auto from_vec = from->estimate().toVector();
+		auto toward_vec = toward->estimate().toVector();
+		g2o::SE2 odom_tmp = toward->estimate() * (from->estimate()).inverse();
+		std::cout << "TRansof" << from_vec << " toward " << toward_vec << " is " << toward_vec - from_vec << std::endl;
+		std::cout << "But the composition is " << (odometry * from->estimate()).toVector() << std::endl;
+		std::cout << "But the composition is " << (odom_tmp * from->estimate()).toVector() << std::endl;
+		int wait = 0;
+		std::cin >> wait;
+
+
+		          std::cout << "Saving cov " << std::endl;
 		//TODO : transpose to 3d and use in odometry!
 		
 		auto cov_msg = ndt_graph_localization.graph_map.factors[element - 1].covariance;
@@ -245,8 +290,47 @@ void AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_
 	AASS::acg::Localization localization;
 	AASS::acg::fromMessage(localization_msg, localization);
 	g2o::SE2 se2loc(localization.mean[0], localization.mean[1], localization.mean[2]);
-	addLocalization(se2loc, robot_ptr, localization.cov.inverse());
+
+	//No localization for now
+//	addLocalization(se2loc, robot_ptr, localization.cov.inverse());
 
 
 }
 
+
+
+void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string& before) const {
+
+	std::cout << "Test info non nul after " << before << std::endl;
+	auto idmapedges = _optimizable_graph.edges();
+
+	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+		assert((*ite)->vertices().size() >= 1);
+
+		g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(*ite);
+		g2o::EdgeSE2Prior_malcolm* ptr1 = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
+		g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(*ite);
+		g2o::EdgeLinkXY_malcolm* ptr3 = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite);
+//		g2o::EdgeLocalization* ptr4 = dynamic_cast<g2o::EdgeLocalization*>(*ite);
+		if(ptr != NULL){
+			assert(ptr->information().isZero(1e-10) == false);
+		}
+		else if(ptr1 != NULL){
+			assert(ptr1->information().isZero(1e-10) == false);
+		}
+		else if(ptr2 != NULL){
+			assert(ptr2->information().isZero(1e-10) == false);
+		}
+		else if(ptr3 != NULL){
+			assert(ptr3->information().isZero(1e-10) == false);
+		}
+//		else if(ptr4 != NULL){
+//			assert(ptr4->information().isZero(1e-10) == false);
+//		}
+		else{
+			throw std::runtime_error("Didn't find the type of the edge :S");
+		}
+	}
+
+
+}

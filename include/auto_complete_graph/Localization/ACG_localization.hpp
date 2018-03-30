@@ -85,6 +85,11 @@ namespace acg{
 		 */
 		void addLocalizationEdges(const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, g2o::VertexSE2RobotPose* robot_ptr);
 
+
+
+
+
+		virtual void testInfoNonNul(const std::string& before = "no data") const ;
     };
 
 }

@@ -259,9 +259,14 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				//Prepare the graph : marginalize + initializeOpti
 				
 				ros::Time start_opti = ros::Time::now();
-// 				oacg->setFirst();
-// 				oacg->prepare();
-// 				oacg->optimize();
+				bool optiquest = false;
+				std::cout << "Optimize ?" << std::endl;
+				std::cin >> optiquest;
+				if(oacg->checkAbleToOptimize() &&  optiquest) {
+					oacg->setFirst();
+					oacg->prepare();
+					oacg->optimize();
+				}
 				ros::Time end_opti = ros::Time::now();	
 				double opti = (start_opti - end_opti).toSec();
 				time_opti.push_back(opti);
@@ -410,7 +415,6 @@ int main(int argc, char **argv)
 	
 	//ATTENTION
 	oacg.addPriorGraph(graph_prior);
-
 	oacg.setPriorReference();
 		
 	//Create initialiser
@@ -434,6 +438,8 @@ int main(int argc, char **argv)
 	
 	timef = ros::Time::now();
 	ros::Time time_begin = ros::Time::now();
+
+	std::cout << "READY :D" << std::endl;
 	
 	bool flag = true;
 	while(ros::ok() && flag == true ){
