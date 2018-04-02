@@ -7,6 +7,10 @@
 #include "auto_complete_graph/Localization/Localization.hpp"
 #include "auto_complete_graph/Localization/LocalizationConvertion.hpp"
 
+//Needed for registraiton between submaps
+#include <ndt_registration/ndt_matcher_d2d_2d.h>
+#include <ndt_registration/ndt_matcher_d2d.h>
+
 
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 
@@ -16,7 +20,9 @@ namespace acg{
 
     class AutoCompleteGraphLocalization : public AutoCompleteGraph{
         protected:
-        
+
+	    bool _do_own_registration;
+	    bool _extract_corners;
         
 		std::vector<g2o::EdgeLocalization*> _edges_localization;
 		g2o::VertexSE2Prior* _vertex_reference_for_montecarlo;
@@ -31,7 +37,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){} 
+  					) : _do_own_registration(true), _extract_corners(true), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){}
   		
   		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, 
 						  const Eigen::Vector2d& tn, 
@@ -40,10 +46,12 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn){}
+					) : _do_own_registration(true), _extract_corners(true), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn){}
 		
-		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : AutoCompleteGraph(sensoffset, load_file){}
-        
+		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), AutoCompleteGraph(sensoffset, load_file){}
+
+	    void doOwnRegistrationBetweenSubmaps(bool setter){_do_own_registration = setter;}
+	    void extractCorners(bool setter){_extract_corners = setter;}
         
 		std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 		const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
@@ -85,6 +93,10 @@ namespace acg{
 		 */
 		void addLocalizationEdges(const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, g2o::VertexSE2RobotPose* robot_ptr);
 
+		std::tuple<Eigen::Affine3d, Eigen::MatrixXd> registerSubmaps(const g2o::VertexSE2RobotPose& from,
+		                                                             const g2o::VertexSE2RobotPose& toward,
+		                                                             Eigen::Affine3d &transformation,
+		                                                             int nb_neighbor);
 
 
 

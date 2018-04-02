@@ -412,10 +412,12 @@ int main(int argc, char **argv)
 	
 	//Use corner orientation ?
 	oacg.useCornerOrientation(true);
+	oacg.extractCorners(false);
+	oacg.doOwnRegistrationBetweenSubmaps(true);
 	
 	//ATTENTION
-	oacg.addPriorGraph(graph_prior);
-	oacg.setPriorReference();
+//	oacg.addPriorGraph(graph_prior);
+//	oacg.setPriorReference();
 		
 	//Create initialiser
 	AASS::acg::RvizPoints initialiser(nh, &oacg);

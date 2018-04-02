@@ -77,7 +77,9 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 			assert(robot_ptr != NULL);
 			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
 			//********************** Extract the corners *****************//
-			extractCornerNDTMap(map, robot_ptr, robot_pos);
+			if(_extract_corners) {
+				extractCornerNDTMap(map, robot_ptr, robot_pos);
+			}
 			//********************** Add the time stamp ******************//
 // 			robot_ptr->setTime(ndt_graph.nodes[i].time_last_update);
 			
@@ -177,23 +179,64 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 	//Add Odometry if it is not the first node
 	
 	if(element > 0 ){
-		std::cout << "adding the odometry" << std::endl;
 
-		//The factors are expressed as transformation between the node expressed in the world frame. They need to be translated to the robot frame I believe?
-		auto geometry_pose_factor = ndt_graph_localization.graph_map.factors[element - 1].diff;
-		Eigen::Affine3d affine_factor;
-		tf::poseMsgToEigen(geometry_pose_factor, affine_factor);
-		Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(affine_factor);
+		if(_do_own_registration) {
+			//From my understanding, for now factors are othe same as all the registrations before. Hence I make it a big registration between the submaps ;)
 
-		////////OLD VERSION
+			auto from = _nodes_ndt[ndt_graph_localization.graph_map.factors[element - 1].prev.data];
+			auto toward = _nodes_ndt[ndt_graph_localization.graph_map.factors[element - 1].next.data];
+			g2o::SE2 from_vec = from->estimate();
+			g2o::SE2 toward_vec = toward->estimate();
+			g2o::SE2 odom = from_vec.inverse() * toward_vec;
+
+			std::cout << "From " << from_vec.toVector() << " toward " << toward_vec.toVector() << " thus odom " << odom.toVector() << std::endl;
+			std::cout << "Make sure that this is correct before moving forward" << std::endl;
+			int waitwait;
+			std::cin >> waitwait;
+
+
+			Eigen::Affine3d odom_affine = se2ToAffine3d(odom);
+
+			Eigen::Affine3d odom_register;
+			Eigen::MatrixXd odom_cov;
+			std::tie(odom_register, odom_cov) = registerSubmaps(*from, *toward, odom_affine, 10);
+
+			Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(odom_register);
+			g2o::SE2 odometry(isometry2d_odometry);
+
+			std::cout << "Saving cov to 2d" << std::endl;
+			Eigen::Matrix3d cov_2d;
+			cov_2d << odom_cov(0, 0), odom_cov(0, 1), 0,
+					odom_cov(1, 0), odom_cov(1, 1), 0,
+					0, 0, odom_cov(5, 5);
+
+// 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
+			std::cout << "Saving information " << std::endl;
+			Eigen::Matrix3d information = cov_2d.inverse();
+
+			std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward << " info " << information << " " << std::endl;
+			addOdometry(odometry, from, toward, information);
+
+		}
+		else {
+
+			std::cout << "adding the odometry" << std::endl;
+
+			//The factors are expressed as transformation between the node expressed in the world frame. They need to be translated to the robot frame I believe?
+			auto geometry_pose_factor = ndt_graph_localization.graph_map.factors[element - 1].diff;
+			Eigen::Affine3d affine_factor;
+			tf::poseMsgToEigen(geometry_pose_factor, affine_factor);
+			Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(affine_factor);
+
+			////////OLD VERSION
 // 		double x = cumulated_translation(0, 3);
 // 		double y = cumulated_translation(1, 3);
-		g2o::SE2 odometry(isometry2d_odometry);
+			g2o::SE2 odometry(isometry2d_odometry);
 
-		////////NEW VERSION
-		//We need to transform the odometry into he robot pose coordinate frame see https://en.wikipedia.org/wiki/Change_of_basis#Change_of_coordinates_of_a_vector
+			////////NEW VERSION
+			//We need to transform the odometry into he robot pose coordinate frame see https://en.wikipedia.org/wiki/Change_of_basis#Change_of_coordinates_of_a_vector
 
-		//Find the matrix describing the rotation and left multiply the odometry by the inverse of it.
+			//Find the matrix describing the rotation and left multiply the odometry by the inverse of it.
 //		double angle = robot_pos.toVector()[2];
 //		Eigen::Matrix2d rot;
 //		rot << std::cos(angle), - std::sin(angle),
@@ -206,74 +249,79 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 //
 //		std::cout << "Odom " << odom_2d_translation_robot_frame[0] << " " << odom_2d_translation_robot_frame[1] << std::endl;
 
-		std::cout << "ODOM " << odometry.toVector() << std::endl;
+			std::cout << "ODOM " << odometry.toVector() << std::endl;
 //		exit(0);
 
 // 		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
-		
-		std::cout << " ref " << ndt_graph_localization.graph_map.factors[element-1].prev.data << " and mov " << ndt_graph_localization.graph_map.factors[element-1].next.data << " ndt node size " << _nodes_ndt.size() << std::endl;
-		
-		///ATTENTION Indexes of graph_map start at 1 instead of 0 :/
-		assert( ndt_graph_localization.graph_map.factors[element-1].prev.data < _nodes_ndt.size() );
-		assert( ndt_graph_localization.graph_map.factors[element-1].next.data < _nodes_ndt.size() );
-		assert( ndt_graph_localization.graph_map.factors[element-1].prev.data >= 0 );
-		assert( ndt_graph_localization.graph_map.factors[element-1].next.data >= 0 );
-		
-		auto from = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].prev.data ] ;
-		auto toward = _nodes_ndt[ ndt_graph_localization.graph_map.factors[element-1].next.data ] ;
 
-		assert(from->getIndexGraphMap() == ndt_graph_localization.graph_map.factors[element-1].prev.data);
-		assert(toward->getIndexGraphMap() == ndt_graph_localization.graph_map.factors[element-1].next.data);
+			std::cout << " ref " << ndt_graph_localization.graph_map.factors[element - 1].prev.data << " and mov "
+			          << ndt_graph_localization.graph_map.factors[element - 1].next.data << " ndt node size "
+			          << _nodes_ndt.size() << std::endl;
 
-		auto from_vec = from->estimate().toVector();
-		auto toward_vec = toward->estimate().toVector();
-		g2o::SE2 odom_tmp = toward->estimate() * (from->estimate()).inverse();
-		std::cout << "TRansof" << from_vec << " toward " << toward_vec << " is " << toward_vec - from_vec << std::endl;
-		std::cout << "But the composition is " << (odometry * from->estimate()).toVector() << std::endl;
-		std::cout << "But the composition is " << (odom_tmp * from->estimate()).toVector() << std::endl;
-		int wait = 0;
-		std::cin >> wait;
+			///ATTENTION Indexes of graph_map start at 1 instead of 0 :/
+			assert(ndt_graph_localization.graph_map.factors[element - 1].prev.data < _nodes_ndt.size());
+			assert(ndt_graph_localization.graph_map.factors[element - 1].next.data < _nodes_ndt.size());
+			assert(ndt_graph_localization.graph_map.factors[element - 1].prev.data >= 0);
+			assert(ndt_graph_localization.graph_map.factors[element - 1].next.data >= 0);
+
+			auto from = _nodes_ndt[ndt_graph_localization.graph_map.factors[element - 1].prev.data];
+			auto toward = _nodes_ndt[ndt_graph_localization.graph_map.factors[element - 1].next.data];
+
+			assert(from->getIndexGraphMap() == ndt_graph_localization.graph_map.factors[element - 1].prev.data);
+			assert(toward->getIndexGraphMap() == ndt_graph_localization.graph_map.factors[element - 1].next.data);
+
+			auto from_vec = from->estimate().toVector();
+			auto toward_vec = toward->estimate().toVector();
+			g2o::SE2 odom_tmp = toward->estimate() * (from->estimate()).inverse();
+			std::cout << "TRansof" << from_vec << " toward " << toward_vec << " is " << toward_vec - from_vec
+			          << std::endl;
+			std::cout << "But the composition is " << (odometry * from->estimate()).toVector() << std::endl;
+			std::cout << "But the composition is " << (odom_tmp * from->estimate()).toVector() << std::endl;
+			int wait = 0;
+			std::cin >> wait;
 
 
-		          std::cout << "Saving cov " << std::endl;
-		//TODO : transpose to 3d and use in odometry!
-		
-		auto cov_msg = ndt_graph_localization.graph_map.factors[element - 1].covariance;
-		
-		std::vector<double>::const_iterator it;
-		it=cov_msg.data.begin();
-		std::cout << "Cov size " << cov_msg.data.size() << std::endl;
-		assert(cov_msg.data.size() == 36); //6x6 matrix
-		
-		std::vector<double>::const_iterator it_2;
-		it_2=cov_msg.data.begin();
-		std::cout << cov_msg.data.size() << std::endl;
-		assert(cov_msg.data.size() == 36);
-		
-		Eigen::MatrixXd cov_3d(6,6);
-		for(size_t i = 0; i < 6 ; ++i){
-			for(size_t j = 0 ; j < 6 ; ++j){
-				cov_3d(i, j) = cov_msg.data[ (6*i) + j];
+			std::cout << "Saving cov " << std::endl;
+			//TODO : transpose to 3d and use in odometry!
+
+			auto cov_msg = ndt_graph_localization.graph_map.factors[element - 1].covariance;
+
+			std::vector<double>::const_iterator it;
+			it = cov_msg.data.begin();
+			std::cout << "Cov size " << cov_msg.data.size() << std::endl;
+			assert(cov_msg.data.size() == 36); //6x6 matrix
+
+			std::vector<double>::const_iterator it_2;
+			it_2 = cov_msg.data.begin();
+			std::cout << cov_msg.data.size() << std::endl;
+			assert(cov_msg.data.size() == 36);
+
+			Eigen::MatrixXd cov_3d(6, 6);
+			for (size_t i = 0; i < 6; ++i) {
+				for (size_t j = 0; j < 6; ++j) {
+					cov_3d(i, j) = cov_msg.data[(6 * i) + j];
+				}
 			}
-		}		
-		
-		std::cout << "Saving cov to 2d" << std::endl;
-		Eigen::Matrix3d cov_2d;
-		cov_2d << 	cov_3d(0, 0), 	cov_3d(0, 1), 	0,
-					cov_3d(1, 0), 	cov_3d(1, 1), 	0,
-					0, 		 	0, 			cov_3d(5, 5);
-		
+
+			std::cout << "Saving cov to 2d" << std::endl;
+			Eigen::Matrix3d cov_2d;
+			cov_2d << cov_3d(0, 0), cov_3d(0, 1), 0,
+					cov_3d(1, 0), cov_3d(1, 1), 0,
+					0, 0, cov_3d(5, 5);
+
 // 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
-		std::cout << "Saving information " << std::endl;
-		Eigen::Matrix3d information = cov_2d.inverse();
-		
+			std::cout << "Saving information " << std::endl;
+			Eigen::Matrix3d information = cov_2d.inverse();
+
 // 				if(noise_flag = true && i != 0){
 // 					odometry = odometry * noise_se2;
 // 				}
-		
-		std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward << " info " << information << " " << std::endl;
-		addOdometry(odometry, from, toward, information);
-		std::cout << ">Done" << std::endl;
+
+			std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward
+			          << " info " << information << " " << std::endl;
+			addOdometry(odometry, from, toward, information);
+			std::cout << ">Done" << std::endl;
+		}
 	}
 
 
@@ -333,4 +381,82 @@ void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string&
 	}
 
 
+}
+
+
+
+std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocalization::registerSubmaps(const g2o::VertexSE2RobotPose& from, const g2o::VertexSE2RobotPose& toward, Eigen::Affine3d &transformation,	int nb_neighbor) {
+//	void ndt_feature::NDTFeatureGraph::registerSubmaps(NDTFeatureLink &link, int nb_neighbours, bool keepScore) {
+	perception_oru::NDTMatcherD2D matcher_d2d;
+	matcher_d2d.n_neighbours = nb_neighbor;
+
+	std::cout << "Matching : " << from.getIndexGraphMap() << " with " << toward.getIndexGraphMap() << std::endl;
+//		Eigen::IOFormat cleanFmt(4, 0, ", ", "\n", "[", "]");
+	std::cout << "Transform between the two " <<transformation.matrix() << std::endl;
+	int a ;
+// 	std::cout << "PAUSE before match" << std::endl;
+// 	std::cin >> a;
+
+	Eigen::Affine3d before_T = transformation;
+
+	bool converged = matcher_d2d.match(*(from.getMap().get()), *(toward.getMap().get()), transformation, true);
+
+	std::cout << "Transform between the two new " <<transformation.matrix() << std::endl;
+
+// 	int a ;
+// 	std::cout << "PAUSE before cov" << std::endl;
+// 	std::cin >> a;
+
+	//Adding the covariance into the link
+	Eigen::MatrixXd cov(6,6);
+
+	bool same = true;
+	for(size_t i = 0; i < 4 ; ++i){
+
+		for(size_t  j = 0 ; j < 4 ; ++j){
+			if(before_T(i,j) != transformation(i,j)){
+				same = false;
+			}
+		}
+	}
+
+	if(!same){
+		cov.setZero();
+		matcher_d2d.covariance(*(from.getMap().get()), *(toward.getMap().get()), transformation, cov);
+	}
+	else{
+		std::cout << "NOTHING HAPPENED Creating a identity matrix" << std::endl;
+		cov = Eigen::MatrixXd::Identity(6, 6);
+		cov << 	0.02, 	0, 		0,    0,    0,    0,
+				0, 		0.02, 	0,    0,    0,    0,
+				0, 		0, 		0.02, 0,    0,    0,
+				0, 		0, 		0,	  0.02, 0,    0,
+				0, 		0,	 	0,	  0,    0.02, 0,
+				0, 		0, 		0,	  0,    0,    0.02;
+// 		exit(0);
+	}
+	std::cout << "Size of Covariance : " << cov.rows() << " AND COLS " << cov.cols() << std::endl;
+
+	assert(cov.rows() == 6);
+	assert(cov.cols() == 6);
+	std::cout << "PAUSE got cov : " << cov << "\n";
+	std::cout << "COVARIANCE BY MATCHER " << cov.inverse() << "\n";
+
+	if(!converged){
+// 		throw std::runtime_error("ndt_map registration didn't converge");
+		std::cout << "USing odometry input a number to continue" << std::endl;
+		int a;
+		std::cin >> a;
+	}
+	if(same){
+		std::cout << "Manually created the covariance because the matching returned the same transof as before." << std::endl;
+		int a;
+		std::cin >> a;
+	}
+// 	exit(0);
+// 	std::cin >> a;
+
+	std::cout << "End of link" << std::endl;
+
+	return std::tuple<Eigen::Affine3d, Eigen::MatrixXd>(transformation, cov);
 }
