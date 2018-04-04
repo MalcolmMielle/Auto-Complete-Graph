@@ -20,6 +20,8 @@
 #include "auto_complete_graph/GoodMatchings.hpp"
 
 #include <ros/package.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 bool abort_f = false;
 
@@ -27,6 +29,7 @@ ros::Publisher map_pub_;
 ros::Publisher last_ndtmap_full;
 ros::Publisher occupancy_grid;
 ros::Publisher occ_send;
+ros::Publisher prior_cloud, prior_ndt;
 
 ros::Time timef;
 
@@ -42,6 +45,29 @@ std::vector<double> all_node_times;
 inline bool exists_test3 (const std::string& name) {
 	struct stat buffer;   
 	return (stat (name.c_str(), &buffer) == 0); 
+}
+
+
+void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, const AASS::acg::AutoCompleteGraphLocalization& oacg) {
+
+		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud(oacg, 0.1, 0.1/4);
+		sensor_msgs::PointCloud2 pcl_prior_msg;
+		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
+		pcl_prior_msg.header.frame_id = "world";
+		pcl_prior_msg.header.stamp = ros::Time::now();
+		prior_cloud.publish(pcl_prior_msg);
+
+		perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
+		AASS::acg::ACGPriorToNDTMap(oacg, *ndt_prior, 0.1);
+
+		auto allcells = ndt_prior->getAllCellsShared();
+		assert(allcells.size() > 0);
+
+		ndt_map::NDTMapMsg priormapmsg;
+		perception_oru::toMessage(ndt_prior, priormapmsg, "world");
+		prior_ndt.publish(priormapmsg);
+
+		delete ndt_prior;
 }
 
 
@@ -262,7 +288,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				bool optiquest = false;
 				std::cout << "Optimize ?" << std::endl;
 				std::cin >> optiquest;
-				if(oacg->checkAbleToOptimize() &&  optiquest) {
+				if( /*oacg->checkAbleToOptimize() &&*/  optiquest) {
 					oacg->setFirst();
 					oacg->prepare();
 					oacg->optimize();
@@ -377,8 +403,9 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
-	ros::Subscriber call_for_publish_occ;
+	ros::Subscriber call_for_publish_occ, publish_prior_ndt;
     ros::NodeHandle nh("~");
+
 	
 	
 	double deviation = 0;
@@ -416,8 +443,8 @@ int main(int argc, char **argv)
 	oacg.doOwnRegistrationBetweenSubmaps(true);
 	
 	//ATTENTION
-//	oacg.addPriorGraph(graph_prior);
-//	oacg.setPriorReference();
+	oacg.addPriorGraph(graph_prior);
+	oacg.setPriorReference();
 		
 	//Create initialiser
 	AASS::acg::RvizPoints initialiser(nh, &oacg);
@@ -429,12 +456,16 @@ int main(int argc, char **argv)
 	
 	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_node/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
-// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
+	publish_prior_ndt = nh.subscribe<std_msgs::Bool>("/publish_prior_ndt", 1, boost::bind(&publishPriorNDT, _1, boost::ref(oacg) ));
+	// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	occ_send = nh.advertise<nav_msgs::OccupancyGrid>("/map", 10, true);
-	
+
 	last_ndtmap_full = nh.advertise<nav_msgs::OccupancyGrid>("occ_grid_ndt", 10);
+
+	prior_cloud = nh.advertise<sensor_msgs::PointCloud2>("prior_point_cloud", 10);
+	prior_ndt = nh.advertise<ndt_map::NDTMapMsg>("prior_ndt", 10);
 	
 // 	visu.updateRvizNoNDT();
 	
@@ -491,7 +522,9 @@ int main(int argc, char **argv)
 // 		}	
 		
 		visu.updateRviz();
-		
+
+
+
 		
 		
 	}

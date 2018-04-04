@@ -314,6 +314,103 @@ namespace acg{
 		
 		
 	}
+
+
+	inline pcl::PointCloud<pcl::PointXYZ>::Ptr ACGPriortoPointCloud(const AASS::acg::AutoCompleteGraph& acg, double resolution, double varz){
+
+		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pc(new pcl::PointCloud<pcl::PointXYZ>);
+		int nb_points = 0;
+		auto edges = acg.getPriorEdges();
+		for(auto it = edges.begin(); it != edges.end() ; ++it){
+
+			std::vector<Eigen::Vector3d> points;
+
+			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+				geometry_msgs::Point p;
+				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+				auto vertex = ptr->estimate().toVector();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+//				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
+//                 std::cout << "Pushing " << veve << std::endl;
+				points.push_back(vertex);
+			}
+			assert(points.size() == 2);
+
+			Eigen::Vector3d slope = points[1] - points[0];
+//			std::cout << "from " << points[0] << " tot " << points[1] << " slope " << slope << std::endl;
+
+
+			slope = slope / slope.norm();
+//			std::cout << "Then slope " << slope << std::endl;
+			slope = slope * resolution;
+//			std::cout << "Final slope " << slope << std::endl;
+
+//			int wait;
+//			std::cin>>wait;
+
+			Eigen::Vector3d point = points[0];
+
+			pcl::PointXYZ pcl_point;
+			pcl_point.x = point[0];
+			pcl_point.y = point[1];
+			pcl_point.z = point[2];
+			pcl_pc->push_back(pcl_point);
+			nb_points++;
+
+			while( (points[1] - point).norm() >= resolution) {
+
+//				std::cout << "Adding point " << pcl_point.x << " " << pcl_point.y << " " << pcl_point.z << " nbpt " << nb_points << " "  << slope[0] << " " << slope[1] << " " << slope[2] << std::endl;
+				point = point + slope;
+				pcl_point.x = point[0];
+				pcl_point.y = point[1];
+				pcl_point.z = point[2];
+				pcl_pc->push_back(pcl_point);
+				nb_points++;
+
+			}
+
+		}
+
+		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pc_noise(new pcl::PointCloud<pcl::PointXYZ>);
+		pcl::PointXYZ pt;
+		//add some variance on z
+		for(int i=0; i<pcl_pc->points.size(); i++) {
+			pt = pcl_pc->points[i];
+			pt.z += varz*((double)rand())/(double)INT_MAX;
+			pcl_pc_noise->points.push_back(pt);
+
+		}
+
+		std::cout << "Adding data " << nb_points << std::endl;
+
+		pcl_pc_noise->width = nb_points;
+		pcl_pc_noise->height = 1;
+		pcl_pc_noise->is_dense = false;
+
+		return pcl_pc_noise;
+
+	}
+
+
+
+
+	inline void ACGPriorToNDTMap(const AASS::acg::AutoCompleteGraph& acg, perception_oru::NDTMap& map_out, double pt_cloud_resolution){
+
+		auto pcl_prior = ACGPriortoPointCloud(acg, pt_cloud_resolution, pt_cloud_resolution/4);
+
+		map_out.loadPointCloud(*pcl_prior);
+		map_out.computeNDTCells(CELL_UPDATE_MODE_SAMPLE_VARIANCE);
+
+		auto allcells = map_out.getAllCellsShared();
+		auto allcellsinit = map_out.getAllInitializedCellsShared();
+		std::cout << "all cells " << allcells.size() << " all cells init " << allcellsinit.size() << std::endl;
+		assert(allcells.size() > 0);
+
+	}
+
+
+
+
 	
 	
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution){
@@ -324,10 +421,10 @@ namespace acg{
 		
 		auto it = edges.begin();
 		for(it ; it != edges.end() ; ++it){
-			
-			
+
+
 			std::vector<Eigen::Vector2d> points;
-			
+
 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
 				geometry_msgs::Point p;
 				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
@@ -337,9 +434,9 @@ namespace acg{
 //                 std::cout << "Pushing " << veve << std::endl;
 				points.push_back(veve);
 			}
-			
+
 			assert(points.size() == 2);
-			
+
 			for (grid_map::LineIterator iterator(gridMap, points[0], points[1]);
 				!iterator.isPastEnd(); ++iterator) {
 // 				std::cout << "Stuck" << std::endl;
@@ -349,18 +446,18 @@ namespace acg{
 	// 			duration.sleep();
 			}
 // 			std::cout << "Or not" << std::endl;
-			
+
 		}
 
 // 		return gridMap;
-		
+
 	}
-	
+
 	///@brief return the biggest absolute value along x and y for the prior.
 	inline void getPriorSizes(const AASS::acg::AutoCompleteGraph& acg, double& size_x, double& size_y){
-		
+
 		auto edges = acg.getPriorEdges();
-		
+
 		double max_x, min_x, max_y, min_y;
 		bool flag_init = false;
 		auto it = edges.begin();

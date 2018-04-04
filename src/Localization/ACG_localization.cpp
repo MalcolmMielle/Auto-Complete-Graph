@@ -199,7 +199,7 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 
 			Eigen::Affine3d odom_register;
 			Eigen::MatrixXd odom_cov;
-			std::tie(odom_register, odom_cov) = registerSubmaps(*from, *toward, odom_affine, 10);
+			std::tie(odom_register, odom_cov) = registerSubmaps(*from, *toward, odom_affine, 2);
 
 			Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(odom_register);
 			g2o::SE2 odometry(isometry2d_odometry);

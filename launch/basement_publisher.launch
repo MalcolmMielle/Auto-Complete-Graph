@@ -19,8 +19,8 @@
 <node pkg="auto_complete_graph" type="graph_map_publisher_localization_ac" name="graph_node" output="screen">
 
 <!-- 	MCL -->
-	<param name="use_mcl" value="false" />
-	<param name="use_graph_map_registration" value="true" />
+	<param name="use_mcl" value="true" />
+	<param name="use_graph_map_registration" value="false" />
 	<param name="zfilter_min" value="-1000" />
 	<param name="fraction" value="1" />
 	<param name="cutoff" value="-10" />
