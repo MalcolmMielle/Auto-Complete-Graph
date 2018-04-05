@@ -329,6 +329,7 @@ namespace acg{
 				geometry_msgs::Point p;
 				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
 				auto vertex = ptr->estimate().toVector();
+				vertex[2] = acg.getZElevation();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 //				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
 //                 std::cout << "Pushing " << veve << std::endl;

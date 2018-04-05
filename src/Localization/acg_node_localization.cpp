@@ -22,6 +22,8 @@
 #include <ros/package.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
 
 bool abort_f = false;
 
@@ -46,6 +48,27 @@ inline bool exists_test3 (const std::string& name) {
 	struct stat buffer;   
 	return (stat (name.c_str(), &buffer) == 0); 
 }
+
+
+tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std::string& to_frame, ros::Time time=ros::Time(0)){
+	std::cout << "GEt pose " << std::endl;
+	tf::TransformListener listener;
+	tf::StampedTransform transform;
+// 	int i = 0;
+// 	while(i < 10){
+// 	++i;
+	try {
+		time=ros::Time(0);
+		bool hunm = listener.waitForTransform(base_frame, to_frame, time, ros::Duration(1.0));
+		listener.lookupTransform(base_frame, to_frame, time, transform);
+	} catch (tf::TransformException ex) {
+		ROS_ERROR("%s",ex.what());
+		exit(0);
+	}
+	return transform;
+}
+
+
 
 
 void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, const AASS::acg::AutoCompleteGraphLocalization& oacg) {
@@ -430,7 +453,8 @@ int main(int argc, char **argv)
 	basement.extractCornerPrior();
 	basement.transformOntoSLAM();
 	auto graph_prior = basement.getGraph();
-	
+
+	auto sensor_pose = getPoseTFTransform("/world", "/velodyne");
 	//Create graph instance
 	//
 	std::string path_to_acg = ros::package::getPath("auto_complete_graph");
@@ -441,6 +465,7 @@ int main(int argc, char **argv)
 	oacg.useCornerOrientation(true);
 	oacg.extractCorners(false);
 	oacg.doOwnRegistrationBetweenSubmaps(true);
+	oacg.setZElevation(sensor_pose.getOrigin().getZ());
 	
 	//ATTENTION
 	oacg.addPriorGraph(graph_prior);
