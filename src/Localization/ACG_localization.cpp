@@ -1,6 +1,41 @@
 #include "auto_complete_graph/Localization/ACG_localization.hpp"
 
 
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const g2o::SE2& se2, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr< perception_oru::NDTMap >& map){
+
+	std::cout << "Adding the robot pose " << std::endl;
+	g2o::VertexSE2RobotLocalization* robotlocalization =  new g2o::VertexSE2RobotLocalization();
+
+	robotlocalization->setEstimate(se2);
+	robotlocalization->setId(new_id_);
+	++new_id_;
+
+	robotlocalization->setMap(map);
+	robotlocalization->setPose(affine);
+	robotlocalization->setCovariance(cov);
+	robotlocalization->initial_transfo = robotlocalization->estimate();
+
+	_optimizable_graph.addVertex(robotlocalization);
+
+// 	NDTNodeAndMap nodeAndMap(robot, map, affine);
+
+	_nodes_localization.push_back(robotlocalization);
+	return robotlocalization;
+}
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const Eigen::Vector3d& rob_localization, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov,const std::shared_ptr< perception_oru::NDTMap >& map){
+	g2o::SE2 se2(rob_localization(0), rob_localization(1), rob_localization(2));
+	return addRobotLocalization(se2, affine, cov, map);
+}
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(double x, double y, double theta, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov,const std::shared_ptr< perception_oru::NDTMap >& map){
+	Eigen::Vector3d robot1;
+	robot1 << x, y, theta;
+	return addRobotLocalization(robot1, affine, cov, map);
+}
+
+
+
+
+
 g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information)
 {
 	g2o::SE2 se2(x, y, theta);
@@ -70,15 +105,17 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 		assert(i >= 0);
 		
 		for (i; i < ndt_graph_localization.graph_map.nodes.size() - 1 ; ++i) {
-			
+
 			g2o::VertexSE2RobotPose* robot_ptr;
-			g2o::SE2 robot_pos;
-			auto map = addElementNDT(ndt_graph_localization, i, &robot_ptr, robot_pos);
+			g2o::VertexSE2RobotLocalization* robot_localization_ptr;
+			std::shared_ptr<perception_oru::NDTMap> map;
+//			g2o::SE2 robot_pos;
+			std::tie(robot_ptr, robot_localization_ptr, map) = addElementNDT(ndt_graph_localization, i);
 			assert(robot_ptr != NULL);
 			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
 			//********************** Extract the corners *****************//
 			if(_extract_corners) {
-				extractCornerNDTMap(map, robot_ptr, robot_pos);
+				extractCornerNDTMap(map, robot_ptr, robot_localization_ptr);
 			}
 			//********************** Add the time stamp ******************//
 // 			robot_ptr->setTime(ndt_graph.nodes[i].time_last_update);
@@ -100,7 +137,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 
 }
 
-std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
+std::tuple<g2o::VertexSE2RobotPose*, g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDTMap> > AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element)
 {
 	///ATTENTION Indexes start at 1 instead of 0 :/
 	std::cout << "good indexes " << ndt_graph_localization.graph_map.nodes[element].id.data << " = " << element << " voilaaa " << std::endl;
@@ -136,7 +173,7 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 	//BUG IS AFTER
 	std::cout << "print" << std::endl;
 	
-	robot_pos = g2o::SE2(isometry2d);
+	auto robot_pos = g2o::SE2(isometry2d);
 // 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
 	g2o::SE2 diff_vec_se2(diff_vec);
 // 			std::cout << "diff vec done" << diff_vec << std::endl;
@@ -171,11 +208,11 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 // 	bool good2 = perception_oru::fromMessage(lz, map_copy, msg, frame);
 // 	std::shared_ptr<perception_oru::NDTMap> shared_map(map_copy);
 
-	*robot_ptr = addRobotPose(robot_pos, affine, shared_map);
+	auto robot_ptr = addRobotPose(robot_pos, affine, shared_map);
 
-	(**robot_ptr).setIndexGraphMap(ndt_graph_localization.graph_map.nodes[element].id.data);
+	robot_ptr->setIndexGraphMap(ndt_graph_localization.graph_map.nodes[element].id.data);
 
-	assert(*robot_ptr != NULL);
+	assert(robot_ptr != NULL);
 	//Add Odometry if it is not the first node
 	
 	if(element > 0 ){
@@ -324,27 +361,205 @@ std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphLocalization
 		}
 	}
 
-
-	addLocalizationEdges(ndt_graph_localization, element, *robot_ptr);
-
-	
-	return shared_map;
+	auto robot_localization_ptr = addLocalizationEdges(ndt_graph_localization, element, shared_map);
+	std::tuple<g2o::VertexSE2RobotPose*, g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDTMap> > tuple(robot_ptr, robot_localization_ptr, shared_map);
+	return tuple;
 
 }
 
-void AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, g2o::VertexSE2RobotPose* robot_ptr) {
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, const std::shared_ptr<perception_oru::NDTMap>& shared_map) {
 
 	auto localization_msg = ndt_graph_localization.localizations[element];
 	AASS::acg::Localization localization;
 	AASS::acg::fromMessage(localization_msg, localization);
+	std::cout << "Reading MCL Localization position : " << localization.mean[0] << ", " << localization.mean[1] << ", " << localization.mean[2] << std::endl;
 	g2o::SE2 se2loc(localization.mean[0], localization.mean[1], localization.mean[2]);
+	Eigen::Matrix3d cov = localization.cov;
 
+	auto affine3d = se2ToAffine3d(se2loc, _z_elevation);
+	return addRobotLocalization(se2loc, affine3d, cov, shared_map);
 	//No localization for now
 //	addLocalization(se2loc, robot_ptr, localization.cov.inverse());
 
+}
+
+
+
+//TODO: refactor this!
+void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, g2o::VertexSE2RobotLocalization* robot_localization)
+{
+	//HACK For now : we translate the Corner extracted and not the ndt-maps
+	auto cells = map->getAllCellsShared();
+	std::cout << "got all cell shared " <<  cells.size() << std::endl;
+	double x2, y2, z2;
+	map->getCellSizeInMeters(x2, y2, z2);
+	std::cout << "got all cell sized" << std::endl;
+	double cell_size = x2;
+
+	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
+	getAllCornersNDTTranslatedToGlobalAndRobotFrame(map, robot_ptr, corners_end);
+
+	/***************** ADD THE CORNERS INTO THE GRAPH***********************/
+
+	Eigen::Matrix3d cov = robot_localization->getCovariance();
+	//Remove the rotationnal component
+	Eigen::Matrix2d cov_2d;
+	cov_2d << cov(0,0), cov(0,1),
+			cov(1,0), cov(1,1);
+
+	for(size_t i = 0 ; i < corners_end.size() ; ++i){
+// 		std::cout << "checking corner : " << _nodes_landmark.size() << std::endl ;  /*corners_end[i].print()*/ ; std::cout << std::endl;
+		bool seen = false;
+		g2o::VertexLandmarkNDT* ptr_landmark_seen = NULL;
+		for(size_t j = 0 ; j <_nodes_landmark.size() ; ++j){
+// 			if(tmp[j] == _corners_position[i]){
+			g2o::Vector2 landmark = _nodes_landmark[j]->estimate();
+			cv::Point2f point_land(landmark(0), landmark(1));
+
+			double res = cv::norm(point_land - corners_end[i].position);
+
+			std::cout << "res : " << std::endl;
+
+			//If we found the landmark, we save the data
+			if( res < cell_size * 2){
+				seen = true;
+				ptr_landmark_seen = _nodes_landmark[j];
+			}
+		}
+		if(seen == false){
+			std::cout << "New point " << i << std::endl;
+// 			assert(i < ret_export.size());
+			g2o::Vector2 position_globalframe;
+			position_globalframe << corners_end[i].position.x, corners_end[i].position.y ;
+// 			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
+
+			cv::Point2f p_observation;
+			std::cout << "New point " << i << std::endl;
+			p_observation.x = corners_end[i].getObservations()(0);
+			std::cout << "New point " << i << std::endl;
+			p_observation.y = corners_end[i].getObservations()(1);
+			std::cout << "New point " << i << std::endl;
+			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(position_globalframe, p_observation, 1);
+			ptr->addAnglesOrientations(corners_end[i].getAngleWidths(), corners_end[i].getOrientations());
+			ptr->first_seen_from = robot_ptr;
+
+			//TESTING to visualise which cells gave the corner
+			ptr->cells_that_gave_it_1 = corners_end[i].cells1;
+			ptr->cells_that_gave_it_2 = corners_end[i].cells2;
+			ptr->robotpose_seen_from = robot_ptr->estimate();
+			//END OF TEST
+
+			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr);
+			//Add covariance given by MCL instead of the default one.
+			addLandmarkObservation(corners_end[i].getObservations(), robot_localization, ptr, cov_2d);
+
+
+		}
+		else{
+			std::cout << "Point seen " << std::endl;
+			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr_landmark_seen);
+			//Add covariance given by MCL instead of the default one.
+			addLandmarkObservation(corners_end[i].getObservations(), robot_localization, ptr_landmark_seen, cov_2d);
+		}
+	}
 
 }
 
+
+void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement>& corners_end)
+{
+
+	perception_oru::ndt_feature_finder::NDTCorner cornersExtractor;
+	std::cout << "hopidy" << std::endl;
+	auto ret_export = cornersExtractor.getAllCorners(*map);
+	std::cout << "gotall corner" << std::endl;
+// 	auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();
+	std::cout << "got all accurate corners" << std::endl;
+// 	auto angles = cornersExtractor.getAngles();
+// 	std::cout << "got all angles" << std::endl;
+
+	auto it = ret_export.begin();
+
+	std::cout << "Found " << ret_export.size() << " corners " << std::endl;
+	//Find all the observations :
+
+	//**************** HACK: translate the corners now : **************//
+
+// 	int count_tmp = 0;
+	for(it ; it != ret_export.end() ; ++it){
+		std::cout << "Corner size " << it->getOrientations().size() << std::endl;
+		//Limited to corners that possess an orientation.
+		if(it->getOrientations().size() > 0){
+			Eigen::Vector3d vec;
+			// 		vec << it->x, it->y, angles[count_tmp].second;
+			std::cout << "Corner size " << std::endl;
+			vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, it->getOrientations()[0];
+
+			std::cout << "Corner size " << std::endl;
+			cv::Point2f p_out;
+			Eigen::Vector3d landmark_robotframe;
+			translateFromRobotFrameToGlobalFrame(vec, robot_ptr->estimate(), landmark_robotframe);
+
+			std::cout << "Corner size " << std::endl;
+			p_out.x = landmark_robotframe(0);
+			p_out.y = landmark_robotframe(1);
+
+			Eigen::Vector2d observation; observation << vec(0), vec(1);
+			std::vector<double> orientations;
+			std::vector<double> angles_width;
+
+			std::cout << "Corner size " << std::endl;
+			double angle_landmark = vec(2);
+
+			std::cout << "Corner size " << std::endl;
+			for(auto it_orientation = it->getOrientations().begin() ; it_orientation != it->getOrientations().end() ; ++it_orientation){
+				std::cout << "Pushing back orientation" << std::endl;
+				orientations.push_back((*it_orientation));
+			}
+			for(auto it_angles = it->getAngles().begin() ; it_angles != it->getAngles().end() ; ++it_angles){
+				std::cout << "Pushing back angle" << std::endl;
+				angles_width.push_back((*it_angles));
+			}
+
+
+
+			//***************************Old version for testing***************************//
+			// 		Eigen::Vector2d trueObservation2d = robot_pos.inverse() * real_obs;
+			// 		std::cout << trueObservation(0) << " == " << trueObservation2d(0) << std::endl;
+			// 		assert(trueObservation(0) == trueObservation2d(0));
+			// 		std::cout << trueObservation(1) << " == " << trueObservation2d(1) << std::endl;
+			// 		assert(trueObservation(1) == trueObservation2d(1));
+			// 		observation2d_test = trueObservation2d;
+			// 		std::cout << observation(0) << " == " << observation2d_test(0) << " minus " << observation(0) - observation2d_test(0) << std::endl;
+			// 		assert(trueObservation(0) == trueObservation2d(0));
+			// 		std::cout << observation(1) << " == " << observation2d_test(1) << " minus " << observation(1) - observation2d_test(1) << std::endl;
+			// 		int a ;
+			// 		std::cin >> a;
+			//******************************************************************************//
+
+
+
+			// 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
+			std::cout << "Position node " << robot_ptr->estimate().toVector() << std::endl;
+			std::cout << " vec " << vec << std::endl;
+			// 		std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
+
+			//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
+			// 				assert (robot_pos + vec == ndt_graph.getNode(i).T * vec);
+
+			std::cout << "NEW POINT : "<< p_out << std::endl;
+
+			NDTCornerGraphElement cor(p_out);
+			cor.addAllObserv(robot_ptr, observation, orientations, angles_width);
+			cor.cells1 = it->getCells1();
+			cor.cells2 = it->getCells2();
+			corners_end.push_back(cor);
+			// 		count_tmp++;
+		}
+
+	}
+
+}
 
 
 void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string& before) const {

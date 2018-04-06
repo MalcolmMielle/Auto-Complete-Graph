@@ -326,7 +326,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		// 		}
 
 				std::cout << "RVIZ " << std::endl;
-				visu.updateRviz();
+				visu.updateRviz(*oacg);
 				std::cout << "RVIZ DONE" << std::endl;
 		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
 		// 		std::cin >>a;
@@ -475,7 +475,7 @@ int main(int argc, char **argv)
 	AASS::acg::RvizPoints initialiser(nh, &oacg);
 	
 	
-	AASS::acg::VisuAutoCompleteGraphLocalization visu(&oacg, nh);
+	AASS::acg::VisuAutoCompleteGraphLocalization visu(nh);
 	std::string path_images = path_to_acg + "/ACG_folder/Images";
 	visu.setImageFileNameOut(path_images);
 	
@@ -511,7 +511,7 @@ int main(int argc, char **argv)
 		if(initialiser.size() >= 2){
 			was_init = true;
 			initAll(oacg, initialiser, basement);
-			visu.updateRvizNoNDT();
+			visu.updateRvizNoNDT(oacg);
 		}
 		
 // 		visu.updateRvizV2();
@@ -546,7 +546,7 @@ int main(int argc, char **argv)
 			
 // 		}	
 		
-		visu.updateRviz();
+		visu.updateRviz(oacg);
 
 
 

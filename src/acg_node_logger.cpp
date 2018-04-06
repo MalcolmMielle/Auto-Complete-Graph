@@ -185,7 +185,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 					count++;
 		// 		}
 				
-				visu.updateRviz();
+				visu.updateRviz(*oacg);
 		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
 		// 		std::cin >>a;
 				
@@ -228,7 +228,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	}
 	catch(...){
 		std::cout << "Error " << std::endl;
-		visu.updateRviz();
+		visu.updateRviz(*oacg);
 // 		int a;
 // 		std::cin >> a;
 	}
@@ -325,7 +325,7 @@ int main(int argc, char **argv)
 	AASS::acg::RvizPoints initialiser(nh, &oacg);
 	
 	
-	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
+	AASS::acg::VisuAutoCompleteGraph visu(nh);
 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
 		if(initialiser.size() == 2){
 			was_init = true;
 			initAll(oacg, initialiser, basement);
-			visu.updateRvizNoNDT();
+			visu.updateRvizNoNDT(oacg);
 		}
 		
 // 		visu.updateRvizV2();
@@ -389,7 +389,7 @@ int main(int argc, char **argv)
 			
 // 		}	
 		
-		visu.updateRviz();
+		visu.updateRviz(oacg);
 		
 	}
 	

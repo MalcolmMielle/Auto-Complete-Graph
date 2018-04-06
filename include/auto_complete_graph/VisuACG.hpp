@@ -42,7 +42,7 @@ namespace acg{
 		
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
-		AutoCompleteGraph* _acg;
+//		AutoCompleteGraph* _acg;
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids_original;
 		visualization_msgs::Marker _prior_edge_markers;
@@ -62,7 +62,7 @@ namespace acg{
 		std::string _image_file;
 		
 	public:
-		VisuAutoCompleteGraph(AutoCompleteGraph* acg, ros::NodeHandle nh) : _nb_of_zone(0), _resolution(0.1){
+		VisuAutoCompleteGraph(ros::NodeHandle nh) : _nb_of_zone(0), _resolution(0.1){
 			_nh = nh;
 			_last_ndtmap_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg_occ", 10);
 			_last_ndtmap = _nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
@@ -85,7 +85,7 @@ namespace acg{
 			_acg_gdim_om = _nh.advertise<auto_complete_graph::ACGMapsOM>("acg_maps_om", 10);
 			_last_grid_map = _nh.advertise<grid_map_msgs::GridMap>("last_grid_map", 10);
 			
-			_acg = acg;
+//			_acg = acg;
 			
 			_prior_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
 			_prior_edge_markers.header.frame_id = "/world";
@@ -202,20 +202,20 @@ namespace acg{
 		void setImageFileNameOut(const std::string& f){_image_file = f;}
 		
 		
-		void updateRvizStepByStep(){
+		void updateRvizStepByStep(const AutoCompleteGraph& acg){
 			
-			drawPrior();
+			drawPrior(acg);
 			
-			drawCornersNdt();
+			drawCornersNdt(acg);
 			
-			drawLinks();
+			drawLinks(acg);
 			
 // 			_ndt_node_markers.points.clear();
 			
-			if(_nb_of_zone != _acg->getRobotNodes().size()){
+			if(_nb_of_zone != acg.getRobotNodes().size()){
 				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
-				ACGtoOccupancyGrid(*_acg, occ_outt, _acg->getRobotNodes().size() - 2);
+				ACGtoOccupancyGrid(acg, occ_outt, acg.getRobotNodes().size() - 2);
 				
 // 				grid_map::GridMap gridMap;
 // 				ACGToGridMap(*_acg, gridMap);
@@ -238,7 +238,7 @@ namespace acg{
 				
 // 				exit(0);
 				
-// 				auto node = _acg->getRobotNodes()[0].getNode();
+// 				auto node = acg.getRobotNodes()[0].getNode();
 // 				auto vertex = node->estimate().toIsometry();
 // 				moveOccupancyMap(*occ_out, vertex);
 				
@@ -253,7 +253,7 @@ namespace acg{
 // 				std::cout << "Image saved" << std::endl;
 				
 				ndt_map::NDTVectorMapMsg msg;
-				ACGToVectorMaps(*_acg, msg);
+				ACGToVectorMaps(acg, msg);
 				_ndtmap.publish(msg);
 // 				_last_ndtmap.publish<nav_msgs::OccupancyGrid>(*occ_out);
 				
@@ -262,19 +262,19 @@ namespace acg{
 			}
 		}
 		
-		void toOcc(){
-			drawPrior();
+		void toOcc(const AutoCompleteGraph& acg){
+			drawPrior(acg);
 			
-			drawCornersNdt();
+			drawCornersNdt(acg);
+
+			drawLinks(acg);
 			
-			drawLinks();
-			
-			drawAngles();
+			drawAngles(acg);
 						
-			if(_nb_of_zone != _acg->getRobotNodes().size()){
+			if(_nb_of_zone != acg.getRobotNodes().size()){
 				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
-				ACGtoOccupancyGrid(*_acg, occ_outt);
+				ACGtoOccupancyGrid(acg, occ_outt);
 				_last_ndtmap_full_occ.publish<nav_msgs::OccupancyGrid>(*occ_outt);
 				
 				
@@ -282,13 +282,13 @@ namespace acg{
 		}
 
 
-		void publishFullOccGrid(){
+		void publishFullOccGrid(const AutoCompleteGraph& acg){
 			grid_map::GridMap gridMap;
-			ACGToGridMap(*_acg, gridMap);
+			ACGToGridMap(acg, gridMap);
 			nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
 			nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
 			grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
-			// auto node = _acg->getRobotNodes()[0];
+			// auto node = acg.getRobotNodes()[0];
 			// auto vertex = node->estimate().toIsometry();
 			// moveOccupancyMap(*occ_out, vertex);
 			_last_ndtmap_full_occ.publish<nav_msgs::OccupancyGrid>(*occ_out);
@@ -299,43 +299,43 @@ namespace acg{
 			_prior_map_occ.publish<nav_msgs::OccupancyGrid>(*occ_out_p);
 		}
 		
-		void updateRviz(){
+		void updateRviz(const AutoCompleteGraph& acg){
 			
-			drawPrior();
+			drawPrior(acg);
 				
-			drawCornersNdt();
+			drawCornersNdt(acg);
 				
-			drawLinks();
+			drawLinks(acg);
 			
-			if(_nb_of_zone != _acg->getRobotNodes().size()){
+			if(_nb_of_zone != acg.getRobotNodes().size()){
 				
 				
-				drawGaussiansThatGaveCorners();
+				drawGaussiansThatGaveCorners(acg);
 				
-				drawRobotPoses();
+				drawRobotPoses(acg);
 			
 // 			_ndt_node_markers.points.clear();
 			
-            // if(_acg->getRobotNodes().size() >= 1){
+            // if(acg.getRobotNodes().size() >= 1){
 				ndt_map::NDTVectorMapMsg msg;
 				msg.header.frame_id = "/world";
 				msg.header.stamp=ros::Time::now();
-				ACGToVectorMaps(*_acg, msg);
+				ACGToVectorMaps(acg, msg);
 				_ndtmap.publish(msg);	
 				
-				_nb_of_zone = _acg->getRobotNodes().size();
+				_nb_of_zone = acg.getRobotNodes().size();
 // 				exit(0);
 				
 				//Puclish message for GDIM
 				auto_complete_graph::ACGMaps mapmsg;
 				std::cout << "PUSH acg maps message" << std::endl;
-				AASS::acg::ACGToACGMapsMsg(*_acg, mapmsg);
+				AASS::acg::ACGToACGMapsMsg(acg, mapmsg);
 				_acg_gdim.publish(mapmsg);
 				
 				
 				auto_complete_graph::ACGMapsOM mapmsg_om;
 				std::cout << "PUSH acg maps OM message" << std::endl;
-				AASS::acg::ACGToACGMapsOMMsg(*_acg, mapmsg_om);
+				AASS::acg::ACGToACGMapsOMMsg(acg, mapmsg_om);
 				_acg_gdim_om.publish(mapmsg_om);
 				
 				//Publish the last grid map as a message to make sure that they look like something
@@ -358,18 +358,18 @@ namespace acg{
             }
 		}
 		
-		void updateRvizNoNDT(){
+		void updateRvizNoNDT(const AutoCompleteGraph& acg){
 			
-			drawPrior();
+			drawPrior(acg);
 			
-			drawCornersNdt();
+			drawCornersNdt(acg);
 			
-			drawLinks();
+			drawLinks(acg);
 			
-			drawAngles();
+			drawAngles(acg);
 // 			_ndt_node_markers.points.clear();
 			
-// 			if(_nb_of_zone != _acg->getRobotNodes().size()){
+// 			if(_nb_of_zone != acg.getRobotNodes().size()){
 // 				nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 // 				nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
 // 				ACGtoOccupancyGrid(*_acg, occ_outt);
@@ -395,7 +395,7 @@ namespace acg{
 // 				
 // // 				exit(0);
 // 				
-// // 				auto node = _acg->getRobotNodes()[0].getNode();
+// // 				auto node = acg.getRobotNodes()[0].getNode();
 // // 				auto vertex = node->estimate().toIsometry();
 // // 				moveOccupancyMap(*occ_out, vertex);
 // 				
@@ -417,22 +417,22 @@ namespace acg{
 		}
 		
 		
-		void updateRvizV2(){
+		void updateRvizV2(const AutoCompleteGraph& acg){
 			
-			drawPrior();
+			drawPrior(acg);
 			
-			drawCornersNdt();
+			drawCornersNdt(acg);
 			
-			drawLinks();
+			drawLinks(acg);
 			
 // 			_ndt_node_markers.points.clear();
 			
 			
-			if(_nb_of_zone != _acg->getRobotNodes().size()){
+			if(_nb_of_zone != acg.getRobotNodes().size()){
 				grids.clear();
 				std::cout <<"update the zones" << std::endl;
 				
-				for(size_t i = 0 ; i < _acg->getRobotNodes().size() ; ++i){
+				for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
 					
 					
@@ -443,7 +443,7 @@ namespace acg{
 //Grid map test
 // 					grid_map::GridMap gridMap({"elevation"});
 // 					std::cout << "Converting" << std::endl;
-// 					toGridMap(_acg->getRobotNodes()[i].getMap(), gridMap, 0.4, "/world", "elevation");
+// 					toGridMap(acg.getRobotNodes()[i].getMap(), gridMap, 0.4, "/world", "elevation");
 // 					cv_bridge::CvImage cvImage;
 // 					grid_map::GridMapRosConverter converter;
 // 					
@@ -489,9 +489,9 @@ namespace acg{
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					perception_oru::toOccupancyGrid(_acg->getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
-// 					auto pose = _acg->getRobotNodes()[i].getPose();
-					auto node = _acg->getRobotNodes()[i];
+					perception_oru::toOccupancyGrid(acg.getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
+// 					auto pose = acg.getRobotNodes()[i].getPose();
+					auto node = acg.getRobotNodes()[i];
 					auto vertex = node->estimate().toIsometry();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
 // 					std::cout << "Move : " << node.matrix() << std::endl;
@@ -537,14 +537,14 @@ namespace acg{
 				_last_ndtmap_occ.publish<nav_msgs::OccupancyGrid>(*final);
 				
 				_ndt_node_pub.publish(_ndt_node_markers);
-// 				if(_nb_of_zone != _acg->getRobotNodes().size()){
+// 				if(_nb_of_zone != acg.getRobotNodes().size()){
 // 					saveImage(final);
 // 				}
 // 				std::cout <<"Final orientaiotn " << final->info.origin.orientation << std::endl;
 // 				exit(0);
 			}
 			
-			_nb_of_zone = _acg->getRobotNodes().size();
+			_nb_of_zone = acg.getRobotNodes().size();
 			
 			
 			
@@ -553,23 +553,23 @@ namespace acg{
 			
 		}
 		
-		void updateRvizOriginalSLAM(){
+		void updateRvizOriginalSLAM(const AutoCompleteGraph& acg){
 			
-			drawPrior();
+			drawPrior(acg);
 			
-			drawLinks();
+			drawLinks(acg);
 			
-			if(_nb_of_zone != _acg->getRobotNodes().size()){
+			if(_nb_of_zone != acg.getRobotNodes().size()){
 				
 				std::cout <<"update the zones" << std::endl;
 				
-				for(size_t i = _nb_of_zone ; i < _acg->getRobotNodes().size() ; ++i){
+				for(size_t i = _nb_of_zone ; i < acg.getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
 					
 					nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();			
 // 					initOccupancyGrid(*omap_tmp, 250, 250, 0.4, "/world");
-					perception_oru::toOccupancyGrid(_acg->getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
-					auto pose = _acg->getRobotNodes()[i]->getPose();
+					perception_oru::toOccupancyGrid(acg.getRobotNodes()[i]->getMap().get(), *omap_tmp, _resolution, "/world");
+					auto pose = acg.getRobotNodes()[i]->getPose();
 // 					auto vertex = node->estimate().toVector();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
 					std::cout << "Move : " << pose.matrix() << std::endl;
@@ -591,7 +591,7 @@ namespace acg{
 				
 			}
 			
-			_nb_of_zone = _acg->getRobotNodes().size();
+			_nb_of_zone = acg.getRobotNodes().size();
 // 			omap.header.frame_id = "/world";
 // 			omap.header.stamp = ros::Time::now();
 			nav_msgs::OccupancyGrid::Ptr final;
@@ -622,15 +622,15 @@ namespace acg{
 			return t;
 		}
 		
-		void drawPrior();
-		void drawLinks();
-		void drawCornersNdt();
-		void drawGaussiansThatGaveCorners();
-		void drawAngles();
-		void drawPriorAngles(const g2o::VertexSE2Prior& vertex_in);
-		void drawRobotPoses();
+		void drawPrior(const AutoCompleteGraph& acg);
+		void drawLinks(const AutoCompleteGraph& acg);
+		void drawCornersNdt(const AutoCompleteGraph& acg);
+		void drawGaussiansThatGaveCorners(const AutoCompleteGraph& acg);
+		void drawAngles(const AutoCompleteGraph& acg);
+		void drawPriorAngles(const AutoCompleteGraph& acg, const g2o::VertexSE2Prior& vertex_in);
+		void drawRobotPoses(const AutoCompleteGraph& acg);
 		
-		void saveImage(nav_msgs::OccupancyGrid::Ptr& msg);
+		void saveImage(const AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& msg);
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
 // 		bool toOccupancyGrid(perception_oru::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
 		
@@ -700,10 +700,10 @@ namespace acg{
 	
 
 
-	inline void VisuAutoCompleteGraph::drawPrior()
+	inline void VisuAutoCompleteGraph::drawPrior(const AutoCompleteGraph& acg)
 	{
 		_prior_edge_markers.header.stamp = ros::Time::now();
-		auto edges = _acg->getPriorEdges();
+		auto edges = acg.getPriorEdges();
 		if(edges.size() != _prior_edge_markers.points.size()){
 			_prior_edge_markers.points.clear();
 			
@@ -716,12 +716,12 @@ namespace acg{
 					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 					p.x = vertex(0);
 					p.y = vertex(1);
-					p.z = 0;
+					p.z = acg.getZElevation();
 					_prior_edge_markers.points.push_back(p);
 				}
 			}
 			
-			auto prior_node = _acg->getPriorNodes();
+			auto prior_node = acg.getPriorNodes();
 			_prior_node_markers.points.clear();
 			_angles_prior_markers.points.clear();
 			_anglesw_prior_markers.points.clear();
@@ -736,11 +736,11 @@ namespace acg{
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
 				p.y = vertex(1);
-				p.z = 0;
+				p.z = acg.getZElevation();
 				_prior_node_markers.points.push_back(p);
 				
 // 				std::cout << "Drawing angles landmark" << std::endl;
-				drawPriorAngles(*ptr);
+				drawPriorAngles(acg, *ptr);
 				
 			}
 		}
@@ -750,10 +750,10 @@ namespace acg{
 		_anglesw_prior_pub.publish(_anglesw_prior_markers);
 	}
 	
-	inline void VisuAutoCompleteGraph::drawLinks()
+	inline void VisuAutoCompleteGraph::drawLinks(const AutoCompleteGraph& acg)
 	{
 		_link_markers.header.stamp = ros::Time::now();
-		auto edges = _acg->getLinkEdges();
+		auto edges = acg.getLinkEdges();
 		if(edges.size() != _link_markers.points.size()){
 			_link_markers.points.clear();
 			auto it = edges.begin();
@@ -770,14 +770,14 @@ namespace acg{
 						auto vertex = ptr->estimate().toVector();
 						p.x = vertex(0);
 						p.y = vertex(1);
-						p.z = 0;
+						p.z = acg.getZElevation();
 					}
 					else if(ptr2 != NULL){
 // 						std::cout << "Got a VertexPOINTXY" << std::endl;
 						auto vertex = ptr2->estimate();
 						p.x = vertex(0);
 						p.y = vertex(1);
-						p.z = 0;
+						p.z = acg.getZElevation();
 					}
 					else{
 						throw std::runtime_error("Links do not have the good vertex type");
@@ -790,11 +790,11 @@ namespace acg{
 		_link_pub.publish(_link_markers);
 	}
 	
-	inline void VisuAutoCompleteGraph::drawCornersNdt()
+	inline void VisuAutoCompleteGraph::drawCornersNdt(const AutoCompleteGraph& acg)
 	{
 // 		std::cout << "Getting the corners" << std::endl;
 		_corner_ndt_node_markers.header.stamp = ros::Time::now();
-		auto edges = _acg->getLandmarkNodes();
+		auto edges = acg.getLandmarkNodes();
 // 		std::cout << "Getting the corners " << edges.size() << std::endl;
 		if(edges.size() != _corner_ndt_node_markers.points.size()){
 			_corner_ndt_node_markers.points.clear();
@@ -807,7 +807,7 @@ namespace acg{
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
 				p.y = vertex(1);
-				p.z = 0;
+				p.z = acg.getZElevation();
 				
 				//TESTING
 // 				auto vertex_seen = (*it)->gaussian_seen_from.toVector();
@@ -822,14 +822,14 @@ namespace acg{
 			}
 		}
 		
-		drawAngles();
+		drawAngles(acg);
 		
 		_corner_ndt_node_pub.publish(_corner_ndt_node_markers);
 	}
 	
 	
 	//TODO
-	inline void VisuAutoCompleteGraph::drawGaussiansThatGaveCorners()
+	inline void VisuAutoCompleteGraph::drawGaussiansThatGaveCorners(const AutoCompleteGraph& acg)
 	{
 // 		std::cout << "Drawing the gaussians " << std::endl;
 // 		int a ;
@@ -840,7 +840,7 @@ namespace acg{
 		_gaussian_that_gave_corners.header.stamp = ros::Time::now();
 		_gaussian_that_gave_corners.header.stamp = ros::Time::now();
 		
-		auto landmark = _acg->getLandmarkNodes();
+		auto landmark = acg.getLandmarkNodes();
 // 		std::cout << "Getting the angles" << landmark.size() << std::endl;
 // 		std::cout << "Getting the corners " << edges.size() << std::endl;
 			
@@ -859,11 +859,11 @@ namespace acg{
 				geometry_msgs::Point p2;
 				p2.x = robotframe_eigen(0) + (0.5 * std::cos(robotframe_eigen(2)) );
 				p2.y = robotframe_eigen(1) + (0.5 * std::sin(robotframe_eigen(2)) );
-				p2.z = 0;
+				p2.z = acg.getZElevation();
 				geometry_msgs::Point p3;
 				p3.x = robotframe_eigen(0) - (0.5 * std::cos(robotframe_eigen(2)) );
 				p3.y = robotframe_eigen(1) - (0.5 * std::sin(robotframe_eigen(2)) );
-				p3.z = 0;
+				p3.z = acg.getZElevation();
 				
 				_gaussian_that_gave_corners.points.push_back(p2);
 				_gaussian_that_gave_corners.points.push_back(p3);
@@ -882,11 +882,11 @@ namespace acg{
 				geometry_msgs::Point p2;
 				p2.x = robotframe_eigen(0) + (0.5 * std::cos(robotframe_eigen(2)) );
 				p2.y = robotframe_eigen(1) + (0.5 * std::sin(robotframe_eigen(2)) );
-				p2.z = 0;
+				p2.z = acg.getZElevation();
 				geometry_msgs::Point p3;
 				p3.x = robotframe_eigen(0) - (0.5 * std::cos(robotframe_eigen(2)) );
 				p3.y = robotframe_eigen(1) - (0.5 * std::sin(robotframe_eigen(2)) );
-				p3.z = 0;
+				p3.z = acg.getZElevation();
 				
 				_gaussian_that_gave_corners2.points.push_back(p2);
 				_gaussian_that_gave_corners2.points.push_back(p3);
@@ -904,7 +904,7 @@ namespace acg{
 
 	
 	
-	inline void VisuAutoCompleteGraph::saveImage(nav_msgs::OccupancyGrid::Ptr& msg)
+	inline void VisuAutoCompleteGraph::saveImage(const AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& msg)
 	{
 // 		const unsigned char* databeg = &(msg->data.front());
 		
@@ -918,7 +918,7 @@ namespace acg{
 		
 		std::string file_out = _image_file;
 		std::ostringstream convert;   // stream used for the conversion
-		convert << _acg->getGraph().vertices().size(); 
+		convert << acg.getGraph().vertices().size(); 
 		file_out = file_out + convert.str();
 		file_out = file_out + "nodes.png";
 		
@@ -931,12 +931,12 @@ namespace acg{
 	}
 
 
-	inline void VisuAutoCompleteGraph::drawAngles()
+	inline void VisuAutoCompleteGraph::drawAngles(const AutoCompleteGraph& acg)
 	{
 // 		std::cout << "Getting the angles" << std::endl;
 		_angles_markers.header.stamp = ros::Time::now();
 		_anglesw_markers.header.stamp = ros::Time::now();
-		auto landmark = _acg->getLandmarkNodes();
+		auto landmark = acg.getLandmarkNodes();
 // 		std::cout << "Getting the angles" << landmark.size() << std::endl;
 // 		std::cout << "Getting the corners " << edges.size() << std::endl;
 		//I think this line is useless
@@ -954,7 +954,7 @@ namespace acg{
 					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 					p.x = vertex(0);
 					p.y = vertex(1);
-					p.z = 0;
+					p.z = acg.getZElevation();
 					_angles_markers.points.push_back(p);
 					
 	// 				std::cout << "getting the angle" << std::endl;
@@ -966,20 +966,20 @@ namespace acg{
 					geometry_msgs::Point p2;
 					p2.x = p.x + (2 * std::cos(angle) );
 					p2.y = p.y + (2 * std::sin(angle) );
-					p2.z = 0;
+					p2.z = acg.getZElevation();
 					_angles_markers.points.push_back(p2);
 					
 	// 				std::cout << "angle " << angle<< std::endl;
 					p2.x = p.x + (2 * std::cos(angle - (anglew/2)) );
 					p2.y = p.y + (2 * std::sin(angle - (anglew/2)) );
-					p2.z = 0;
+					p2.z = acg.getZElevation();
 					_anglesw_markers.points.push_back(p);
 					_anglesw_markers.points.push_back(p2);
 					
 	// 				std::cout << "angle " << angle<< std::endl;
 					p2.x = p.x + (2 * std::cos(angle + (anglew/2)) );
 					p2.y = p.y + (2 * std::sin(angle + (anglew/2)) );
-					p2.z = 0;
+					p2.z = acg.getZElevation();
 					_anglesw_markers.points.push_back(p);
 					_anglesw_markers.points.push_back(p2);
 					
@@ -998,7 +998,7 @@ namespace acg{
 		_anglesw_pub.publish(_anglesw_markers);
 	}
 
-	inline void VisuAutoCompleteGraph::drawPriorAngles(const g2o::VertexSE2Prior& vertex_in)
+	inline void VisuAutoCompleteGraph::drawPriorAngles(const AutoCompleteGraph& acg, const g2o::VertexSE2Prior& vertex_in)
 	{
 		geometry_msgs::Point p;
 // 		std::cout << "getting the vector" << std::endl;
@@ -1007,7 +1007,7 @@ namespace acg{
 		//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 		p.x = vertex(0);
 		p.y = vertex(1);
-		p.z = 0;
+		p.z = acg.getZElevation();
 		
 // 		std::cout << "getting the angle" << std::endl;
 		auto angles = vertex_in.getAnglesAndOrientations();
@@ -1027,20 +1027,20 @@ namespace acg{
 			geometry_msgs::Point p2;
 			p2.x = p.x + (2 * std::cos(angle) );
 			p2.y = p.y + (2 * std::sin(angle) );
-			p2.z = 0;
+			p2.z = acg.getZElevation();
 			_angles_prior_markers.points.push_back(p2);
 			
 // 			std::cout << "angle " << angle<< std::endl;
 			p2.x = p.x + (2 * std::cos(angle - (anglew/2)) );
 			p2.y = p.y + (2 * std::sin(angle - (anglew/2)) );
-			p2.z = 0;
+			p2.z = acg.getZElevation();
 			_anglesw_prior_markers.points.push_back(p);
 			_anglesw_prior_markers.points.push_back(p2);
 			
 // 			std::cout << "angle " << angle<< std::endl;
 			p2.x = p.x + (2 * std::cos(angle + (anglew/2)) );
 			p2.y = p.y + (2 * std::sin(angle + (anglew/2)) );
-			p2.z = 0;
+			p2.z = acg.getZElevation();
 			_anglesw_prior_markers.points.push_back(p);
 			_anglesw_prior_markers.points.push_back(p2);
 			
@@ -1052,21 +1052,21 @@ namespace acg{
 	}
 
 	
-	inline void VisuAutoCompleteGraph::drawRobotPoses(){
+	inline void VisuAutoCompleteGraph::drawRobotPoses(const AutoCompleteGraph& acg){
 	
 // 		std::cout << "Drawgin robot poses " << std::endl;
 		_ndt_node_markers.points.clear();
 		_ndt_node_markers.header.stamp = ros::Time::now();
 		
-		for(size_t i = 0 ; i < _acg->getRobotNodes().size() ; ++i){
+		for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
 
-			auto node = _acg->getRobotNodes()[i];
+			auto node = acg.getRobotNodes()[i];
 			geometry_msgs::Point p;
 			auto vertex2 = node->estimate().toVector();
 			//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 			p.x = vertex2(0);
 			p.y = vertex2(1);
-			p.z = 0;
+			p.z = acg.getZElevation();
 			
 			_ndt_node_markers.points.push_back(p);
 			

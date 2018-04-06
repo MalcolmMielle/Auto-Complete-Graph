@@ -991,6 +991,7 @@ public:
 				 // 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
 				 //
 				 if (use_mcl_ && mcl_loaded_) {
+					 std::cout << "*************************** > Real Localization < ****************************" << std::endl;
 
 					 std::cout << acg_localization->getLocalizations().size() << " == " <<  nb_of_node_new << std::endl;
 					 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
@@ -1002,6 +1003,8 @@ public:
 					 //Export all localization information.
 				 }
 				 else{
+
+					 std::cout << "*************************** > Mock Localization < ****************************" << std::endl;
 
 					 auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
 					 graphmaplocalizationmsg.graph_map = graphmapmsg;

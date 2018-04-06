@@ -133,7 +133,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 // 	std::cout << "saved to " << file_out << std::endl;
 	
 	/*** image****/
-	visu.updateRvizNoNDT();
+	visu.updateRvizNoNDT(*oacg);
 	
 	
 // 	oacg->initializeOptimization();
@@ -145,7 +145,7 @@ void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg
 	count++;
 	
 	
-	visu.updateRviz();
+	visu.updateRviz(*oacg);
 	
 // 	printImages(oacg);
 // 	std::string file_out_after = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_after_";
@@ -298,7 +298,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 	
 // 	AASS::acg::VisuAutoCompleteGraph visu(&oacg);
-	AASS::acg::VisuAutoCompleteGraph visu(&oacg, nh);
+	AASS::acg::VisuAutoCompleteGraph visu(nh);
 	visu.setImageFileNameOut("/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/optimization_rviz_small");
 	
 	AASS::acg::GoodMatchings goodmatchings(nh, &oacg);
@@ -308,7 +308,7 @@ int main(int argc, char **argv)
     
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	
-	visu.updateRvizNoNDT();
+	visu.updateRvizNoNDT(oacg);
 	
 	timef = ros::Time::now();
 	ros::Time time_begin = ros::Time::now();
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 		if( (future - timef).toSec() >= 10 && oacg.getRobotNodes().size() > 5 && new_node == true){
 // 			std::cout << "Out " << (future - timef).toSec() << " "<< (timef).toSec() << " " <<(future).toSec() <<std::endl;
 // 			exit(0);
-			visu.updateRvizNoNDT();	
+			visu.updateRvizNoNDT(oacg);
 		// 	oacg->initializeOptimization();
 		// 	oacg->initialGuess();
 			//Prepare the graph : marginalize + initializeOpti
@@ -343,7 +343,7 @@ int main(int argc, char **argv)
 			std::cout << "********************************************************" << std::endl << std::endl;
 // 			flag = false;
 			
-			visu.updateRviz();
+			visu.updateRviz(oacg);
 			
 			goodmatchings.getOutliers();
 			
