@@ -388,6 +388,9 @@ g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addLo
 //TODO: refactor this!
 void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, g2o::VertexSE2RobotLocalization* robot_localization)
 {
+
+	int corners_added = 0, observations_added = 0;
+
 	//HACK For now : we translate the Corner extracted and not the ndt-maps
 	auto cells = map->getAllCellsShared();
 	std::cout << "got all cell shared " <<  cells.size() << std::endl;
@@ -407,7 +410,11 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 	cov_2d << cov(0,0), cov(0,1),
 			cov(1,0), cov(1,1);
 
+	//If corners are found too close we fuse them:
+	std::set<g2o::VertexLandmarkNDT*> corner_seen_here;
+
 	for(size_t i = 0 ; i < corners_end.size() ; ++i){
+		corners_added++;
 // 		std::cout << "checking corner : " << _nodes_landmark.size() << std::endl ;  /*corners_end[i].print()*/ ; std::cout << std::endl;
 		bool seen = false;
 		g2o::VertexLandmarkNDT* ptr_landmark_seen = NULL;
@@ -418,7 +425,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 
 			double res = cv::norm(point_land - corners_end[i].position);
 
-			std::cout << "res : " << std::endl;
+//			std::cout << "res : " << std::endl;
 
 			//If we found the landmark, we save the data
 			if( res < cell_size * 2){
@@ -426,42 +433,61 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				ptr_landmark_seen = _nodes_landmark[j];
 			}
 		}
-		if(seen == false){
-			std::cout << "New point " << i << std::endl;
+
+		auto ptr_find = corner_seen_here.find(ptr_landmark_seen);
+		//If the corner was not added this turn around
+		if(ptr_find == corner_seen_here.end()) {
+			if (seen == false) {
+//				std::cout << "New point " << i << std::endl;
 // 			assert(i < ret_export.size());
-			g2o::Vector2 position_globalframe;
-			position_globalframe << corners_end[i].position.x, corners_end[i].position.y ;
+				g2o::Vector2 position_globalframe;
+				position_globalframe << corners_end[i].position.x, corners_end[i].position.y;
 // 			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
 
-			cv::Point2f p_observation;
-			std::cout << "New point " << i << std::endl;
-			p_observation.x = corners_end[i].getObservations()(0);
-			std::cout << "New point " << i << std::endl;
-			p_observation.y = corners_end[i].getObservations()(1);
-			std::cout << "New point " << i << std::endl;
-			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(position_globalframe, p_observation, 1);
-			ptr->addAnglesOrientations(corners_end[i].getAngleWidths(), corners_end[i].getOrientations());
-			ptr->first_seen_from = robot_ptr;
+				cv::Point2f p_observation;
+//				std::cout << "New point " << i << std::endl;
+				p_observation.x = corners_end[i].getObservations()(0);
+//				std::cout << "New point " << i << std::endl;
+				p_observation.y = corners_end[i].getObservations()(1);
+//				std::cout << "New point " << i << std::endl;
+				g2o::VertexLandmarkNDT *ptr = addLandmarkPose(position_globalframe, p_observation, 1);
+				ptr->addAnglesOrientations(corners_end[i].getAngleWidths(), corners_end[i].getOrientations());
+				ptr->first_seen_from = robot_ptr;
 
-			//TESTING to visualise which cells gave the corner
-			ptr->cells_that_gave_it_1 = corners_end[i].cells1;
-			ptr->cells_that_gave_it_2 = corners_end[i].cells2;
-			ptr->robotpose_seen_from = robot_ptr->estimate();
-			//END OF TEST
+				//TESTING to visualise which cells gave the corner
+				ptr->cells_that_gave_it_1 = corners_end[i].cells1;
+				ptr->cells_that_gave_it_2 = corners_end[i].cells2;
+				ptr->robotpose_seen_from = robot_ptr->estimate();
+				//END OF TEST
 
-			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr);
-			//Add covariance given by MCL instead of the default one.
-			addLandmarkObservation(corners_end[i].getObservations(), robot_localization, ptr, cov_2d);
+				corner_seen_here.insert(ptr);
+				std::cout << "Adding corner " << ptr << " from " << corners_end[i].getNodeLinkedPtr() << " and " << robot_localization << std::endl;
+
+				addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr);
+				//Add covariance given by MCL instead of the default one.
+				addLandmarkObservation(corners_end[i].getObservations(), robot_localization, ptr, cov_2d);
+
+				observations_added++;
+				observations_added++;
 
 
+			} else {
+				std::cout << "Point seen: " << ptr_landmark_seen << " from " << corners_end[i].getNodeLinkedPtr() << " and " << robot_localization << std::endl;
+				addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(),
+				                       ptr_landmark_seen);
+				//Add covariance given by MCL instead of the default one.
+				addLandmarkObservation(corners_end[i].getObservations(), robot_localization, ptr_landmark_seen, cov_2d);
+				observations_added++;
+				observations_added++;
+
+				corner_seen_here.insert(ptr_landmark_seen);
+			}
 		}
 		else{
-			std::cout << "Point seen " << std::endl;
-			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr_landmark_seen);
-			//Add covariance given by MCL instead of the default one.
-			addLandmarkObservation(corners_end[i].getObservations(), robot_localization, ptr_landmark_seen, cov_2d);
+			std::cout << "Created in this loop" << std::endl;
 		}
 	}
+//	assert(corners_added * 2 == observations_added);
 
 }
 

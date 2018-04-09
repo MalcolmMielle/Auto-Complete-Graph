@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+
+
+<node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen">
+
+	<param name="use_prior" value="true" />
+	<param name="use_corner" value="true" />
+	<param name="own_registration" value="true" />
+	<param name="link_to_prior" value="true" />
+	<param name="world_frame" value="/world" />
+	<param name="sensor_frame" value="/velodyne" />
+
+    <remap from="acg_node_localization/prior_ndt" to ="/ndt_map_init_mcl"/>
+ <!-- /auto_complete_graph_rviz_small_optimi -->
+
+  </node>
+
+
+</launch>

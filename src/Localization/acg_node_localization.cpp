@@ -83,8 +83,8 @@ void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, const AASS::acg::AutoCo
 		perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
 		AASS::acg::ACGPriorToNDTMap(oacg, *ndt_prior, 0.1);
 
-		auto allcells = ndt_prior->getAllCellsShared();
-		assert(allcells.size() > 0);
+//		auto allcells = ndt_prior->getAllCellsShared();
+//		assert(allcells.size() > 0);
 
 		ndt_map::NDTMapMsg priormapmsg;
 		perception_oru::toMessage(ndt_prior, priormapmsg, "world");
@@ -347,6 +347,14 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 				timef = ros::Time::now();
 				all_node_times.push_back((timef - start).toSec());
+
+
+
+				std::cout << "\n************** Description *************" << std::endl;
+				std::cout << "Number of corners " << oacg->getLandmarkNodes().size() << std::endl;
+				std::cout << "Number of poses " << oacg->getRobotNodes().size() << std::endl;
+				std::cout << "Number of observation " << oacg->getLandmarkEdges().size() << std::endl;
+				std::cout << "************** ********** *************\n" << std::endl;
 				
 			// 	nav_msgs::OccupancyGrid omap; 
 			// 	perception_oru::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
@@ -429,32 +437,47 @@ int main(int argc, char **argv)
 	ros::Subscriber call_for_publish_occ, publish_prior_ndt;
     ros::NodeHandle nh("~");
 
-	
-	
+	/**************PARAMETERS**************/
+	bool use_prior = true;
+	nh.param("use_prior",use_prior,true);
+	bool use_corner = true;
+	nh.param("use_corner",use_corner,true);
+	bool own_registration = true;
+	nh.param("own_registration",own_registration,true);
+	bool link_to_prior = true;
+	nh.param("link_to_prior",link_to_prior,true);
+	std::string world_frame;
+	nh.param<std::string>("world_frame",world_frame,"/world");
+	std::string sensor_frame;
+	nh.param<std::string>("sensor_frame",sensor_frame,"/velodyne");
 	double deviation = 0;
+	nh.param<double>("deviation", deviation, 0);
 	double angle = 0;
+	nh.param<double>("angle", angle, 0);
 	double scale = 1;
+	nh.param<double>("scale", scale, 1.0);
 	cv::Point2f center(19.5, 4.5);
-	if(argc > 1){
-		deviation = strtod(argv[1], NULL);
-		if(argc > 2){
-			angle = strtod(argv[2], NULL);
-			if(argc > 3){
-				scale = strtod(argv[3], NULL);
-				if(argc > 5){
-					center.x = strtod(argv[4], NULL);
-					center.y = strtod(argv[5], NULL);
-				}
-			}
-		}
-	}
+
+//	if(argc > 1){
+//		deviation = strtod(argv[1], NULL);
+//		if(argc > 2){
+//			angle = strtod(argv[2], NULL);
+//			if(argc > 3){
+//				scale = strtod(argv[3], NULL);
+//				if(argc > 5){
+//					center.x = strtod(argv[4], NULL);
+//					center.y = strtod(argv[5], NULL);
+//				}
+//			}
+//		}
+//	}
 
 	AASS::acg::BasementFull basement(deviation, angle, scale, center);
 	basement.extractCornerPrior();
 	basement.transformOntoSLAM();
 	auto graph_prior = basement.getGraph();
 
-	auto sensor_pose = getPoseTFTransform("/world", "/velodyne");
+	auto sensor_pose = getPoseTFTransform(world_frame, sensor_frame);
 	//Create graph instance
 	//
 	std::string path_to_acg = ros::package::getPath("auto_complete_graph");
@@ -462,14 +485,19 @@ int main(int argc, char **argv)
 	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), param);
 	
 	//Use corner orientation ?
-	oacg.useCornerOrientation(true);
-	oacg.extractCorners(false);
-	oacg.doOwnRegistrationBetweenSubmaps(true);
+	oacg.useCornerOrientation(use_corner);
+	oacg.extractCorners(use_corner);
+	oacg.doOwnRegistrationBetweenSubmaps(own_registration);
 	oacg.setZElevation(sensor_pose.getOrigin().getZ());
-	
+
+	oacg.usePrior(use_prior);
 	//ATTENTION
-	oacg.addPriorGraph(graph_prior);
-	oacg.setPriorReference();
+	if(use_prior) {
+		oacg.addPriorGraph(graph_prior);
+		oacg.setPriorReference();
+	}
+
+	oacg.linkToPrior(link_to_prior);
 		
 	//Create initialiser
 	AASS::acg::RvizPoints initialiser(nh, &oacg);

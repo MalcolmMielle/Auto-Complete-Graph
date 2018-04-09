@@ -138,6 +138,17 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(double x, d
 
 g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark){
 
+	//Making sure the same edge is not added twice
+
+	for(auto land_edge : _edge_landmark){
+		if(v1 == land_edge->vertices()[0] && v2 == land_edge->vertices()[1]){
+			throw std::runtime_error("Edge observation already added");
+		}
+		else if(v1 == land_edge->vertices()[1] && v2 == land_edge->vertices()[0]){
+			throw std::runtime_error("Edge observation already added");
+		}
+	}
+
     Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 
 	g2o::EdgeLandmark_malcolm* landmarkObservation =  new g2o::EdgeLandmark_malcolm;
@@ -1038,78 +1049,83 @@ void AASS::acg::AutoCompleteGraph::updateNDTGraph(ndt_feature::NDTFeatureGraph& 
 void AASS::acg::AutoCompleteGraph::updateLinks()
 {
 
-	std::cout << "Create new links" << std::endl;
+	if(_use_links_prior) {
+		std::cout << "Create new links" << std::endl;
 // 	int count = countLinkToMake();
-	int count2 = createNewLinks();
+		int count2 = createNewLinks();
 // 	if(count != count2){
 // 		std::cout << "Weird different detection" << std::endl;
 // 		throw std::runtime_error("ARF NOT GOOD COUNT in update link");
 // 	}
-	std::cout << "updateLink no small forgotten" << std::endl;
+		std::cout << "updateLink no small forgotten" << std::endl;
 // 	checkLinkNotForgotten();
-	removeBadLinks();
-	std::cout << "update link not too big" << std::endl;
-	checkLinkNotTooBig();
+		removeBadLinks();
+		std::cout << "update link not too big" << std::endl;
+		checkLinkNotTooBig();
+	}
 }
 
 int AASS::acg::AutoCompleteGraph::createNewLinks()
 {
-	int count = 0 ;
+
+	if(_use_links_prior) {
+		int count = 0;
 // 	std::vector < std::pair < g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*> > links;
 
-	std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
-	std::cout << "Prior " << _nodes_prior.size() << std::endl;
+		std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
+		std::cout << "Prior " << _nodes_prior.size() << std::endl;
 // 	if(_nodes_prior.size() > 0){
 
-	//Update ALL links
-	auto it = _nodes_landmark.begin();
-	for(it ; it != _nodes_landmark.end() ; it++){
+		//Update ALL links
+		auto it = _nodes_landmark.begin();
+		for (it; it != _nodes_landmark.end(); it++) {
 // 		std::cout << "Working on links " << std::endl;
-		Eigen::Vector2d pose_landmark = (*it)->estimate();
-		auto it_prior = _nodes_prior.begin();
-		for(it_prior ; it_prior != _nodes_prior.end() ; ++it_prior){
+			Eigen::Vector2d pose_landmark = (*it)->estimate();
+			auto it_prior = _nodes_prior.begin();
+			for (it_prior; it_prior != _nodes_prior.end(); ++it_prior) {
 
-			//Don't add the same link twice
-			if(linkAlreadyExist(*it, *it_prior) == false){
+				//Don't add the same link twice
+				if (linkAlreadyExist(*it, *it_prior) == false) {
 
 
-				//TODO TEST IT
-				if(_flag_use_corner_orientation == false || (_flag_use_corner_orientation == true && (*it)->sameOrientation(**it_prior))){
+					//TODO TEST IT
+					if (_flag_use_corner_orientation == false ||
+					    (_flag_use_corner_orientation == true && (*it)->sameOrientation(**it_prior))) {
 
-					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
-					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
-					double norm_tmp = (pose_prior - pose_landmark).norm();
-	// 				std::cout << "new" << std::endl;
+						Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+						Eigen::Vector2d pose_prior;
+						pose_prior << pose_tmp(0), pose_tmp(1);
+						double norm_tmp = (pose_prior - pose_landmark).norm();
+						// 				std::cout << "new" << std::endl;
 
-					//Update the link
-					if(norm_tmp <= _min_distance_for_link_in_meter){
-						std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter << std::endl;
-	// 					ptr_closest = *it_prior;
-	// 					norm = norm_tmp;
-						//Pushing the link
-	// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-	// 					links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it, *it_prior));
+						//Update the link
+						if (norm_tmp <= _min_distance_for_link_in_meter) {
+							std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter
+							          << std::endl;
+							// 					ptr_closest = *it_prior;
+							// 					norm = norm_tmp;
+							//Pushing the link
+							// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+							// 					links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it, *it_prior));
 
-						g2o::Vector2 vec;
-						vec << 0, 0;
-						addLinkBetweenMaps(vec, *it_prior, *it);
+							g2o::Vector2 vec;
+							vec << 0, 0;
+							addLinkBetweenMaps(vec, *it_prior, *it);
 
-						++count;
+							++count;
+						}
+					} else {
+						std::cout << "Orientation check failed" << std::endl;
 					}
-				}
-				else{
-					std::cout << "Orientation check failed" << std::endl;
-				}
-			}
-			else{
+				} else {
 
-				std::cout << "Already exist" << std::endl;
+					std::cout << "Already exist" << std::endl;
+				}
 			}
-		}
-		//Pushing the link
+			//Pushing the link
 // 			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
 // 			links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it, ptr_closest));
-	}
+		}
 
 // 	auto it_links = links.begin();
 // 	for(it_links ; it_links != links.end() ; it_links++){
@@ -1120,7 +1136,11 @@ int AASS::acg::AutoCompleteGraph::createNewLinks()
 // 	}
 // 	}
 
-return count;
+		return count;
+	}
+	else {
+		return 0;
+	}
 
 }
 

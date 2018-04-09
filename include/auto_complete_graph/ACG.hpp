@@ -56,6 +56,10 @@ namespace acg{
 		///@brief user user inputted cov for robot pos. Uses registration otherwise
 		bool _use_user_robot_pose_cov;
 
+		bool _use_links_prior;
+
+		bool _use_prior;
+
 		bool _flag_optimize;
 
 		bool _flag_use_robust_kernel;
@@ -243,7 +247,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false) {
+  					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false) {
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -257,7 +261,7 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
+					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
 
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -268,7 +272,7 @@ namespace acg{
 					}
 
 
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
 
 
 			std::ifstream infile(load_file);
@@ -375,24 +379,30 @@ namespace acg{
 		double getZElevation() const {return _z_elevation;}
 
 		void setMinDistanceForLinksInMeters(double inpu){_min_distance_for_link_in_meter = inpu;}
-		double getMinDistanceForLinksInMeters(){return _min_distance_for_link_in_meter;}
+		double getMinDistanceForLinksInMeters() const {return _min_distance_for_link_in_meter;}
 
 		void setMaxDistanceForLinksInMeters(double inpu){_max_distance_for_link_in_meter = inpu;}
-		double getMaxDistanceForLinksInMeters(){return _max_distance_for_link_in_meter;}
+		double getMaxDistanceForLinksInMeters() const {return _max_distance_for_link_in_meter;}
 
 		void useUserCovForPrior(bool u){_use_user_prior_cov = u;}
-		bool isUsingUserCovForPrior(){return _use_user_prior_cov;}
+		bool isUsingUserCovForPrior() const {return _use_user_prior_cov;}
 
 		void useUserCovForRobotPose(bool u){_use_user_robot_pose_cov = u;}
-		bool isUsingUserCovForRobotPose(){return _use_user_robot_pose_cov;}
+		bool isUsingUserCovForRobotPose() const {return _use_user_robot_pose_cov;}
 
 		void useCornerOrientation(bool b){_flag_use_corner_orientation = b;}
-		bool isUsingCornerOrientation(){return _flag_use_corner_orientation;}
+		bool isUsingCornerOrientation() const {return _flag_use_corner_orientation;}
 
-		double getStepAge(){return _age_step;}
+		void usePrior(bool setter){_use_prior = setter;}
+		bool isUsingPrior() const {return _use_prior;}
+
+		void linkToPrior(bool setter){ _use_links_prior = setter;}
+		bool isUsingLinksToPrior(){return _use_links_prior;}
+
+		double getStepAge() const {return _age_step;}
 		void setStepAge(double ss){_age_step = ss;}
 
-		double getStartAge(){return _age_start_value;}
+		double getStartAge() const {return _age_start_value;}
 		void setAgeStartValue(double ss){ _age_start_value = ss;}
 
 		void numberOfIterationsToCheckForStabilityOfError(int e){
