@@ -10,10 +10,13 @@
 
 namespace g2o{
 	
-class VertexLandmarkNDT: public g2o::VertexPointXYACG
+	class VertexLandmarkNDT: public g2o::VertexPointXYACG
 	{
 		public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+		//Covariance of localization
+		Eigen::Matrix2d cov_mcl_localization;
 			
 		//TESTING
 		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_1;
@@ -31,7 +34,11 @@ class VertexLandmarkNDT: public g2o::VertexPointXYACG
 		g2o::VertexSE2RobotPose* first_seen_from;
 		
 		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXYACG(){};
-		
+
+		const Eigen::Matrix2d& getCovarianceObservation() const {return cov_mcl_localization;}
+		Eigen::Matrix2d& getCovarianceObservation(){return cov_mcl_localization;}
+		void setCovarianceObservation(const Eigen::Matrix2d& cov){ cov_mcl_localization = cov;}
+
 		const std::vector < std::pair<double, double> >& getAnglesAndOrientations() const {return angle_orientation;}
 		double getAngleWidth(int i){return angle_orientation[i].first;}
 		double getOrientation(int i){return angle_orientation[i].second;}

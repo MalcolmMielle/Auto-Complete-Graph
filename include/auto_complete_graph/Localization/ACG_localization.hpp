@@ -69,6 +69,15 @@ namespace acg{
 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information);
 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, int from_id, const Eigen::Matrix3d& information);
 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information);
+
+	    /**
+	     * @brief Uses the covariance from MCL instead of a user chosen one.
+	     * @param pos link size
+	     * @param v2 from
+	     * @param v1 toward
+	     * @return link edge created
+	     */
+	    g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1);
 // 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& observ, int from_id);
 // 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id);
 		

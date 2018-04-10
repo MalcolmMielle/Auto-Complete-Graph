@@ -71,6 +71,16 @@ g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraph::addPriorLandmarkPose(double x
 
 g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix3d& information_tmp){
 
+
+	for(auto odom_edge : _edge_odometry){
+		if(v1 == odom_edge->vertices()[0] && v2 == odom_edge->vertices()[1]){
+			throw std::runtime_error("Edge odometry already added");
+		}
+		else if(v1 == odom_edge->vertices()[1] && v2 == odom_edge->vertices()[0]){
+			throw std::runtime_error("Edge odometry already added");
+		}
+	}
+
 	Eigen::Matrix3d information;
 	if(_use_user_robot_pose_cov == true){
 		Eigen::Matrix3d covariance_robot;
@@ -80,6 +90,8 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::
 	// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
 		covariance_robot(2, 2) = _rotNoise * _rotNoise;
 		information = covariance_robot.inverse();
+
+		throw std::runtime_error("Do not use user inputted values in odometry");
 	}
 	else{
 		 information = information_tmp;
@@ -119,6 +131,8 @@ g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraph::addOdometry(const g2o::
 	covariance(1, 1) = _transNoise[1]*_transNoise[1];
 	covariance(2, 2) = _rotNoise*_rotNoise;
 	Eigen::Matrix3d information = covariance.inverse();
+
+	throw std::runtime_error("Do not use user inputted values in odometry");
 
 	return addOdometry(se2, v1, v2, information);
 }
@@ -176,6 +190,9 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 	covariance_landmark.fill(0.);
 	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
 	covariance_landmark(1, 1) = _landmarkNoise[1]*_landmarkNoise[1];
+
+	throw std::runtime_error("Do not use user inputted values in landmark observation");
+
 // 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
 	return addLandmarkObservation(pos, v1, v2, covariance_landmark);
 }
@@ -187,6 +204,14 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 
 g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 
+	for(auto prior_edge : _edge_prior){
+		if(v1 == prior_edge->vertices()[0] && v2 == prior_edge->vertices()[1]){
+			throw std::runtime_error("Edge link already added");
+		}
+		else if(v1 == prior_edge->vertices()[1] && v2 == prior_edge->vertices()[0]){
+			throw std::runtime_error("Edge link already added");
+		}
+	}
 
 	//Get Eigen vector
 	g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
@@ -267,11 +292,23 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraph::addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1){
 	std::cout << "Adding link" << std::endl;
 
+	for(auto link_edge : _edge_link){
+		if(v1 == link_edge->vertices()[0] && v2 == link_edge->vertices()[1]){
+			throw std::runtime_error("Edge link already added");
+		}
+		else if(v1 == link_edge->vertices()[1] && v2 == link_edge->vertices()[0]){
+			throw std::runtime_error("Edge link already added");
+		}
+	}
+
 
 	Eigen::Matrix2d covariance_link;
 	covariance_link.fill(0.);
 	covariance_link(0, 0) = _linkNoise[0]*_linkNoise[0];
 	covariance_link(1, 1) = _linkNoise[1]*_linkNoise[1];
+
+
+	throw std::runtime_error("Do not use user inputted values in links");
 
 // 	std::cout << "Link cov " << covariance_link << std::endl;
 

@@ -34,8 +34,8 @@ namespace AASS {
 				_localization_edge_markers.header.frame_id = "/world";
 				_localization_edge_markers.ns = "acg";
 				_localization_edge_markers.id = 0;
-				_localization_edge_markers.scale.x = 0.2;
-				_localization_edge_markers.scale.y = 0.2;
+				_localization_edge_markers.scale.x = 0.1;
+				_localization_edge_markers.scale.y = 0.1;
 				_localization_edge_markers.color.b = 1.0f;
 				_localization_edge_markers.color.a = 1.0;
 
