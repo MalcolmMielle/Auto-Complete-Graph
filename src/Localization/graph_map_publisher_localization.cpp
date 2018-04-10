@@ -160,7 +160,7 @@ protected:
   plotmarker plot_marker;
 
   message_filters::Subscriber<nav_msgs::Odometry> *gt_fuser_sub_;
-  ros::Subscriber gt_sub,points2OdomTfSub;
+  ros::Subscriber gt_sub,points2OdomTfSub, publisher_graph_map;
 
   ros::Subscriber ndt_mcl_map;
 
@@ -503,6 +503,10 @@ public:
 		particlePub_ = param_nh.advertise<geometry_msgs::PoseArray>("particles", 1);
 
 		std::cout << "Init mcl done" << std::endl;
+
+		publisher_graph_map=nh_.subscribe<std_msgs::Bool::ConstPtr>("/pub_graph_map_now", 10, &GraphMapFuserNode::pubGraphMap, this);
+
+
 	}
 	else{
 		std::cout << "ATTENTION NO MCL" << std::endl;
@@ -511,8 +515,62 @@ public:
 
   }
 
+	void pubGraphMap(const std_msgs::Bool::ConstPtr msg) {
 
-	geometry_msgs::PoseArray ParticlesToMsg(std::vector<perception_oru::particle, Eigen::aligned_allocator<perception_oru::particle> > particles){
+		std::cout << "Publishing" << std::endl;
+		ndt_map::NDTVectorMapMsg vector_maps;
+		perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
+		graph_map_vector_.publish(vector_maps);
+
+		//Save the new pose associated with the node.
+//		assert(nb_of_node_new - 1 > 0);
+
+//				 acg_localization->savePos(nb_of_node_new - 1);
+		std::cout << "PUBLISH: now" << std::endl;
+		//Publish message
+		graph_map::GraphMapMsg graphmapmsg;
+		perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, world_link_id);
+		// 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
+		//
+		if (use_mcl_ && mcl_loaded_) {
+			std::cout << "*************************** > Real Localization < ****************************" << std::endl;
+
+//			std::cout << acg_localization->getLocalizations().size() << " == " <<  nb_of_node_new << std::endl;
+//			assert(acg_localization->getLocalizations().size() == nb_of_node_new);
+
+			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
+			graphmaplocalizationmsg.graph_map = graphmapmsg;
+			acg_localization->toMessage(graphmaplocalizationmsg);
+			graphmap_localization_pub.publish(graphmaplocalizationmsg);
+			//Export all localization information.
+		}
+		else{
+
+			std::cout << "*************************** > Mock Localization < ****************************" << std::endl;
+
+			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
+			graphmaplocalizationmsg.graph_map = graphmapmsg;
+			mockLocalizationMessage(graphmaplocalizationmsg, fuser_->GetGraphMap()->GetNodes().size());
+			graphmap_localization_pub.publish(graphmaplocalizationmsg);
+
+//					 bool unstop = true;
+//					 while(nb_of_node_new >= 6 && unstop){
+//						 std::cout << "Keep publishing ? " << std::endl;
+//						 std::cin >> unstop;
+//						 graphmap_localization_pub.publish(graphmaplocalizationmsg);
+//
+//					 }
+
+		}
+
+		graphmap_pub_.publish(graphmapmsg);
+		// 			std::cout << "PUBLISHED" << std::endl;
+		// 		exit(0);
+	}
+
+
+
+		geometry_msgs::PoseArray ParticlesToMsg(std::vector<perception_oru::particle, Eigen::aligned_allocator<perception_oru::particle> > particles){
 		//ROS_INFO("publishing particles");
 		geometry_msgs::PoseArray ret;
 		for(int i = 0; i < particles.size(); i++){
@@ -971,59 +1029,9 @@ public:
 
 
 			 if (nb_of_node != nb_of_node_new) {
+			    std_msgs::Bool::Ptr bool_msg;
+				pubGraphMap(bool_msg);
 
-				 std::cout << "Publishing" << std::endl;
-				 ndt_map::NDTVectorMapMsg vector_maps;
-				 perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
-				 graph_map_vector_.publish(vector_maps);
-
-				 //Save the new pose associated with the node.
-				 assert(nb_of_node_new - 1 > 0);
-
-//				 acg_localization->savePos(nb_of_node_new - 1);
-
-
-
-				 std::cout << "PUBLISH: now" << std::endl;
-				 //Publish message
-				 graph_map::GraphMapMsg graphmapmsg;
-				 perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, world_link_id);
-				 // 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
-				 //
-				 if (use_mcl_ && mcl_loaded_) {
-					 std::cout << "*************************** > Real Localization < ****************************" << std::endl;
-
-					 std::cout << acg_localization->getLocalizations().size() << " == " <<  nb_of_node_new << std::endl;
-					 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
-
-					 auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
-					 graphmaplocalizationmsg.graph_map = graphmapmsg;
-					 acg_localization->toMessage(graphmaplocalizationmsg);
-					 graphmap_localization_pub.publish(graphmaplocalizationmsg);
-					 //Export all localization information.
-				 }
-				 else{
-
-					 std::cout << "*************************** > Mock Localization < ****************************" << std::endl;
-
-					 auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
-					 graphmaplocalizationmsg.graph_map = graphmapmsg;
-					 mockLocalizationMessage(graphmaplocalizationmsg, nb_of_node_new);
-					 graphmap_localization_pub.publish(graphmaplocalizationmsg);
-
-//					 bool unstop = true;
-//					 while(nb_of_node_new >= 6 && unstop){
-//						 std::cout << "Keep publishing ? " << std::endl;
-//						 std::cin >> unstop;
-//						 graphmap_localization_pub.publish(graphmaplocalizationmsg);
-//
-//					 }
-
-				 }
-
-				 graphmap_pub_.publish(graphmapmsg);
-				 // 			std::cout << "PUBLISHED" << std::endl;
-				 // 		exit(0);
 			 }
 		 }
 		 else{

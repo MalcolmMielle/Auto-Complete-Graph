@@ -24,6 +24,7 @@ namespace acg{
 
 	    bool _do_own_registration;
 	    bool _extract_corners;
+	    bool _use_corner_covariance;
 
 	    std::vector<g2o::EdgeLocalization*> _edges_localization;
 	    std::vector<g2o::VertexSE2RobotLocalization*> _nodes_localization;
@@ -39,7 +40,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _do_own_registration(true), _extract_corners(true), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){}
+  					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true),AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){}
   		
   		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, 
 						  const Eigen::Vector2d& tn, 
@@ -48,12 +49,13 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _do_own_registration(true), _extract_corners(true), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn){}
+					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true),AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn){}
 		
-		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), AutoCompleteGraph(sensoffset, load_file){}
+		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), AutoCompleteGraph(sensoffset, load_file){}
 
 	    void doOwnRegistrationBetweenSubmaps(bool setter){_do_own_registration = setter;}
 	    void extractCorners(bool setter){_extract_corners = setter;}
+	    void useCornerCovariance(bool setter){ _use_corner_covariance = setter;}
 
 	    std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 	    const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}

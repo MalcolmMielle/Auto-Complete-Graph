@@ -26,7 +26,7 @@ This should all be soon ros parameters but for now here is how you can test the 
 
 * Use `rosrun auto_complete_graph acg_node_review` to run the algorithm.
 
-* In Rviz, one can give an approximation of the position of the prior compared to robot map using the Publish point button. Only two links are needed to initialize.
+* In Rviz, one can give an approximation of the position_in_robot_frame of the prior compared to robot map using the Publish point button. Only two links are needed to initialize.
 
 ### How to use your own prior
 

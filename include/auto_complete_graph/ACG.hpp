@@ -76,30 +76,31 @@ namespace acg{
 		/**
 		 * @brief : used in a function to update the NDTGraph
 		 * */
-		class NDTCornerGraphElement{
+		class NDTCornerGraphElement : public perception_oru::ndt_feature_finder::NDTCornerBundle{
 			public:
-				cv::Point2f position;
+				cv::Point2f position_in_robot_frame;
 			protected:
 				//TODO : change it to a set
 // 				std::vector<int> nodes_linked;
 				g2o::VertexSE2RobotPose* nodes_linked_ptr;
 				Eigen::Vector2d observations;
-				std::vector<double> _angle_orientation;
-				std::vector<double> _angle_width;
+//				std::vector<double> _angle_orientation;
+//				std::vector<double> _angle_width;
 
 			public:
 				std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells1;
 				std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells2;
 
-				NDTCornerGraphElement(float x, float y) : position(x, y){};
-				NDTCornerGraphElement(const cv::Point2f& p) : position(p){};
+//				NDTCornerGraphElement(float x, float y) : position_in_robot_frame(x, y){};
+				NDTCornerGraphElement(const cv::Point2f& p) : position_in_robot_frame(p){};
+				NDTCornerGraphElement(const cv::Point2f& p, const perception_oru::ndt_feature_finder::NDTCornerBundle& ndtcorner): perception_oru::ndt_feature_finder::NDTCornerBundle(ndtcorner), position_in_robot_frame(p) {};
 
-				void addAllObserv(g2o::VertexSE2RobotPose* ptr, Eigen::Vector2d obs, const std::vector<double>& angle_orientation, const std::vector<double>& a_width){
+				void addAllObserv(g2o::VertexSE2RobotPose* ptr, Eigen::Vector2d obs){
 // 					nodes_linked.push_back(i);
 					observations = obs;
 					nodes_linked_ptr = ptr;
-					_angle_orientation = angle_orientation;
-					_angle_width = a_width;
+//					_angle_orientation = angle_orientation;
+//					_angle_width = a_width;
 				}
 
 
@@ -113,8 +114,8 @@ namespace acg{
 // 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
 				g2o::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
 				const Eigen::Vector2d& getObservations() const {return observations;}
-				const std::vector<double>& getOrientations() const {return _angle_orientation;}
-				const std::vector<double>& getAngleWidths() const {return _angle_width;}
+//				const std::vector<double>& getOrientations() const {return _angle_orientation;}
+//				const std::vector<double>& getAngleWidths() const {return _angle_width;}
 
 		// 		void push_back(int i){nodes_linked.push_back(i);}
 

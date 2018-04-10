@@ -6,6 +6,7 @@
 
 	<param name="use_prior" value="true" />
 	<param name="use_corner" value="true" />
+	<param name="corner_covariance" value="false" /> <!-- DOESNT WORK -->
 	<param name="own_registration" value="true" />
 	<param name="link_to_prior" value="true" />
 	<param name="world_frame" value="/world" />

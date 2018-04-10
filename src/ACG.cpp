@@ -191,7 +191,7 @@ g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraph::addLandmarkObservation(
 	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
 	covariance_landmark(1, 1) = _landmarkNoise[1]*_landmarkNoise[1];
 
-	throw std::runtime_error("Do not use user inputted values in landmark observation");
+//	throw std::runtime_error("Do not use user inputted values in landmark observation");
 
 // 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
 	return addLandmarkObservation(pos, v1, v2, covariance_landmark);
@@ -241,7 +241,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraph::addEdgePrior(const g2o:
 	std::pair<double, double> eigenval(newnorm, _priorNoise(1));
 // 	std::pair<double, double> eigenval(_priorNoise(0), _priorNoise(1));
 
-	Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
+	Eigen::Matrix2d cov = getCovarianceSingleEigenVector(eigenvec, eigenval);
 
 // 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
 
@@ -857,7 +857,7 @@ void AASS::acg::AutoCompleteGraph::getAllCornersNDTTranslatedToGlobalAndRobotFra
 
 	// 		auto vec_out_se2 = _nodes_ndt[i]->estimate();
 
-			//Calculate obstacle position in global coordinates.
+			//Calculate obstacle position_in_robot_frame in global coordinates.
 
 	// 		//Node it beong to :
 	// 		g2o::SE2 vec_out_se2 = g2o::SE2(robot_pos);
@@ -906,8 +906,8 @@ void AASS::acg::AutoCompleteGraph::getAllCornersNDTTranslatedToGlobalAndRobotFra
 
 					std::cout << "NEW POINT : "<< p_out << std::endl;
 
-			NDTCornerGraphElement cor(p_out);
-			cor.addAllObserv(robot_ptr, observation, orientations, angles_width);
+			NDTCornerGraphElement cor(p_out, *it);
+			cor.addAllObserv(robot_ptr, observation);
 			cor.cells1 = it->getCells1();
 			cor.cells2 = it->getCells2();
 			corners_end.push_back(cor);
@@ -950,7 +950,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<per
 			g2o::Vector2 landmark = _nodes_landmark[j]->estimate();
 			cv::Point2f point_land(landmark(0), landmark(1));
 
-			double res = cv::norm(point_land - corners_end[i].position);
+			double res = cv::norm(point_land - corners_end[i].position_in_robot_frame);
 
 			std::cout << "res : " << std::endl;
 
@@ -964,7 +964,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<per
 			std::cout << "New point " << i << std::endl;
 // 			assert(i < ret_export.size());
 			g2o::Vector2 position_globalframe;
-			position_globalframe << corners_end[i].position.x, corners_end[i].position.y ;
+			position_globalframe << corners_end[i].position_in_robot_frame.x, corners_end[i].position_in_robot_frame.y ;
 // 			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
 
 			cv::Point2f p_observation;
@@ -974,7 +974,7 @@ void AASS::acg::AutoCompleteGraph::extractCornerNDTMap(const std::shared_ptr<per
 			p_observation.y = corners_end[i].getObservations()(1);
 			std::cout << "New point " << i << std::endl;
 			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(position_globalframe, p_observation, 1);
-			ptr->addAnglesOrientations(corners_end[i].getAngleWidths(), corners_end[i].getOrientations());
+			ptr->addAnglesOrientations(corners_end[i].getAngles(), corners_end[i].getOrientations());
 			ptr->first_seen_from = robot_ptr;
 
 			//TESTING to visualise which cells gave the corner
@@ -1429,7 +1429,7 @@ void AASS::acg::AutoCompleteGraph::updatePriorEdgeCovariance()
 
 		std::cout << "Eigen vec " << eigenvec << " egenval " << eigenval.first << " " << eigenval.second << std::endl;
 
-		Eigen::Matrix2d cov = getCovarianceVec(eigenvec, eigenval);
+		Eigen::Matrix2d cov = getCovarianceSingleEigenVector(eigenvec, eigenval);
 
 	// 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
 

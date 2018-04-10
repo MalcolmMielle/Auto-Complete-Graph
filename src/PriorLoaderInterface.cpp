@@ -314,7 +314,7 @@ void AASS::acg::PriorLoaderInterface::initialize(const std::vector< cv::Point2f 
 // 		assert(descriptors_1.rows == 1);
 // 		
 // 		nodeAttribute.keypoint = keypoint;
-// 		nodeAttribute.position = keypoint.pt;
+// 		nodeAttribute.position_in_robot_frame = keypoint.pt;
 // 		nodeAttribute.descriptor = descriptors_1;
 // 		
 // 		_prior_graph.addVertex(vertex_out, nodeAttribute);

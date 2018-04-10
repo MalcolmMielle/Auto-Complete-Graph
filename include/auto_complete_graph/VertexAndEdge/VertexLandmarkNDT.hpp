@@ -28,7 +28,7 @@ namespace g2o{
 
 		cv::Point2f position;
 		cv::KeyPoint keypoint;
-// 		cv::Point2d position;
+// 		cv::Point2d position_in_robot_frame;
 		cv::Mat descriptor;
 		std::vector < std::pair<double, double> > angle_orientation;
 		g2o::VertexSE2RobotPose* first_seen_from;

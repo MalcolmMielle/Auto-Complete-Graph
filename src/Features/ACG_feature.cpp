@@ -69,7 +69,7 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(const std::shared_
 			perception_oru::ndt_feature_finder::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
 			
 			//Use accurate CV point
-			//Get old position
+			//Get old position_in_robot_frame
 // 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
 // 			cv::Point2f p_observation;
 // 			p_observation.x = corners_end[i].getObservations()(0);
@@ -173,7 +173,7 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(const std::shared_
 // 			perception_oru::ndt_feature_finder::toCvMat(*map_tmp, ndt_img, size_image_max, max, min);
 // 			
 // 			//Use accurate CV point
-// 			//Get old position
+// 			//Get old position_in_robot_frame
 // // 			std::cout << "Position " << ret_opencv_point_corner[i] << std::endl;
 // 			cv::Point2i center = perception_oru::ndt_feature_finder::scalePoint(ret_export[i].getMeanOpenCV(), max, min, size_image_max);
 // // 			std::cout << "Position " << center << "max min " << max << " " << min << std::endl;

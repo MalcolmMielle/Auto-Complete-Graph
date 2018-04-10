@@ -50,7 +50,7 @@ namespace g2o {
 
 	void EdgeSE2PointXYACG::initialEstimate(const OptimizableGraph::VertexSet& from, OptimizableGraph::Vertex* to)
 	{
-		assert(from.size() == 1 && from.count(_vertices[0]) == 1 && "Can not initialize VertexSE2ACG position by VertexPointXYACG");
+		assert(from.size() == 1 && from.count(_vertices[0]) == 1 && "Can not initialize VertexSE2ACG position_in_robot_frame by VertexPointXYACG");
 
 		VertexSE2ACG* vi     = static_cast<VertexSE2ACG*>(_vertices[0]);
 		VertexPointXYACG* vj = static_cast<VertexPointXYACG*>(_vertices[1]);

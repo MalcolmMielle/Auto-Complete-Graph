@@ -714,8 +714,8 @@ namespace acg{
 // 		occ_grid.info.height=size_y_cell_count;
 // 		occ_grid.info.resolution=resolution;
 // 		occ_grid.info.map_load_time=ros::Time::now();
-// 		occ_grid.info.origin.position.x=orig_x;
-// 		occ_grid.info.origin.position.y=orig_y;
+// 		occ_grid.info.origin.position_in_robot_frame.x=orig_x;
+// 		occ_grid.info.origin.position_in_robot_frame.y=orig_y;
 // 		occ_grid.header.stamp=ros::Time::now();
 // 		occ_grid.header.frame_id=frame_id;
 		map.setFrameId(frame_id);
@@ -903,10 +903,10 @@ namespace acg{
 // 		grid_map::Matrix& data = target[layer2];
 // 		
 // 		for (grid_map::GridMapIterator it(target); !it.isPastEnd(); ++it) {
-// 			grid_map::Position position;
-// 			target.getPosition(*it, position);
+// 			grid_map::Position position_in_robot_frame;
+// 			target.getPosition(*it, position_in_robot_frame);
 // 			try{
-// 				double val = modifiedMap.atPosition(layer, position);
+// 				double val = modifiedMap.atPosition(layer, position_in_robot_frame);
 // // 				std::cout << "val norm " << val << " " << target.at(layer2, *it) << std::endl;
 // 				
 // 				if(target.at(layer2, *it) < val || std::isnan(target.at(layer2, *it)) ){

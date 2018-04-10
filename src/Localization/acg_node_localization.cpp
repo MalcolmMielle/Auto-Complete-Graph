@@ -160,7 +160,7 @@ inline void printImages(AASS::acg::AutoCompleteGraph* oacg){
 	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt, "all", gridMap);
 // 
 // 	
-// 	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;	
+// 	std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position_in_robot_frame << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
 // 	
 	cv::Mat originalImageP;
 	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
@@ -446,6 +446,8 @@ int main(int argc, char **argv)
 	nh.param("own_registration",own_registration,true);
 	bool link_to_prior = true;
 	nh.param("link_to_prior",link_to_prior,true);
+	bool use_corner_covariance = true;
+	nh.param("corner_covariance",use_corner_covariance,true);
 	std::string world_frame;
 	nh.param<std::string>("world_frame",world_frame,"/world");
 	std::string sensor_frame;
@@ -489,6 +491,7 @@ int main(int argc, char **argv)
 	oacg.extractCorners(use_corner);
 	oacg.doOwnRegistrationBetweenSubmaps(own_registration);
 	oacg.setZElevation(sensor_pose.getOrigin().getZ());
+	oacg.useCornerCovariance(use_corner_covariance);
 
 	oacg.usePrior(use_prior);
 	//ATTENTION

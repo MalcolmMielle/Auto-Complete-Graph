@@ -246,7 +246,7 @@ namespace acg{
 // 				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
 				
 				std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
-// 				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
+// 				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position_in_robot_frame << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
 				
 // 				exit(0);
 				
@@ -404,8 +404,8 @@ namespace acg{
 // // 				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
 // // 				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
 // 				
-// 				std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
-// // 				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
+// 				std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position_in_robot_frame << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
+// // 				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position_in_robot_frame << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
 // 				
 // // 				exit(0);
 // 				
@@ -873,7 +873,7 @@ namespace acg{
 				
 				//TESTING
 // 				auto vertex_seen = (*it)->gaussian_seen_from.toVector();
-// 				auto point = ptr->position;
+// 				auto point = ptr->position_in_robot_frame;
 // 				p.x = point.x + vertex_seen(0);
 // 				p.y = point.y + vertex_seen(1);
 // 				p.z = 0;
