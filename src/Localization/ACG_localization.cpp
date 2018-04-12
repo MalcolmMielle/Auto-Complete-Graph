@@ -847,6 +847,12 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 							Eigen::Matrix2d icov = landmark->getInverseCovarianceObservation();
 							double l = (pose_prior - pose_landmark).dot(icov * (pose_prior - pose_landmark));
 							double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+
+							if(score >= _threshold_of_score_for_creating_a_link){
+								g2o::Vector2 vec;
+								vec << 0, 0;
+								addLinkBetweenMaps(vec, prior_node, landmark);
+							}
 						}
 
 						//Update the link

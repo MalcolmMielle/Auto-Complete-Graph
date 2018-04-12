@@ -452,6 +452,12 @@ int main(int argc, char **argv)
 	nh.param("covariance_to_find_links",use_covariance_to_find_links,false);
 	double gaussian_scale = 1;
 	nh.param<double>("gaussian_scaling_factor", gaussian_scale, 0);
+	double threshold_score_link_creation = 0.5;
+	nh.param<double>("threshold_score_link_creation", threshold_score_link_creation, 0.5);
+	if(threshold_score_link_creation > 1 || threshold_score_link_creation < 0){
+		std::cout << "threshold_score_link_creation needs to be between 0 and 1. Fix it" << std::endl;
+		return 0;
+	}
 	std::string world_frame;
 	nh.param<std::string>("world_frame",world_frame,"/world");
 	std::string sensor_frame;

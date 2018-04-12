@@ -13,6 +13,7 @@
 	<param name="sensor_frame" value="/velodyne" />
 	<param name="covariance_to_find_links" value="false" />
 	<param name="gaussian_scaling_factor" value="1" />
+	<param name="threshold_score_link_creation" value="0.5" />
 
     <remap from="acg_node_localization/prior_ndt" to ="/ndt_map_init_mcl"/>
  <!-- /auto_complete_graph_rviz_small_optimi -->
