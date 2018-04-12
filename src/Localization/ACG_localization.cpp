@@ -807,3 +807,90 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetwee
 // 	std::cout << "Done" << std::endl;
 	return linkObservation;
 }
+
+
+
+int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
+{
+
+	if(_use_links_prior) {
+		int count = 0;
+// 	std::vector < std::pair < g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*> > links;
+
+		std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
+		std::cout << "Prior " << _nodes_prior.size() << std::endl;
+// 	if(_nodes_prior.size() > 0){
+
+		//Update ALL links
+//		auto it = _nodes_landmark.begin();
+		for (auto landmark : _nodes_landmark) {
+// 		std::cout << "Working on links " << std::endl;
+			Eigen::Vector2d pose_landmark = landmark->estimate();
+//			auto it_prior = _nodes_prior.begin();
+			for (auto prior_node : _nodes_prior) {
+
+				//Don't add the same link twice
+				if (linkAlreadyExist(landmark, prior_node) == false) {
+
+					//TODO TEST IT
+					if (_flag_use_corner_orientation == false ||
+					    (_flag_use_corner_orientation == true && landmark->sameOrientation(*prior_node))) {
+
+						Eigen::Vector3d pose_tmp = prior_node->estimate().toVector();
+						Eigen::Vector2d pose_prior;
+						pose_prior << pose_tmp(0), pose_tmp(1);
+						double norm_tmp = (pose_prior - pose_landmark).norm();
+						// 				std::cout << "new" << std::endl;
+
+						if(_use_covariance_for_links) {
+							//Find distance needed using covariance of corner. STOLEN FROM LOCALIZATION *monkey which hides it eyes*
+							Eigen::Matrix2d icov = landmark->getInverseCovarianceObservation();
+							double l = (pose_prior - pose_landmark).dot(icov * (pose_prior - pose_landmark));
+							double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+						}
+
+						//Update the link
+						else if (norm_tmp <= _min_distance_for_link_in_meter) {
+							std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter
+							          << std::endl;
+							// 					ptr_closest = *it_prior;
+							// 					norm = norm_tmp;
+							//Pushing the link
+							// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+							// 					links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it, *it_prior));
+
+							g2o::Vector2 vec;
+							vec << 0, 0;
+							addLinkBetweenMaps(vec, prior_node, landmark);
+
+							++count;
+						}
+					} else {
+						std::cout << "Orientation check failed" << std::endl;
+					}
+				} else {
+
+					std::cout << "Already exist" << std::endl;
+				}
+			}
+			//Pushing the link
+// 			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+// 			links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it, ptr_closest));
+		}
+
+// 	auto it_links = links.begin();
+// 	for(it_links ; it_links != links.end() ; it_links++){
+// 		g2o::Vector2 vec;
+// 		vec << 0, 0;
+// 		std::cout << "Creating " << it_links->second << " and " << it_links->first << std::endl;
+// 		addLinkBetweenMaps(vec, it_links->second, it_links->first);
+// 	}
+// 	}
+
+		return count;
+	}
+	else {
+		return 0;
+	}
+
+}

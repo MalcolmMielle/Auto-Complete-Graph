@@ -448,6 +448,10 @@ int main(int argc, char **argv)
 	nh.param("link_to_prior",link_to_prior,true);
 	bool use_corner_covariance = true;
 	nh.param("corner_covariance",use_corner_covariance,true);
+	bool use_covariance_to_find_links = false;
+	nh.param("covariance_to_find_links",use_covariance_to_find_links,false);
+	double gaussian_scale = 1;
+	nh.param<double>("gaussian_scaling_factor", gaussian_scale, 0);
 	std::string world_frame;
 	nh.param<std::string>("world_frame",world_frame,"/world");
 	std::string sensor_frame;
@@ -492,6 +496,8 @@ int main(int argc, char **argv)
 	oacg.doOwnRegistrationBetweenSubmaps(own_registration);
 	oacg.setZElevation(sensor_pose.getOrigin().getZ());
 	oacg.useCornerCovariance(use_corner_covariance);
+	oacg.useCovarianceToFindLinks(use_covariance_to_find_links);
+	oacg.setScalingFactorOfGaussians(gaussian_scale);
 
 	oacg.usePrior(use_prior);
 	//ATTENTION

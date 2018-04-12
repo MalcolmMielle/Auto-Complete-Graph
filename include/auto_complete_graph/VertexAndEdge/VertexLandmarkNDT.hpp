@@ -17,6 +17,10 @@ namespace g2o{
 
 		//Covariance of localization
 		Eigen::Matrix2d cov_mcl_localization;
+		//Covariance of localization
+		Eigen::Matrix2d cov_mcl_localization_inverse;
+		double determinant;
+		bool inverse_cov_exist;
 			
 		//TESTING
 		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_1;
@@ -33,11 +37,21 @@ namespace g2o{
 		std::vector < std::pair<double, double> > angle_orientation;
 		g2o::VertexSE2RobotPose* first_seen_from;
 		
-		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXYACG(){};
+		VertexLandmarkNDT() : first_seen_from(NULL), determinant(0), inverse_cov_exist(false), g2o::VertexPointXYACG(){};
 
 		const Eigen::Matrix2d& getCovarianceObservation() const {return cov_mcl_localization;}
 		Eigen::Matrix2d& getCovarianceObservation(){return cov_mcl_localization;}
-		void setCovarianceObservation(const Eigen::Matrix2d& cov){ cov_mcl_localization = cov;}
+		const Eigen::Matrix2d& getInverseCovarianceObservation() const {return cov_mcl_localization_inverse;}
+		Eigen::Matrix2d& getInverseCovarianceObservation(){return cov_mcl_localization_inverse;}
+
+		void setCovarianceObservation(const Eigen::Matrix2d& cov){
+			cov_mcl_localization = cov;
+			//I'm not to sure but I'm stealing this from localization
+			cov.computeInverseAndDetWithCheck(cov_mcl_localization_inverse, determinant, inverse_cov_exist);
+			if (!inverse_cov_exist) {
+				throw std::runtime_error("Inverse covariance not findable");
+			}
+		}
 
 		const std::vector < std::pair<double, double> >& getAnglesAndOrientations() const {return angle_orientation;}
 		double getAngleWidth(int i){return angle_orientation[i].first;}
