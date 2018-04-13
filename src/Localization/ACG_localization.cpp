@@ -817,7 +817,7 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 // 	std::vector < std::pair < g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*> > links;
 
 		std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
-		std::cout << "Prior " << _nodes_prior.size() << std::endl;
+		std::cout << "Prior " << _prior.getNodesPrior().size() << std::endl;
 // 	if(_nodes_prior.size() > 0){
 
 		//Update ALL links
@@ -826,7 +826,7 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 // 		std::cout << "Working on links " << std::endl;
 			Eigen::Vector2d pose_landmark = landmark->estimate();
 //			auto it_prior = _nodes_prior.begin();
-			for (auto prior_node : _nodes_prior) {
+			for (auto prior_node : _prior.getNodesPrior().size()) {
 
 				//Don't add the same link twice
 				if (linkAlreadyExist(landmark, prior_node) == false) {

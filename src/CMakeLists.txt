@@ -5,6 +5,7 @@ add_library(auto_complete_graph_lib
   ACG.cpp
   OptimizableAutoCompleteGraph.cpp
   PriorLoaderInterface.cpp
+        ACGPriorSE2.cpp
 
 #   VisuACG.cpp
 )

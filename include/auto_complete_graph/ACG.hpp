@@ -26,6 +26,8 @@
 #include "VertexAndEdge/VertexSE2Prior.hpp"
 #include "VertexAndEdge/VertexSE2RobotPose.hpp"
 
+#include "ACGPriorSE2.hpp"
+
 
 namespace AASS {
 
@@ -191,14 +193,15 @@ namespace acg{
 		Eigen::Vector2d _transNoise;
 		double _rotNoise;
 		Eigen::Vector2d _landmarkNoise;
-		Eigen::Vector2d _priorNoise;
-		double _prior_rot;
 		Eigen::Vector2d _linkNoise;
 		g2o::ParameterSE2Offset* _sensorOffset;
 		g2o::SE2 _sensorOffsetTransf;
 
-		///@brief vector storing all node from the prior
-		std::vector<g2o::VertexSE2Prior*> _nodes_prior;
+
+
+		///@brief the prior
+		AutoCompleteGraphPriorSE2* _prior;
+
 		///@brief vector storing all node from the landarks
 		std::vector<g2o::VertexLandmarkNDT*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
@@ -211,8 +214,7 @@ namespace acg{
 
 		///@brief vector storing all edges between a landmark and the robot
 		std::vector<g2o::EdgeLandmark_malcolm*> _edge_landmark;
-		///@brief vector storing all edge between the prior nodes
-		std::vector<g2o::EdgeSE2Prior_malcolm*> _edge_prior;
+
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeOdometry_malcolm*> _edge_odometry;
 
@@ -248,7 +250,7 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false) {
+  					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new AutoCompleteGraphPriorSE2(pn, rp, sensoffset)) {
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
@@ -262,7 +264,7 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _priorNoise(pn), _prior_rot(rp), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
+					) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new AutoCompleteGraphPriorSE2(pn, rp, sensoffset)){
 
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -273,7 +275,7 @@ namespace acg{
 					}
 
 
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false){
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _z_elevation(0), _use_user_prior_cov(false), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new AutoCompleteGraphPriorSE2(sensoffset)){
 
 
 			std::ifstream infile(load_file);
@@ -297,12 +299,12 @@ namespace acg{
 // 			assert(a == 0.05);
 // 			assert(b == 0.05);
 			infile >> a >> b;
-			_priorNoise << a, b;
-			std::cout << _priorNoise << std::endl;
+			_prior->setPriorNoise(a, b);
+//			std::cout << _priorNoise << std::endl;
 // 			assert(a == 1);
 // 			assert(b == 0.01);
 			infile >> a;
-			_prior_rot = DEG2RAD(a);
+			_prior->setPriorRot(DEG2RAD(a));
 			infile >> a >> b;
 			_linkNoise << a, b;
 			std::cout << _linkNoise << std::endl;
@@ -350,13 +352,16 @@ namespace acg{
 // 				std::cout << "Deleting the NDT maps" << std::endl;
 //  				delete _nodes_ndt[i].getMap();
 			}
+
+			_prior->clear();
+			delete _prior;
 // 			std::cout << "OUT ACG dest " << std::endl ;
 
 		}
 
 		/** Accessor**/
-		std::vector<g2o::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
-		const std::vector<g2o::VertexSE2Prior*>& getPriorNodes() const {return _nodes_prior;}
+//		std::vector<g2o::VertexSE2Prior*>& getPriorNodes(){return _nodes_prior;}
+//		const std::vector<g2o::VertexSE2Prior*>& getPriorNodes() const {return _nodes_prior;}
 		///@brief vector storing all node from the prior
 		std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes(){return _nodes_landmark;}
 		const std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes() const {return _nodes_landmark;}
@@ -370,8 +375,8 @@ namespace acg{
 		std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges(){return _edge_landmark;}
 		const std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges() const {return _edge_landmark;}
 		///@brief vector storing all edge between the prior nodes
-		std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
-		const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
+//		std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _edge_prior;}
+//		const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges(){return _edge_odometry;}
 		const std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges() const {return _edge_odometry;}
@@ -463,9 +468,9 @@ namespace acg{
 		void removeVertex(g2o::HyperGraph::Vertex* v1);
 // 		void removeEdge(g2o::HyperGraph::Edge* v1);
 
-		int findRobotNode(g2o::HyperGraph::Vertex* v);
-		int findLandmarkNode(g2o::HyperGraph::Vertex* v);
-		int findPriorNode(g2o::HyperGraph::Vertex* v);
+//		int findRobotNode(g2o::HyperGraph::Vertex* v);
+//		int findLandmarkNode(g2o::HyperGraph::Vertex* v);
+//		int findPriorNode(g2o::HyperGraph::Vertex* v);
 
 
 		//FUNTION TO ADD A PRIOR GRAPH INTO THE GRAPH
@@ -678,7 +683,7 @@ namespace acg{
 
 		void checkLinkNotTooBig();
 
-		void checkNoRepeatingPriorEdge();
+//		void checkNoRepeatingPriorEdge();
 
 
 		void checkRobotPoseNotMoved(const std::string& when);
