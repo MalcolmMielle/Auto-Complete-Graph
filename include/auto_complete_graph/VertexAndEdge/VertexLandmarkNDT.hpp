@@ -1,12 +1,34 @@
 #ifndef AUTOCOMPLETEGRAPH_VERTEXLANDMARKNDT_10112017
 #define AUTOCOMPLETEGRAPH_VERTEXLANDMARKNDT_10112017
 
+#include <auto_complete_graph/Localization/Localization.hpp>
 #include "ndt_map/ndt_cell.h"
 #include "VertexPointXYACG.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 #include "VertexSE2RobotPose.hpp"
 #include "opencv2/opencv.hpp"
 #include "VertexSE2Prior.hpp"
+#include "VertexSE2RobotLocalization.hpp"
+
+namespace AASS{
+	namespace acg{
+
+		class LocalizationPointer : public AASS::acg::Localization {
+
+		public:
+			EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+			Eigen::Matrix2d cov_inverse;
+			double determinant;
+			bool inverse_cov_exist;
+
+			LocalizationPointer() : vertex(NULL){}
+			VertexSE2RobotLocalization* vertex;
+		};
+
+	}
+}
+
 
 namespace g2o{
 	
@@ -15,12 +37,15 @@ namespace g2o{
 		public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
+
+		std::set<AASS::acg::LocalizationPointer, Eigen::aligned_allocator<AASS::acg::LocalizationPointer> > associated_localization;
+
 		//Covariance of localization
-		Eigen::Matrix2d cov_mcl_localization;
+//		std::set<Eigen::Matrix2d, Eigen::aligned_allocator<Eigen::Matrix2d> > cov_mcl_localization;
 		//Covariance of localization
-		Eigen::Matrix2d cov_mcl_localization_inverse;
-		double determinant;
-		bool inverse_cov_exist;
+//		Eigen::Matrix2d cov_mcl_localization_inverse;
+//		double determinant;
+//		bool inverse_cov_exist;
 			
 		//TESTING
 		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_1;
@@ -37,21 +62,52 @@ namespace g2o{
 		std::vector < std::pair<double, double> > angle_orientation;
 		g2o::VertexSE2RobotPose* first_seen_from;
 		
-		VertexLandmarkNDT() : first_seen_from(NULL), determinant(0), inverse_cov_exist(false), g2o::VertexPointXYACG(){};
+		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXYACG(){};
 
-		const Eigen::Matrix2d& getCovarianceObservation() const {return cov_mcl_localization;}
-		Eigen::Matrix2d& getCovarianceObservation(){return cov_mcl_localization;}
-		const Eigen::Matrix2d& getInverseCovarianceObservation() const {return cov_mcl_localization_inverse;}
-		Eigen::Matrix2d& getInverseCovarianceObservation(){return cov_mcl_localization_inverse;}
-
-		void setCovarianceObservation(const Eigen::Matrix2d& cov){
-			cov_mcl_localization = cov;
-			//I'm not to sure but I'm stealing this from localization
-			cov.computeInverseAndDetWithCheck(cov_mcl_localization_inverse, determinant, inverse_cov_exist);
-			if (!inverse_cov_exist) {
+		void addLocalization(VertexSE2RobotLocalization* vertex, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, int index){
+			LocalizationPointer lp;
+			lp.vertex = vertex;
+			lp.mean = mean;
+			lp.cov = cov;
+			lp.index = index;
+			cov.computeInverseAndDetWithCheck(lp.cov_inverse, lp.determinant, lp.inverse_cov_exist);
+			if (!lp.inverse_cov_exist) {
 				throw std::runtime_error("Inverse covariance not findable");
 			}
+			associated_localization.insert(lp);
 		}
+
+		const Eigen::Matrix2d& getCovarianceObservation(const VertexSE2RobotLocalization* vertex) const {
+			auto result = std::find_if(associated_localization.begin(), associated_localization.end(),
+			                           [vertex](const AASS::acg::LocalizationPointer &a)->bool { return a.vertex == vertex; } );
+			return result->cov;
+		}
+		Eigen::Matrix2d& getCovarianceObservation(const VertexSE2RobotLocalization* vertex){
+			auto result = std::find_if(associated_localization.begin(), associated_localization.end(),
+			                           [vertex](const AASS::acg::LocalizationPointer &a)->bool { return a.vertex == vertex; } );
+			return result->cov;
+		}
+		const Eigen::Matrix2d& getInverseCovarianceObservation(const VertexSE2RobotLocalization* vertex) const {
+			auto result = std::find_if(associated_localization.begin(), associated_localization.end(),
+			                           [vertex](const AASS::acg::LocalizationPointer &a)->bool { return a.vertex == vertex; } );
+			return result->cov_inverse;
+		}
+		Eigen::Matrix2d& getInverseCovarianceObservation(const VertexSE2RobotLocalization* vertex){
+			auto result = std::find_if(associated_localization.begin(), associated_localization.end(),
+			                           [vertex](const AASS::acg::LocalizationPointer &a)->bool { return a.vertex == vertex; } );
+			return result->cov_inverse;
+		}
+
+		const std::set<AASS::acg::LocalizationPointer, Eigen::aligned_allocator<AASS::acg::LocalizationPointer> >& getLocalization() const {return associated_localization;}
+
+//		void setCovarianceObservation(const Eigen::Matrix2d& cov){
+//			cov_mcl_localization = cov;
+//			//I'm not to sure but I'm stealing this from localization
+//			cov.computeInverseAndDetWithCheck(cov_mcl_localization_inverse, determinant, inverse_cov_exist);
+//			if (!inverse_cov_exist) {
+//				throw std::runtime_error("Inverse covariance not findable");
+//			}
+//		}
 
 		const std::vector < std::pair<double, double> >& getAnglesAndOrientations() const {return angle_orientation;}
 		double getAngleWidth(int i){return angle_orientation[i].first;}

@@ -22,11 +22,21 @@ namespace acg{
     class AutoCompleteGraphLocalization : public AutoCompleteGraph{
         protected:
 
+	    ///@brief register the submaps
 	    bool _do_own_registration;
+	    ///@brief Extract the corners from the submaps
 	    bool _extract_corners;
+	    ///@brief Use the gaussian of the corner approximated by ndt_feature_finder
 	    bool _use_corner_covariance;
+	    ///@brief Use the covariance of MCL into the link between corner in submaps and prior. NOT WORKING :)
 		bool _use_covariance_for_links;
+	    ///@brief Add an observation between mcl poses and prior corner if the prior is close enough to a NDT corner. The obervation is the corner observation from the robot to the NDT corner.
+	    bool _use_mcl_observation_on_prior;
+	    ///@brief Add link in between ndt corner and prior corner based on a distance threshold.
+	    bool _use_links_prior_classic_ssrr;
+	    ///@brief when adding obersvation between the prior and mcl, this is the threshold of the score for creating an observation. Score depend on mcl cov and distance between corners.
 	    double _threshold_of_score_for_creating_a_link;
+	    ///@brief do we want to scale the score a little bit to help out ?
 	    double _scaling_factor_gaussian;
 
 	    std::vector<g2o::EdgeLocalization*> _edges_localization;
@@ -43,7 +53,12 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){}
+  					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){
+
+	        if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
+		        throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
+	        }
+        }
   		
   		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, 
 						  const Eigen::Vector2d& tn, 
@@ -52,9 +67,21 @@ namespace acg{
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn){}
+					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), AutoCompleteGraph(sensoffset, tn, rn, ln, pn, rp, linkn){
+
+		    if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
+			    throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
+		    }
+
+	    }
 		
-		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), AutoCompleteGraph(sensoffset, load_file){}
+		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), AutoCompleteGraph(sensoffset, load_file){
+
+			if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
+				throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
+			}
+
+		}
 
 	    void doOwnRegistrationBetweenSubmaps(bool setter){_do_own_registration = setter;}
 	    void extractCorners(bool setter){_extract_corners = setter;}
@@ -62,6 +89,8 @@ namespace acg{
 	    void useCovarianceToFindLinks(bool setter){ _use_covariance_for_links = setter;}
 	    void setScalingFactorOfGaussians(double setter){_scaling_factor_gaussian = setter;}
 	    void setThrehsoldOfScoreForCreatingLink(double setter){_threshold_of_score_for_creating_a_link = setter;}
+	    void useMCLObservationOnPrior(bool setter){_use_mcl_observation_on_prior = setter;}
+	    void useLinksPriorSSRR(bool setter){_use_links_prior_classic_ssrr = setter;}
 
 	    std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 	    const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
@@ -85,7 +114,7 @@ namespace acg{
 	     * @param v1 toward
 	     * @return link edge created
 	     */
-	    g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1);
+	    g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, const g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1, const g2o::VertexSE2RobotLocalization* mcl_pose);
 // 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& observ, int from_id);
 // 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id);
 		

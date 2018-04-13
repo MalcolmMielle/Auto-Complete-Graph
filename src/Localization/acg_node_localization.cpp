@@ -450,6 +450,11 @@ int main(int argc, char **argv)
 	nh.param("corner_covariance",use_corner_covariance,true);
 	bool use_covariance_to_find_links = false;
 	nh.param("covariance_to_find_links",use_covariance_to_find_links,false);
+	bool use_mcl_observation_on_prior;
+	nh.param("mcl_observation_on_prior",use_mcl_observation_on_prior,false);
+	///@brief Add link in between ndt corner and prior corner based on a distance threshold.
+	bool use_links_prior_classic_ssrr;
+	nh.param("links_prior_classic_ssrr;",use_links_prior_classic_ssrr,false);
 	double gaussian_scale = 1;
 	nh.param<double>("gaussian_scaling_factor", gaussian_scale, 0);
 	double threshold_score_link_creation = 0.5;
@@ -504,6 +509,8 @@ int main(int argc, char **argv)
 	oacg.useCornerCovariance(use_corner_covariance);
 	oacg.useCovarianceToFindLinks(use_covariance_to_find_links);
 	oacg.setScalingFactorOfGaussians(gaussian_scale);
+	oacg.useLinksPriorSSRR(use_links_prior_classic_ssrr);
+	oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
 
 	oacg.usePrior(use_prior);
 	//ATTENTION

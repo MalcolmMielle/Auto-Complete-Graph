@@ -733,7 +733,7 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 
 
 
-g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1){
+g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1, const g2o::VertexSE2RobotLocalization* mcl_pose){
 	std::cout << "Adding link" << std::endl;
 
 	for(auto link_edge : _edge_link){
@@ -746,7 +746,7 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetwee
 	}
 
 
-	Eigen::Matrix2d covariance_link =  v1->getCovarianceObservation();
+	Eigen::Matrix2d covariance_link =  v1->getCovarianceObservation(mcl_pose);
 //	covariance_link.fill(0.);
 //	covariance_link(0, 0) = _linkNoise[0]*_linkNoise[0];
 //	covariance_link(1, 1) = _linkNoise[1]*_linkNoise[1];
@@ -812,9 +812,8 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetwee
 
 int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 {
-
+	int count = 0;
 	if(_use_links_prior) {
-		int count = 0;
 // 	std::vector < std::pair < g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*> > links;
 
 		std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
@@ -839,40 +838,66 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 						Eigen::Vector3d pose_tmp = prior_node->estimate().toVector();
 						Eigen::Vector2d pose_prior;
 						pose_prior << pose_tmp(0), pose_tmp(1);
-						double norm_tmp = (pose_prior - pose_landmark).norm();
-						// 				std::cout << "new" << std::endl;
 
-						if(_use_covariance_for_links) {
-							//Find distance needed using covariance of corner. STOLEN FROM LOCALIZATION *monkey which hides it eyes*
-							Eigen::Matrix2d icov = landmark->getInverseCovarianceObservation();
-							double l = (pose_prior - pose_landmark).dot(icov * (pose_prior - pose_landmark));
-							double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+						if (_use_links_prior_classic_ssrr) {
 
-							if(score >= _threshold_of_score_for_creating_a_link){
+							double norm_tmp = (pose_prior - pose_landmark).norm();
+							// 				std::cout << "new" << std::endl;
+
+							if (_use_covariance_for_links) {
+
+								throw std::runtime_error(
+										"This parameter is not usable. The reason for this is that one obstacle can be seen from multiple MCL poses. Hence it is impossible to choose which MCL covariance to use for one link which can be created from multiple MCL poses. Please use the _use_mcl_observation_on_prior parameter ;).");
+//							//Find distance needed using covariance of corner. STOLEN FROM LOCALIZATION *monkey which hides it eyes*
+//							Eigen::Matrix2d icov = landmark->getInverseCovarianceObservation();
+//							double l = (pose_prior - pose_landmark).dot(icov * (pose_prior - pose_landmark));
+//							double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+//
+//							if(score >= _threshold_of_score_for_creating_a_link){
+//								g2o::Vector2 vec;
+//								vec << 0, 0;
+//								addLinkBetweenMaps(vec, prior_node, landmark, );
+//							}
+							}
+
+								//Update the link
+							else if (norm_tmp <= _min_distance_for_link_in_meter) {
+								std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter
+								          << std::endl;
+								// 					ptr_closest = *it_prior;
+								// 					norm = norm_tmp;
+								//Pushing the link
+								// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+								// 					links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it, *it_prior));
+
 								g2o::Vector2 vec;
 								vec << 0, 0;
-								addLinkBetweenMaps(vec, prior_node, landmark);
+								AutoCompleteGraph::addLinkBetweenMaps(vec, prior_node, landmark);
+
+								++count;
 							}
 						}
 
-						//Update the link
-						else if (norm_tmp <= _min_distance_for_link_in_meter) {
-							std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter
-							          << std::endl;
-							// 					ptr_closest = *it_prior;
-							// 					norm = norm_tmp;
-							//Pushing the link
-							// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-							// 					links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it, *it_prior));
+						if (_use_mcl_observation_on_prior) {
 
-							g2o::Vector2 vec;
-							vec << 0, 0;
-							addLinkBetweenMaps(vec, prior_node, landmark);
+							std::set<LocalizationPointer, Eigen::aligned_allocator<LocalizationPointer> > localization = landmark->getLocalization();
+							for (auto loc: localization) {
 
-							++count;
+//							Eigen::Matrix2d icov = loc.cov_inverse();
+								double l = (pose_prior - pose_landmark).dot( loc.cov_inverse() * (pose_prior - pose_landmark));
+								double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+
+								if (score >= _threshold_of_score_for_creating_a_link) {
+									g2o::Vector2 vec;
+									vec << 0, 0;
+									addPriorObservation();
+//									addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
+								}
+							}
 						}
 					} else {
-						std::cout << "Orientation check failed" << std::endl;
+
+						std::cout << "Not same orientation" << std::endl;
 					}
 				} else {
 
@@ -892,11 +917,8 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 // 		addLinkBetweenMaps(vec, it_links->second, it_links->first);
 // 	}
 // 	}
+	}
 
 		return count;
-	}
-	else {
-		return 0;
-	}
 
 }
