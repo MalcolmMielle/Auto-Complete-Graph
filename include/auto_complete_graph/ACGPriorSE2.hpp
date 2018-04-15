@@ -8,6 +8,8 @@ namespace AASS {
 
 	namespace acg {
 
+
+
 		/**
 		 * @brief The graph class containing all elements from the prior. Needed for the templated version of ACGLocalization :(.
 		 */
@@ -15,9 +17,9 @@ namespace AASS {
 
 		protected:
 			///@brief vector storing all node from the prior
-			std::vector<g2o::VertexSE2Prior*> _nodes_prior;
+//			std::vector<g2o::VertexSE2Prior*> _nodes_prior;
 			///@brief vector storing all edge between the prior nodes
-			std::vector<g2o::EdgeSE2Prior_malcolm*> _edge_prior;
+//			std::vector<g2o::EdgeSE2Prior_malcolm*> _edge_prior;
 
 		public:
 
@@ -43,7 +45,7 @@ namespace AASS {
 			 * @brief Directly use the prior graph to init the prior part of the ACG
 			 *
 			 */
-			void addPriorGraph(const PriorLoaderInterface::PriorGraph& graph);
+			virtual int addPriorGraph(const PriorLoaderInterface::PriorGraph& graph, int first_index);
 
 
 			///@remove the prior and all link edges
@@ -51,6 +53,10 @@ namespace AASS {
 
 
 			void checkNoRepeatingPriorEdge();
+
+			void updatePriorEdgeCovariance();
+
+			void testNoNanInPrior(const std::string& before) const;
 
 
 		};

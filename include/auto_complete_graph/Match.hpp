@@ -28,11 +28,11 @@ namespace acg{
 		void getNodes(const AutoCompleteGraph& acg){
 			
 			Eigen::Vector2d pose2d_p; pose2d_p << _prior.x, _prior.y;
-			std::vector<g2o::VertexSE2Prior*> prior_nodes = acg.getPriorNodes();
+			auto prior_nodes = acg.getPrior()->getPriorNodes();
 			
 			double norm_p = -1;
 			
-			for(std::vector<g2o::VertexSE2Prior*>::const_iterator prior_node_it_const = prior_nodes.begin();prior_node_it_const != prior_nodes.end(); prior_node_it_const++){
+			for(auto prior_node_it_const = prior_nodes.begin();prior_node_it_const != prior_nodes.end(); prior_node_it_const++){
 				
 				Eigen::Vector3d pose = (*prior_node_it_const)->estimate().toVector();
 				Eigen::Vector2d pose2d; pose2d << pose(0), pose(1);

@@ -69,7 +69,7 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraphPriorSE2::addEdgePrior(co
 //	_optimizable_graph.addEdge(priorObservation);
 
 // 	EdgePriorAndInitialValue epiv(priorObservation, se2);
-	_edge_prior.push_back(priorObservation);
+	_edge_prior.insert(priorObservation);
 
 	std::cout << "After adding an edge" << std::endl;
 	checkNoRepeatingPriorEdge();
@@ -83,17 +83,17 @@ g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(
 	priorlandmark->setId(index);
 	priorlandmark->setEstimate(se2);
 	priorlandmark->priorattr = priorAttr;
-	_nodes_prior.push_back(priorlandmark);
+	_nodes_prior.insert(priorlandmark);
 	return priorlandmark;
 }
 g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index){
 	g2o::SE2 se2(lan(0), lan(1), lan(2));
-	return addPriorLandmarkPose(se2, priorAttr);
+	return addPriorLandmarkPose(se2, priorAttr, index);
 }
 g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(double x, double y, double theta, const AASS::acg::PriorAttr& priorAttr, int index){
 	Eigen::Vector3d lan;
 	lan << x, y, theta;
-	return addPriorLandmarkPose(lan, priorAttr);
+	return addPriorLandmarkPose(lan, priorAttr, index);
 }
 
 
@@ -101,7 +101,7 @@ g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(
 
 
 
-void AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterface::PriorGraph& graph){
+int AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterface::PriorGraph& graph, int first_index){
 
 	std::pair< PriorLoaderInterface::PriorGraph::VertexIterator, PriorLoaderInterface::PriorGraph::VertexIterator > vp;
 	std::deque<PriorLoaderInterface::PriorGraph::Vertex> vec_deque;
@@ -119,7 +119,8 @@ void AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterf
 // 		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
 
 
-		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0, graph[v]);
+		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0, graph[v], first_index);
+		first_index++;
 		vec_deque.push_back(v);
 		out_prior.push_back(res);
 // 		_nodes_prior.push_back(res);
@@ -204,6 +205,8 @@ void AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterf
 	std::cout << "After update graph prior" << std::endl;
 	checkNoRepeatingPriorEdge();
 
+	return first_index;
+
 }
 
 //void AASS::acg::AutoCompleteGraphPriorSE2::clear(){
@@ -280,14 +283,200 @@ void AASS::acg::AutoCompleteGraphPriorSE2::checkNoRepeatingPriorEdge(){
 			}
 		}
 		for(auto it = edges_prior.begin() ; it != edges_prior.end() ; ++it){
-			for(auto ite2 = it +1 ; ite2 != edges_prior.end() ; ++ite2 ){
+			auto ite2 = it;
+			ite2++;
+			for( ; ite2 != edges_prior.end() ; ++ite2 ){
 				assert((*it)->getOrientation2D(**it_vertex) != (*ite2)->getOrientation2D(**it_vertex));
 			}
 		}
 	}
 	for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
-		for(auto ite2 = it +1 ; ite2 != _edge_prior.end() ; ++ite2 ){
+		auto ite2 = it;
+		ite2++;
+		for(; ite2 != _edge_prior.end() ; ++ite2 ){
 			assert(it != ite2);
 		}
 	}
+}
+
+
+
+void AASS::acg::AutoCompleteGraphPriorSE2::updatePriorEdgeCovariance()
+{
+
+	std::cout << "DO NOT USE " << std::endl;
+	testNoNanInPrior("no dtat");
+	assert(false);
+
+	auto edges = getPriorEdges();
+	auto it = edges.begin();
+	for(it ; it != edges.end() ; ++it){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[0]);
+		if(v_ptr == NULL){
+			throw std::runtime_error("no");
+		}
+		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[1]);
+		if(v_ptr2 == NULL){
+			throw std::runtime_error("no2");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+
+		// 			std::cout << "Poses 1 " << std::endl << pose1.format(cleanFmt) << std::endl;
+		// 			std::cout << "Poses 2 " << std::endl << pose2.format(cleanFmt) << std::endl;
+
+		double tre[3];
+		(*it)->getMeasurementData(tre);
+
+		Eigen::Vector2d length; length << tre[0], tre[1] ;
+
+		Eigen::Vector2d eigenvec;
+		eigenvec << pose1(0) - pose2(0), pose1(1) - pose2(1);
+
+		double newnorm = (pose1 - pose2).norm();
+		double len_norm = length.norm();
+		std::cout << "new norm " << newnorm << " because " << pose1 << " " << pose2 << " and lennorm " << len_norm << "because  " <<length << std::endl;
+		g2o::SE2 oldnormse2 = (*it)->interface.getOriginalValue();
+		Eigen::Vector3d vecold = oldnormse2.toVector();
+		double oldnorm = (vecold).norm();
+		std::cout << "oldnorm" << oldnorm << std::endl;
+		assert(oldnorm >= 0);
+
+		//Using the diff so we cannot shrink it or stretch it easily.
+		double diff_norm = std::abs(oldnorm - newnorm);
+		std::cout << "Diff norm " << diff_norm << std::endl;
+		assert(diff_norm >= 0);
+		if(diff_norm > oldnorm){
+			diff_norm = oldnorm;
+		}
+		diff_norm = std::abs(diff_norm);
+		std::cout << "Diff norm " << diff_norm << std::endl;
+		assert(diff_norm >= 0);
+		assert(diff_norm <= oldnorm);
+
+		//Normalizes it
+		double normalizer_own = 1 / oldnorm;
+
+		//Between 0 and 1 between 0 and oldnorm
+// 		double diff_norm_normalized = 1 - (diff_norm * normalizer_own);
+// 		double min = 0;
+// 		double max = oldnorm;
+// 		double max_range = 1;
+// 		double min_range = 0;
+
+		//Between 0 and 1 between oldnorm / 2 and oldnorm
+		//This is between 0 and oldnorm/2 because we work on the diff and not on the length ==> best length is 0 diff and worse will be half of oldnorm
+		double min = 0;
+		double max = (oldnorm / 2);
+		double max_range = 1;
+		double min_range = 0;
+
+		double diff_norm_normalized = 1 - ( ( ( (max_range - min_range) * (diff_norm - min ) ) / (max - min) ) + min_range );
+
+		double new_cov = diff_norm_normalized;
+
+		std::cout << "min " << min << " max " << max << " max_range " << max_range << " min_range " << min_range << " diff norm  " << diff_norm << " cov " << new_cov << std::endl;
+
+		assert(new_cov <= 1);
+
+		//Sometime the optimization in one turn goes under the limit so need to correct those cases ;)
+// 		assert(new_cov >= 0);
+
+		if(new_cov <= 0.001){
+			//Apparently the vaqlue in the edge does not get changed so it's useless modifying it ?
+			//See :
+// 			double tre[3];
+// 			(*it)->getMeasurementData(tre);
+// 			Eigen::Vector2d length; length << tre[0], tre[1] ;
+
+
+			new_cov = 0.001;
+		}
+
+		//Scale it again.depending on user inputed value
+		if(_use_user_prior_cov == true){
+			new_cov = new_cov * _priorNoise(0);
+			assert(new_cov <= _priorNoise(0));
+			assert(new_cov >= 0);
+		}
+		else{
+			//Scale it again. depending on oldnorm/10
+			new_cov = new_cov * (oldnorm / 10);
+			assert(new_cov <= (oldnorm / 10));
+			assert(new_cov >= 0);
+		}
+
+
+		// 				std::cout << "EigenVec " << std::endl << eigenvec.format(cleanFmt) << std::endl;
+		std::pair<double, double> eigenval(new_cov, _priorNoise(1));
+
+		std::cout << "Eigen vec " << eigenvec << " egenval " << eigenval.first << " " << eigenval.second << std::endl;
+
+		Eigen::Matrix2d cov = getCovarianceSingleEigenVector(eigenvec, eigenval);
+
+		// 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
+
+		Eigen::Matrix3d covariance_prior;
+		covariance_prior.fill(0.);
+		covariance_prior(0, 0) = cov(0, 0);
+		covariance_prior(0, 1) = cov(0, 1);
+		covariance_prior(1, 0) = cov(1, 0);
+		covariance_prior(1, 1) = cov(1, 1);
+		// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
+		covariance_prior(2, 2) = _prior_rot * _prior_rot;
+		Eigen::Matrix3d information_prior = covariance_prior.inverse();
+
+		std::cout << "ALL INFO \n" << information_prior << "\n new cov " << new_cov << " cov mat " << cov << std::endl;
+
+		(*it)->setInformation(information_prior);
+
+	}
+
+
+
+
+}
+
+
+void AASS::acg::AutoCompleteGraphPriorSE2::testNoNanInPrior(const std::string& before) const {
+
+	std::cout << "Test No nan in prior after " << before << std::endl;
+	auto it = getPriorNodes().begin();
+	for(it ; it != getPriorNodes().end() ; ++it){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it));
+		if(v_ptr == NULL){
+			throw std::runtime_error("not good vertex type");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		assert(!std::isnan(pose1[0]));
+		assert(!std::isnan(pose1[1]));
+		assert(!std::isnan(pose1[2]));
+
+	}
+
+	std::cout << "Testing the edges now" << std::endl;
+
+	auto edges = getPriorEdges();
+	auto it_edge = edges.begin();
+	for(it_edge ; it_edge != edges.end() ; ++it_edge){
+		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[0]);
+		if(v_ptr == NULL){
+			throw std::runtime_error("no");
+		}
+		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[1]);
+		if(v_ptr2 == NULL){
+			throw std::runtime_error("no2");
+		}
+		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+
+		assert(!std::isnan(pose1[0]));
+		assert(!std::isnan(pose1[1]));
+		assert(!std::isnan(pose1[2]));
+
+		assert(!std::isnan(pose2[0]));
+		assert(!std::isnan(pose2[1]));
+		assert(!std::isnan(pose2[2]));
+	}
+
 }

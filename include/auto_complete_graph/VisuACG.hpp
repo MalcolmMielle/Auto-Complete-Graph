@@ -718,7 +718,7 @@ namespace acg{
 		inline void VisuAutoCompleteGraph::drawPrior(const AutoCompleteGraph& acg)
 		{
 			_prior_edge_markers.header.stamp = ros::Time::now();
-			auto edges = acg.getPriorEdges();
+			auto edges = acg.getPrior()->getPriorEdges();
 			if(edges.size() != _prior_edge_markers.points.size()){
 				_prior_edge_markers.points.clear();
 
@@ -736,7 +736,7 @@ namespace acg{
 					}
 				}
 
-				auto prior_node = acg.getPriorNodes();
+				auto prior_node = acg.getPrior()->getPriorNodes();
 				_prior_node_markers.points.clear();
 				_angles_prior_markers.points.clear();
 				_anglesw_prior_markers.points.clear();

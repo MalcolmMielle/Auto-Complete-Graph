@@ -11,16 +11,17 @@
 
 namespace AASS{
 	namespace acg{
-		
-		
+
+
 		class PriorAttr : public AASS::vodigrex::SimpleNode{
 		public:
 			cv::KeyPoint keypoint;
 			cv::Point2d position;
 			cv::Mat descriptor;
-            PriorAttr() : AASS::vodigrex::SimpleNode(){}
+			PriorAttr() : AASS::vodigrex::SimpleNode(){}
 			PriorAttr(const AASS::vodigrex::SimpleNode& inp) : AASS::vodigrex::SimpleNode(inp){}
 		};
+
 		
 
 		/**

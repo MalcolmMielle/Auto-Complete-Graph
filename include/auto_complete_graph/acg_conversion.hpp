@@ -112,7 +112,7 @@ namespace acg{
 		//************* TODO : shorten this code !
 		//Get max sinze of prior
 		grid_map::GridMap map;
-		auto edges = acg.getPriorEdges();
+		auto edges = acg.getPrior()->getPriorEdges();
 		
 		double max_x, min_x, max_y, min_y;
 		bool flag_init = false;
@@ -320,7 +320,7 @@ namespace acg{
 
 		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pc(new pcl::PointCloud<pcl::PointXYZ>);
 		int nb_points = 0;
-		auto edges = acg.getPriorEdges();
+		auto edges = acg.getPrior()->getPriorEdges();
 		for(auto it = edges.begin(); it != edges.end() ; ++it){
 
 			std::vector<Eigen::Vector3d> points;
@@ -415,7 +415,7 @@ namespace acg{
 	
 	
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution){
-		auto edges = acg.getPriorEdges();
+		auto edges = acg.getPrior()->getPriorEdges();
 		
 		gridMap.add("prior");
 		gridMap["prior"].setZero();
@@ -457,7 +457,7 @@ namespace acg{
 	///@brief return the biggest absolute value along x and y for the prior.
 	inline void getPriorSizes(const AASS::acg::AutoCompleteGraph& acg, double& size_x, double& size_y){
 
-		auto edges = acg.getPriorEdges();
+		auto edges = acg.getPrior()->getPriorEdges();
 
 		double max_x, min_x, max_y, min_y;
 		bool flag_init = false;

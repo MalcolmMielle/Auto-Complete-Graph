@@ -1,8 +1,8 @@
 
 #include "graph_map/graph_map_fuser.h"
 #include <ros/ros.h>
-#include <rosbag/bag.h>
-#include <rosbag/view.h>
+//#include <rosbag/bag.h>
+//#include <rosbag/view.h>
 
 #include <ndt_map/ndt_conversions.h>
 #include "ndt_generic/utils.h"

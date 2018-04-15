@@ -73,8 +73,8 @@ g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization
 
 g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphLocalization::setPriorReference()
 {
-	if(_nodes_prior.size() > 0) {
-		_vertex_reference_for_montecarlo = _nodes_prior[0];
+	if(_prior->getPriorNodes().size() > 0) {
+		_vertex_reference_for_montecarlo = *(_prior->getPriorNodes().begin());
 		return _vertex_reference_for_montecarlo;
 	}
 	return NULL;
@@ -464,7 +464,9 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 //				std::cout << "New point " << i << std::endl;
 				g2o::VertexLandmarkNDT *ptr = addLandmarkPose(position_globalframe, p_observation, 1);
 
-				ptr->setCovarianceObservation(cov_2d);
+//				ptr->setCovarianceObservation(cov_2d);
+				//Last parmater will be usel so to make sur eit's unused it's set to -1
+				ptr->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), -1);
 
 				ptr->addAnglesOrientations(corner.getAngles(), corner.getOrientations());
 				ptr->first_seen_from = robot_ptr;
@@ -491,6 +493,9 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 //				observations_added++;
 
 			} else {
+
+				ptr_landmark_seen->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), -1);
+
 				std::cout << "Point seen: " << ptr_landmark_seen << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
 				if(_use_corner_covariance) {
 					//Use the covariance given by the corner itself
@@ -746,7 +751,8 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetwee
 	}
 
 
-	Eigen::Matrix2d covariance_link =  v1->getCovarianceObservation(mcl_pose);
+	Eigen::Matrix3d covariance_link_tmp=  v1->getCovarianceObservation(mcl_pose);
+	Eigen::Matrix2d covariance_link =  covariance_link_tmp.block(0, 0, 2, 2);
 //	covariance_link.fill(0.);
 //	covariance_link(0, 0) = _linkNoise[0]*_linkNoise[0];
 //	covariance_link(1, 1) = _linkNoise[1]*_linkNoise[1];
@@ -817,7 +823,7 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 // 	std::vector < std::pair < g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*> > links;
 
 		std::cout << "Number new landmarks " << _nodes_landmark.size() << std::endl;
-		std::cout << "Prior " << _prior.getNodesPrior().size() << std::endl;
+		std::cout << "Prior " << _prior->getPriorNodes().size() << std::endl;
 // 	if(_nodes_prior.size() > 0){
 
 		//Update ALL links
@@ -826,7 +832,7 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 // 		std::cout << "Working on links " << std::endl;
 			Eigen::Vector2d pose_landmark = landmark->estimate();
 //			auto it_prior = _nodes_prior.begin();
-			for (auto prior_node : _prior.getNodesPrior().size()) {
+			for (auto prior_node : _prior->getPriorNodes()) {
 
 				//Don't add the same link twice
 				if (linkAlreadyExist(landmark, prior_node) == false) {
@@ -880,17 +886,25 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 
 						if (_use_mcl_observation_on_prior) {
 
-							std::set<LocalizationPointer, Eigen::aligned_allocator<LocalizationPointer> > localization = landmark->getLocalization();
+							std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer> > localization = landmark->getLocalization();
 							for (auto loc: localization) {
 
 //							Eigen::Matrix2d icov = loc.cov_inverse();
-								double l = (pose_prior - pose_landmark).dot( loc.cov_inverse() * (pose_prior - pose_landmark));
+								Eigen::Matrix2d cov_2d;
+								cov_2d << loc->cov_inverse(0,0), loc->cov_inverse(0,1),
+										 loc->cov_inverse(1,0), loc->cov_inverse(1,1);
+
+										double l = (pose_prior - pose_landmark).dot( cov_2d * (pose_prior - pose_landmark));
 								double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
 
 								if (score >= _threshold_of_score_for_creating_a_link) {
 									g2o::Vector2 vec;
 									vec << 0, 0;
-									addPriorObservation();
+
+									//ATTENTION MASSIVE TODO
+
+
+//									addPriorObservation();
 //									addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
 								}
 							}

@@ -4,31 +4,35 @@
 #include <ctime>
 #include <fstream>
 #include <random>
+#include <vector>
+#include <set>
 #include "g2o/types/slam2d/parameter_se2_offset.h"
-#include "ndt_feature/ndt_feature_graph.h"
+//#include "ndt_feature/ndt_feature_graph.h"
 #include "Eigen/Core"
-#include "bettergraph/PseudoGraph.hpp"
-#include "vodigrex/linefollower/SimpleNode.hpp"
-#include "ndt_feature_finder/ndt_corner.hpp"
+//#include "bettergraph/PseudoGraph.hpp"
+//#include "vodigrex/linefollower/SimpleNode.hpp"
+//#include "ndt_feature_finder/ndt_corner.hpp"
 #include "covariance.hpp"
-#include "conversion.hpp"
-#include "OptimizableAutoCompleteGraph.hpp"
+//#include "conversion.hpp"
+//#include "OptimizableAutoCompleteGraph.hpp"
 #include "PriorLoaderInterface.hpp"
-#include "ndt_feature_finder/conversion.hpp"
-#include "utils.hpp"
-#include "VertexAndEdge/EdgeInterfaceMalcolm.hpp"
-#include "VertexAndEdge/EdgeOdometry.hpp"
-#include "VertexAndEdge/EdgeLandmark.hpp"
-#include "VertexAndEdge/EdgeLinkXY.hpp"
+//#include "ndt_feature_finder/conversion.hpp"
+//#include "utils.hpp"
+//#include "VertexAndEdge/EdgeInterfaceMalcolm.hpp"
+//#include "VertexAndEdge/EdgeOdometry.hpp"
+//#include "VertexAndEdge/EdgeLandmark.hpp"
+//#include "VertexAndEdge/EdgeLinkXY.hpp"
 #include "VertexAndEdge/EdgeSE2Prior.hpp"
-#include "VertexAndEdge/VertexLandmarkNDT.hpp"
+//#include "VertexAndEdge/VertexLandmarkNDT.hpp"
 #include "VertexAndEdge/VertexSE2Prior.hpp"
-#include "VertexAndEdge/VertexSE2RobotPose.hpp"
+//#include "VertexAndEdge/VertexSE2RobotPose.hpp"
 
 
 namespace AASS {
 
 	namespace acg {
+
+
 
 		/**
 		 * @brief The graph class containing all elements from the prior. Needed for the templated version of ACGLocalization :(.
@@ -45,6 +49,8 @@ namespace AASS {
 			Eigen::Vector2d _priorNoise;
 			double _prior_rot;
 			g2o::ParameterSE2Offset* _sensorOffset;
+
+			bool _use_user_prior_cov = false;
 
 		public:
 
@@ -72,6 +78,9 @@ namespace AASS {
 			void setPriorNoise(double a, double b){_priorNoise << a, b;}
 			void setPriorRot(double r){_prior_rot = r;}
 
+			void useUserCovForPrior(bool u){_use_user_prior_cov = u;}
+			bool isUsingUserCovForPrior() const {return _use_user_prior_cov;}
+
 
 			virtual VERTEXTYPE* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index) = 0;
 			virtual VERTEXTYPE* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index) = 0;
@@ -84,12 +93,20 @@ namespace AASS {
 			 * @brief Directly use the prior graph to init the prior part of the ACG
 			 *
 			 */
-			virtual void addPriorGraph(const PriorLoaderInterface::PriorGraph& graph) = 0;
+			virtual int addPriorGraph(const PriorLoaderInterface::PriorGraph& graph, int first_index) = 0;
 			///@remove the prior and all link edges
 //			virtual void clearPrior() = 0;
 			virtual void checkNoRepeatingPriorEdge() = 0;
 
 			virtual void clear(){
+				//It's a set so not needed
+//				for(typename std::set<VERTEXTYPE*>::iterator it = getPriorNodes().begin() ; it != getPriorNodes().end() ; ++it){
+//
+////					for(auto it1 = it + 1 ; it1 != getPriorNodes().end() ;++it1){
+////						assert(*it != *it1);
+//////						++i;
+////					}
+//				}
 				_nodes_prior.clear();
 				_edge_prior.clear();
 			}

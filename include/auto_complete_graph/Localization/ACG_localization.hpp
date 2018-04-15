@@ -114,7 +114,7 @@ namespace acg{
 	     * @param v1 toward
 	     * @return link edge created
 	     */
-	    g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, const g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1, const g2o::VertexSE2RobotLocalization* mcl_pose);
+	    g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1, const g2o::VertexSE2RobotLocalization* mcl_pose);
 // 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& observ, int from_id);
 // 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id);
 		
