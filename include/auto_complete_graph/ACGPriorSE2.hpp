@@ -3,6 +3,9 @@
 
 #include "auto_complete_graph/ACGPrior.hpp"
 
+#include "VertexAndEdge/EdgeSE2Prior.hpp"
+#include "VertexAndEdge/VertexSE2Prior.hpp"
+
 
 namespace AASS {
 
@@ -52,7 +55,7 @@ namespace AASS {
 //			void clear();
 
 
-			void checkNoRepeatingPriorEdge();
+//			void checkNoRepeatingPriorEdge();
 
 			void updatePriorEdgeCovariance();
 

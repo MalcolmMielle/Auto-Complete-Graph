@@ -96,7 +96,7 @@ namespace acg{
 			_prior_edge_markers.id = 0;
 			_prior_edge_markers.scale.x = 0.2;
 			_prior_edge_markers.scale.y = 0.2;
-			_prior_edge_markers.color.b = 1.0f;
+			_prior_edge_markers.color.b = 0.0f;
 			_prior_edge_markers.color.a = 1.0;
 
 			_observation_edge_markers.type = visualization_msgs::Marker::LINE_LIST;

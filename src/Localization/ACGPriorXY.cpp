@@ -1,6 +1,6 @@
-#include "auto_complete_graph/ACGPriorSE2.hpp"
+#include "auto_complete_graph/Localization/ACGPriorXY.hpp"
 
-g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraphPriorSE2::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 
 	for(auto prior_edge : _edge_prior){
 		if(v1 == prior_edge->vertices()[0] && v2 == prior_edge->vertices()[1]){
@@ -12,10 +12,10 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraphPriorSE2::addEdgePrior(co
 	}
 
 	//Get Eigen vector
-	g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>(v1);
-	g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>(v2);
-	Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
-	Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+	g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>(v1);
+	g2o::VertexXYPrior* v_ptr2 = dynamic_cast<g2o::VertexXYPrior*>(v2);
+	Eigen::Vector2d pose1 = v_ptr->estimate();
+	Eigen::Vector2d pose2 = v_ptr2->estimate();
 
 // 			std::cout << "Poses 1 " << std::endl << pose1.format(cleanFmt) << std::endl;
 // 			std::cout << "Poses 2 " << std::endl << pose2.format(cleanFmt) << std::endl;
@@ -42,24 +42,27 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraphPriorSE2::addEdgePrior(co
 	Eigen::Matrix2d cov = getCovarianceSingleEigenVector(eigenvec, eigenval);
 
 // 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
-
-	Eigen::Matrix3d covariance_prior;
-	covariance_prior.fill(0.);
-	covariance_prior(0, 0) = cov(0, 0);
-	covariance_prior(0, 1) = cov(0, 1);
-	covariance_prior(1, 0) = cov(1, 0);
-	covariance_prior(1, 1) = cov(1, 1);
+//	Eigen::Matrix2d covariance_prior;
+//	covariance_prior.fill(0.);
+//	covariance_prior(0, 0) = cov(0, 0);
+//	covariance_prior(0, 1) = cov(0, 1);
+//	covariance_prior(1, 0) = cov(1, 0);
+//	covariance_prior(1, 1) = cov(1, 1);
 // 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
-	covariance_prior(2, 2) = _prior_rot * _prior_rot;
-	Eigen::Matrix3d information_prior = covariance_prior.inverse();
+//	covariance_prior(2, 2) = _prior_rot * _prior_rot;
+
+	//CHECK INVERTIBILITY OF THE MATRIX
+	Eigen::Matrix2d information_prior = cov.inverse();
 // 			std::cout << "Information prior " << std::endl << cov.format(cleanFmt) << std::endl;
 
 	assert(information_prior.isZero(1e-10) == false);
 
-	g2o::EdgeSE2Prior_malcolm* priorObservation =  new g2o::EdgeSE2Prior_malcolm;
+	g2o::EdgeXYPriorACG* priorObservation =  new g2o::EdgeXYPriorACG;
 	priorObservation->vertices()[0] = v1;
 	priorObservation->vertices()[1] = v2;
-	priorObservation->setMeasurement(se2);
+	Eigen::Vector3d se3_vec = se2.toVector();
+	Eigen::Vector2d se_no_rotation = se3_vec.head(2);
+	priorObservation->setMeasurement(se_no_rotation);
 	priorObservation->setInformation(information_prior);
 	priorObservation->setParameterId(0, _sensorOffset->id());
 
@@ -78,19 +81,20 @@ g2o::EdgeSE2Prior_malcolm* AASS::acg::AutoCompleteGraphPriorSE2::addEdgePrior(co
 }
 
 
-g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index){
-	g2o::VertexSE2Prior* priorlandmark = new g2o::VertexSE2Prior();
+g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index){
+	g2o::VertexXYPrior* priorlandmark = new g2o::VertexXYPrior();
 	priorlandmark->setId(index);
-	priorlandmark->setEstimate(se2);
+	Eigen::Vector2d pose = se2.toVector().head(2);
+	priorlandmark->setEstimate(pose);
 	priorlandmark->priorattr = priorAttr;
 	_nodes_prior.insert(priorlandmark);
 	return priorlandmark;
 }
-g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index){
+g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index){
 	g2o::SE2 se2(lan(0), lan(1), lan(2));
 	return addPriorLandmarkPose(se2, priorAttr, index);
 }
-g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(double x, double y, double theta, const AASS::acg::PriorAttr& priorAttr, int index){
+g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPriorLandmarkPose(double x, double y, double theta, const AASS::acg::PriorAttr& priorAttr, int index){
 	Eigen::Vector3d lan;
 	lan << x, y, theta;
 	return addPriorLandmarkPose(lan, priorAttr, index);
@@ -101,11 +105,11 @@ g2o::VertexSE2Prior* AASS::acg::AutoCompleteGraphPriorSE2::addPriorLandmarkPose(
 
 
 
-int AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterface::PriorGraph& graph, int first_index){
+int AASS::acg::AutoCompleteGraphPriorXY::addPriorGraph(const PriorLoaderInterface::PriorGraph& graph, int first_index){
 
 	std::pair< PriorLoaderInterface::PriorGraph::VertexIterator, PriorLoaderInterface::PriorGraph::VertexIterator > vp;
 	std::deque<PriorLoaderInterface::PriorGraph::Vertex> vec_deque;
-	std::vector<g2o::VertexSE2Prior*> out_prior;
+	std::vector<g2o::VertexXYPrior*> out_prior;
 
 //	std::cout << "NOOOOOOW" << _optimizable_graph.vertices().size() << std::endl << std::endl;
 
@@ -119,7 +123,7 @@ int AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterfa
 // 		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
 
 
-		g2o::VertexSE2Prior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0, graph[v], first_index);
+		g2o::VertexXYPrior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0, graph[v], first_index);
 		first_index++;
 		vec_deque.push_back(v);
 		out_prior.push_back(res);
@@ -171,8 +175,8 @@ int AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterfa
 
 				assert(idx != count);
 
-				g2o::VertexSE2Prior* from = out_prior[count]; //<-Base
-				g2o::VertexSE2Prior* toward = out_prior[idx]; //<-Targ
+				g2o::VertexXYPrior* from = out_prior[count]; //<-Base
+				g2o::VertexXYPrior* toward = out_prior[idx]; //<-Targ
 
 				double x_diff = graph[targ].getX() - graph[v].getX();
 				double y_diff = graph[targ].getY() - graph[v].getY();
@@ -209,7 +213,7 @@ int AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterfa
 
 }
 
-//void AASS::acg::AutoCompleteGraphPriorSE2::clear(){
+//void AASS::acg::AutoCompleteGraphPriorXY::clear(){
 ////	std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 //	int i = 0;
 //	for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ; ++it){
@@ -253,25 +257,25 @@ int AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterfa
 //	//Making sure all edge prior were removed.
 //	auto idmapedges = _optimizable_graph.edges();
 //	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-//// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-//		assert( dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) == NULL );
+//// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPrior*>(*ite) << std::endl;
+//		assert( dynamic_cast<g2o::EdgeXYPrior*>(*ite) == NULL );
 //		assert( dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite) == NULL );
 //	}
 //	std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 //	std::cout << "DONE removing " << std::endl;
 //}
 
-//void AASS::acg::AutoCompleteGraphPriorSE2::checkNoRepeatingPriorEdge(){
+//void AASS::acg::AutoCompleteGraphPriorXY::checkNoRepeatingPriorEdge(){
 //	for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
 //		std::vector<std::pair<double, double> > out;
 //		// 			std::cout << "edges " << std::endl;
 //		auto edges = (*it_vertex)->edges();
 //		// 			std::cout << "edges done " << std::endl;
-//		std::vector<g2o::EdgeSE2Prior_malcolm*> edges_prior;
+//		std::vector<g2o::EdgeXYPrior*> edges_prior;
 //
 //		for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-//			// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-//			g2o::EdgeSE2Prior_malcolm* ptr = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
+//			// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPrior*>(*ite) << std::endl;
+//			g2o::EdgeXYPrior* ptr = dynamic_cast<g2o::EdgeXYPrior*>(*ite);
 //			if(ptr != NULL){
 //				//Make sure not pushed twice
 //				for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
@@ -301,7 +305,7 @@ int AASS::acg::AutoCompleteGraphPriorSE2::addPriorGraph(const PriorLoaderInterfa
 
 
 
-void AASS::acg::AutoCompleteGraphPriorSE2::updatePriorEdgeCovariance()
+void AASS::acg::AutoCompleteGraphPriorXY::updatePriorEdgeCovariance()
 {
 
 	std::cout << "DO NOT USE " << std::endl;
@@ -311,16 +315,16 @@ void AASS::acg::AutoCompleteGraphPriorSE2::updatePriorEdgeCovariance()
 	auto edges = getPriorEdges();
 	auto it = edges.begin();
 	for(it ; it != edges.end() ; ++it){
-		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[0]);
+		g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>((*it)->vertices()[0]);
 		if(v_ptr == NULL){
 			throw std::runtime_error("no");
 		}
-		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it)->vertices()[1]);
+		g2o::VertexXYPrior* v_ptr2 = dynamic_cast<g2o::VertexXYPrior*>((*it)->vertices()[1]);
 		if(v_ptr2 == NULL){
 			throw std::runtime_error("no2");
 		}
-		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
-		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+		Eigen::Vector2d pose1 = v_ptr->estimate();
+		Eigen::Vector2d pose2 = v_ptr2->estimate();
 
 		// 			std::cout << "Poses 1 " << std::endl << pose1.format(cleanFmt) << std::endl;
 		// 			std::cout << "Poses 2 " << std::endl << pose2.format(cleanFmt) << std::endl;
@@ -416,15 +420,15 @@ void AASS::acg::AutoCompleteGraphPriorSE2::updatePriorEdgeCovariance()
 
 		// 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
 
-		Eigen::Matrix3d covariance_prior;
-		covariance_prior.fill(0.);
-		covariance_prior(0, 0) = cov(0, 0);
-		covariance_prior(0, 1) = cov(0, 1);
-		covariance_prior(1, 0) = cov(1, 0);
-		covariance_prior(1, 1) = cov(1, 1);
+//		Eigen::Matrix3d covariance_prior;
+//		covariance_prior.fill(0.);
+//		covariance_prior(0, 0) = cov(0, 0);
+//		covariance_prior(0, 1) = cov(0, 1);
+//		covariance_prior(1, 0) = cov(1, 0);
+//		covariance_prior(1, 1) = cov(1, 1);
 		// 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior landmark is more than 4PI
-		covariance_prior(2, 2) = _prior_rot * _prior_rot;
-		Eigen::Matrix3d information_prior = covariance_prior.inverse();
+//		covariance_prior(2, 2) = _prior_rot * _prior_rot;
+		Eigen::Matrix2d information_prior = cov.inverse();
 
 		std::cout << "ALL INFO \n" << information_prior << "\n new cov " << new_cov << " cov mat " << cov << std::endl;
 
@@ -438,19 +442,19 @@ void AASS::acg::AutoCompleteGraphPriorSE2::updatePriorEdgeCovariance()
 }
 
 
-void AASS::acg::AutoCompleteGraphPriorSE2::testNoNanInPrior(const std::string& before) const {
+void AASS::acg::AutoCompleteGraphPriorXY::testNoNanInPrior(const std::string& before) const {
 
 	std::cout << "Test No nan in prior after " << before << std::endl;
 	auto it = getPriorNodes().begin();
 	for(it ; it != getPriorNodes().end() ; ++it){
-		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it));
+		g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>((*it));
 		if(v_ptr == NULL){
 			throw std::runtime_error("not good vertex type");
 		}
-		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
+		Eigen::Vector2d pose1 = v_ptr->estimate();
 		assert(!std::isnan(pose1[0]));
 		assert(!std::isnan(pose1[1]));
-		assert(!std::isnan(pose1[2]));
+//		assert(!std::isnan(pose1[2]));
 
 	}
 
@@ -459,24 +463,24 @@ void AASS::acg::AutoCompleteGraphPriorSE2::testNoNanInPrior(const std::string& b
 	auto edges = getPriorEdges();
 	auto it_edge = edges.begin();
 	for(it_edge ; it_edge != edges.end() ; ++it_edge){
-		g2o::VertexSE2Prior* v_ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[0]);
+		g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>((*it_edge)->vertices()[0]);
 		if(v_ptr == NULL){
 			throw std::runtime_error("no");
 		}
-		g2o::VertexSE2Prior* v_ptr2 = dynamic_cast<g2o::VertexSE2Prior*>((*it_edge)->vertices()[1]);
+		g2o::VertexXYPrior* v_ptr2 = dynamic_cast<g2o::VertexXYPrior*>((*it_edge)->vertices()[1]);
 		if(v_ptr2 == NULL){
 			throw std::runtime_error("no2");
 		}
-		Eigen::Vector3d pose1 = v_ptr->estimate().toVector();
-		Eigen::Vector3d pose2 = v_ptr2->estimate().toVector();
+		Eigen::Vector2d pose1 = v_ptr->estimate();
+		Eigen::Vector2d pose2 = v_ptr2->estimate();
 
 		assert(!std::isnan(pose1[0]));
 		assert(!std::isnan(pose1[1]));
-		assert(!std::isnan(pose1[2]));
+//		assert(!std::isnan(pose1[2]));
 
 		assert(!std::isnan(pose2[0]));
 		assert(!std::isnan(pose2[1]));
-		assert(!std::isnan(pose2[2]));
+//		assert(!std::isnan(pose2[2]));
 	}
 
 }

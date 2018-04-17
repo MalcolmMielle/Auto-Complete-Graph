@@ -24,33 +24,54 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "auto_complete_graph/VertexAndEdge/registration.hpp"
+#include "auto_complete_graph/VertexAndEdge/EdgePointXYACG.hpp"
 
-#include "g2o/core/factory.h"
-
-#include "g2o/stuff/macros.h"
-
-#include <iostream>
-//#include <auto_complete_graph/VertexAndEdge/VertexSE2RobotPose.hpp>
+//#ifdef G2O_HAVE_OPENGL
+//#include "g2o/stuff/opengl_wrapper.h"
+//#include "g2o/stuff/opengl_primitives.h"
+//#endif
 
 namespace g2o {
 
-	G2O_REGISTER_TYPE_GROUP(acgvertex);
+	EdgePointXYACG::EdgePointXYACG() :
+			BaseBinaryEdge<2, Vector2, VertexPointXYACG, VertexPointXYACG>()
+	{
+//		_information.setIdentity();
+//		_error.setZero();
+	}
 
-	G2O_REGISTER_TYPE(VERTEX_SE2_ROBOTPOSE, VertexSE2RobotPose);
-	G2O_REGISTER_TYPE(VERTEX_SE2_PRIOR, VertexSE2Prior);
-	G2O_REGISTER_TYPE(VERTEX_SE2_LANDMARK, VertexLandmarkNDT);
-	G2O_REGISTER_TYPE(VERTEX_XY_PRIOR, VertexXYPrior);
+	bool EdgePointXYACG::read(std::istream& is)
+	{
+		Vector2 p;
+		is >> p[0] >> p[1];
+		setMeasurement(p);
+		for (int i = 0; i < 2; ++i)
+			for (int j = i; j < 2; ++j) {
+				is >> information()(i, j);
+				if (i != j)
+					information()(j, i) = information()(i, j);
+			}
+		return true;
+	}
+
+	bool EdgePointXYACG::write(std::ostream& os) const
+	{
+		Vector2 p = measurement();
+		os << p.x() << " " << p.y();
+		for (int i = 0; i < 2; ++i)
+			for (int j = i; j < 2; ++j)
+				os << " " << information()(i, j);
+		return os.good();
+	}
 
 
-	G2O_REGISTER_TYPE(EDGE_SE2_PRIOR, EdgeSE2Prior_malcolm);
-	G2O_REGISTER_TYPE(EDGE_LANDMARK, EdgeLandmark_malcolm);
-	G2O_REGISTER_TYPE(EDGE_LINK, EdgeLinkXY_malcolm);
-	G2O_REGISTER_TYPE(EDGE_LOCALIZATION, EdgeLocalization);
-	G2O_REGISTER_TYPE(EDGE_ODOMETRY, EdgeOdometry_malcolm);
-	G2O_REGISTER_TYPE(EDGE_XY_PRIOR_ACG, EdgeXYPriorACG);
-	G2O_REGISTER_TYPE(EDGE_XY_XY, EdgePointXYACG);
+#ifndef NUMERIC_JACOBIAN_TWO_D_TYPES
+	void EdgePointXYACG::linearizeOplus()
+	{
+		_jacobianOplusXi=-Matrix2::Identity();
+		_jacobianOplusXj= Matrix2::Identity();
+	}
+#endif
 
-//	EdgeXYPrior e;
 
 } // end namespace

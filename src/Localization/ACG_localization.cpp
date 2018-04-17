@@ -399,7 +399,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 	std::cout << "got all cell sized" << std::endl;
 	double cell_size = x2;
 
-	std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement> corners_end;
+	std::vector<AASS::acg::NDTCornerGraphElement> corners_end;
 	getAllCornersNDTTranslatedToGlobalAndRobotFrame(map, robot_ptr, corners_end);
 
 	/***************** ADD THE CORNERS INTO THE GRAPH***********************/
@@ -520,7 +520,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 }
 
 
-void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement>& corners_end)
+void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, std::vector<AASS::acg::NDTCornerGraphElement>& corners_end)
 {
 
 	perception_oru::ndt_feature_finder::NDTCorner cornersExtractor;
@@ -839,7 +839,7 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 
 					//TODO TEST IT
 					if (_flag_use_corner_orientation == false ||
-					    (_flag_use_corner_orientation == true && landmark->sameOrientation(*prior_node))) {
+					    (_flag_use_corner_orientation == true && landmark->sameOrientation(prior_node->getAnglesAndOrientations() ))) {
 
 						Eigen::Vector3d pose_tmp = prior_node->estimate().toVector();
 						Eigen::Vector2d pose_prior;

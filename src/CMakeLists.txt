@@ -2,7 +2,7 @@ add_subdirectory(VertexAndEdge)
 
 ## Declare a C++ library
 add_library(auto_complete_graph_lib
-  ACG.cpp
+#        ACG.tpp
   OptimizableAutoCompleteGraph.cpp
   PriorLoaderInterface.cpp
         ACGPriorSE2.cpp

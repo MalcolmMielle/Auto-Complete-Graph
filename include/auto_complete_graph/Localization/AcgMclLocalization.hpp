@@ -30,7 +30,7 @@ namespace acg{
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 
-		ACGMCLLocalization(std::string mapFile_, int particleCount_) : mcl_loaded_(false), perception_oru::particle_filter(mapFile_, particleCount_){};
+//		ACGMCLLocalization(std::string mapFile_, int particleCount_) : mcl_loaded_(false), perception_oru::particle_filter(mapFile_, particleCount_){};
 		
 		ACGMCLLocalization(perception_oru::NDTMap *ndtMap_, int particleCount_/*, init_type initializationType_*/, bool be2D_=true, bool forceSIR_=true,double varLimit_=0, int sirCount_=0) : mcl_loaded_(false), perception_oru::particle_filter(ndtMap_, particleCount_, be2D_, forceSIR_, varLimit_, sirCount_){}
 		
@@ -48,7 +48,7 @@ namespace acg{
 			
 	 		std::cout << "Init at " << xx << " " << yy << " " << yaw << std::endl;
 			InitializeNormal(xx, yy, yaw, initVar);
-			std::cout << "ormal init" << std::endl;
+			std::cout << "Normal init" << std::endl;
 			mcl_loaded_ = true;
 			std::cout << "MAP LOADED SUCCESSFULLY :)" << std::endl;
 			

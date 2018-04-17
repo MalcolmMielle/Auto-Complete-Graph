@@ -5,6 +5,8 @@ add_library(auto_complete_graph_vertexedges_lib
         VertexPointXYACG.cpp
         EdgeSE2ACG.cpp
         EdgeSE2PointXYACG.cpp
+        EdgeXYPrior.cpp
+        EdgePointXYACG.cpp
  registration.cpp
 )
 

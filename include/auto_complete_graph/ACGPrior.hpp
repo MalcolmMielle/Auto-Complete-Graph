@@ -22,17 +22,12 @@
 //#include "VertexAndEdge/EdgeOdometry.hpp"
 //#include "VertexAndEdge/EdgeLandmark.hpp"
 //#include "VertexAndEdge/EdgeLinkXY.hpp"
-#include "VertexAndEdge/EdgeSE2Prior.hpp"
-//#include "VertexAndEdge/VertexLandmarkNDT.hpp"
-#include "VertexAndEdge/VertexSE2Prior.hpp"
 //#include "VertexAndEdge/VertexSE2RobotPose.hpp"
 
 
 namespace AASS {
 
 	namespace acg {
-
-
 
 		/**
 		 * @brief The graph class containing all elements from the prior. Needed for the templated version of ACGLocalization :(.
@@ -96,7 +91,7 @@ namespace AASS {
 			virtual int addPriorGraph(const PriorLoaderInterface::PriorGraph& graph, int first_index) = 0;
 			///@remove the prior and all link edges
 //			virtual void clearPrior() = 0;
-			virtual void checkNoRepeatingPriorEdge() = 0;
+			virtual void checkNoRepeatingPriorEdge();
 
 			virtual void clear(){
 				//It's a set so not needed
@@ -107,8 +102,10 @@ namespace AASS {
 //////						++i;
 ////					}
 //				}
+				std::cout << "Clear the prior" << std::endl;
 				_nodes_prior.clear();
 				_edge_prior.clear();
+				std::cout << "Prior cleared" << std::endl;
 			}
 
 			g2o::HyperGraph::Vertex* removeVertex(g2o::HyperGraph::Vertex* v1){
@@ -126,6 +123,46 @@ namespace AASS {
 
 
 		};
+
+
+		template<typename VERTEXTYPE, typename EDGETYPE>
+		inline void AASS::acg::AutoCompleteGraphPrior<VERTEXTYPE, EDGETYPE>::checkNoRepeatingPriorEdge(){
+			for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
+				std::vector<std::pair<double, double> > out;
+				// 			std::cout << "edges " << std::endl;
+				auto edges = (*it_vertex)->edges();
+				// 			std::cout << "edges done " << std::endl;
+				std::vector<EDGETYPE*> edges_prior;
+
+				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
+					// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPrior*>(*ite) << std::endl;
+					EDGETYPE* ptr = dynamic_cast<EDGETYPE*>(*ite);
+					if(ptr != NULL){
+						//Make sure not pushed twice
+						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
+							assert(ptr != *ite2);
+						}
+						// 						std::cout << " pushed edges " << std::endl;
+						edges_prior.push_back(ptr);
+						// 						std::cout << "pushed edges done " << std::endl;
+					}
+				}
+				for(auto it = edges_prior.begin() ; it != edges_prior.end() ; ++it){
+					auto ite2 = it;
+					ite2++;
+					for( ; ite2 != edges_prior.end() ; ++ite2 ){
+						assert((*it)->getOrientation2D(**it_vertex) != (*ite2)->getOrientation2D(**it_vertex));
+					}
+				}
+			}
+			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+				auto ite2 = it;
+				ite2++;
+				for(; ite2 != _edge_prior.end() ; ++ite2 ){
+					assert(it != ite2);
+				}
+			}
+		}
 	}
 }
 

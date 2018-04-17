@@ -24,19 +24,27 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef REGISTRATION_00000
-#define REGISTRATION_00000
+#ifndef REGISTRATION_00000_DATE
+#define REGISTRATION_00000_DATE
 
 #include "g2o/config.h"
 #include <auto_complete_graph/VertexAndEdge/VertexSE2RobotPose.hpp>
 #include <auto_complete_graph/VertexAndEdge/VertexLandmarkNDT.hpp>
 #include <auto_complete_graph/VertexAndEdge/VertexSE2Prior.hpp>
-#include <auto_complete_graph/VertexAndEdge/EdgeInterfaceMalcolm.hpp>
+#include <auto_complete_graph/VertexAndEdge/VertexXYPrior.hpp>
+
+//#include <auto_complete_graph/VertexAndEdge/EdgeInterfaceMalcolm.hpp>
+
 #include <auto_complete_graph/VertexAndEdge/EdgeOdometry.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeSE2Prior.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeLinkXY.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeLandmark.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgePointXYACG.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgeXYPrior.hpp>
+
+
+//EdgeXYPrior e;
 
 
 #endif

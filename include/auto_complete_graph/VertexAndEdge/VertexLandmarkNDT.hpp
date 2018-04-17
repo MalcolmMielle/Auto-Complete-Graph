@@ -72,6 +72,8 @@ namespace g2o{
 			lp->index = index;
 			cov.computeInverseAndDetWithCheck(lp->cov_inverse, lp->determinant, lp->inverse_cov_exist);
 			if (!lp->inverse_cov_exist) {
+				std::cout << "Covariance " << cov << std::endl;
+				std::cout << "determinant " << lp->determinant << std::endl;
 				throw std::runtime_error("Inverse covariance not findable");
 			}
 			associated_localization.insert(lp);
@@ -138,9 +140,9 @@ namespace g2o{
 			return angle;
 		}
 		
-		bool sameOrientation(const VertexSE2Prior& v){
+		bool sameOrientation(std::vector<std::pair<double, double> > angles_orientations_v){
 			
-			auto angles_orientations_v = v.getAnglesAndOrientations();
+//			auto angles_orientations_v = v.getAnglesAndOrientations();
 			
 			for(auto it_ao_v = angles_orientations_v.begin(); it_ao_v != angles_orientations_v.end() ; ++it_ao_v){
 				double angle_width_v = it_ao_v->first;

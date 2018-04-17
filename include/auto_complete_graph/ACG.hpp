@@ -27,17 +27,139 @@
 #include "VertexAndEdge/VertexSE2RobotPose.hpp"
 
 #include "ACGPriorSE2.hpp"
+#include "auto_complete_graph/Localization/ACGPriorXY.hpp"
 
 
 namespace AASS {
 
 namespace acg{
+
+	/**
+		 * @brief : used in a function to update the NDTGraph
+		 * */
+	class NDTCornerGraphElement : public perception_oru::ndt_feature_finder::NDTCornerBundle{
+	public:
+		cv::Point2f position_in_robot_frame;
+	protected:
+		//TODO : change it to a set
+// 				std::vector<int> nodes_linked;
+		g2o::VertexSE2RobotPose* nodes_linked_ptr;
+		Eigen::Vector2d observations;
+//				std::vector<double> _angle_orientation;
+//				std::vector<double> _angle_width;
+
+	public:
+		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells1;
+		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells2;
+
+//				NDTCornerGraphElement(float x, float y) : position_in_robot_frame(x, y){};
+		NDTCornerGraphElement(const cv::Point2f& p) : position_in_robot_frame(p){};
+		NDTCornerGraphElement(const cv::Point2f& p, const perception_oru::ndt_feature_finder::NDTCornerBundle& ndtcorner): perception_oru::ndt_feature_finder::NDTCornerBundle(ndtcorner), position_in_robot_frame(p) {};
+
+		void addAllObserv(g2o::VertexSE2RobotPose* ptr, Eigen::Vector2d obs){
+// 					nodes_linked.push_back(i);
+			observations = obs;
+			nodes_linked_ptr = ptr;
+//					_angle_orientation = angle_orientation;
+//					_angle_width = a_width;
+		}
+
+
+// 				size_t size(){
+// 					assert(nodes_linked.size() == nodes_linked_ptr.size());
+// 					assert(nodes_linked.size() == observations.size());
+// 					return observations.size();
+// 				}
+
+		// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
+// 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
+		g2o::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
+		const Eigen::Vector2d& getObservations() const {return observations;}
+//				const std::vector<double>& getOrientations() const {return _angle_orientation;}
+//				const std::vector<double>& getAngleWidths() const {return _angle_width;}
+
+		// 		void push_back(int i){nodes_linked.push_back(i);}
+
+		// 		void addNode(int i){nodes_linked.push_back(i);}
+		// 		void addObservation(const g2o::Vector2& obs){ observations.push_back(obs);}
+
+// 				void fuse(const NDTCornerGraphElement& cor){
+// 					for(size_t i = 0 ; i < cor.getNodeLinked().size() ; ++i){
+// 						bool seen = false;
+// 						for(size_t j = 0 ; j < nodes_linked.size() ; ++j){
+// 							if(cor.getNodeLinked()[i] == nodes_linked[j]){
+// 								seen = true;
+// 							}
+// 						}
+// 						if(seen == false){
+// 							nodes_linked.push_back(cor.getNodeLinked()[i]);
+// 							observations.push_back(cor.getObservations()[i]);
+// 							nodes_linked_ptr.push_back(cor.getNodeLinkedPtr()[i]);
+// 						}
+// 					}
+// 				}
+// 				void print() const {std::cout << point << " nodes : ";
+//
+// 					for(size_t i = 0 ; i < nodes_linked.size()  ; ++i){
+// 						std::cout << nodes_linked[i] << " " ;
+// 					}
+//
+// 				}
+
+	};
+
+	//ATTENTION Already useless
+//	class EdgePriorAndInitialValue{
+//	protected:
+//		EdgePrior* _edge;
+//		g2o::SE2 _original_value;
+//
+//	public:
+//		EdgePriorAndInitialValue(EdgePrior* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
+//
+//		EdgePrior* getEdge(){return _edge;}
+//		g2o::SE2 getOriginalValue(){return _original_value;}
+//	};
+
+	class EdgeInterface
+	{
+	protected:
+		bool _flag_set_age;
+	public:
+		g2o::SE2 _malcolm_original_value;
+		double _malcolm_age;
+
+		//       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+		EdgeInterface() : _flag_set_age(false), _malcolm_age(1){};
+
+		virtual g2o::SE2 getOriginalValue(){return _malcolm_original_value;}
+		virtual void setOriginalValue(const g2o::SE2& orig_val){_malcolm_original_value = orig_val;}
+		virtual bool manuallySetAge(){return _flag_set_age;}
+		virtual double getAge(){return _malcolm_age;}
+		virtual bool setAge(double a){
+// 				std::cout << "Setting the age" << std::endl;
+			_flag_set_age = true;
+			assert(_flag_set_age == true);
+			_malcolm_age = a;
+			return _flag_set_age;
+		}
+
+
+	};
+
+
+
+
+
+
+
 	
 	/**
 	 * @brief The graph class containing all elemnts from each map and the graph used in the g2o optimisation.
 	 * ATTENTION : _transNoise is not used anymore when update the NDT-graph for we used the registration. I should remove it but for now I'm leaving it only not to break everything.
 	 */
-	class AutoCompleteGraph{
+	template< typename Prior, typename VertexPrior, typename EdgePrior >
+	class AutoCompleteGraphBase{
 
 
 	protected:
@@ -75,120 +197,6 @@ namespace acg{
 		///@brief Number of optimizatino for which the error needs ot be stable to be considered finished.
 		int _check_error_stable_over;
 
-		/**
-		 * @brief : used in a function to update the NDTGraph
-		 * */
-		class NDTCornerGraphElement : public perception_oru::ndt_feature_finder::NDTCornerBundle{
-			public:
-				cv::Point2f position_in_robot_frame;
-			protected:
-				//TODO : change it to a set
-// 				std::vector<int> nodes_linked;
-				g2o::VertexSE2RobotPose* nodes_linked_ptr;
-				Eigen::Vector2d observations;
-//				std::vector<double> _angle_orientation;
-//				std::vector<double> _angle_width;
-
-			public:
-				std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells1;
-				std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells2;
-
-//				NDTCornerGraphElement(float x, float y) : position_in_robot_frame(x, y){};
-				NDTCornerGraphElement(const cv::Point2f& p) : position_in_robot_frame(p){};
-				NDTCornerGraphElement(const cv::Point2f& p, const perception_oru::ndt_feature_finder::NDTCornerBundle& ndtcorner): perception_oru::ndt_feature_finder::NDTCornerBundle(ndtcorner), position_in_robot_frame(p) {};
-
-				void addAllObserv(g2o::VertexSE2RobotPose* ptr, Eigen::Vector2d obs){
-// 					nodes_linked.push_back(i);
-					observations = obs;
-					nodes_linked_ptr = ptr;
-//					_angle_orientation = angle_orientation;
-//					_angle_width = a_width;
-				}
-
-
-// 				size_t size(){
-// 					assert(nodes_linked.size() == nodes_linked_ptr.size());
-// 					assert(nodes_linked.size() == observations.size());
-// 					return observations.size();
-// 				}
-
-		// 		std::vector<int>& getNodeLinked(){return nodes_linked;}
-// 				const std::vector<int>& getNodeLinked() const {return nodes_linked;}
-				g2o::VertexSE2RobotPose* getNodeLinkedPtr() {return nodes_linked_ptr;}
-				const Eigen::Vector2d& getObservations() const {return observations;}
-//				const std::vector<double>& getOrientations() const {return _angle_orientation;}
-//				const std::vector<double>& getAngleWidths() const {return _angle_width;}
-
-		// 		void push_back(int i){nodes_linked.push_back(i);}
-
-		// 		void addNode(int i){nodes_linked.push_back(i);}
-		// 		void addObservation(const g2o::Vector2& obs){ observations.push_back(obs);}
-
-// 				void fuse(const NDTCornerGraphElement& cor){
-// 					for(size_t i = 0 ; i < cor.getNodeLinked().size() ; ++i){
-// 						bool seen = false;
-// 						for(size_t j = 0 ; j < nodes_linked.size() ; ++j){
-// 							if(cor.getNodeLinked()[i] == nodes_linked[j]){
-// 								seen = true;
-// 							}
-// 						}
-// 						if(seen == false){
-// 							nodes_linked.push_back(cor.getNodeLinked()[i]);
-// 							observations.push_back(cor.getObservations()[i]);
-// 							nodes_linked_ptr.push_back(cor.getNodeLinkedPtr()[i]);
-// 						}
-// 					}
-// 				}
-// 				void print() const {std::cout << point << " nodes : ";
-//
-// 					for(size_t i = 0 ; i < nodes_linked.size()  ; ++i){
-// 						std::cout << nodes_linked[i] << " " ;
-// 					}
-//
-// 				}
-
-			};
-
-		//ATTENTION Already useless
-		class EdgePriorAndInitialValue{
-		protected:
-			g2o::EdgeSE2Prior_malcolm* _edge;
-			g2o::SE2 _original_value;
-
-		public:
-			EdgePriorAndInitialValue(g2o::EdgeSE2Prior_malcolm* ed, const g2o::SE2& orig_val) : _edge(ed), _original_value(orig_val){}
-
-			g2o::EdgeSE2Prior_malcolm* getEdge(){return _edge;}
-			g2o::SE2 getOriginalValue(){return _original_value;}
-		};
-
-		class EdgeInterface
-		{
-			protected:
-			bool _flag_set_age;
-			public:
-			g2o::SE2 _malcolm_original_value;
-			double _malcolm_age;
-
-		//       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-			EdgeInterface() : _flag_set_age(false), _malcolm_age(1){};
-
-			virtual g2o::SE2 getOriginalValue(){return _malcolm_original_value;}
-			virtual void setOriginalValue(const g2o::SE2& orig_val){_malcolm_original_value = orig_val;}
-			virtual bool manuallySetAge(){return _flag_set_age;}
-			virtual double getAge(){return _malcolm_age;}
-			virtual bool setAge(double a){
-// 				std::cout << "Setting the age" << std::endl;
-				_flag_set_age = true;
-				assert(_flag_set_age == true);
-				_malcolm_age = a;
-				return _flag_set_age;
-			}
-
-
-		};
-
-
 		//Needed system values
 		Eigen::Vector2d _transNoise;
 		double _rotNoise;
@@ -198,9 +206,9 @@ namespace acg{
 		g2o::SE2 _sensorOffsetTransf;
 
 
-
 		///@brief the prior
-		AutoCompleteGraphPriorSE2* _prior;
+//		AutoCompleteGraphPriorSE2* _prior;
+		Prior* _prior;
 
 		///@brief vector storing all node from the landarks
 		std::vector<g2o::VertexLandmarkNDT*> _nodes_landmark;
@@ -242,7 +250,7 @@ namespace acg{
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-		AutoCompleteGraph(const g2o::SE2& sensoffset,
+		AutoCompleteGraphBase(const g2o::SE2& sensoffset,
 						const Eigen::Vector2d& tn,
 						double rn,
 						const Eigen::Vector2d& ln,
@@ -250,21 +258,21 @@ namespace acg{
 						double rp,
 						const Eigen::Vector2d& linkn,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new AutoCompleteGraphPriorSE2(pn, rp, sensoffset)) {
+  					) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new Prior(pn, rp, sensoffset)) {
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
 						_sensorOffset->setId(0);
 					}
 
-		AutoCompleteGraph(const g2o::SE2& sensoffset,
+		AutoCompleteGraphBase(const g2o::SE2& sensoffset,
 						  const Eigen::Vector2d& tn,
 						  double rn,
 						  const Eigen::Vector2d& ln,
 						  const Eigen::Vector2d& pn,
 						  double rp,
 						  const Eigen::Vector2d& linkn
-					) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new AutoCompleteGraphPriorSE2(pn, rp, sensoffset)){
+					) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _linkNoise(linkn), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new Prior(pn, rp, sensoffset)){
 
 						// add the parameter representing the sensor offset ATTENTION was ist das ?
 						_sensorOffset = new g2o::ParameterSE2Offset;
@@ -275,7 +283,7 @@ namespace acg{
 					}
 
 
-		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new AutoCompleteGraphPriorSE2(sensoffset)){
+		AutoCompleteGraphBase(const g2o::SE2& sensoffset, const std::string& load_file) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_links_prior(true), _use_prior(true), _sensorOffsetTransf(sensoffset), _previous_number_of_node_in_ndtgraph(1), _min_distance_for_link_in_meter(1.5), _max_distance_for_link_in_meter(3), _optimizable_graph(sensoffset), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new Prior(sensoffset)){
 
 
 			std::ifstream infile(load_file);
@@ -338,9 +346,9 @@ namespace acg{
 		}
 
 		//Forbid copy
-		AutoCompleteGraph(const AutoCompleteGraph& that) = delete;
+		AutoCompleteGraphBase(const AutoCompleteGraphBase& that) = delete;
 
-		virtual ~AutoCompleteGraph(){
+		virtual ~AutoCompleteGraphBase(){
 
 // 			std::cout << "Calling ACG dest with size" << _nodes_ndt.size() << std::endl ;
 			delete _sensorOffset;
@@ -361,11 +369,11 @@ namespace acg{
 
 		/** Accessor**/
 
-		AutoCompleteGraphPriorSE2* getPrior(){return _prior;}
-		const AutoCompleteGraphPriorSE2* getPrior() const {return _prior;}
+		Prior* getPrior(){return _prior;}
+		const Prior* getPrior() const {return _prior;}
 
-//		std::set<g2o::VertexSE2Prior*>& getPriorNodes(){return _prior->getPriorNodes();}
-//		const std::set<g2o::VertexSE2Prior*>& getPriorNodes() const {return _prior->getPriorNodes();}
+//		std::set<VertexPrior*>& getPriorNodes(){return _prior->getPriorNodes();}
+//		const std::set<VertexPrior*>& getPriorNodes() const {return _prior->getPriorNodes();}
 		///@brief vector storing all node from the prior
 		std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes(){return _nodes_landmark;}
 		const std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes() const {return _nodes_landmark;}
@@ -379,8 +387,8 @@ namespace acg{
 		std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges(){return _edge_landmark;}
 		const std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges() const {return _edge_landmark;}
 		///@brief vector storing all edge between the prior nodes
-//		std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges(){ return _prior->getPriorEdges();}
-//		const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _prior->getPriorEdges();}
+//		std::vector<EdgePrior*>& getPriorEdges(){ return _prior->getPriorEdges();}
+//		const std::vector<EdgePrior*>& getPriorEdges() const { return _prior->getPriorEdges();}
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges(){return _edge_odometry;}
 		const std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges() const {return _edge_odometry;}
@@ -441,9 +449,9 @@ namespace acg{
 		virtual g2o::VertexLandmarkNDT* addLandmarkPose(const g2o::Vector2& estimate, const cv::Point2f& position, int strength = 1);
 		virtual g2o::VertexLandmarkNDT* addLandmarkPose(double x, double y, const cv::Point2f& position, int strength = 1);
 
-		virtual g2o::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr);
-		virtual g2o::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr);
-		virtual g2o::VertexSE2Prior* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr);
+		virtual VertexPrior* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr);
+		virtual VertexPrior* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr);
+		virtual VertexPrior* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr);
 
 
 		/** FUNCTION TO ADD THE EGDES **/
@@ -458,11 +466,11 @@ namespace acg{
 		virtual g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 		virtual g2o::EdgeLandmark_malcolm* addLandmarkObservation(const g2o::Vector2& pos, int from_id, int toward_id);
 
-		virtual g2o::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		virtual EdgePrior* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 // 		void addEdgePrior(g2o::SE2 observ, int from, int toward);
 // 		void addEdgePrior(double x, double y, double theta, int from, int toward);
 
-		virtual g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, g2o::VertexSE2Prior* v2, g2o::VertexLandmarkNDT* v1);
+		virtual g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, VertexPrior* v2, g2o::VertexLandmarkNDT* v1);
 
 //		g2o::EdgeLinkXY_malcolm* addLinkBetweenMaps(const g2o::Vector2& pos, int from_id, int toward_id);
 
@@ -602,8 +610,8 @@ namespace acg{
 
 
 		//Todo move in private
-		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
-		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, g2o::VertexSE2Prior* v_prior);
+		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, VertexPrior* v_prior, std::vector< g2o::EdgeLinkXY_malcolm* >::iterator& it);
+		bool linkAlreadyExist(g2o::VertexLandmarkNDT* v_pt, VertexPrior* v_prior);
 		bool noDoubleLinks();
 
 		///@brief return the vector corresponding to the shift due to the optimization.
@@ -632,10 +640,10 @@ namespace acg{
 		virtual void updateLinks();
 
 		///@brief create links between close by landmark and prior
-		virtual int createNewLinks();
+		virtual int createNewLinks() {throw std::runtime_error("createNewLinks base function not implemented. Do no use.");}
 
 		///@brief remove links between too far landmarks and prior
-		void removeBadLinks();
+		virtual void removeBadLinks() {throw std::runtime_error("createNewLinks base function not implemented. Do no use.");}
 
 		void updatePriorEdgeCovariance();
 		void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step);
@@ -683,9 +691,9 @@ namespace acg{
 // 			}
 		}
 
-		int countLinkToMake();
+		virtual int countLinkToMake() {throw std::runtime_error("createNewLinks base function not implemented. Do no use.");}
 
-		void checkLinkNotTooBig();
+		virtual void checkLinkNotTooBig() {throw std::runtime_error("createNewLinks base function not implemented. Do no use.");}
 
 //		void checkNoRepeatingPriorEdge();
 
@@ -714,9 +722,286 @@ namespace acg{
 		/**
 		 * Returns all the corner found in the NDT map in NDTCornerGraphElement. The corner positions are in the global frame while the obervation are in the robot pose frame, as in needed by g2o
 		 */
-		virtual void getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos, std::vector<AASS::acg::AutoCompleteGraph::NDTCornerGraphElement>& corners_end);
+		virtual void getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos, std::vector<AASS::acg::NDTCornerGraphElement>& corners_end);
 
 	};
+
+	#include "ACG.tpp"
+
+
+//Simple template specialization to not brake all base code for now...
+	class AutoCompleteGraph : public AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>{
+
+	public:
+		AutoCompleteGraph(const g2o::SE2& sensoffset,
+		                      const Eigen::Vector2d& tn,
+		                      double rn,
+		                      const Eigen::Vector2d& ln,
+		                      const Eigen::Vector2d& pn,
+		                      double rp,
+		                      const Eigen::Vector2d& linkn,
+		                      ndt_feature::NDTFeatureGraph* ndt_graph
+		) : AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){}
+
+		AutoCompleteGraph(const g2o::SE2& sensoffset,
+		                      const Eigen::Vector2d& tn,
+		                      double rn,
+		                      const Eigen::Vector2d& ln,
+		                      const Eigen::Vector2d& pn,
+		                      double rp,
+		                      const Eigen::Vector2d& linkn
+		) : AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>(sensoffset, tn, rn, ln, pn, rp, linkn){}
+
+
+		AutoCompleteGraph(const g2o::SE2& sensoffset, const std::string& load_file) : AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>(sensoffset, load_file){}
+
+
+
+		int createNewLinks()
+		{
+
+			if(this->_use_links_prior) {
+				int count = 0;
+// 	std::vector < std::pair < g2o::VertexLandmarkNDT*, VertexPrior*> > links;
+
+				std::cout << "Number new landmarks " << this->_nodes_landmark.size() << std::endl;
+				std::cout << "Prior " << this->_prior->getPriorNodes().size() << std::endl;
+// 	if(_nodes_prior.size() > 0){
+
+				//Update ALL links
+				auto it = this->_nodes_landmark.begin();
+				for (it; it != this->_nodes_landmark.end(); it++) {
+// 		std::cout << "Working on links " << std::endl;
+					Eigen::Vector2d pose_landmark = (*it)->estimate();
+					auto it_prior = this->_prior->getPriorNodes().begin();
+					for (it_prior; it_prior != this->_prior->getPriorNodes().end(); ++it_prior) {
+
+						//Don't add the same link twice
+						if (this->linkAlreadyExist(*it, *it_prior) == false) {
+
+
+							//TODO TEST IT
+							if (this->_flag_use_corner_orientation == false ||
+							    (this->_flag_use_corner_orientation == true && (*it)->sameOrientation( (*it_prior)->getAnglesAndOrientations() ))) {
+
+								Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+								Eigen::Vector2d pose_prior;
+								pose_prior << pose_tmp(0), pose_tmp(1);
+								double norm_tmp = (pose_prior - pose_landmark).norm();
+								// 				std::cout << "new" << std::endl;
+
+								//Update the link
+								if (norm_tmp <= _min_distance_for_link_in_meter) {
+									std::cout << "NORM " << norm_tmp << "min dist " << _min_distance_for_link_in_meter
+									          << std::endl;
+									// 					ptr_closest = *it_prior;
+									// 					norm = norm_tmp;
+									//Pushing the link
+									// 					std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+									// 					links.push_back(std::pair<g2o::VertexLandmarkNDT*, VertexPrior*>(*it, *it_prior));
+
+									g2o::Vector2 vec;
+									vec << 0, 0;
+									addLinkBetweenMaps(vec, *it_prior, *it);
+
+									++count;
+								}
+							} else {
+								std::cout << "Orientation check failed" << std::endl;
+							}
+						} else {
+
+							std::cout << "Already exist" << std::endl;
+						}
+					}
+					//Pushing the link
+// 			std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
+// 			links.push_back(std::pair<g2o::VertexLandmarkNDT*, VertexPrior*>(*it, ptr_closest));
+				}
+
+// 	auto it_links = links.begin();
+// 	for(it_links ; it_links != links.end() ; it_links++){
+// 		g2o::Vector2 vec;
+// 		vec << 0, 0;
+// 		std::cout << "Creating " << it_links->second << " and " << it_links->first << std::endl;
+// 		addLinkBetweenMaps(vec, it_links->second, it_links->first);
+// 	}
+// 	}
+
+				return count;
+			}
+			else {
+				return 0;
+			}
+
+		}
+
+
+
+		void checkLinkNotTooBig(){
+			std::cout << "check no big links" << std::endl;
+			//Check if no small links are ledft out
+
+			//Check if the link are not too big
+			for(auto it_old_links = _edge_link.begin(); it_old_links != _edge_link.end() ;it_old_links++){
+
+				std::vector<Eigen::Vector3d> vertex_out;
+
+				assert((*it_old_links)->vertices().size() == 2);
+
+				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
+				if(ptr == NULL){
+					std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
+					throw std::runtime_error("Links do not have the good vertex type. Prior");
+				}
+				auto vertex = ptr->estimate().toVector();
+				vertex_out.push_back(vertex);
+
+				g2o::VertexLandmarkNDT* ptr2 = dynamic_cast<g2o::VertexLandmarkNDT*>((*it_old_links)->vertices()[1]);
+				if(ptr2 == NULL){
+					throw std::runtime_error("Links do not have the good vertex type. Landmark");
+				}
+				auto vertex2 = ptr2->estimate();
+				Eigen::Vector3d pose_prior; pose_prior << vertex2(0), vertex2(1), 0;
+				vertex_out.push_back(pose_prior);
+
+
+				assert(vertex_out.size() == 2);
+				double norm = (vertex_out[0] - vertex_out[1]).norm();
+				//Attention magic number
+				if(norm > _max_distance_for_link_in_meter ){
+					if(linkAlreadyExist(ptr2, ptr) == false){
+						std::cout << "NORM" << norm << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+						throw std::runtime_error("Big link still present :O");
+					}
+				}
+			}
+
+
+		}
+
+
+
+		void removeBadLinks()
+		{
+			//Remove links that went too far away from the points and restor the edges to original state when possible:
+			int count = 0 ;
+			size_t siz = _edge_link.size();
+			auto it_old_links = _edge_link.begin();
+			for(it_old_links; it_old_links != _edge_link.end();){
+
+// 		std::cout << "Studying links "<< std::endl;
+				std::vector<Eigen::Vector3d> vertex_out;
+
+				assert((*it_old_links)->vertices().size() == 2);
+
+// 		std::cout << " LINK " << _edge_link.size() << std::endl;
+				g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_old_links)->vertices()[0]);
+				if(ptr == NULL){
+					std::cout << ptr << " and " << (*it_old_links)->vertices()[0] << std::endl;
+					throw std::runtime_error("Links do not have the good vertex type. Prior");
+				}
+				auto vertex = ptr->estimate().toVector();
+				vertex_out.push_back(vertex);
+
+				g2o::VertexLandmarkNDT* ptr2 = dynamic_cast<g2o::VertexLandmarkNDT*>((*it_old_links)->vertices()[1]);
+				if(ptr2 == NULL){
+					throw std::runtime_error("Links do not have the good vertex type. Landmark");
+				}
+				auto vertex2 = ptr2->estimate();
+				Eigen::Vector3d pose_prior; pose_prior << vertex2(0), vertex2(1), 0;
+				vertex_out.push_back(pose_prior);
+
+
+// 		std::cout << "bottom of ACG.cpp" << std::endl;
+				assert(vertex_out.size() == 2);
+				double norm = (vertex_out[0] - vertex_out[1]).norm();
+				//Attention magic number
+// 		auto it_tmp = it_old_links;
+
+// 		it_old_links++;
+
+// 		std::vector <g2o::EdgeLinkXY_malcolm* >::iterator next_el = it_old_links;
+
+				if(norm > _max_distance_for_link_in_meter ){
+					std::cout << "Removing a link" << std::endl;
+					std::cout << "NORM " << norm << "min dist " << _max_distance_for_link_in_meter << std::endl;
+					it_old_links = removeLinkBetweenMaps(*it_old_links);
+				}
+				else{
+					it_old_links++;
+				}
+				std::cout << "Count " << count << " size " << _edge_link.size() << std::endl;
+				assert(count <= siz);
+				count++;
+
+			}
+		}
+
+
+		int countLinkToMake(){
+
+			int count = 0;
+			std::cout << "check forgotten links" << std::endl;
+			auto it = _nodes_landmark.begin();
+			for(it ; it != _nodes_landmark.end() ; it++){
+				Eigen::Vector2d pose_landmark = (*it)->estimate();
+				auto it_prior = _prior->getPriorNodes().begin();
+				for(it_prior ; it_prior != _prior->getPriorNodes().end() ; ++it_prior){
+
+					Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
+					Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);
+					double norm_tmp = (pose_prior - pose_landmark).norm();
+
+					//Update the link
+					if(norm_tmp <= _min_distance_for_link_in_meter){
+						if(linkAlreadyExist(*it, *it_prior) == false){
+							std::cout << "NORM" << norm_tmp << "min dist " << _min_distance_for_link_in_meter << " and max " << _min_distance_for_link_in_meter << std::endl;
+							count++;
+						}
+					}
+
+				}
+
+			}
+
+			return count;
+		}
+
+
+
+	};
+
+
+
+
+//Simple template specialization to not brake all base code for now...
+class AutoCompleteGraphPRIORXYTEST : public AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>{
+
+public:
+	AutoCompleteGraphPRIORXYTEST(const g2o::SE2& sensoffset,
+	                  const Eigen::Vector2d& tn,
+	                  double rn,
+	                  const Eigen::Vector2d& ln,
+	                  const Eigen::Vector2d& pn,
+	                  double rp,
+	                  const Eigen::Vector2d& linkn,
+	                  ndt_feature::NDTFeatureGraph* ndt_graph
+	) : AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, linkn, ndt_graph){}
+
+	AutoCompleteGraphPRIORXYTEST(const g2o::SE2& sensoffset,
+	                  const Eigen::Vector2d& tn,
+	                  double rn,
+	                  const Eigen::Vector2d& ln,
+	                  const Eigen::Vector2d& pn,
+	                  double rp,
+	                  const Eigen::Vector2d& linkn
+	) : AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, linkn){}
+
+
+	AutoCompleteGraphPRIORXYTEST(const g2o::SE2& sensoffset, const std::string& load_file) : AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, load_file){}
+};
+
 }
 
 }

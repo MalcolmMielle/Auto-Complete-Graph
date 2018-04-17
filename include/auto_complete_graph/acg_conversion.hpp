@@ -321,6 +321,8 @@ namespace acg{
 		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pc(new pcl::PointCloud<pcl::PointXYZ>);
 		int nb_points = 0;
 		auto edges = acg.getPrior()->getPriorEdges();
+		std::cout << "Converting edges : " << edges.size() << std::endl;
+
 		for(auto it = edges.begin(); it != edges.end() ; ++it){
 
 			std::vector<Eigen::Vector3d> points;
