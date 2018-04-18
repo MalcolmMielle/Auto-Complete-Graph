@@ -83,6 +83,28 @@ namespace acg{
 
 		}
 
+	    void print() const{
+			AutoCompleteGraph::print();
+		    std::cout << "Localization parameters: " << std::endl;
+
+		    ///@brief register the submaps
+		    std::cout << "Do own registration: " << _do_own_registration << std::endl;
+		    ///@brief Extract the corners from the submaps
+		    std::cout << "Extract corners: " << _extract_corners << std::endl;
+		    ///@brief Use the gaussian of the corner approximated by ndt_feature_finder
+		    std::cout << "Use corner covariance: " << _use_corner_covariance << std::endl;
+		    ///@brief Use the covariance of MCL into the link between corner in submaps and prior. NOT WORKING :)
+		    std::cout << "Use MCL covariance in links: " << _use_covariance_for_links << std::endl;
+		    ///@brief Add an observation between mcl poses and prior corner if the prior is close enough to a NDT corner. The obervation is the corner observation from the robot to the NDT corner.
+		    std::cout << "Use MCL corner observatino to directly link to the prior: " << _use_mcl_observation_on_prior << std::endl;
+		    ///@brief Add link in between ndt corner and prior corner based on a distance threshold.
+		    std::cout << "Use SSRR link strategy: " << _use_links_prior_classic_ssrr << std::endl;
+		    ///@brief when adding obersvation between the prior and mcl, this is the threshold of the score for creating an observation. Score depend on mcl cov and distance between corners.
+		    std::cout << "Threshold for creating a link using MCL covariance: " << _threshold_of_score_for_creating_a_link << std::endl;
+		    ///@brief do we want to scale the score a little bit to help out ?
+		    std::cout << "Scaling factor for gaussians: " << _scaling_factor_gaussian << std::endl;
+	    }
+
 	    void doOwnRegistrationBetweenSubmaps(bool setter){_do_own_registration = setter;}
 	    void extractCorners(bool setter){_extract_corners = setter;}
 	    void useCornerCovariance(bool setter){ _use_corner_covariance = setter;}

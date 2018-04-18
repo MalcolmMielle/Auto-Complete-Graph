@@ -16,6 +16,8 @@
 //#include "conversion.hpp"
 //#include "OptimizableAutoCompleteGraph.hpp"
 #include "PriorLoaderInterface.hpp"
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 //#include "ndt_feature_finder/conversion.hpp"
 //#include "utils.hpp"
 //#include "VertexAndEdge/EdgeInterfaceMalcolm.hpp"
@@ -92,6 +94,8 @@ namespace AASS {
 			///@remove the prior and all link edges
 //			virtual void clearPrior() = 0;
 			virtual void checkNoRepeatingPriorEdge();
+
+			virtual pcl::PointCloud<pcl::PointXYZ>::Ptr toPointCloud(double resolution, double z_elevation, double varz) const  = 0;
 
 			virtual void clear(){
 				//It's a set so not needed

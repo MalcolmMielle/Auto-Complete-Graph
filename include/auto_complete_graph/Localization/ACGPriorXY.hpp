@@ -62,6 +62,8 @@ namespace AASS {
 
 			void testNoNanInPrior(const std::string& before) const;
 
+			pcl::PointCloud<pcl::PointXYZ>::Ptr toPointCloud(double resolution, double z_elevation, double varz)const ;
+
 
 		};
 	}

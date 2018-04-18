@@ -107,7 +107,7 @@ inline g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 		covariance_robot(2, 2) = _rotNoise * _rotNoise;
 		information = covariance_robot.inverse();
 
-		throw std::runtime_error("Do not use user inputted values in odometry");
+		throw std::runtime_error("Do not use user inputed values in odometry");
 	}
 	else{
 		 information = information_tmp;
@@ -153,7 +153,7 @@ inline g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 	covariance(2, 2) = _rotNoise*_rotNoise;
 	Eigen::Matrix3d information = covariance.inverse();
 
-	throw std::runtime_error("Do not use user inputted values in odometry");
+	throw std::runtime_error("Do not use user inputed values in odometry");
 
 	return addOdometry(se2, v1, v2, information);
 }
@@ -215,7 +215,7 @@ inline g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
 	covariance_landmark(1, 1) = _landmarkNoise[1]*_landmarkNoise[1];
 
-//	throw std::runtime_error("Do not use user inputted values in landmark observation");
+//	throw std::runtime_error("Do not use user inputed values in landmark observation");
 
 // 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
 	return addLandmarkObservation(pos, v1, v2, covariance_landmark);
@@ -273,9 +273,6 @@ inline g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, VertexPr
 	covariance_link.fill(0.);
 	covariance_link(0, 0) = _linkNoise[0]*_linkNoise[0];
 	covariance_link(1, 1) = _linkNoise[1]*_linkNoise[1];
-
-
-	throw std::runtime_error("Do not use user inputted values in links");
 
 // 	std::cout << "Link cov " << covariance_link << std::endl;
 

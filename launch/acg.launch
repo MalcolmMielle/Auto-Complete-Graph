@@ -9,8 +9,8 @@
 	<param name="corner_covariance" value="false" /> <!-- DOESNT WORK -->
 	<param name="own_registration" value="true" />
 	<param name="link_to_prior" value="true" />
-	<param name="mcl_observation_on_prior" value="true" />
-	<param name="use_links_prior_classic_ssrr" value="false" />
+	<param name="mcl_observation_on_prior" value="false" />
+	<param name="links_prior_classic_ssrr" value="true" />
 	<param name="world_frame" value="/world" />
 	<param name="sensor_frame" value="/velodyne" />
 	<param name="covariance_to_find_links" value="false" />

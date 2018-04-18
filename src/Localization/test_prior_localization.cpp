@@ -73,15 +73,15 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 
 void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, const AASS::acg::AutoCompleteGraphLocalization& oacg) {
 
-		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud(oacg, 0.1, 0.1/4);
-		sensor_msgs::PointCloud2 pcl_prior_msg;
-		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
-		pcl_prior_msg.header.frame_id = "world";
-		pcl_prior_msg.header.stamp = ros::Time::now();
-		prior_cloud.publish(pcl_prior_msg);
+//		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud<AASS::acg::AutoCompleteGraphPriorSE2>(oacg, 0.1, 0.1/4);
+//		sensor_msgs::PointCloud2 pcl_prior_msg;
+//		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
+//		pcl_prior_msg.header.frame_id = "world";
+//		pcl_prior_msg.header.stamp = ros::Time::now();
+//		prior_cloud.publish(pcl_prior_msg);
 
 		perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
-		AASS::acg::ACGPriorToNDTMap(oacg, *ndt_prior, 0.1);
+		AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), *ndt_prior, oacg.getZElevation(), 0.1);
 
 //		auto allcells = ndt_prior->getAllCellsShared();
 //		assert(allcells.size() > 0);

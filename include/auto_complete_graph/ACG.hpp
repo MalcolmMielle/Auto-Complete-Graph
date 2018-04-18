@@ -367,6 +367,37 @@ namespace acg{
 
 		}
 
+
+		virtual void print() const {
+
+
+			std::cout << "Number of corners " << getLandmarkNodes().size() << std::endl;
+			std::cout << "Number of poses " << getRobotNodes().size() << std::endl;
+			std::cout << "Number of observation " <<getLandmarkEdges().size() << std::endl;
+			std::cout << "Number of Links " <<getLinkEdges().size() << std::endl;
+
+			std::cout << "using those parameters:" << std::endl;
+
+			std::cout << "z elevation: " << _z_elevation << std::endl;
+			std::cout << "previous nb of node in graph: " << _previous_number_of_node_in_ndtgraph << std::endl;
+
+			///@brief Minimum distance from a prior corner to a NDT corner. THe distance is given in meter and is fixed at 2m in the constuctor
+			std::cout << "min distance for link in meters: " << _min_distance_for_link_in_meter << std::endl;
+			std::cout << "max distance for link in meters: " << _max_distance_for_link_in_meter << std::endl;
+
+			///@brief USELESS NOW ! use the user inputted cov for the prior. Use the length of the edge if false
+//		bool _use_user_prior_cov;
+
+			///@brief user user inputted cov for robot pos. Uses registration otherwise
+			std::cout << "use user robot pose covariance: " << _use_user_robot_pose_cov << std::endl;
+			std::cout << "use link prior: " << _use_links_prior << std::endl;
+			std::cout << "use prior: " << _use_prior << std::endl;
+			std::cout << "optimize: " << _flag_optimize << std::endl;
+			std::cout << "use robust kernel: " << _flag_use_robust_kernel << std::endl;
+			std::cout << "use corner orientation " << _flag_use_corner_orientation << std::endl;
+
+		}
+
 		/** Accessor**/
 
 		Prior* getPrior(){return _prior;}

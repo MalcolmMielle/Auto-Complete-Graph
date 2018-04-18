@@ -818,6 +818,7 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetwee
 
 int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 {
+	std::cout << "Creating the new links in Localization" << std::endl;
 	int count = 0;
 	if(_use_links_prior) {
 // 	std::vector < std::pair < g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*> > links;
@@ -846,6 +847,8 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 						pose_prior << pose_tmp(0), pose_tmp(1);
 
 						if (_use_links_prior_classic_ssrr) {
+
+							std::cout << "Using classic SSRR links" << std::endl;
 
 							double norm_tmp = (pose_prior - pose_landmark).norm();
 							// 				std::cout << "new" << std::endl;
@@ -900,6 +903,8 @@ int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
 								if (score >= _threshold_of_score_for_creating_a_link) {
 									g2o::Vector2 vec;
 									vec << 0, 0;
+
+									throw std::runtime_error("DO not use MCL observation yet");
 
 									//ATTENTION MASSIVE TODO
 

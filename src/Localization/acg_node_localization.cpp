@@ -73,15 +73,15 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 
 void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, const AASS::acg::AutoCompleteGraphLocalization& oacg) {
 
-		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud(oacg, 0.1, 0.1/4);
-		sensor_msgs::PointCloud2 pcl_prior_msg;
-		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
-		pcl_prior_msg.header.frame_id = "world";
-		pcl_prior_msg.header.stamp = ros::Time::now();
-		prior_cloud.publish(pcl_prior_msg);
+//		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), 0.1, 0.1/4);
+//		sensor_msgs::PointCloud2 pcl_prior_msg;
+//		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
+//		pcl_prior_msg.header.frame_id = "world";
+//		pcl_prior_msg.header.stamp = ros::Time::now();
+//		prior_cloud.publish(pcl_prior_msg);
 
 		perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
-		AASS::acg::ACGPriorToNDTMap(oacg, *ndt_prior, 0.1);
+		AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), *ndt_prior, oacg.getZElevation(), 0.1);
 
 //		auto allcells = ndt_prior->getAllCellsShared();
 //		assert(allcells.size() > 0);
@@ -348,13 +348,10 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				timef = ros::Time::now();
 				all_node_times.push_back((timef - start).toSec());
 
+			std::cout << "*************** DESCRIPTION **************" << std::endl;
+			oacg->print();
+			std::cout << "*************** DESCRIPTION **************" << std::endl;
 
-
-				std::cout << "\n************** Description *************" << std::endl;
-				std::cout << "Number of corners " << oacg->getLandmarkNodes().size() << std::endl;
-				std::cout << "Number of poses " << oacg->getRobotNodes().size() << std::endl;
-				std::cout << "Number of observation " << oacg->getLandmarkEdges().size() << std::endl;
-				std::cout << "************** ********** *************\n" << std::endl;
 				
 			// 	nav_msgs::OccupancyGrid omap; 
 			// 	perception_oru::toOccupancyGrid(graph.getMap(), omap, 0.4, "/world");
@@ -520,6 +517,11 @@ int main(int argc, char **argv)
 	}
 
 	oacg.linkToPrior(link_to_prior);
+
+
+	std::cout << "*************** DESCRIPTION INIT **************" << std::endl;
+	oacg.print();
+	std::cout << "*************** DESCRIPTION INIT **************" << std::endl;
 		
 	//Create initialiser
 	AASS::acg::RvizPoints initialiser(nh, &oacg);
