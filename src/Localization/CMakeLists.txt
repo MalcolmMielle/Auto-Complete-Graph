@@ -47,6 +47,6 @@ add_executable(ndtmap_pub_testing ndtmap_pub_testing.cpp)
 target_link_libraries(ndtmap_pub_testing ${catkin_LIBRARIES}  ${Boost_LIBRARIES})
 
 
-add_executable(test_prior_localization test_prior_localization.cpp)
-target_link_libraries(test_prior_localization ${catkin_LIBRARIES} auto_complete_graph_lib auto_complete_graph_localization_lib ${G2O_LIBS} ${vodigrex_LIBRARIES})
-add_dependencies(test_prior_localization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
+#add_executable(test_prior_localization test_prior_localization.cpp)
+#target_link_libraries(test_prior_localization ${catkin_LIBRARIES} auto_complete_graph_lib auto_complete_graph_localization_lib ${G2O_LIBS} ${vodigrex_LIBRARIES})
+#add_dependencies(test_prior_localization ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)

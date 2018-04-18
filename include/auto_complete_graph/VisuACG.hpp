@@ -1,7 +1,7 @@
 #ifndef AUTOCOMPLETEGRAPH_VISUALIZATIONACG_18102016
 #define AUTOCOMPLETEGRAPH_VISUALIZATIONACG_18102016
 
-#include "auto_complete_graph/ACG.hpp"
+#include "auto_complete_graph/ACGBase.hpp"
 #include "occupancy_grid_utils/combine_grids.h"
 #include "ndt_map/NDTVectorMapMsg.h"
 #include "acg_conversion.hpp"
@@ -11,10 +11,10 @@
 
 namespace AASS {
 
-namespace acg{	
-	
-	
-	class VisuAutoCompleteGraph{ 
+namespace acg{
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	class VisuAutoCompleteGraphBase{
 	
 	protected:
 		ros::NodeHandle _nh;
@@ -27,7 +27,7 @@ namespace acg{
 		ros::Publisher _ndt_node_pub;
 		ros::Publisher _prior_node_pub;
 		ros::Publisher _corner_ndt_node_pub;
-		ros::Publisher _link_pub;
+//		ros::Publisher _link_pub;
 		ros::Publisher _ndtmap;
 		ros::Publisher _angles_pub;
 		ros::Publisher _angles_prior_pub;
@@ -51,7 +51,7 @@ namespace acg{
 		visualization_msgs::Marker _ndt_node_markers;
 		visualization_msgs::Marker _prior_node_markers;
 		visualization_msgs::Marker _corner_ndt_node_markers;
-		visualization_msgs::Marker _link_markers;
+//		visualization_msgs::Marker _link_markers;
 		visualization_msgs::Marker _angles_markers;
 		visualization_msgs::Marker _anglesw_markers;
 		visualization_msgs::Marker _angles_prior_markers;
@@ -64,7 +64,7 @@ namespace acg{
 		std::string _image_file;
 		
 	public:
-		VisuAutoCompleteGraph(ros::NodeHandle nh) : _nb_of_zone(0), _resolution(0.1){
+		VisuAutoCompleteGraphBase(ros::NodeHandle nh) : _nb_of_zone(0), _resolution(0.1){
 			_nh = nh;
 			_last_ndtmap_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg_occ", 10);
 			_last_ndtmap = _nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
@@ -79,7 +79,7 @@ namespace acg{
 			_angles_prior_pub = _nh.advertise<visualization_msgs::Marker>("angles_prior", 10);
 			_anglesw_pub = _nh.advertise<visualization_msgs::Marker>("angleswidth", 10);
 			_anglesw_prior_pub = _nh.advertise<visualization_msgs::Marker>("angleswidth_prior", 10);
-			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
+//			_link_pub = _nh.advertise<visualization_msgs::Marker>("link_markers", 10);
 			_ndtmap = _nh.advertise<ndt_map::NDTVectorMapMsg>("ndt_map_msg_node", 10);
 			_gaussian_pub = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners", 10);
 			_gaussian_pub2 = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners2", 10);
@@ -135,16 +135,16 @@ namespace acg{
 			_corner_ndt_node_markers.color.g = 1.0f;
 			_corner_ndt_node_markers.color.a = 1.0;
 			
-			_link_markers.type = visualization_msgs::Marker::LINE_LIST;
-			_link_markers.header.frame_id = "/world";
-			_link_markers.ns = "acg";
-			_link_markers.id = 3;
-			_link_markers.scale.x = 0.2;
-			_link_markers.scale.y = 0.2;
-			_link_markers.scale.z = 0.2;
-			_link_markers.color.g = 1.0f;
-			_link_markers.color.r = 1.0f;
-			_link_markers.color.a = 1.0;
+//			_link_markers.type = visualization_msgs::Marker::LINE_LIST;
+//			_link_markers.header.frame_id = "/world";
+//			_link_markers.ns = "acg";
+//			_link_markers.id = 3;
+//			_link_markers.scale.x = 0.2;
+//			_link_markers.scale.y = 0.2;
+//			_link_markers.scale.z = 0.2;
+//			_link_markers.color.g = 1.0f;
+//			_link_markers.color.r = 1.0f;
+//			_link_markers.color.a = 1.0;
 			
 			_angles_markers.type = visualization_msgs::Marker::LINE_LIST;
 			_angles_markers.header.frame_id = "/world";
@@ -209,18 +209,18 @@ namespace acg{
 			
 // 			initOccupancyGrid(omap, 500, 500, 0.4, "/world");
 		}
-// 		void toRviz(const AutoCompleteGraph& acg);
+// 		void toRviz(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
 		
 		void setImageFileNameOut(const std::string& f){_image_file = f;}
 		
 		
-		void updateRvizStepByStep(const AutoCompleteGraph& acg){
+		void updateRvizStepByStep(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 			
 			drawPrior(acg);
 			
 			drawCornersNdt(acg);
 			
-			drawLinks(acg);
+//			drawLinks(acg);
 			
 // 			_ndt_node_markers.points.clear();
 			
@@ -274,12 +274,12 @@ namespace acg{
 			}
 		}
 		
-		void toOcc(const AutoCompleteGraph& acg){
+		void toOcc(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 			drawPrior(acg);
 			
 			drawCornersNdt(acg);
 
-			drawLinks(acg);
+//			drawLinks(acg);
 			
 			drawAngles(acg);
 						
@@ -294,7 +294,7 @@ namespace acg{
 		}
 
 
-		void publishFullOccGrid(const AutoCompleteGraph& acg){
+		void publishFullOccGrid(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 			grid_map::GridMap gridMap;
 			ACGToGridMap(acg, gridMap);
 			nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
@@ -311,13 +311,13 @@ namespace acg{
 			_prior_map_occ.publish<nav_msgs::OccupancyGrid>(*occ_out_p);
 		}
 		
-		void updateRviz(const AutoCompleteGraph& acg){
+		void updateRviz(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 
 			drawPrior(acg);
 				
 			drawCornersNdt(acg);
 				
-			drawLinks(acg);
+//			drawLinks(acg);
 			
 			if(_nb_of_zone != acg.getRobotNodes().size()){
 
@@ -372,13 +372,13 @@ namespace acg{
             }
 		}
 		
-		void updateRvizNoNDT(const AutoCompleteGraph& acg){
+		void updateRvizNoNDT(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 			
 			drawPrior(acg);
 			
 			drawCornersNdt(acg);
 			
-			drawLinks(acg);
+//			drawLinks(acg);
 			
 			drawAngles(acg);
 // 			_ndt_node_markers.points.clear();
@@ -431,13 +431,13 @@ namespace acg{
 		}
 		
 		
-		void updateRvizV2(const AutoCompleteGraph& acg){
+		void updateRvizV2(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 			
 			drawPrior(acg);
 			
 			drawCornersNdt(acg);
 			
-			drawLinks(acg);
+//			drawLinks(acg);
 			
 // 			_ndt_node_markers.points.clear();
 			
@@ -567,11 +567,11 @@ namespace acg{
 			
 		}
 		
-		void updateRvizOriginalSLAM(const AutoCompleteGraph& acg){
+		void updateRvizOriginalSLAM(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 			
 			drawPrior(acg);
 			
-			drawLinks(acg);
+//			drawLinks(acg);
 			
 			if(_nb_of_zone != acg.getRobotNodes().size()){
 				
@@ -621,9 +621,9 @@ namespace acg{
 			
 		}
 		
-	private:
+	protected:
 		
-// 		bool fuseNDTMap(const AutoCompleteGraph& acg, nav_msgs::OccupancyGridPtr& final);
+// 		bool fuseNDTMap(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, nav_msgs::OccupancyGridPtr& final);
 // 		bool printNDTMap(perception_oru::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg);
 // 		void printPrior(const std::vector<g2o::VertexSE2Prior*>& prior_corners);
 		void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec);
@@ -636,16 +636,16 @@ namespace acg{
 			return t;
 		}
 		
-		void drawPrior(const AutoCompleteGraph& acg);
-		void drawLinks(const AutoCompleteGraph& acg);
-		void drawCornersNdt(const AutoCompleteGraph& acg);
-		void drawGaussiansThatGaveCorners(const AutoCompleteGraph& acg);
-		void drawAngles(const AutoCompleteGraph& acg);
-		void drawPriorAngles(const AutoCompleteGraph& acg, const g2o::VertexSE2Prior& vertex_in);
-		void drawRobotPoses(const AutoCompleteGraph& acg);
-		void drawObservations(const AutoCompleteGraph& acg);
+		virtual void drawPrior(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){std::cout << "Not implemented"<< std::endl;}
+//		void drawLinks(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
+		void drawCornersNdt(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
+		void drawGaussiansThatGaveCorners(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
+		void drawAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
+		void drawPriorAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, const g2o::VertexSE2Prior& vertex_in);
+		void drawRobotPoses(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
+		void drawObservations(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
 		
-		void saveImage(const AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& msg);
+		void saveImage(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, nav_msgs::OccupancyGrid::Ptr& msg);
 // 		bool initOccupancyGrid(nav_msgs::OccupancyGrid& occ_grid, int width, int height, double res, const std::string& frame_id);
 // 		bool toOccupancyGrid(perception_oru::NDTMap *ndt_map, nav_msgs::OccupancyGrid &occ_grid, double resolution,std::string frame_id);
 		
@@ -654,18 +654,18 @@ namespace acg{
 	};
 	
 
-// 	inline bool AASS::acg::VisuAutoCompleteGraph::printNDTMap(perception_oru::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg)
+// 	inline bool AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::printNDTMap(perception_oru::NDTMap* map, const std::string& frame_name, ndt_map::NDTMapMsg& mapmsg)
 // 	{
 // 		return perception_oru::toMessage(map, mapmsg, frame_name);
 // 	}
 // 
 // 
-// 	inline void AASS::acg::VisuAutoCompleteGraph::printPrior(const std::vector< g2o::VertexSE2Prior* >& prior_corners)
+// 	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::printPrior(const std::vector< g2o::VertexSE2Prior* >& prior_corners)
 // 	{
 // 
 // 	}
 // 
-// 	inline void AASS::acg::VisuAutoCompleteGraph::toRviz(const AASS::acg::AutoCompleteGraph& acg)
+// 	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::toRviz(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg)
 // 	{
 // 		nav_msgs::OccupancyGrid::Ptr final;
 // 		fuseNDTMap(acg, final);
@@ -677,7 +677,7 @@ namespace acg{
 // 		
 // 	}
 
-// 	inline void AASS::acg::VisuAutoCompleteGraph::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Vector3d &pose_vec) {
+// 	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Vector3d &pose_vec) {
 // 
 // 		auto pose = vector3dToAffine3d(pose_vec);
 // 		Eigen::Affine3d map_origin;
@@ -685,16 +685,18 @@ namespace acg{
 // 		Eigen::Affine3d new_map_origin = pose*map_origin;
 // 		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 // 	}
-// 	
-	inline void AASS::acg::VisuAutoCompleteGraph::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec) {
+//
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine3d &pose_vec) {
 
 		Eigen::Affine3d map_origin;
 		tf::poseMsgToEigen(occ_grid.info.origin, map_origin);
 		Eigen::Affine3d new_map_origin = pose_vec*map_origin;
 		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 	}
-	
-	inline void AASS::acg::VisuAutoCompleteGraph::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &a2d) {
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Affine2d &a2d) {
 
 		//Affine 2d to 3d
 		//  Eigen::Rotation2D<double> rot = Eigen::Rotation2D<double>::fromRotationMatrix(a2d.rotation());//Eigen::fromRotationMatrix(a2d.translation());
@@ -715,58 +717,9 @@ namespace acg{
 
 
 
-		inline void VisuAutoCompleteGraph::drawPrior(const AutoCompleteGraph& acg)
-		{
-			_prior_edge_markers.header.stamp = ros::Time::now();
-			auto edges = acg.getPrior()->getPriorEdges();
-			if(edges.size() != _prior_edge_markers.points.size()){
-				_prior_edge_markers.points.clear();
 
-				auto it = edges.begin();
-				for(it ; it != edges.end() ; ++it){
-					for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-						geometry_msgs::Point p;
-						g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
-						auto vertex = ptr->estimate().toVector();
-						//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-						p.x = vertex(0);
-						p.y = vertex(1);
-						p.z = acg.getZElevation();
-						_prior_edge_markers.points.push_back(p);
-					}
-				}
-
-				auto prior_node = acg.getPrior()->getPriorNodes();
-				_prior_node_markers.points.clear();
-				_angles_prior_markers.points.clear();
-				_anglesw_prior_markers.points.clear();
-				_angles_prior_markers.header.stamp = ros::Time::now();
-				_anglesw_prior_markers.header.stamp = ros::Time::now();
-				auto itt = prior_node.begin();
-				for(itt ; itt != prior_node.end() ; ++itt){
-
-					geometry_msgs::Point p;
-					g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*itt));
-					auto vertex = ptr->estimate().toVector();
-					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-					p.x = vertex(0);
-					p.y = vertex(1);
-					p.z = acg.getZElevation();
-					_prior_node_markers.points.push_back(p);
-
-// 				std::cout << "Drawing angles landmark" << std::endl;
-					drawPriorAngles(acg, *ptr);
-
-				}
-			}
-			_marker_pub.publish(_prior_edge_markers);
-			_prior_node_pub.publish(_prior_node_markers);
-			_angles_prior_pub.publish(_angles_prior_markers);
-			_anglesw_prior_pub.publish(_anglesw_prior_markers);
-		}
-
-
-		inline void VisuAutoCompleteGraph::drawObservations(const AutoCompleteGraph& acg)
+		template< typename Prior, typename VertexPrior, typename EdgePrior>
+		inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawObservations(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg)
 		{
 			_observation_edge_markers.header.stamp = ros::Time::now();
 			auto edges = acg.getLandmarkEdges();
@@ -812,47 +765,49 @@ namespace acg{
 //			}
 		}
 
-		inline void VisuAutoCompleteGraph::drawLinks(const AutoCompleteGraph& acg)
-	{
-		_link_markers.header.stamp = ros::Time::now();
-		auto edges = acg.getLinkEdges();
-		if(edges.size() != _link_markers.points.size()){
-			_link_markers.points.clear();
-			auto it = edges.begin();
-			for(it ; it != edges.end() ; ++it){
-				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-					
-					geometry_msgs::Point p;
-				
-					g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
-					g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
-					
-					if(ptr != NULL){
-// 						std::cout << "Got a VertexSE2" << std::endl;
-						auto vertex = ptr->estimate().toVector();
-						p.x = vertex(0);
-						p.y = vertex(1);
-						p.z = acg.getZElevation();
-					}
-					else if(ptr2 != NULL){
-// 						std::cout << "Got a VertexPOINTXY" << std::endl;
-						auto vertex = ptr2->estimate();
-						p.x = vertex(0);
-						p.y = vertex(1);
-						p.z = acg.getZElevation();
-					}
-					else{
-						throw std::runtime_error("Links do not have the good vertex type");
-					}			
-					
-					_link_markers.points.push_back(p);
-				}
-			}
-		}
-		_link_pub.publish(_link_markers);
-	}
-	
-	inline void VisuAutoCompleteGraph::drawCornersNdt(const AutoCompleteGraph& acg)
+//		template< typename Prior, typename VertexPrior, typename EdgePrior>
+//		inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawLinks(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg)
+//	{
+//		_link_markers.header.stamp = ros::Time::now();
+//		auto edges = acg.getLinkEdges();
+//		if(edges.size() != _link_markers.points.size()){
+//			_link_markers.points.clear();
+//			auto it = edges.begin();
+//			for(it ; it != edges.end() ; ++it){
+//				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+//
+//					geometry_msgs::Point p;
+//
+//					g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+//					g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
+//
+//					if(ptr != NULL){
+//// 						std::cout << "Got a VertexSE2" << std::endl;
+//						auto vertex = ptr->estimate().toVector();
+//						p.x = vertex(0);
+//						p.y = vertex(1);
+//						p.z = acg.getZElevation();
+//					}
+//					else if(ptr2 != NULL){
+//// 						std::cout << "Got a VertexPOINTXY" << std::endl;
+//						auto vertex = ptr2->estimate();
+//						p.x = vertex(0);
+//						p.y = vertex(1);
+//						p.z = acg.getZElevation();
+//					}
+//					else{
+//						throw std::runtime_error("Links do not have the good vertex type");
+//					}
+//
+//					_link_markers.points.push_back(p);
+//				}
+//			}
+//		}
+//		_link_pub.publish(_link_markers);
+//	}
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawCornersNdt(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg)
 	{
 // 		std::cout << "Getting the corners" << std::endl;
 		_corner_ndt_node_markers.header.stamp = ros::Time::now();
@@ -891,7 +846,8 @@ namespace acg{
 	
 	
 	//TODO
-	inline void VisuAutoCompleteGraph::drawGaussiansThatGaveCorners(const AutoCompleteGraph& acg)
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawGaussiansThatGaveCorners(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg)
 	{
 // 		std::cout << "Drawing the gaussians " << std::endl;
 // 		int a ;
@@ -964,9 +920,9 @@ namespace acg{
 		_gaussian_pub2.publish(_gaussian_that_gave_corners2);
 	}
 
-	
-	
-	inline void VisuAutoCompleteGraph::saveImage(const AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& msg)
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::saveImage(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, nav_msgs::OccupancyGrid::Ptr& msg)
 	{
 // 		const unsigned char* databeg = &(msg->data.front());
 		
@@ -992,8 +948,8 @@ namespace acg{
 
 	}
 
-
-	inline void VisuAutoCompleteGraph::drawAngles(const AutoCompleteGraph& acg)
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg)
 	{
 // 		std::cout << "Getting the angles" << std::endl;
 		_angles_markers.header.stamp = ros::Time::now();
@@ -1060,7 +1016,8 @@ namespace acg{
 		_anglesw_pub.publish(_anglesw_markers);
 	}
 
-	inline void VisuAutoCompleteGraph::drawPriorAngles(const AutoCompleteGraph& acg, const g2o::VertexSE2Prior& vertex_in)
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawPriorAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, const g2o::VertexSE2Prior& vertex_in)
 	{
 		geometry_msgs::Point p;
 // 		std::cout << "getting the vector" << std::endl;
@@ -1113,8 +1070,8 @@ namespace acg{
 
 	}
 
-	
-	inline void VisuAutoCompleteGraph::drawRobotPoses(const AutoCompleteGraph& acg){
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawRobotPoses(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 	
 // 		std::cout << "Drawgin robot poses " << std::endl;
 		_ndt_node_markers.points.clear();
@@ -1137,6 +1094,71 @@ namespace acg{
 		_ndt_node_pub.publish(_ndt_node_markers);
 
 	}
+
+
+		//Specialized this one
+		template<>
+		inline void AASS::acg::VisuAutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>::drawPrior(const AASS::acg::AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>& acg)
+		{
+			_prior_edge_markers.header.stamp = ros::Time::now();
+			auto edges = acg.getPrior()->getPriorEdges();
+			if(edges.size() != _prior_edge_markers.points.size()){
+				_prior_edge_markers.points.clear();
+
+				auto it = edges.begin();
+				for(it ; it != edges.end() ; ++it){
+					for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+						geometry_msgs::Point p;
+						g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+						auto vertex = ptr->estimate().toVector();
+						//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+						p.x = vertex(0);
+						p.y = vertex(1);
+						p.z = acg.getZElevation();
+						_prior_edge_markers.points.push_back(p);
+					}
+				}
+
+				auto prior_node = acg.getPrior()->getPriorNodes();
+				_prior_node_markers.points.clear();
+				_angles_prior_markers.points.clear();
+				_anglesw_prior_markers.points.clear();
+				_angles_prior_markers.header.stamp = ros::Time::now();
+				_anglesw_prior_markers.header.stamp = ros::Time::now();
+				auto itt = prior_node.begin();
+				for(itt ; itt != prior_node.end() ; ++itt){
+
+					geometry_msgs::Point p;
+					g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*itt));
+					auto vertex = ptr->estimate().toVector();
+					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+					p.x = vertex(0);
+					p.y = vertex(1);
+					p.z = acg.getZElevation();
+					_prior_node_markers.points.push_back(p);
+
+// 				std::cout << "Drawing angles landmark" << std::endl;
+					drawPriorAngles(acg, *ptr);
+
+				}
+			}
+			_marker_pub.publish(_prior_edge_markers);
+			_prior_node_pub.publish(_prior_node_markers);
+			_angles_prior_pub.publish(_angles_prior_markers);
+			_anglesw_prior_pub.publish(_anglesw_prior_markers);
+		}
+
+
+
+
+
+		class VisuAutoCompleteGraph : public VisuAutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm> {
+		public:
+			VisuAutoCompleteGraph(ros::NodeHandle nh)
+					: VisuAutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>(
+					nh) {}
+
+		};
 
 	
 }

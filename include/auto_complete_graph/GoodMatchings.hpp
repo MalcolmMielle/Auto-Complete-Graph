@@ -16,7 +16,7 @@ namespace acg{
 	class GoodMatchings : public RvizPoints {
 		
 	public:
-		GoodMatchings(ros::NodeHandle nh, AutoCompleteGraph* acg) : RvizPoints(nh, acg){			
+		GoodMatchings(ros::NodeHandle nh, AutoCompleteGraph* acg) : RvizPoints(nh, acg){
 		}
 		
 		/**

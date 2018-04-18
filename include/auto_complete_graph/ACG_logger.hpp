@@ -1,7 +1,7 @@
 #ifndef AUTOCOMPLETEGRAPH_ACGLOGGER_01062017
 #define AUTOCOMPLETEGRAPH_ACGLOGGER_01062017
 
-#include "ACG.hpp"
+#include "ACGBase.hpp"
 
 namespace AASS{
 namespace acg{

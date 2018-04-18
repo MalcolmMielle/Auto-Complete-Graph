@@ -17,7 +17,7 @@
 #include "auto_complete_graph/Basement.hpp"
 #include "auto_complete_graph/BasementFull.hpp"
 #include "auto_complete_graph/Localization/VisuACGLocalization.hpp"
-#include "auto_complete_graph/GoodMatchings.hpp"
+#include "auto_complete_graph/Localization/GoodMatchingLocalization.hpp"
 
 #include <ros/package.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -81,7 +81,7 @@ void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, const AASS::acg::AutoCo
 //		prior_cloud.publish(pcl_prior_msg);
 
 		perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
-		AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), *ndt_prior, oacg.getZElevation(), 0.1);
+		AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorXY>(*oacg.getPrior(), *ndt_prior, oacg.getZElevation(), 0.1);
 
 //		auto allcells = ndt_prior->getAllCellsShared();
 //		assert(allcells.size() > 0);
@@ -210,7 +210,7 @@ inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Aff
 
 
 
-void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraph& visu){
+void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
 	std::cout << "Got a new graph " << std::endl;
 	
 	ndt_feature::NDTFeatureGraph graph;
@@ -258,7 +258,7 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 
 
 
-void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg, AASS::acg::VisuAutoCompleteGraph& visu){
+void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 // 	try{
 		new_node = true;
@@ -381,7 +381,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 
 
-void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoints& initialiser, AASS::acg::PriorLoaderInterface& priorloader){
+void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPointsLocalization& initialiser, AASS::acg::PriorLoaderInterface& priorloader){
 	
 	std::cout << "INIT ALL" << std::endl;
 	std::vector<cv::Point2f> slam_pt;
@@ -413,7 +413,7 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 }
 
 
-void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
+void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg){
 	if(msg->data == true){
 		grid_map::GridMap gridMap;
 		AASS::acg::ACGToGridMap(*oacg, gridMap);
@@ -516,7 +516,7 @@ int main(int argc, char **argv)
 		oacg.setPriorReference();
 	}
 
-	oacg.linkToPrior(link_to_prior);
+//	oacg.linkToPrior(link_to_prior);
 
 
 	std::cout << "*************** DESCRIPTION INIT **************" << std::endl;
@@ -524,7 +524,7 @@ int main(int argc, char **argv)
 	std::cout << "*************** DESCRIPTION INIT **************" << std::endl;
 		
 	//Create initialiser
-	AASS::acg::RvizPoints initialiser(nh, &oacg);
+	AASS::acg::RvizPointsLocalization initialiser(nh, &oacg);
 	
 	
 	AASS::acg::VisuAutoCompleteGraphLocalization visu(nh);

@@ -11,17 +11,21 @@
 #include "auto_complete_graph/ACGMaps.h"
 #include "auto_complete_graph/ACGMapsOM.h"
 
-#include "ACG.hpp"
+#include "ACGBase.hpp"
 
 namespace AASS{
 namespace acg{
 
 	inline bool toGridMap(perception_oru::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::__cxx11::string frame_id, std::string layer_name);
-	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution);
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, grid_map::GridMap& gridMap, double resolution);
+
 	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer = "combined", const std::string& layer2 = "combined", const std::string& final_layer = "combined");
-	
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
 	inline void ACGNdtNodetoVecGrids(
-		const AASS::acg::AutoCompleteGraph& acg, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_end,
+		const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_end,
 		std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out
 	);
 	
@@ -53,9 +57,10 @@ namespace acg{
 		Eigen::Affine3d new_map_origin = pose_effi*map_origin;
 		tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 	}
-	
-	
-	inline nav_msgs::OccupancyGrid::Ptr ACGNDTtoOcc(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::ConstPtr& ptr_prior_occ, double resol){
+
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline nav_msgs::OccupancyGrid::Ptr ACGNDTtoOcc(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, nav_msgs::OccupancyGrid::ConstPtr& ptr_prior_occ, double resol){
 		
 		
 		
@@ -105,10 +110,10 @@ namespace acg{
 		std::cout << "Out" << std::endl;
 		return occ_out;
 	}
-	
-	
-	
-	inline void ACGtoOccupancyGrid(const AASS::acg::AutoCompleteGraph& acg, nav_msgs::OccupancyGrid::Ptr& occ_out, int start = 0, int end = -1){
+
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGtoOccupancyGrid(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, nav_msgs::OccupancyGrid::Ptr& occ_out, int start = 0, int end = -1){
 		//************* TODO : shorten this code !
 		//Get max sinze of prior
 		grid_map::GridMap map;
@@ -182,7 +187,7 @@ namespace acg{
   
 // 		std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
 		std::cout <<"update the zones again" << std::endl;
-		ACGPriortoGridMap(acg, map, 0.1);
+		ACGPriortoGridMap<Prior, VertexPrior, EdgePrior>(acg, map, 0.1);
 		
 		std::cout << "Pos again" << map.getPosition() << std::endl;
 		
@@ -277,9 +282,10 @@ namespace acg{
 		
 
 	}
-	
-	
-	inline void ACGNdtNodetoVecGrids(const AASS::acg::AutoCompleteGraph& acg, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_end, std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out){
+
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGNdtNodetoVecGrids(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_start, std::vector< g2o::VertexSE2RobotPose* >::const_iterator& it_end, std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out){
 		
 		for(it_start ; it_start != it_end ; ++it_start){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
@@ -414,9 +420,10 @@ namespace acg{
 
 
 
-	
-	
-	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& gridMap, double resolution){
+
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, grid_map::GridMap& gridMap, double resolution){
 		auto edges = acg.getPrior()->getPriorEdges();
 		
 		gridMap.add("prior");
@@ -457,7 +464,8 @@ namespace acg{
 	}
 
 	///@brief return the biggest absolute value along x and y for the prior.
-	inline void getPriorSizes(const AASS::acg::AutoCompleteGraph& acg, double& size_x, double& size_y){
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void getPriorSizes(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, double& size_x, double& size_y){
 
 		auto edges = acg.getPrior()->getPriorEdges();
 
@@ -520,7 +528,8 @@ namespace acg{
 	
 	
 	//TODO : BROKEN FUNCTION FOR NOW
-	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraph& acg, grid_map::GridMap& map){
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGToGridMap(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, grid_map::GridMap& map){
 		
         double resol = 0.1;
 		
@@ -599,7 +608,7 @@ namespace acg{
 // 		map["all"].setZero();
 		
 // 		
-		ACGPriortoGridMap(acg, map, resol);
+		ACGPriortoGridMap<Prior, VertexPrior, EdgePrior>(acg, map, resol);
 		
 // 		grid_map::Matrix& data3 = map["prior"];
 // 		for (grid_map::GridMapIterator iterator(map); !iterator.isPastEnd(); ++iterator) {
@@ -955,9 +964,10 @@ namespace acg{
 		assert(combinedGrid.getSize()(0) == combinedGrid["combined"].rows());
 		assert(combinedGrid.getSize()(1) == combinedGrid["combined"].cols());
 	}
-	
-	
-	inline void ACGToVectorMaps(const AASS::acg::AutoCompleteGraph& acg, ndt_map::NDTVectorMapMsg& maps){
+
+
+		template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGToVectorMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, ndt_map::NDTVectorMapMsg& maps){
 		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
 				std::cout << "ADDING A MAP" << std::endl;
@@ -986,7 +996,8 @@ namespace acg{
 	}
 	
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
-	inline void ACGToACGMapsMsg(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMaps& mapmsg){
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGToACGMapsMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMaps& mapmsg){
 		
 		mapmsg.header.stamp = ros::Time::now();
 		mapmsg.header.frame_id = "world";
@@ -1011,9 +1022,10 @@ namespace acg{
 		
 		
 	}
-	
-	
-	inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1){
+
+
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1){
 		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
 				
@@ -1084,7 +1096,8 @@ namespace acg{
 	}
 	
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
-	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraph& acg, auto_complete_graph::ACGMapsOM& mapmsg){
+	template< typename Prior, typename VertexPrior, typename EdgePrior>
+	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg){
 		
 		mapmsg.header.stamp = ros::Time::now();
 		mapmsg.header.frame_id = "world";
