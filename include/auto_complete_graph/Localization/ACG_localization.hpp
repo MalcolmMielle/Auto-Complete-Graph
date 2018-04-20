@@ -22,6 +22,8 @@ namespace acg{
     class AutoCompleteGraphLocalization : public AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>{
         protected:
 
+	    double _number_of_links_to_prior = 0;
+
 	    ///@brief register the submaps
 	    bool _do_own_registration;
 	    ///@brief Extract the corners from the submaps
@@ -39,6 +41,8 @@ namespace acg{
 	    ///@brief do we want to scale the score a little bit to help out ?
 	    double _scaling_factor_gaussian;
 
+	    bool _use_robot_maps;
+
 	    std::vector<g2o::EdgeLocalization*> _edges_localization;
 	    std::vector<g2o::VertexSE2RobotLocalization*> _nodes_localization;
 	    g2o::VertexXYPrior* _vertex_reference_for_montecarlo;
@@ -52,7 +56,7 @@ namespace acg{
 						const Eigen::Vector2d& pn,
 						double rp,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, ndt_graph){
+  					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, ndt_graph){
 
 	        if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
 		        throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
@@ -65,7 +69,7 @@ namespace acg{
 						  const Eigen::Vector2d& ln,
 						  const Eigen::Vector2d& pn,
 						  double rp
-					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp){
+					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp){
 
 		    if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
 			    throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
@@ -73,7 +77,7 @@ namespace acg{
 
 	    }
 		
-		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, load_file){
+		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, load_file){
 
 			if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
 				throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
@@ -85,6 +89,7 @@ namespace acg{
 			AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>::print();
 		    std::cout << "Localization parameters: " << std::endl;
 
+		    std::cout << "Use robot maps: " <<  _use_robot_maps << std::endl;
 		    ///@brief register the submaps
 		    std::cout << "Do own registration: " << _do_own_registration << std::endl;
 		    ///@brief Extract the corners from the submaps
@@ -101,6 +106,15 @@ namespace acg{
 		    std::cout << "Threshold for creating a link using MCL covariance: " << _threshold_of_score_for_creating_a_link << std::endl;
 		    ///@brief do we want to scale the score a little bit to help out ?
 		    std::cout << "Scaling factor for gaussians: " << _scaling_factor_gaussian << std::endl;
+
+		    std::cout << "Number of links to prior: " << _number_of_links_to_prior << std::endl;
+	    }
+
+	    virtual bool checkAbleToOptimize(){
+		    if(_number_of_links_to_prior > 0) {
+			    return true;
+		    }
+		    return false;
 	    }
 
 	    void doOwnRegistrationBetweenSubmaps(bool setter){_do_own_registration = setter;}
@@ -111,6 +125,7 @@ namespace acg{
 	    void setThrehsoldOfScoreForCreatingLink(double setter){_threshold_of_score_for_creating_a_link = setter;}
 	    void useMCLObservationOnPrior(bool setter){_use_mcl_observation_on_prior = setter;}
 	    void useLinksPriorSSRR(bool setter){_use_links_prior_classic_ssrr = setter;}
+	    void useRobotMaps(bool setter){_use_robot_maps = setter;}
 
 	    std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 	    const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
@@ -118,9 +133,9 @@ namespace acg{
 	    const std::vector<g2o::VertexSE2RobotLocalization*>& getRobotPoseLocalization() const {return _nodes_localization;}
 
 	    /***FUNCTIONS TO ADD THE NODES***/
-	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const g2o::SE2& se2, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map);
-	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const Eigen::Vector3d& rob_localization, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map);
-	    g2o::VertexSE2RobotLocalization* addRobotLocalization(double x, double y, double theta, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map);
+	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const g2o::SE2& se2, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* equivalent_robot_pose);
+	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const Eigen::Vector3d& rob_localization, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* equivalent_robot_pose);
+	    g2o::VertexSE2RobotLocalization* addRobotLocalization(double x, double y, double theta, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* equivalent_robot_pose);
 		
 		/** FUNCTION TO ADD THE EGDES **/
 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information);
@@ -167,7 +182,9 @@ namespace acg{
 		 * @param element
 		 * @param robot_ptr
 		 */
-		g2o::VertexSE2RobotLocalization* addLocalizationEdges(const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, const std::shared_ptr<perception_oru::NDTMap>& shared_map);
+		g2o::VertexSE2RobotLocalization* addLocalizationVertex(
+				const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element,
+				const std::shared_ptr<perception_oru::NDTMap> &shared_map, g2o::VertexSE2RobotPose* robot_ptr);
 
 		std::tuple<Eigen::Affine3d, Eigen::MatrixXd> registerSubmaps(const g2o::VertexSE2RobotPose& from,
 		                                                             const g2o::VertexSE2RobotPose& toward,
@@ -183,6 +200,12 @@ namespace acg{
 
 
 		virtual void testInfoNonNul(const std::string& before = "no data") const ;
+
+
+		void AddObservationsMCLPrior();
+
+//		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark) const;
+		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark, const Eigen::Vector2d& observation);
 
 
 //		int createNewLinks();

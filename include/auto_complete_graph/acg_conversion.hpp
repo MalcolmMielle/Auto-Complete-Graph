@@ -21,6 +21,12 @@ namespace acg{
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, grid_map::GridMap& gridMap, double resolution);
 
+	template<>
+	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<AASS::acg::AutoCompleteGraphPriorSE2, g2o::VertexSE2RobotPose, g2o::EdgeSE2Prior_malcolm>& acg, grid_map::GridMap& gridMap, double resolution);
+
+	template<>
+	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<AASS::acg::AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>& acg, grid_map::GridMap& gridMap, double resolution);
+
 	inline void fuseGridMap(const grid_map::GridMap& src, grid_map::GridMap& target, grid_map::GridMap& out_grid, const std::string& layer = "combined", const std::string& layer2 = "combined", const std::string& final_layer = "combined");
 
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
@@ -423,49 +429,105 @@ namespace acg{
 
 
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, grid_map::GridMap& gridMap, double resolution){
-		auto edges = acg.getPrior()->getPriorEdges();
-		
-		gridMap.add("prior");
-		gridMap["prior"].setZero();
-		
-		auto it = edges.begin();
-		for(it ; it != edges.end() ; ++it){
+	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, grid_map::GridMap& gridMap, double resolution) {
+
+		throw std::runtime_error("DO NOT USE TEMPLATE of prior to grid map");
+	}
+
+		template< >
+		inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<AASS::acg::AutoCompleteGraphPriorSE2, g2o::VertexSE2RobotPose, g2o::EdgeSE2Prior_malcolm>& acg, grid_map::GridMap& gridMap, double resolution) {
+
+			auto edges = acg.getPrior()->getPriorEdges();
+
+			gridMap.add("prior");
+			gridMap["prior"].setZero();
+
+			auto it = edges.begin();
+			for(it ; it != edges.end() ; ++it){
 
 
-			std::vector<Eigen::Vector2d> points;
+				std::vector<Eigen::Vector2d> points;
 
-			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
-				geometry_msgs::Point p;
-				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
-				auto vertex = ptr->estimate().toVector();
-				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-				Eigen::Vector2d veve; veve << vertex(0), vertex(1);
+				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+					geometry_msgs::Point p;
+					g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+					auto vertex = ptr->estimate().toVector();
+					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+					Eigen::Vector2d veve; veve << vertex(0), vertex(1);
 //                 std::cout << "Pushing " << veve << std::endl;
-				points.push_back(veve);
-			}
+					points.push_back(veve);
+				}
 
-			assert(points.size() == 2);
+				assert(points.size() == 2);
 
-			for (grid_map::LineIterator iterator(gridMap, points[0], points[1]);
-				!iterator.isPastEnd(); ++iterator) {
+				for (grid_map::LineIterator iterator(gridMap, points[0], points[1]);
+				     !iterator.isPastEnd(); ++iterator) {
 // 				std::cout << "Stuck" << std::endl;
-				gridMap.at("prior", *iterator) = 100;
-	// 			publish();
-	// 			ros::Duration duration(0.02);
-	// 			duration.sleep();
-			}
+					gridMap.at("prior", *iterator) = 100;
+					// 			publish();
+					// 			ros::Duration duration(0.02);
+					// 			duration.sleep();
+				}
 // 			std::cout << "Or not" << std::endl;
 
-		}
+			}
 
 // 		return gridMap;
 
-	}
+		}
+
+		template< >
+		inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<AASS::acg::AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>& acg, grid_map::GridMap& gridMap, double resolution) {
+
+			auto edges = acg.getPrior()->getPriorEdges();
+
+			gridMap.add("prior");
+			gridMap["prior"].setZero();
+
+			auto it = edges.begin();
+			for(it ; it != edges.end() ; ++it){
+
+
+				std::vector<Eigen::Vector2d> points;
+
+				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+					geometry_msgs::Point p;
+					g2o::VertexXYPrior* ptr = dynamic_cast<g2o::VertexXYPrior*>((*ite2));
+					auto vertex = ptr->estimate();
+					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+					Eigen::Vector2d veve; veve << vertex(0), vertex(1);
+//                 std::cout << "Pushing " << veve << std::endl;
+					points.push_back(veve);
+				}
+
+				assert(points.size() == 2);
+
+				for (grid_map::LineIterator iterator(gridMap, points[0], points[1]);
+				     !iterator.isPastEnd(); ++iterator) {
+// 				std::cout << "Stuck" << std::endl;
+					gridMap.at("prior", *iterator) = 100;
+					// 			publish();
+					// 			ros::Duration duration(0.02);
+					// 			duration.sleep();
+				}
+// 			std::cout << "Or not" << std::endl;
+
+			}
+
+// 		return gridMap;
+
+		}
 
 	///@brief return the biggest absolute value along x and y for the prior.
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void getPriorSizes(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, double& size_x, double& size_y){
+	inline void getPriorSizes(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, double& size_x, double& size_y) {
+		throw std::runtime_error("do not use templated version of prior sizes");
+
+	}
+
+	template<>
+	inline void getPriorSizes(const AASS::acg::AutoCompleteGraphBase<AASS::acg::AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>& acg, double& size_x, double& size_y){
+//			throw std::runtime_error("do not use templated version");
 
 		auto edges = acg.getPrior()->getPriorEdges();
 
@@ -475,9 +537,9 @@ namespace acg{
 		for(it ; it != edges.end() ; ++it){
 			for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
 				geometry_msgs::Point p;
-				g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+				g2o::VertexXYPrior* ptr = dynamic_cast<g2o::VertexXYPrior*>((*ite2));
 				assert(ptr != NULL);
-				auto vertex = ptr->estimate().toVector();
+				auto vertex = ptr->estimate();
 				if(flag_init == false){
 					flag_init = true;
 					max_x = vertex(0);
@@ -499,17 +561,17 @@ namespace acg{
 						min_y = vertex(1);
 					}
 				}
-				
+
 			}
-			
+
 		}
-		
+
 		max_x = std::abs(max_x);
 		max_y = std::abs(max_y);
 		min_x = std::abs(min_x);
 		min_y = std::abs(min_y);
-		
-		
+
+
 		if(max_x > min_x){
 			size_x = max_x + 10;
 		}
@@ -522,9 +584,72 @@ namespace acg{
 		else{
 			size_y = min_y + 10;
 		}
-		
-		
+
+
 	}
+
+		template<>
+		inline void getPriorSizes(const AASS::acg::AutoCompleteGraphBase<AASS::acg::AutoCompleteGraphPriorSE2, g2o::VertexSE2RobotPose, g2o::EdgeSE2Prior_malcolm>& acg, double& size_x, double& size_y){
+//			throw std::runtime_error("do not use templated version");
+
+			auto edges = acg.getPrior()->getPriorEdges();
+
+			double max_x, min_x, max_y, min_y;
+			bool flag_init = false;
+			auto it = edges.begin();
+			for(it ; it != edges.end() ; ++it){
+				for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+					geometry_msgs::Point p;
+					g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+					assert(ptr != NULL);
+					auto vertex = ptr->estimate().toVector();
+					if(flag_init == false){
+						flag_init = true;
+						max_x = vertex(0);
+						max_y = vertex(1);
+						min_x = vertex(0);
+						min_y = vertex(1);
+					}
+					else{
+						if(max_x < vertex(0)){
+							max_x = vertex(0);
+						}
+						if(max_y < vertex(1)){
+							max_y = vertex(1);
+						}
+						if(min_x > vertex(0)){
+							min_x = vertex(0);
+						}
+						if(min_y > vertex(1)){
+							min_y = vertex(1);
+						}
+					}
+
+				}
+
+			}
+
+			max_x = std::abs(max_x);
+			max_y = std::abs(max_y);
+			min_x = std::abs(min_x);
+			min_y = std::abs(min_y);
+
+
+			if(max_x > min_x){
+				size_x = max_x + 10;
+			}
+			else{
+				size_x = min_x + 10;
+			}
+			if(max_y > min_y){
+				size_y = max_y + 10;
+			}
+			else{
+				size_y = min_y + 10;
+			}
+
+
+		}
 	
 	
 	//TODO : BROKEN FUNCTION FOR NOW
@@ -578,7 +703,7 @@ namespace acg{
 // 		min_y = std::abs(min_y);
 		
 		double size_x, size_y;
-		getPriorSizes(acg, size_x, size_y);
+		getPriorSizes<Prior, VertexPrior, EdgePrior>(acg, size_x, size_y);
 		
 // 		if(max_x > min_x){
 // 			size_x = max_x + 10;
@@ -1010,12 +1135,12 @@ namespace acg{
 		grid_map::GridMap gridMap;
 		gridMap.setFrameId("/world");
 		double size_x, size_y;
-		getPriorSizes(acg, size_x, size_y);
+		getPriorSizes<Prior, VertexPrior, EdgePrior>(acg, size_x, size_y);
 		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));
 		gridMap.add("prior"); 
 		gridMap["prior"].setZero(); 
 		double resolution = 0.1;
-		ACGPriortoGridMap(acg, gridMap, resolution);
+		ACGPriortoGridMap<Prior, VertexPrior, EdgePrior>(acg, gridMap, resolution);
 		grid_map::GridMapRosConverter converter;
 		grid_map_msgs::GridMap gridmapmsg;
 		converter.toMessage(gridMap, mapmsg.prior);

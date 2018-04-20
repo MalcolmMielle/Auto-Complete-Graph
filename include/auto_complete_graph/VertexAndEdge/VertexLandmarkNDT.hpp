@@ -18,9 +18,9 @@ namespace AASS{
 		public:
 			EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-			Eigen::Matrix3d cov_inverse;
-			double determinant;
-			bool inverse_cov_exist;
+			Eigen::Matrix3d cov_inverse = Eigen::Matrix3d::Zero();
+			double determinant = 0;
+			bool inverse_cov_exist = false;
 
 			LocalizationPointer() : vertex(NULL){}
 			g2o::VertexSE2RobotLocalization* vertex;

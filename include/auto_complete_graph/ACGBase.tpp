@@ -177,14 +177,15 @@ inline g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 
 	//Making sure the same edge is not added twice
 
-	for(auto land_edge : _edge_landmark){
-		if(v1 == land_edge->vertices()[0] && v2 == land_edge->vertices()[1]){
-			throw std::runtime_error("Edge observation already added");
-		}
-		else if(v1 == land_edge->vertices()[1] && v2 == land_edge->vertices()[0]){
-			throw std::runtime_error("Edge observation already added");
-		}
-	}
+	//for(auto land_edge : _edge_landmark){
+	//	if(v1 == land_edge->vertices()[0] && v2 == land_edge->vertices()[1]){
+	//		throw std::runtime_error("Edge observation already added");
+	//	}
+	//	else if(v1 == land_edge->vertices()[1] && v2 == land_edge->vertices()[0]){
+	//		throw std::runtime_error("Edge observation already added");
+	//	}
+	//}
+	assert(findObservation(v1, v2) == NULL);
 
     Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 
@@ -1001,28 +1002,30 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::tes
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::testInfoNonNul(const std::string& before) const {
 
-	std::cout << "Test info non nul after " << before << std::endl;
-	auto idmapedges = _optimizable_graph.edges();
-
-	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-		assert((*ite)->vertices().size() >= 1);
-
-		g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(*ite);
-		EdgePrior* ptr1 = dynamic_cast<EdgePrior*>(*ite);
-		g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(*ite);
-		if(ptr != NULL){
-			assert(ptr->information().isZero(1e-10) == false);
-		}
-		else if(ptr1 != NULL){
-			assert(ptr1->information().isZero(1e-10) == false);
-		}
-		else if(ptr2 != NULL){
-			assert(ptr2->information().isZero(1e-10) == false);
-		}
-		else{
-			throw std::runtime_error("Didn't find the type of the edge :S");
-		}
-	}
+//TODO CORRECT THIS
+//	std::cout << "Test info non nul after " << before << std::endl;
+//	auto idmapedges = _optimizable_graph.edges();
+//
+//	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+//		assert((*ite)->vertices().size() >= 1);
+//
+//		g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(*ite);
+//		//Doesn't work with template TODO
+//		EdgePrior* ptr1 = dynamic_cast<EdgePrior*>(*ite);
+//		g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(*ite);
+//		if(ptr != NULL){
+//			assert(ptr->information().isZero(1e-10) == false);
+//		}
+//		else if(ptr1 != NULL){
+//			assert(ptr1->information().isZero(1e-10) == false);
+//		}
+//		else if(ptr2 != NULL){
+//			assert(ptr2->information().isZero(1e-10) == false);
+//		}
+//		else{
+//			throw std::runtime_error("Didn't find the type of the edge :S");
+//		}
+//	}
 
 
 }
@@ -1171,38 +1174,43 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::upd
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void  AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step){
 
-	g2o::EdgeLandmark_malcolm* v_land = dynamic_cast<g2o::EdgeLandmark_malcolm*>(e);
-	EdgePrior* v_prior = dynamic_cast<EdgePrior*>(e);
-	g2o::EdgeOdometry_malcolm* v_odom = dynamic_cast<g2o::EdgeOdometry_malcolm*>(e);
-	double age = -1;
 
-	assert(_min_age >= 0);
-	assert(_max_age >= 0);
-	assert(_min_age <= _max_age);
+    e->robustKernel()->setDelta(100);
 
-	if(v_land != NULL){
-		age = v_land->interface.getAge();
-		v_land->interface.setAge(age + 1);
+    //throw std::runtime_error("DO NOT USE AGE");
+	//g2o::EdgeLandmark_malcolm* v_land = dynamic_cast<g2o::EdgeLandmark_malcolm*>(e);
+	//EdgePrior* v_prior = dynamic_cast<EdgePrior*>(e);
+	//g2o::EdgeOdometry_malcolm* v_odom = dynamic_cast<g2o::EdgeOdometry_malcolm*>(e);
 
-// 				std::cout << "kernel size : " << age << std::endl;
-		e->robustKernel()->setDelta(100);
-	}
-	else if(v_prior != NULL){
-		age = v_prior->interface.getAge();
-		v_prior->interface.setAge(age + 1);
+	//double age = -1;
+
+	//assert(_min_age >= 0);
+	//assert(_max_age >= 0);
+	//assert(_min_age <= _max_age);
+
+	//if(v_land != NULL){
+	//	age = v_land->interface.getAge();
+	//	v_land->interface.setAge(age + 1);
 
 // 				std::cout << "kernel size : " << age << std::endl;
-		e->robustKernel()->setDelta(100);
-
-	}
-	else if(v_odom != NULL){
-		age = v_odom->interface.getAge();
-		v_odom->interface.setAge(age + 1);
+	//	e->robustKernel()->setDelta(100);
+	//}
+	//else if(v_prior != NULL){
+	//	age = v_prior->interface.getAge();
+	//	v_prior->interface.setAge(age + 1);
 
 // 				std::cout << "kernel size : " << age << std::endl;
-		e->robustKernel()->setDelta(100);
+	//	e->robustKernel()->setDelta(100);
+//
+	//}
+	//else if(v_odom != NULL){
+	//	age = v_odom->interface.getAge();
+	//	v_odom->interface.setAge(age + 1);
 
-	}
+// 				std::cout << "kernel size : " << age << std::endl;
+	//	e->robustKernel()->setDelta(100);
+
+	//}
 
 // 			std::cout << "AGE : " << age << std::endl;
 
@@ -1484,11 +1492,11 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::cle
 //	_edge_prior.clear();
 
 	//Making sure all edge prior were removed.
-	auto idmapedges = _optimizable_graph.edges();
-	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
+//	auto idmapedges = _optimizable_graph.edges();
+//	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
 // 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
-		assert( dynamic_cast<EdgePrior*>(*ite) == NULL );
-	}
+//		assert( dynamic_cast<EdgePrior*>(*ite) == NULL );
+//	}
 	std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 	std::cout << "DONE removing " << std::endl;
 }

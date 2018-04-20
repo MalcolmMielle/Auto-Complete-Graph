@@ -283,7 +283,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		double corner_extract_tt = (start_corner - end_corner).toSec();
 		time_extract_corner_ndt.push_back(corner_extract_tt);
 		
-		if(oacg->getRobotNodes().size() > 0){
+//		if(oacg->getRobotNodes().size() > 0){
 		
 		
 		// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
@@ -368,7 +368,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		// 		else{
 		// 			visu.updateRvizNoNDT();
 		// 		}
-		}	
+//		}
 // 	}
 // 	catch(...){
 // 		
@@ -437,6 +437,8 @@ int main(int argc, char **argv)
 	/**************PARAMETERS**************/
 	bool use_prior = true;
 	nh.param("use_prior",use_prior,true);
+	bool use_robot_maps = true;
+	nh.param("use_robot_maps",use_robot_maps,true);
 	bool use_corner = true;
 	nh.param("use_corner",use_corner,true);
 	bool own_registration = true;
@@ -508,6 +510,7 @@ int main(int argc, char **argv)
 	oacg.setScalingFactorOfGaussians(gaussian_scale);
 	oacg.useLinksPriorSSRR(use_links_prior_classic_ssrr);
 	oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
+	oacg.useRobotMaps(use_robot_maps);
 
 	oacg.usePrior(use_prior);
 	//ATTENTION

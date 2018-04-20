@@ -1,10 +1,11 @@
 #include "auto_complete_graph/Localization/ACG_localization.hpp"
 
 
-g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const g2o::SE2& se2, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr< perception_oru::NDTMap >& map){
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const g2o::SE2& se2, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr< perception_oru::NDTMap >& map, g2o::VertexSE2RobotPose* equivalent_robot_pose){
 
 	std::cout << "Adding the robot pose " << std::endl;
 	g2o::VertexSE2RobotLocalization* robotlocalization =  new g2o::VertexSE2RobotLocalization();
+	robotlocalization->setEquivalentRobotPose(equivalent_robot_pose);
 
 	robotlocalization->setEstimate(se2);
 	robotlocalization->setId(new_id_);
@@ -22,14 +23,14 @@ g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRo
 	_nodes_localization.push_back(robotlocalization);
 	return robotlocalization;
 }
-g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const Eigen::Vector3d& rob_localization, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov,const std::shared_ptr< perception_oru::NDTMap >& map){
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const Eigen::Vector3d& rob_localization, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov,const std::shared_ptr< perception_oru::NDTMap >& map, g2o::VertexSE2RobotPose* equivalent_robot_pose){
 	g2o::SE2 se2(rob_localization(0), rob_localization(1), rob_localization(2));
-	return addRobotLocalization(se2, affine, cov, map);
+	return addRobotLocalization(se2, affine, cov, map, equivalent_robot_pose);
 }
-g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(double x, double y, double theta, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov,const std::shared_ptr< perception_oru::NDTMap >& map){
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(double x, double y, double theta, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov,const std::shared_ptr< perception_oru::NDTMap >& map, g2o::VertexSE2RobotPose* equivalent_robot_pose){
 	Eigen::Vector3d robot1;
 	robot1 << x, y, theta;
-	return addRobotLocalization(robot1, affine, cov, map);
+	return addRobotLocalization(robot1, affine, cov, map, equivalent_robot_pose);
 }
 
 
@@ -83,8 +84,9 @@ g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphLocalization::setPriorReference(
 
 void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization) {
 
-	addNDTGraph(ndt_graph_localization);
-
+	if(_use_robot_maps == true) {
+		addNDTGraph(ndt_graph_localization);
+	}
 //	updateLocalizationEdges(ndt_graph_localization);
 
 
@@ -92,46 +94,50 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const auto_complet
 
 void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization)
 {
-	
-	std::cout << "Node in graph " << ndt_graph_localization.graph_map.nodes.size() << std::endl;
-	
-	if(_previous_number_of_node_in_ndtgraph != ndt_graph_localization.graph_map.nodes.size() ){
-		
-// 		auto factors = ndt_graph.factors();
-		
-		size_t i;
-		i = _previous_number_of_node_in_ndtgraph - 1;
-		
-		assert(i >= 0);
-		
-		for (i; i < ndt_graph_localization.graph_map.nodes.size() - 1 ; ++i) {
+	if(_use_robot_maps == true) {
+		std::cout << "Node in graph " << ndt_graph_localization.graph_map.nodes.size() << std::endl;
 
-			g2o::VertexSE2RobotPose* robot_ptr;
-			g2o::VertexSE2RobotLocalization* robot_localization_ptr;
-			std::shared_ptr<perception_oru::NDTMap> map;
+		if (_previous_number_of_node_in_ndtgraph != ndt_graph_localization.graph_map.nodes.size()) {
+
+// 		auto factors = ndt_graph.factors();
+
+			size_t i;
+			i = _previous_number_of_node_in_ndtgraph - 1;
+
+			assert(i >= 0);
+
+			for (i; i < ndt_graph_localization.graph_map.nodes.size() - 1; ++i) {
+
+				g2o::VertexSE2RobotPose *robot_ptr;
+				g2o::VertexSE2RobotLocalization *robot_localization_ptr;
+				std::shared_ptr<perception_oru::NDTMap> map;
 //			g2o::SE2 robot_pos;
-			std::tie(robot_ptr, robot_localization_ptr, map) = addElementNDT(ndt_graph_localization, i);
-			assert(robot_ptr != NULL);
-			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
-			//********************** Extract the corners *****************//
-			if(_extract_corners) {
-				extractCornerNDTMap(map, robot_ptr, robot_localization_ptr);
-			}
-			//********************** Add the time stamp ******************//
+				std::tie(robot_ptr, robot_localization_ptr, map) = addElementNDT(ndt_graph_localization, i);
+				assert(robot_ptr != NULL);
+				std::cout << "TEST pointer " << std::endl;
+				std::cout << robot_ptr->getPose().matrix() << std::endl;
+				//********************** Extract the corners *****************//
+				if (_extract_corners) {
+					extractCornerNDTMap(map, robot_ptr, robot_localization_ptr);
+					//NEED TO ADD OBSERVATION EDGES BETWEEN MCL AND CORNERS HERE TODO
+					AddObservationsMCLPrior();
+				}
+				//********************** Add the time stamp ******************//
 // 			robot_ptr->setTime(ndt_graph.nodes[i].time_last_update);
-			
+
+			}
+
+			_previous_number_of_node_in_ndtgraph = ndt_graph_localization.graph_map.nodes.size();
+
 		}
-		
-		_previous_number_of_node_in_ndtgraph = ndt_graph_localization.graph_map.nodes.size();
-		
-	}
 
 //	updateLinks();
 
 //	std::cout << "Test no double links" << std::endl;
 //	noDoubleLinks();
 
-	std::cout << "After " << std::endl;
+		std::cout << "After " << std::endl;
+	}
 	
 	
 
@@ -361,13 +367,15 @@ std::tuple<g2o::VertexSE2RobotPose*, g2o::VertexSE2RobotLocalization*, std::shar
 		}
 	}
 
-	auto robot_localization_ptr = addLocalizationEdges(ndt_graph_localization, element, shared_map);
+	auto robot_localization_ptr = addLocalizationVertex(ndt_graph_localization, element, shared_map, robot_ptr);
 	std::tuple<g2o::VertexSE2RobotPose*, g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDTMap> > tuple(robot_ptr, robot_localization_ptr, shared_map);
 	return tuple;
 
 }
 
-g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalizationEdges( const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element, const std::shared_ptr<perception_oru::NDTMap>& shared_map) {
+g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalizationVertex(
+		const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element,
+		const std::shared_ptr<perception_oru::NDTMap> &shared_map, g2o::VertexSE2RobotPose* robot_ptr) {
 
 	auto localization_msg = ndt_graph_localization.localizations[element];
 	AASS::acg::Localization localization;
@@ -377,7 +385,7 @@ g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addLo
 	Eigen::Matrix3d cov = localization.cov;
 
 	auto affine3d = se2ToAffine3d(se2loc, _z_elevation);
-	return addRobotLocalization(se2loc, affine3d, cov, shared_map);
+	return addRobotLocalization(se2loc, affine3d, cov, shared_map, robot_ptr);
 	//No localization for now
 //	addLocalization(se2loc, robot_ptr, localization.cov.inverse());
 
@@ -489,6 +497,8 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				}
 				//Add covariance given by MCL instead of the default one.
 				addLandmarkObservation(corner.getObservations(), robot_localization, ptr, cov_2d);
+				//Link between the prior and MCL
+				addObservationMCLToPrior(ptr, corner.getObservations());
 //				observations_added++;
 //				observations_added++;
 
@@ -505,6 +515,8 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				}
 				//Add covariance given by MCL instead of the default one.
 				addLandmarkObservation(corner.getObservations(), robot_localization, ptr_landmark_seen, cov_2d);
+				//Link between the prior and MCL
+				addObservationMCLToPrior(ptr_landmark_seen, corner.getObservations());
 //				observations_added++;
 //				observations_added++;
 
@@ -631,7 +643,7 @@ void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string&
 		assert((*ite)->vertices().size() >= 1);
 
 		g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(*ite);
-		g2o::EdgeSE2Prior_malcolm* ptr1 = dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite);
+		g2o::EdgeXYPriorACG* ptr1 = dynamic_cast<g2o::EdgeXYPriorACG*>(*ite);
 		g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(*ite);
 		g2o::EdgeLinkXY_malcolm* ptr3 = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(*ite);
 //		g2o::EdgeLocalization* ptr4 = dynamic_cast<g2o::EdgeLocalization*>(*ite);
@@ -815,6 +827,123 @@ g2o::EdgeLinkXY_malcolm* AASS::acg::AutoCompleteGraphLocalization::addLinkBetwee
 //// 	std::cout << "Done" << std::endl;
 //	return linkObservation;
 }
+
+void AASS::acg::AutoCompleteGraphLocalization::AddObservationsMCLPrior() {
+
+}
+
+
+void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark, const Eigen::Vector2d& observation) {
+
+	std::cout << "Start" << std::endl;
+	for(auto prior_corner : _prior->getPriorNodes() ){
+
+		if (_use_mcl_observation_on_prior) {
+
+			std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer> > localization = landmark->getLocalization();
+			for (auto loc: localization) {
+
+				Eigen::Vector2d pose_landmark = loc->vertex->estimate().toVector().head(2);
+
+				assert(pose_landmark(0) == loc->vertex->estimate().toVector().head(2)(0));
+				assert(pose_landmark(1) == loc->vertex->estimate().toVector().head(2)(1));
+
+				Eigen::Vector2d pose_prior = prior_corner->estimate();
+
+				if( (pose_prior - pose_landmark).norm() <= 5) {
+//							Eigen::Matrix2d icov = loc.cov_inverse();
+					Eigen::Matrix2d cov_inv_2d;
+					cov_inv_2d << loc->cov_inverse(0, 0), loc->cov_inverse(0, 1),
+							loc->cov_inverse(1, 0), loc->cov_inverse(1, 1);
+
+					double l = (pose_prior - pose_landmark).dot(cov_inv_2d * (pose_prior - pose_landmark));
+					double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+
+					std::cout << "Poses : " << pose_prior << " - " << pose_landmark << " distance "<< (pose_prior - pose_landmark).norm() << " l " << l << " SCORE " << score
+					          << std::endl;
+
+					if (score >= _threshold_of_score_for_creating_a_link) {
+//					g2o::Vector2 vec;
+//					vec << 0, 0;
+
+//					throw std::runtime_error("DO not use MCL observation yet");
+
+						//ATTENTION MASSIVE TODO
+//					g2o::VertexSE2RobotPose* rpose = loc->vertex->getEquivalentRobotPose();
+//					g2o::EdgeLandmark_malcolm* observation = findObservation(rpose, landmark);
+
+						g2o::EdgeLandmark_malcolm *observation_mcl = addLandmarkObservation(observation, loc->vertex,
+						                                                                    prior_corner);
+						_number_of_links_to_prior++;
+//									addPriorObservation();
+//									addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
+					}
+				}
+			}
+		}
+		else{
+			std::cout << "What else to use :( " << std::endl;
+			throw std::runtime_error("no mathcing function");
+		}
+
+	}
+
+	std::cout << "Stop" << std::endl;
+	int aaa;
+	std::cin >> aaa;
+
+
+}
+
+//void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark) const {
+//
+//	for(auto prior_corner : _prior->getPriorNodes() ){
+//
+//		if (_use_mcl_observation_on_prior) {
+//
+//			std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer> > localization = landmark->getLocalization();
+//			for (auto loc: localization) {
+//
+//				Eigen::Vector2d pose_landmark = loc->vertex->estimate().toVector().head(2);
+//
+//				assert(pose_landmark(0) == loc->vertex->estimate().toVector().head(2)(0));
+//				assert(pose_landmark(1) == loc->vertex->estimate().toVector().head(2)(1));
+//
+//				Eigen::Vector2d pose_prior = prior_corner->estimate();
+////							Eigen::Matrix2d icov = loc.cov_inverse();
+//				Eigen::Matrix2d cov_inv_2d;
+//				cov_inv_2d << loc->cov_inverse(0, 0), loc->cov_inverse(0, 1),
+//						loc->cov_inverse(1, 0), loc->cov_inverse(1, 1);
+//
+//				double l = (pose_prior - pose_landmark).dot(cov_inv_2d * (pose_prior - pose_landmark));
+//				double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+//
+//				if (score >= _threshold_of_score_for_creating_a_link) {
+////					g2o::Vector2 vec;
+////					vec << 0, 0;
+//
+////					throw std::runtime_error("DO not use MCL observation yet");
+//
+//					//ATTENTION MASSIVE TODO
+//					g2o::VertexSE2RobotPose* rpose = loc->vertex->getEquivalentRobotPose();
+//
+//					g2o::EdgeLandmark_malcolm* observation = findObservation(rpose, landmark);
+//
+//					g2o::EdgeLandmark_malcolm* observation_mcl = addLandmarkObservation(observation->measurement(), loc->vertex, prior_corner);
+//
+////									addPriorObservation();
+////									addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
+//				}
+//			}
+//		}
+//		else{
+//			std::cout << "What else to use :( " << std::endl;
+//			throw std::runtime_error("no mathcing function");
+//		}
+//
+//	}
+//
+//}
 
 
 

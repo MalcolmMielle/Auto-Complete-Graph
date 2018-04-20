@@ -477,6 +477,19 @@ namespace acg{
 
 		int findRobotNode(g2o::HyperGraph::Vertex* v);
 		int findLandmarkNode(g2o::HyperGraph::Vertex* v);
+
+		g2o::EdgeLandmark_malcolm* findObservation(const g2o::HyperGraph::Vertex* from, const g2o::HyperGraph::Vertex* toward) const {
+			for(auto land_edge : _edge_landmark){
+				if(from == land_edge->vertices()[0] && toward == land_edge->vertices()[1]){
+					return land_edge;
+				}
+				else if(from == land_edge->vertices()[1] && toward == land_edge->vertices()[0]){
+					return land_edge;
+				}
+			}
+			return NULL;
+		}
+
 //		int findPriorNode(g2o::HyperGraph::Vertex* v);
 
 
@@ -564,7 +577,8 @@ namespace acg{
 
 
 		void setFirst(){
-			g2o::OptimizableGraph::Vertex* fRobot = _nodes_ndt[0];
+//			g2o::OptimizableGraph::Vertex* fRobot = _nodes_ndt[0];
+			g2o::OptimizableGraph::Vertex* fRobot = *( _prior->getPriorNodes().begin() );
 			_optimizable_graph.setFirst(fRobot);
 		}
 

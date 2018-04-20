@@ -112,17 +112,24 @@ namespace AASS {
 				std::cout << "Prior cleared" << std::endl;
 			}
 
-			g2o::HyperGraph::Vertex* removeVertex(g2o::HyperGraph::Vertex* v1){
+			bool removeVertex(g2o::HyperGraph::Vertex* v1){
 				//Prior
-				VERTEXTYPE* ptr = dynamic_cast<VERTEXTYPE*>(v1);
+//				VERTEXTYPE* ptr = dynamic_cast<VERTEXTYPE*>(v1);
 
-				if(ptr != NULL){
+				if(v1 != NULL){
 					std::cout <<"Found vertex" << std::endl;
-					auto it = _nodes_prior.find(ptr);
+					auto it = _nodes_prior.find(v1);
+
+					if(it != _nodes_prior.end()) {
 //					int index = findPriorNode(v1);
-					_nodes_prior.erase(it);
+						_nodes_prior.erase(it);
+					}
+					else{
+						return false;
+					}
 				}
-				return ptr;
+//				return NULL;
+				return true;
 			}
 
 
@@ -131,41 +138,66 @@ namespace AASS {
 
 		template<typename VERTEXTYPE, typename EDGETYPE>
 		inline void AASS::acg::AutoCompleteGraphPrior<VERTEXTYPE, EDGETYPE>::checkNoRepeatingPriorEdge(){
-			for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
-				std::vector<std::pair<double, double> > out;
-				// 			std::cout << "edges " << std::endl;
-				auto edges = (*it_vertex)->edges();
-				// 			std::cout << "edges done " << std::endl;
-				std::vector<EDGETYPE*> edges_prior;
 
-				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-					// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPrior*>(*ite) << std::endl;
-					EDGETYPE* ptr = dynamic_cast<EDGETYPE*>(*ite);
-					if(ptr != NULL){
-						//Make sure not pushed twice
-						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
-							assert(ptr != *ite2);
+
+			for(auto edge : _edge_prior){
+				auto vertex = edge->vertices()[0];
+				auto vertex2 = edge->vertices()[1];
+				for(auto edge_second : _edge_prior){
+
+					if(edge != edge_second){
+						auto vertex_second = edge_second->vertices()[0];
+						auto vertex_second2 = edge_second->vertices()[1];
+
+						if(vertex_second == vertex && vertex_second2 == vertex2){
+							throw std::runtime_error("Same prior edge");
 						}
-						// 						std::cout << " pushed edges " << std::endl;
-						edges_prior.push_back(ptr);
-						// 						std::cout << "pushed edges done " << std::endl;
+						else if(vertex_second == vertex2 && vertex_second2 == vertex){
+							throw std::runtime_error("Same prior edge");
+						}
+
 					}
+
 				}
-				for(auto it = edges_prior.begin() ; it != edges_prior.end() ; ++it){
-					auto ite2 = it;
-					ite2++;
-					for( ; ite2 != edges_prior.end() ; ++ite2 ){
-						assert((*it)->getOrientation2D(**it_vertex) != (*ite2)->getOrientation2D(**it_vertex));
-					}
-				}
+
 			}
-			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
-				auto ite2 = it;
-				ite2++;
-				for(; ite2 != _edge_prior.end() ; ++ite2 ){
-					assert(it != ite2);
-				}
-			}
+
+
+//			for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
+//				std::vector<std::pair<double, double> > out;
+//				// 			std::cout << "edges " << std::endl;
+//				auto edges = (*it_vertex)->edges();
+//				// 			std::cout << "edges done " << std::endl;
+//				std::vector<EDGETYPE*> edges_prior;
+//
+//				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
+//					// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPrior*>(*ite) << std::endl;
+////					EDGETYPE* ptr = dynamic_cast<EDGETYPE*>(*ite);
+////					if(ptr != NULL){
+//						//Make sure not pushed twice
+//						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
+//							assert(*ite != *ite2);
+//						}
+//						// 						std::cout << " pushed edges " << std::endl;
+//						edges_prior.push_back(*ite);
+//						// 						std::cout << "pushed edges done " << std::endl;
+////					}
+//				}
+//				for(auto it = edges_prior.begin() ; it != edges_prior.end() ; ++it){
+//					auto ite2 = it;
+//					ite2++;
+//					for( ; ite2 != edges_prior.end() ; ++ite2 ){
+//						assert((*it)->getOrientation2D(**it_vertex) != (*ite2)->getOrientation2D(**it_vertex));
+//					}
+//				}
+//			}
+//			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+//				auto ite2 = it;
+//				ite2++;
+//				for(; ite2 != _edge_prior.end() ; ++ite2 ){
+//					assert(it != ite2);
+//				}
+//			}
 		}
 	}
 }

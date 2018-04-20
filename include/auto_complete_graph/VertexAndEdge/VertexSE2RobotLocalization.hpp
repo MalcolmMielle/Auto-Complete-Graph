@@ -2,6 +2,7 @@
 #define AUTOCOMPLETEGRAPH_VERTEXSE2ROBOTLOCALIZATION_06042018
 
 #include "VertexSE2ACG.hpp"
+#include "VertexSE2RobotPose.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 #include "opencv2/core/core.hpp"
 #include "ndt_map/ndt_map.h"
@@ -20,6 +21,8 @@ namespace g2o{
 		Eigen::Matrix3d cov;
 		double _time;
 		int _index_graphmap;
+		g2o::VertexSE2RobotPose* _equivalent_robot_pose = NULL;
+
 	public:
 		g2o::SE2 initial_transfo;
 		cv::Mat img;
@@ -32,6 +35,9 @@ namespace g2o{
 		void setPose(const Eigen::Affine3d& T) {_T = T;}
 		void setTime(double t){_time = t;}
 		double getTime(){return _time;}
+
+		void setEquivalentRobotPose(g2o::VertexSE2RobotPose* eq){_equivalent_robot_pose = eq;}
+		g2o::VertexSE2RobotPose* getEquivalentRobotPose(){return _equivalent_robot_pose;}
 
 		void setIndexGraphMap(int i){_index_graphmap = i;}
 		int getIndexGraphMap() const {return _index_graphmap;}
