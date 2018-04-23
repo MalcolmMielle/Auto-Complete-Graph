@@ -864,7 +864,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 							loc->cov_inverse(1, 0), loc->cov_inverse(1, 1);
 
 					double l = (pose_prior - pose_landmark).dot(cov_inv_2d * (pose_prior - pose_landmark));
-					double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
+						//I need to remove that 2 in the formula since we haven't added the covariance together ! Hence no need to divided by two :)
+					double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l); /// / 2.0);
 
 					std::cout << "Poses : " << pose_prior << " - " << pose_landmark << " distance "<< (pose_prior - pose_landmark).norm() << " inverse cov\n" << cov_inv_2d.matrix() <<  " \nl " << l << " SCORE " << score << " threshold " << _threshold_of_score_for_creating_a_link << std::endl;
 
