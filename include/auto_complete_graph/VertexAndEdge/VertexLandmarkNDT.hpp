@@ -18,12 +18,17 @@ namespace AASS{
 		public:
 			EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
+			//To check if a link between MCL and the landmark was already done using the localization
+			bool link_created = false;
+
+			Eigen::Vector2d observation;
+
 			Eigen::Matrix3d cov_inverse = Eigen::Matrix3d::Zero();
 			double determinant = 0;
 			bool inverse_cov_exist = false;
 
-			LocalizationPointer() : vertex(NULL){}
-			g2o::VertexSE2RobotLocalization* vertex;
+			LocalizationPointer() : vertex_mcl_pose(NULL){}
+			g2o::VertexSE2RobotLocalization* vertex_mcl_pose;
 		};
 
 	}
@@ -64,12 +69,13 @@ namespace g2o{
 		
 		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXYACG(){};
 
-		void addLocalization(VertexSE2RobotLocalization* vertex, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, int index){
+		void addLocalization(VertexSE2RobotLocalization* vertex, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const Eigen::Vector2d& observation, int index){
 			std::shared_ptr<AASS::acg::LocalizationPointer> lp (new AASS::acg::LocalizationPointer() );
-			lp->vertex = vertex;
+			lp->vertex_mcl_pose = vertex;
 			lp->mean = mean;
 			lp->cov = cov;
 			lp->index = index;
+			lp->observation = observation;
 			cov.computeInverseAndDetWithCheck(lp->cov_inverse, lp->determinant, lp->inverse_cov_exist);
 			if (!lp->inverse_cov_exist) {
 				std::cout << "Covariance " << cov << std::endl;
@@ -81,7 +87,7 @@ namespace g2o{
 
 		const Eigen::Matrix3d& getCovarianceObservation(const VertexSE2RobotLocalization* vertex) const {
 			auto result = std::find_if(associated_localization.begin(), associated_localization.end(),
-			                           [vertex](const std::shared_ptr<AASS::acg::LocalizationPointer> &a)->bool { return a->vertex == vertex; } );
+			                           [vertex](const std::shared_ptr<AASS::acg::LocalizationPointer> &a)->bool { return a->vertex_mcl_pose == vertex; } );
 			return (*result)->cov;
 		}
 //		Eigen::Matrix2d& getCovarianceObservation(const VertexSE2RobotLocalization* vertex){
@@ -91,7 +97,7 @@ namespace g2o{
 //		}
 		const Eigen::Matrix3d& getInverseCovarianceObservation(const VertexSE2RobotLocalization* vertex) const {
 			auto result = std::find_if(associated_localization.begin(), associated_localization.end(),
-			                           [vertex](const std::shared_ptr<AASS::acg::LocalizationPointer> &a)->bool { return a->vertex == vertex; } );
+			                           [vertex](const std::shared_ptr<AASS::acg::LocalizationPointer> &a)->bool { return a->vertex_mcl_pose == vertex; } );
 			return (*result)->cov_inverse;
 		}
 //		Eigen::Matrix2d& getInverseCovarianceObservation(const VertexSE2RobotLocalization* vertex){

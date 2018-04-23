@@ -577,8 +577,13 @@ namespace acg{
 
 
 		void setFirst(){
-//			g2o::OptimizableGraph::Vertex* fRobot = _nodes_ndt[0];
-			g2o::OptimizableGraph::Vertex* fRobot = *( _prior->getPriorNodes().begin() );
+			g2o::OptimizableGraph::Vertex *fRobot;
+			if(_nodes_ndt.size() > 0) {
+				fRobot = _nodes_ndt[0];
+			}
+			else {
+				fRobot = *(_prior->getPriorNodes().begin());
+			}
 			_optimizable_graph.setFirst(fRobot);
 		}
 

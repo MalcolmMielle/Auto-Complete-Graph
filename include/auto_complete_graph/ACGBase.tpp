@@ -185,7 +185,9 @@ inline g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 	//		throw std::runtime_error("Edge observation already added");
 	//	}
 	//}
-	assert(findObservation(v1, v2) == NULL);
+
+	//Might have more than one observation ot hte prior
+	//assert(findObservation(v1, v2) == NULL);
 
     Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 

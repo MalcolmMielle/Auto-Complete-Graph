@@ -137,6 +137,9 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 //	noDoubleLinks();
 
 		std::cout << "After " << std::endl;
+
+		assert(_nodes_ndt.size() == _nodes_localization.size());
+
 	}
 	
 	
@@ -474,7 +477,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 
 //				ptr->setCovarianceObservation(cov_2d);
 				//Last parmater will be usel so to make sur eit's unused it's set to -1
-				ptr->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), -1);
+				ptr->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), corner.getObservations(), -1);
 
 				ptr->addAnglesOrientations(corner.getAngles(), corner.getOrientations());
 				ptr->first_seen_from = robot_ptr;
@@ -498,13 +501,13 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				//Add covariance given by MCL instead of the default one.
 				addLandmarkObservation(corner.getObservations(), robot_localization, ptr, cov_2d);
 				//Link between the prior and MCL
-				addObservationMCLToPrior(ptr, corner.getObservations());
+				addObservationMCLToPrior(ptr);
 //				observations_added++;
 //				observations_added++;
 
 			} else {
 
-				ptr_landmark_seen->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), -1);
+				ptr_landmark_seen->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), corner.getObservations(), -1);
 
 				std::cout << "Point seen: " << ptr_landmark_seen << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
 				if(_use_corner_covariance) {
@@ -516,7 +519,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				//Add covariance given by MCL instead of the default one.
 				addLandmarkObservation(corner.getObservations(), robot_localization, ptr_landmark_seen, cov_2d);
 				//Link between the prior and MCL
-				addObservationMCLToPrior(ptr_landmark_seen, corner.getObservations());
+				addObservationMCLToPrior(ptr_landmark_seen);
 //				observations_added++;
 //				observations_added++;
 
@@ -556,26 +559,27 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 //		std::cout << "Corner size " << it->getOrientations().size() << std::endl;
 		//Limited to corners that possess an orientation.
 		if(it->getOrientations().size() > 0){
-			Eigen::Vector3d vec;
+			Eigen::Vector3d landmark_robot_frame;
 			// 		vec << it->x, it->y, angles[count_tmp].second;
 //			std::cout << "Corner size " << std::endl;
-			vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, it->getOrientations()[0];
+//			vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, it->getOrientations()[0];
+			landmark_robot_frame << it->getMeanOpenCV().x, it->getMeanOpenCV().y, robot_ptr->estimate().toVector()(2);
 
 //			std::cout << "Corner size " << std::endl;
 			cv::Point2f p_out;
-			Eigen::Vector3d landmark_robotframe;
-			translateFromRobotFrameToGlobalFrame(vec, robot_ptr->estimate(), landmark_robotframe);
+			Eigen::Vector3d landmark_globalframe;
+			translateFromRobotFrameToGlobalFrame(landmark_robot_frame, robot_ptr->estimate(), landmark_globalframe);
 
 			std::cout << "Corner size " << std::endl;
-			p_out.x = landmark_robotframe(0);
-			p_out.y = landmark_robotframe(1);
+			p_out.x = landmark_globalframe(0);
+			p_out.y = landmark_globalframe(1);
 
-			Eigen::Vector2d observation; observation << vec(0), vec(1);
+			Eigen::Vector2d observation; observation << landmark_robot_frame(0), landmark_robot_frame(1);
 			std::vector<double> orientations;
 			std::vector<double> angles_width;
 
 //			std::cout << "Corner size " << std::endl;
-			double angle_landmark = vec(2);
+			double angle_landmark = it->getOrientations()[0];
 
 //			std::cout << "Corner size " << std::endl;
 			for(auto it_orientation = it->getOrientations().begin() ; it_orientation != it->getOrientations().end() ; ++it_orientation){
@@ -607,7 +611,7 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 
 			// 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
 			std::cout << "Position node " << robot_ptr->estimate().toVector() << std::endl;
-			std::cout << " vec " << vec << std::endl;
+			std::cout << " vec " << landmark_robot_frame << std::endl;
 			// 		std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
 
 			//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
@@ -833,24 +837,27 @@ void AASS::acg::AutoCompleteGraphLocalization::AddObservationsMCLPrior() {
 }
 
 
-void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark, const Eigen::Vector2d& observation) {
+void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark) {
 
-	std::cout << "Start" << std::endl;
+	std::cout << "Start for landmark " << landmark << " at pose " << landmark->estimate() << std::endl;
 	for(auto prior_corner : _prior->getPriorNodes() ){
 
 		if (_use_mcl_observation_on_prior) {
 
+			Eigen::Vector2d pose_landmark = landmark->estimate();
+			Eigen::Vector2d pose_prior = prior_corner->estimate();
+
+			if( (pose_prior - pose_landmark).norm() <= 5) {
+
 			std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer> > localization = landmark->getLocalization();
-			for (auto loc: localization) {
 
-				Eigen::Vector2d pose_landmark = loc->vertex->estimate().toVector().head(2);
+				for (auto loc: localization) {
 
-				assert(pose_landmark(0) == loc->vertex->estimate().toVector().head(2)(0));
-				assert(pose_landmark(1) == loc->vertex->estimate().toVector().head(2)(1));
+					if(loc->link_created == false){
+//				loc->vertex_mcl_pose->estimate().toVector().head(2);
+//				assert(pose_landmark(0) == loc->vertex->estimate().toVector().head(2)(0));
+//				assert(pose_landmark(1) == loc->vertex->estimate().toVector().head(2)(1));
 
-				Eigen::Vector2d pose_prior = prior_corner->estimate();
-
-				if( (pose_prior - pose_landmark).norm() <= 5) {
 //							Eigen::Matrix2d icov = loc.cov_inverse();
 					Eigen::Matrix2d cov_inv_2d;
 					cov_inv_2d << loc->cov_inverse(0, 0), loc->cov_inverse(0, 1),
@@ -859,31 +866,55 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 					double l = (pose_prior - pose_landmark).dot(cov_inv_2d * (pose_prior - pose_landmark));
 					double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
 
-					std::cout << "Poses : " << pose_prior << " - " << pose_landmark << " distance "<< (pose_prior - pose_landmark).norm() << " l " << l << " SCORE " << score
-					          << std::endl;
+					std::cout << "Poses : " << pose_prior << " - " << pose_landmark << " distance "<< (pose_prior - pose_landmark).norm() << " inverse cov\n" << cov_inv_2d.matrix() <<  " \nl " << l << " SCORE " << score << " threshold " << _threshold_of_score_for_creating_a_link << std::endl;
 
 					if (score >= _threshold_of_score_for_creating_a_link) {
-//					g2o::Vector2 vec;
-//					vec << 0, 0;
+	//					g2o::Vector2 vec;
+	//					vec << 0, 0;
 
-//					throw std::runtime_error("DO not use MCL observation yet");
+	//					throw std::runtime_error("DO not use MCL observation yet");
 
-						//ATTENTION MASSIVE TODO
-//					g2o::VertexSE2RobotPose* rpose = loc->vertex->getEquivalentRobotPose();
-//					g2o::EdgeLandmark_malcolm* observation = findObservation(rpose, landmark);
+							//ATTENTION MASSIVE TODO
+	//					g2o::VertexSE2RobotPose* rpose = loc->vertex->getEquivalentRobotPose();
+	//					g2o::EdgeLandmark_malcolm* observation = findObservation(rpose, landmark);
 
-						g2o::EdgeLandmark_malcolm *observation_mcl = addLandmarkObservation(observation, loc->vertex,
-						                                                                    prior_corner);
-						_number_of_links_to_prior++;
-//									addPriorObservation();
-//									addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
+							//TODO USE MCL COVARIANCE
+							g2o::EdgeLandmark_malcolm *observation_mcl = addLandmarkObservation(loc->observation,
+							                                                                    loc->vertex_mcl_pose,
+							                                                                    prior_corner);
+							//To know link was already done !
+							loc->link_created = true;
+
+							bool test_pointer_type = false;
+							for (auto vertex : observation_mcl->vertices()) {
+								g2o::VertexXYPrior *ptr = dynamic_cast<g2o::VertexXYPrior *>(vertex);
+								if (ptr != NULL) {
+									test_pointer_type = true;
+								}
+							}
+							assert(test_pointer_type == true);
+
+							bool test_pointer_type2 = false;
+							for (auto vertex : observation_mcl->vertices()) {
+								g2o::VertexSE2RobotLocalization *ptr = dynamic_cast<g2o::VertexSE2RobotLocalization *>(vertex);
+								if (ptr != NULL) {
+									test_pointer_type2 = true;
+								}
+							}
+							assert(test_pointer_type2 == true);
+
+							prior_corner->landmarks.insert(landmark);
+							_number_of_links_to_prior++;
+	//									addPriorObservation();
+	//									addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
+						}
 					}
 				}
 			}
 		}
 		else{
 			std::cout << "What else to use :( " << std::endl;
-			throw std::runtime_error("no mathcing function");
+			throw std::runtime_error("no matching function");
 		}
 
 	}

@@ -5,6 +5,7 @@
 #include "EdgeInterfaceMalcolm.hpp"
 #include "EdgeXYPrior.hpp"
 #include "auto_complete_graph/PriorLoaderInterface.hpp"
+#include "VertexLandmarkNDT.hpp"
 
 namespace g2o{
 
@@ -16,6 +17,8 @@ namespace g2o{
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 		VertexXYPrior() : g2o::VertexPointXYACG(){}
 		AASS::acg::PriorAttr priorattr;
+		//List of associated landmark. For visualization purpose
+		std::set<const g2o::VertexLandmarkNDT*> landmarks;
 
 		//Repeating code between VertexSE2Prior and VertexXYPrior...
 		std::vector<std::pair<double, double> > getAnglesAndOrientations() const {

@@ -507,10 +507,12 @@ int main(int argc, char **argv)
 	oacg.setZElevation(sensor_pose.getOrigin().getZ());
 	oacg.useCornerCovariance(use_corner_covariance);
 	oacg.useCovarianceToFindLinks(use_covariance_to_find_links);
-	oacg.setScalingFactorOfGaussians(gaussian_scale);
 	oacg.useLinksPriorSSRR(use_links_prior_classic_ssrr);
 	oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
 	oacg.useRobotMaps(use_robot_maps);
+
+	oacg.setScalingFactorOfGaussians(gaussian_scale);
+	oacg.setThrehsoldOfScoreForCreatingLink(threshold_score_link_creation);
 
 	oacg.usePrior(use_prior);
 	//ATTENTION

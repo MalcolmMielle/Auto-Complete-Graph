@@ -205,7 +205,7 @@ namespace acg{
 		void AddObservationsMCLPrior();
 
 //		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark) const;
-		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark, const Eigen::Vector2d& observation);
+		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark);
 
 
 //		int createNewLinks();

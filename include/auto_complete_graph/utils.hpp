@@ -40,13 +40,13 @@ namespace AASS{
 			//Node it beong to :
 			g2o::SE2 robot_frame_se2 = g2o::SE2(robot_frame_pose);
 			//Pose of landmark
-			g2o::SE2 landmark_se2(vec_input);
+			g2o::SE2 landmark_inrobotframe_se2(vec_input);
 			//Composition
-			g2o::SE2 landmark_robotframe = robot_frame_se2 * landmark_se2;
-			Eigen::Vector3d landmark_robotframe_vector = landmark_robotframe.toVector();
+			g2o::SE2 landmark_globalframe = robot_frame_se2 * landmark_inrobotframe_se2;
+//			Eigen::Vector3d landmark_robotframe_vector = landmark_robotframe.toVector();
 			
 			
-			pose_inglobal_frame = landmark_robotframe.toVector();
+			pose_inglobal_frame = landmark_globalframe.toVector();
 			//Pose of landmark in global reference
 // 			point_inglobal_frame.x = landmark_robotframe_vector(0);
 // 			point_inglobal_frame.y = landmark_robotframe_vector(1);
