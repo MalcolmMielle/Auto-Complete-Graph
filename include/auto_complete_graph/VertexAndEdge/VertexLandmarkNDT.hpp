@@ -9,6 +9,12 @@
 #include "opencv2/opencv.hpp"
 #include "VertexSE2Prior.hpp"
 #include "VertexSE2RobotLocalization.hpp"
+#include "auto_complete_graph/utils.hpp"
+#include "VertexPointXYACG.hpp"
+//
+//namespace g2o{
+//	class VertexXYPrior;
+//}
 
 namespace AASS{
 	namespace acg{
@@ -19,7 +25,10 @@ namespace AASS{
 			EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
 			//To check if a link between MCL and the landmark was already done using the localization
-			bool link_created = false;
+			std::unordered_set<g2o::VertexPointXYACG*> _prior_linked_using_landmark;
+
+			//Pose of the landmark in the equivalent robot_frame to this mcl frame when it was detected -> used to translate to the corner.
+			Eigen::Vector2d original_pose_in_robot_frame = Eigen::Vector2d::Zero();
 
 			Eigen::Vector2d observation;
 
@@ -29,6 +38,20 @@ namespace AASS{
 
 			LocalizationPointer() : vertex_mcl_pose(NULL){}
 			g2o::VertexSE2RobotLocalization* vertex_mcl_pose;
+
+			Eigen::Vector3d landmarkInGlobalFrame() {
+
+				Eigen::Vector3d original_pose_in_mcl_frame_3d;
+				g2o::SE2 mcl_frame_pose = vertex_mcl_pose->estimate();
+				original_pose_in_mcl_frame_3d << original_pose_in_robot_frame(0), original_pose_in_robot_frame(1), 0;
+//				std::cout << "Pose original " << original_pose_in_robot_frame << std::endl;
+//				std::cout << "Pose mcl " << mcl_frame_pose.toVector() << std::endl;
+				Eigen::Vector3d pose_inglobal_frame;
+				translateFromRobotFrameToGlobalFrame(original_pose_in_mcl_frame_3d, mcl_frame_pose, pose_inglobal_frame);
+				return pose_inglobal_frame;
+
+			}
+
 		};
 
 	}
@@ -56,6 +79,7 @@ namespace g2o{
 		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_1;
 		std::vector<boost::shared_ptr< perception_oru::NDTCell > > cells_that_gave_it_2;
 		g2o::SE2 robotpose_seen_from;
+
 		
 		//END OF TESTING
 		AASS::acg::EdgeInterfaceMalcolm interface;
@@ -69,13 +93,14 @@ namespace g2o{
 		
 		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXYACG(){};
 
-		void addLocalization(VertexSE2RobotLocalization* vertex, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const Eigen::Vector2d& observation, int index){
+		void addLocalization(VertexSE2RobotLocalization* vertex, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const Eigen::Vector2d& observation, const Eigen::Vector2d& original_pose_in_robot_frame, int index){
 			std::shared_ptr<AASS::acg::LocalizationPointer> lp (new AASS::acg::LocalizationPointer() );
 			lp->vertex_mcl_pose = vertex;
 			lp->mean = mean;
 			lp->cov = cov;
 			lp->index = index;
 			lp->observation = observation;
+			lp->original_pose_in_robot_frame = original_pose_in_robot_frame;
 			cov.computeInverseAndDetWithCheck(lp->cov_inverse, lp->determinant, lp->inverse_cov_exist);
 			if (!lp->inverse_cov_exist) {
 				std::cout << "Covariance " << cov << std::endl;

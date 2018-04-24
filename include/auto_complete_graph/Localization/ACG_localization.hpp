@@ -1,6 +1,8 @@
 ﻿#ifndef AUTOCOMPLETEGRAPH_ACG_LOCALIZATION_07012018
 #define AUTOCOMPLETEGRAPH_ACG_LOCALIZATION_07012018
 
+
+#include <cmath>
 #include "auto_complete_graph/ACG.hpp"
 #include "auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp"
 #include "auto_complete_graph/VertexAndEdge/VertexSE2RobotLocalization.hpp"
@@ -88,6 +90,8 @@ namespace acg{
 	    void print() const{
 			AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>::print();
 		    std::cout << "Localization parameters: " << std::endl;
+
+		    std::cout << "Number of localization nodes: " << _nodes_localization.size() << std::endl;
 
 		    std::cout << "Use robot maps: " <<  _use_robot_maps << std::endl;
 		    ///@brief register the submaps

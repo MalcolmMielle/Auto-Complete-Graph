@@ -151,6 +151,8 @@ namespace AASS {
 
 		inline  void VisuAutoCompleteGraphLocalization::drawPoseLocalizations(const AutoCompleteGraphLocalization &acg) {
 
+			_ndt_node_localization_markers.header.stamp = ros::Time::now();
+			_ndt_node_localization_markers.points.clear();
 			auto loc_vec = acg.getRobotPoseLocalization();
 			for(auto loc : loc_vec) {
 
@@ -257,6 +259,34 @@ namespace AASS {
 				geometry_msgs::Point p;
 				// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXYACG*>((*it));
 				auto vertex = loc->estimate().toVector();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+				p.x = vertex(0);
+				p.y = vertex(1);
+				p.z = acg.getZElevation();
+				_mcl_angles_markers.points.push_back(p);
+
+				// 				std::cout << "getting the angle" << std::endl;
+
+				double angle = vertex(2);
+//				double anglew = (*it)->getAngleWidth(i);
+
+				// 				std::cout << "angle " << angle<< std::endl;
+				geometry_msgs::Point p2;
+				p2.x = p.x + (2 * std::cos(angle));
+				p2.y = p.y + (2 * std::sin(angle));
+				p2.z = acg.getZElevation();
+				_mcl_angles_markers.points.push_back(p2);
+
+			}
+
+			auto robotpose = acg.getRobotNodes();
+			_mcl_angles_markers.points.clear();
+
+			for(auto robop : robotpose){
+
+				geometry_msgs::Point p;
+				// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXYACG*>((*it));
+				auto vertex = robop->estimate().toVector();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
 				p.y = vertex(1);

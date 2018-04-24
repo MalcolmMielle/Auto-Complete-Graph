@@ -515,6 +515,8 @@ public:
 
   }
 
+
+
 	void pubGraphMap(const std_msgs::Bool::ConstPtr msg) {
 
 		std::cout << "Publishing" << std::endl;
@@ -588,8 +590,20 @@ public:
 		return ret;
 	}
 
-	void loadNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
+	void updateMCLNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
+		if (use_mcl_ && mcl_loaded_) {
 
+			perception_oru::NDTMap* map;
+			perception_oru::LazyGrid* lz;
+			std::string frame;
+			perception_oru::fromMessage(lz, map, *mapmsg, frame, false, false);
+			acg_localization->setMap(*map);
+			delete map;
+
+		}
+	}
+
+	void initMCL(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
 		double numPart = 250;
 		bool forceSIR = true;
 
@@ -597,8 +611,8 @@ public:
 		auto init_pose = getPoseTFTransform(world_link_id, laser_link_id);
 		std::cout << "Pose found " << pose_.matrix() << std::endl;
 
-		perception_oru::NDTMap* map;
-		perception_oru::LazyGrid* lz;
+		perception_oru::NDTMap *map;
+		perception_oru::LazyGrid *lz;
 		std::string frame;
 		perception_oru::fromMessage(lz, map, *mapmsg, frame, false, false);
 
@@ -612,10 +626,11 @@ public:
 		double roll, pitch, yaw;
 		init_pose.getBasis().getRPY(roll, pitch, yaw);
 
-		AASS::acg::ACGMCLLocalization* pMCL = new AASS::acg::ACGMCLLocalization(map, numPart, true, forceSIR);
+		AASS::acg::ACGMCLLocalization *pMCL = new AASS::acg::ACGMCLLocalization(map, numPart, true, forceSIR);
 		acg_localization = boost::shared_ptr<AASS::acg::ACGMCLLocalization>(pMCL);
 
-		acg_localization->init(xx, yy, yaw, initVar, cov_x_mcl, cov_y_mcl, cov_yaw_mcl, scale_gaussian_mcl, numPart, forceSIR);
+		acg_localization->init(xx, yy, yaw, initVar, cov_x_mcl, cov_y_mcl, cov_yaw_mcl, scale_gaussian_mcl, numPart,
+		                       forceSIR);
 
 		acg_localization->useEuclideanDistance(_use_euclidean_mcl);
 		acg_localization->setCellneighborToConsider(_cell_neighborhood_size_mcl);
@@ -636,10 +651,22 @@ public:
 //         ndtmcl_->changeMapAndInitializeFilter(*map, resolution, zfilter_min_, xx, yy, yaw, x_va, y_va, yaw_va, numPart);
 		mcl_loaded_ = true;
 
+		delete map;
+
 		//ATTENTION MEMORY LEAK :(. But if I delete it it's deleted from the particule filter...
 // 		delete map;
 
 		std::cout << "MAP LOADED SUCCESSFULLY :)" << std::endl;
+	}
+
+	void loadNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
+
+		if(!mcl_loaded_) {
+			initMCL(mapmsg);
+		}
+		else{
+			updateMCLNDTMap(mapmsg);
+		}
 
 	}
 

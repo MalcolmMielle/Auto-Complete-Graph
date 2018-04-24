@@ -107,6 +107,15 @@ namespace acg{
 			
 
 		}
+
+		/**
+		 * Update the internal map and copy it
+		 * @param ndtMap new map
+		 */
+		void setMap(const perception_oru::NDTMap& ndtMap){
+			std::shared_ptr<perception_oru::NDTMap> ndtmapcopy (new perception_oru::NDTMap(ndtMap));
+			perception_oru::particle_filter::setMap(ndtmapcopy);
+		}
 		
 	};
 	

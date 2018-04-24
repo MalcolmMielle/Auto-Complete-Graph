@@ -16,7 +16,13 @@ namespace acg{
 		out << -vec(1), vec(0);
 		return out;
 	}
-	
+
+	/**
+	 *
+	 * @param eigenvec each eigen vec tor is a column
+	 * @param eigenval
+	 * @return
+	 */
 	inline Eigen::Matrix2d getCovariance(const Eigen::Matrix2d& eigenvec, const std::pair<double, double>& eigenval){
 		
 		std::cout << "eigenvec after " << eigenvec << std::endl;
