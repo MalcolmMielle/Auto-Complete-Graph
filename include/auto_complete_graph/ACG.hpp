@@ -109,6 +109,7 @@ namespace AASS {
 				std::cout << "Print ACG " << std::endl;
 
 				std::cout << "Number of Links " <<getLinkEdges().size() << std::endl;
+				std::cout << "Number of robot poses " <<_nodes_ndt.size() << std::endl;
 
 				///@brief Minimum distance from a prior corner to a NDT corner. THe distance is given in meter and is fixed at 2m in the constuctor
 				std::cout << "min distance for link in meters: " << _min_distance_for_link_in_meter << std::endl;
