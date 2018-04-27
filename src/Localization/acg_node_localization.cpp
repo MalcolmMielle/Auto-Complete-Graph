@@ -68,6 +68,22 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 	return transform;
 }
 
+void sendMapAsOcc(const AASS::acg::AutoCompleteGraphLocalization& oacg){
+	grid_map::GridMap gridMap;
+	AASS::acg::ACGToGridMap(oacg, gridMap);
+	nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+	nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
+	grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+
+	//Just to make sure
+	occ_send.publish<nav_msgs::OccupancyGrid>(*occ_out);
+}
+
+void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg){
+	if(msg->data == true){
+		sendMapAsOcc(*oacg);
+	}
+}
 
 void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
@@ -336,6 +352,9 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				std::cout << "Publishing the new prior ndt map" << std::endl;
 				publishPriorNDT(*oacg);
 
+				std::cout << "Publish an occupancy grid for you Asif :3 ! " << std::endl;
+				sendMapAsOcc(*oacg);
+
 
 				std::cout << "RVIZ " << std::endl;
 				visu.updateRviz(*oacg);
@@ -425,19 +444,6 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 }
 
 
-void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg){
-	if(msg->data == true){
-		grid_map::GridMap gridMap;
-		AASS::acg::ACGToGridMap(*oacg, gridMap);
-		nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
-		nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
-		grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
-		
-		//Just to make sure
-		occ_send.publish<nav_msgs::OccupancyGrid>(*occ_out);
-	}
-}
-
 
 int main(int argc, char **argv)
 {
@@ -466,6 +472,8 @@ int main(int argc, char **argv)
 	///@brief Add link in between ndt corner and prior corner based on a distance threshold.
 	bool use_links_prior_classic_ssrr;
 	nh.param("links_prior_classic_ssrr",use_links_prior_classic_ssrr,false);
+	bool use_mcl_cov_to_find_prior_observed;
+	nh.param("use_mcl_cov_to_find_prior_observed",use_mcl_cov_to_find_prior_observed,false);
 	double gaussian_scale = 1;
 	nh.param<double>("gaussian_scaling_factor", gaussian_scale, 0);
 	double threshold_score_link_creation = 0.5;
@@ -523,6 +531,8 @@ int main(int argc, char **argv)
 	oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
 	oacg.useRobotMaps(use_robot_maps);
 
+	oacg.useMCLCovToFindPriorObserved(use_mcl_cov_to_find_prior_observed);
+
 	oacg.setScalingFactorOfGaussians(gaussian_scale);
 	oacg.setThrehsoldOfScoreForCreatingLink(threshold_score_link_creation);
 
@@ -554,7 +564,7 @@ int main(int argc, char **argv)
 	// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
-	occ_send = nh.advertise<nav_msgs::OccupancyGrid>("/map", 10, true);
+	occ_send = nh.advertise<nav_msgs::OccupancyGrid>("/occupancy_map_asif", 10, true);
 
 	last_ndtmap_full = nh.advertise<nav_msgs::OccupancyGrid>("occ_grid_ndt", 10);
 

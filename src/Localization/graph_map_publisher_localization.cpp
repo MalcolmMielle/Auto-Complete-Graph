@@ -220,8 +220,8 @@ protected:
 
   boost::shared_ptr<AASS::acg::ACGMCLLocalization> acg_localization;
 
-	double _cell_neighborhood_size_mcl;
-	bool _use_euclidean_mcl;
+	double _cell_neighborhood_size_mcl_in_meters;
+	bool _use_euclidean_mcl, _use_euclidean_for_long_distances, _use_hybrid_strategy_mcl;
 	bool _use_mean_score_mcl;
 
 public:
@@ -372,7 +372,9 @@ public:
     param_nh.param<double>("cov_y_mcl", cov_y_mcl, 0.5);
     param_nh.param<double>("cov_yaw_mcl", cov_yaw_mcl, 0.5);
 	  param_nh.param<double>("scale_gaussian_mcl", scale_gaussian_mcl, 0.005);
-	  param_nh.param<double>("cell_neighborhood_size_mcl", _cell_neighborhood_size_mcl, 1);
+	  param_nh.param<double>("cell_neighborhood_size_mcl_in_meters", _cell_neighborhood_size_mcl_in_meters, 1);
+	  param_nh.param("use_euclidean_for_long_distances", _use_euclidean_for_long_distances, true);
+	  param_nh.param("use_hybrid_strategy_mcl", _use_hybrid_strategy_mcl, true);
 	  param_nh.param("use_euclidean_mcl", _use_euclidean_mcl, false);
 	  param_nh.param("use_mean_score_mcl", _use_mean_score_mcl, false);
 
@@ -633,7 +635,9 @@ public:
 		                       forceSIR);
 
 		acg_localization->useEuclideanDistance(_use_euclidean_mcl);
-		acg_localization->setCellneighborToConsider(_cell_neighborhood_size_mcl);
+		acg_localization->setCellNeighborToConsiderInMeters(_cell_neighborhood_size_mcl_in_meters);
+		acg_localization->useEuclideanForLongDistances(_use_euclidean_for_long_distances);
+		acg_localization->useHybridStrategy(_use_hybrid_strategy_mcl);
 		acg_localization->useMeanOfAllScores(_use_mean_score_mcl);
 
 
