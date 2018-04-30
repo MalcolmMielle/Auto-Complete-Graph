@@ -25,6 +25,8 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 
+
+bool optimize_prior = true;
 bool abort_f = false;
 
 ros::Publisher map_pub_;
@@ -109,8 +111,11 @@ void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
 
 
-void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, const AASS::acg::AutoCompleteGraphLocalization& oacg) {
+void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization& oacg) {
 	publishPriorNDT(oacg);
+	if(optimize_prior == false){
+		oacg.clearPrior();
+	}
 }
 
 
@@ -349,11 +354,13 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 					
 		// 		}
 
-				std::cout << "Publishing the new prior ndt map" << std::endl;
-				publishPriorNDT(*oacg);
+				if(optimize_prior == true) {
+					std::cout << "Publishing the new prior ndt map" << std::endl;
+					publishPriorNDT(*oacg);
+				}
 
-				std::cout << "Publish an occupancy grid for you Asif :3 ! " << std::endl;
-				sendMapAsOcc(*oacg);
+//				std::cout << "Publish an occupancy grid for you Asif :3 ! " << std::endl;
+//				sendMapAsOcc(*oacg);
 
 
 				std::cout << "RVIZ " << std::endl;
@@ -459,6 +466,8 @@ int main(int argc, char **argv)
 	nh.param("use_robot_maps",use_robot_maps,true);
 	bool use_corner = true;
 	nh.param("use_corner",use_corner,true);
+	bool use_corner_orientation = true;
+	nh.param("use_corner_orientation",use_corner_orientation,true);
 	bool own_registration = true;
 	nh.param("own_registration",own_registration,true);
 	bool link_to_prior = true;
@@ -472,6 +481,8 @@ int main(int argc, char **argv)
 	///@brief Add link in between ndt corner and prior corner based on a distance threshold.
 	bool use_links_prior_classic_ssrr;
 	nh.param("links_prior_classic_ssrr",use_links_prior_classic_ssrr,false);
+//	bool optimize_prior;
+	nh.param("optimize_prior",optimize_prior,true);
 	bool use_mcl_cov_to_find_prior_observed;
 	nh.param("use_mcl_cov_to_find_prior_observed",use_mcl_cov_to_find_prior_observed,false);
 	double gaussian_scale = 1;
@@ -521,7 +532,7 @@ int main(int argc, char **argv)
 	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), param);
 	
 	//Use corner orientation ?
-	oacg.useCornerOrientation(use_corner);
+	oacg.useCornerOrientation(use_corner_orientation);
 	oacg.extractCorners(use_corner);
 	oacg.doOwnRegistrationBetweenSubmaps(own_registration);
 	oacg.setZElevation(sensor_pose.getOrigin().getZ());
@@ -530,6 +541,7 @@ int main(int argc, char **argv)
 	oacg.useLinksPriorSSRR(use_links_prior_classic_ssrr);
 	oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
 	oacg.useRobotMaps(use_robot_maps);
+//	oacg.optimizePrior(optimize_prior);
 
 	oacg.useMCLCovToFindPriorObserved(use_mcl_cov_to_find_prior_observed);
 

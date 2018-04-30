@@ -190,6 +190,7 @@ namespace AASS {
 						geometry_msgs::Point p;
 						g2o::VertexXYPrior* ptr = dynamic_cast<g2o::VertexXYPrior*>(vertex);
 						g2o::VertexSE2RobotLocalization* ptr_loc = dynamic_cast<g2o::VertexSE2RobotLocalization*>(vertex);
+						g2o::VertexSE2RobotPose* ptr_robot_pose = dynamic_cast<g2o::VertexSE2RobotPose*>(vertex);
 						if(ptr != NULL){
 							auto vertex = ptr->estimate();
 							//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
@@ -233,6 +234,15 @@ namespace AASS {
 							p.y = vertex(1);
 							p.z = acg.getZElevation();
 							std::cout << "PRIOR OBS Loc " << p.x << " " << p.y << std::endl;
+							_prior_observations.points.push_back(p);
+						}
+						else if(ptr_robot_pose != NULL){
+							auto vertex = ptr_robot_pose->estimate().toVector();
+							//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+							p.x = vertex(0);
+							p.y = vertex(1);
+							p.z = acg.getZElevation();
+							std::cout << "PRIOR OBS Robot pose " << p.x << " " << p.y << std::endl;
 							_prior_observations.points.push_back(p);
 						}
 						else{
@@ -355,7 +365,7 @@ namespace AASS {
 
 // 				std::cout << "Drawing angles landmark" << std::endl;
 					//NO PRIOR ANGLE YET HERE
-//					drawPriorAngles(acg, *ptr);
+					drawPriorAngles(acg, *ptr, vertex);
 
 				}
 			}

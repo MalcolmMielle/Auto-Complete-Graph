@@ -117,10 +117,10 @@ namespace acg{
 	    }
 
 	    virtual bool checkAbleToOptimize(){
-		    if(_number_of_links_to_prior > 0) {
+//		    if(_number_of_links_to_prior > 0) {
 			    return true;
-		    }
-		    return false;
+//		    }
+//		    return false;
 	    }
 
 	    void doOwnRegistrationBetweenSubmaps(bool setter){_do_own_registration = setter;}

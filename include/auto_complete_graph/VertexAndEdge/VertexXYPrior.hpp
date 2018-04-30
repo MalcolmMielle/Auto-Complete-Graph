@@ -31,12 +31,12 @@ namespace g2o{
 // 			std::cout << "edges done " << std::endl;
 			std::vector<g2o::EdgeXYPriorACG*> edges_prior;
 			//Get only prior edges
-			if(edges.size() > 1){
+			if(edges.size() >= 1){
 				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-					// 				std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPriorACG*>(*ite) << std::endl;
+//					std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPriorACG*>(*ite) << std::endl;
 					g2o::EdgeXYPriorACG* ptr = dynamic_cast<g2o::EdgeXYPriorACG*>(*ite);
 					if(ptr != NULL){
-
+//						std::cout << "Ptr non nul :)" << std::endl;
 						//Make sure not pushed twice
 						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
 							assert(ptr != *ite2);
@@ -49,6 +49,7 @@ namespace g2o{
 				}
 
 				if(edges_prior.size() > 1){
+//					std::cout << "This should always be right :) : edges_prior.size() : " << edges_prior.size() << std::endl;
 					auto comp = [this](g2o::EdgeXYPriorACG* a, g2o::EdgeXYPriorACG* b)
 					{
 						auto from_vec2d = a->getOrientation2D(*this);
@@ -84,6 +85,13 @@ namespace g2o{
 						assert(out.back().second <= 2 * M_PI);
 					}
 				}
+//				else{
+//					throw std::runtime_error("No edge prior :( ??");
+//				}
+
+			}
+			else{
+				throw std::runtime_error("No edges at all :(");
 			}
 			return out;
 
@@ -119,11 +127,11 @@ namespace g2o{
 			double width = std::abs(angle_to - angle_from);
 
 // 			std::cout << "Angle between " << angle_between << std::endl;
-			assert(angle_between >= 0.08);
-			assert(direction >= 0);
-			assert(angle_between >= 0);
-			assert(direction <= 2 * M_PI);
-			assert(angle_between <= 2 * M_PI);
+//			assert(angle_between >= 0.08);
+//			assert(direction >= 0);
+//			assert(angle_between >= 0);
+//			assert(direction <= 2 * M_PI);
+//			assert(angle_between <= 2 * M_PI);
 
 			return std::pair<double, double>(angle_between, direction);
 		}

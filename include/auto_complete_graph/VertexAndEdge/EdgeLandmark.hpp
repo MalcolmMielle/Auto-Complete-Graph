@@ -11,6 +11,8 @@ namespace g2o{
     public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 		AASS::acg::EdgeInterfaceMalcolm interface;
+
+		Eigen::Vector2d original_observation = Eigen::Vector2d::Zero();
 // 	  g2o::SE2 _original_value;
 //       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
       EdgeLandmark_malcolm() :

@@ -641,7 +641,7 @@ namespace acg{
 		void drawCornersNdt(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
 		void drawGaussiansThatGaveCorners(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
 		void drawAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
-		void drawPriorAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, const g2o::VertexSE2Prior& vertex_in);
+		void drawPriorAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, const VertexPrior& vertex_in, const Eigen::Vector2d& vertex_pose);
 		void drawRobotPoses(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
 		void drawObservations(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg);
 		
@@ -1017,12 +1017,13 @@ namespace acg{
 	}
 
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawPriorAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, const g2o::VertexSE2Prior& vertex_in)
+	inline void AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawPriorAngles(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, const VertexPrior& vertex_in, const Eigen::Vector2d& vertex_pose)
 	{
 		geometry_msgs::Point p;
 // 		std::cout << "getting the vector" << std::endl;
 // 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXYACG*>((*it));
-		auto vertex = vertex_in.estimate().toVector();
+//		auto vertex = vertex_in.estimate().toVector();
+		auto vertex = vertex_pose;
 		//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 		p.x = vertex(0);
 		p.y = vertex(1);
@@ -1138,7 +1139,7 @@ namespace acg{
 					_prior_node_markers.points.push_back(p);
 
 // 				std::cout << "Drawing angles landmark" << std::endl;
-					drawPriorAngles(acg, *ptr);
+					drawPriorAngles(acg, *ptr, vertex.head(2));
 
 				}
 			}

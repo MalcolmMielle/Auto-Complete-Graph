@@ -38,14 +38,15 @@ namespace AASS{
 
 			LocalizationPointer() : vertex_mcl_pose(NULL){}
 			g2o::VertexSE2RobotLocalization* vertex_mcl_pose;
+			g2o::VertexSE2RobotPose* vertex_robot_pose;
 
 			Eigen::Vector3d landmarkInGlobalFrame() {
 
 				Eigen::Vector3d original_pose_in_mcl_frame_3d;
 				g2o::SE2 mcl_frame_pose = vertex_mcl_pose->estimate();
 				original_pose_in_mcl_frame_3d << original_pose_in_robot_frame(0), original_pose_in_robot_frame(1), 0;
-//				std::cout << "Pose original " << original_pose_in_robot_frame << std::endl;
-//				std::cout << "Pose mcl " << mcl_frame_pose.toVector() << std::endl;
+				std::cout << "Pose original " << original_pose_in_robot_frame << std::endl;
+				std::cout << "Pose mcl " << mcl_frame_pose.toVector() << std::endl;
 				Eigen::Vector3d pose_inglobal_frame;
 				translateFromRobotFrameToGlobalFrame(original_pose_in_mcl_frame_3d, mcl_frame_pose, pose_inglobal_frame);
 				return pose_inglobal_frame;
@@ -93,9 +94,13 @@ namespace g2o{
 		
 		VertexLandmarkNDT() : first_seen_from(NULL), g2o::VertexPointXYACG(){};
 
-		void addLocalization(VertexSE2RobotLocalization* vertex, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const Eigen::Vector2d& observation, const Eigen::Vector2d& original_pose_in_robot_frame, int index){
+		void addLocalization(VertexSE2RobotLocalization* vertex, VertexSE2RobotPose* vertex_robot_pose, const Eigen::Vector3d& mean, const Eigen::Matrix3d& cov, const Eigen::Vector2d& observation, const Eigen::Vector2d& original_pose_in_robot_frame, int index){
+
+			assert(vertex->getEquivalentRobotPose() == vertex_robot_pose);
+
 			std::shared_ptr<AASS::acg::LocalizationPointer> lp (new AASS::acg::LocalizationPointer() );
 			lp->vertex_mcl_pose = vertex;
+			lp->vertex_robot_pose = vertex_robot_pose;
 			lp->mean = mean;
 			lp->cov = cov;
 			lp->index = index;
@@ -143,8 +148,8 @@ namespace g2o{
 //		}
 
 		const std::vector < std::pair<double, double> >& getAnglesAndOrientations() const {return angle_orientation;}
-		double getAngleWidth(int i){return angle_orientation[i].first;}
-		double getOrientation(int i){return angle_orientation[i].second;}
+		double getAngleWidth(int i) const {return angle_orientation[i].first;}
+		double getOrientation(int i) const {return angle_orientation[i].second;}
 // 		double getOrientation() const {return angle_orientation.second;}
 		void addAngleOrientation(double a, double d){
 			if (a < 0) a += 2 * M_PI;
@@ -171,7 +176,7 @@ namespace g2o{
 			return angle;
 		}
 		
-		bool sameOrientation(std::vector<std::pair<double, double> > angles_orientations_v){
+		bool sameOrientation(std::vector<std::pair<double, double> > angles_orientations_v) const {
 			
 //			auto angles_orientations_v = v.getAnglesAndOrientations();
 			

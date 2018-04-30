@@ -478,7 +478,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 
 //				ptr->setCovarianceObservation(cov_2d);
 				//Last parmater will be usel so to make sur eit's unused it's set to -1
-				ptr->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), corner.getObservations(), corner.getObservations(), -1);
+				ptr->addLocalization(robot_localization, robot_ptr, robot_localization->estimate().toVector(), robot_localization->getCovariance(), corner.getObservations(), corner.getObservations(), -1);
 
 				ptr->addAnglesOrientations(corner.getAngles(), corner.getOrientations());
 				ptr->first_seen_from = robot_ptr;
@@ -492,13 +492,14 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				corner_seen_here.insert(ptr);
 				std::cout << "Adding corner " << ptr << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
 
-
+				g2o::EdgeLandmark_malcolm* edge_landmark;
 				if(_use_corner_covariance) {
 					//Use the covariance given by the corner itself
-					addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr, cov_landmark);
+					edge_landmark = addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr, cov_landmark);
 				}else{
-					addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr);
+					edge_landmark = addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr);
 				}
+				edge_landmark->original_observation = corner.getObservations();
 				//Add covariance given by MCL instead of the default one.
 				addLandmarkObservation(corner.getObservations(), robot_localization, ptr, cov_2d);
 				//Link between the prior and MCL
@@ -508,15 +509,17 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 
 			} else {
 
-				ptr_landmark_seen->addLocalization(robot_localization, robot_localization->estimate().toVector(), robot_localization->getCovariance(), corner.getObservations(), corner.getObservations(), -1);
+				g2o::EdgeLandmark_malcolm* edge_landmark;
+				ptr_landmark_seen->addLocalization(robot_localization, robot_ptr, robot_localization->estimate().toVector(), robot_localization->getCovariance(), corner.getObservations(), corner.getObservations(), -1);
 
 				std::cout << "Point seen: " << ptr_landmark_seen << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
 				if(_use_corner_covariance) {
 					//Use the covariance given by the corner itself
-					addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr_landmark_seen, cov_landmark);
+					edge_landmark = addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr_landmark_seen, cov_landmark);
 				}else{
-					addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr_landmark_seen);
+					edge_landmark = addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr_landmark_seen);
 				}
+				edge_landmark->original_observation = corner.getObservations();
 				//Add covariance given by MCL instead of the default one.
 				addLandmarkObservation(corner.getObservations(), robot_localization, ptr_landmark_seen, cov_2d);
 				//Link between the prior and MCL
@@ -1000,6 +1003,19 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 		std::unordered_set <std::shared_ptr<AASS::acg::LocalizationPointer>> localization = landmark->getLocalization();
 
 		for (auto loc: localization) {
+
+			assert(loc->vertex_robot_pose == loc->vertex_mcl_pose->getEquivalentRobotPose());
+
+
+			for(auto edge : _edge_landmark){
+
+				if(loc->vertex_robot_pose == edge->vertices()[0] && landmark == edge->vertices()[1] || loc->vertex_robot_pose == edge->vertices()[1] && landmark == edge->vertices()[0]){
+					assert(loc->observation == edge->original_observation);
+				}
+
+			}
+
+
 			//The landmark pose should be in the mcl pose frame and not the robot mapping frame.
 			Eigen::Vector2d pose_landmark = loc->landmarkInGlobalFrame().head(2);
 			Eigen::Vector2d pose_landmark_test = landmark->estimate();
@@ -1022,44 +1038,74 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 
 						if (euclidean_distance <= 5) {
 
-							Eigen::Matrix2d cov_inv_2d = loc->cov_inverse.block(0, 0, 2, 2) / _scaling_factor_gaussian;
-							double probabilistic_distance = (pose_prior - pose_landmark).dot(
-									cov_inv_2d * (pose_prior - pose_landmark));
+							auto angles_width = prior_corner->getAnglesAndOrientations();
+//							assert(angles_width.size() > 0);
 
-							//I need to remove that 2 in the formula since we haven't added the covariance together ! Hence no need to divided by two :)
+							if (this->_flag_use_corner_orientation == false ||
+							    (this->_flag_use_corner_orientation == true &&
+							     landmark->sameOrientation(angles_width) )) {
 
-							//That score is stupid as a measurement measure
-							//					double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * probabilistic_distance); /// / 2.0);
+								Eigen::Matrix2d cov_inv_2d =
+										loc->cov_inverse.block(0, 0, 2, 2) / _scaling_factor_gaussian;
+//								double probabilistic_distance = (pose_prior - pose_landmark).dot(
+//										cov_inv_2d * (pose_prior - pose_landmark));
 
-							//Instead we will say that if the probabilistic distance is less than the euclidean distance, we associated them ! That makes a lot more sense. Indeed, it is less if each points are "in the covariance. See test_prior_localization.cpp.
+								//I need to remove that 2 in the formula since we haven't added the covariance together ! Hence no need to divided by two :)
 
-							std::cout << "Poses : " << pose_prior << " - " << pose_landmark
-							          << " ( actual landmark pose: " << pose_landmark_test << " ) inverse cov\n"
-							          << cov_inv_2d.matrix() << "\n and cov\n" << loc->cov.matrix()
-							          << " \nprobabilistic_distance " << probabilistic_distance
-							          << " euclidean distance " << euclidean_distance << " threshold "
-							          << _threshold_of_score_for_creating_a_link << std::endl;
+								//That score is stupid as a measurement measure
+								//					double score = 0.1 + 0.9 * exp(-_scaling_factor_gaussian * probabilistic_distance); /// / 2.0);
 
-							if (probabilistic_distance <= euclidean_distance) {
+								//Instead we will say that if the probabilistic distance is less than the euclidean distance, we associated them ! That makes a lot more sense. Indeed, it is less if each points are "in the covariance. See test_prior_localization.cpp.
 
-								//Cov is cov factor square of distance
-								Eigen::Matrix2d cov =
-										loc->cov.block(0, 0, 2, 2) * (euclidean_distance * euclidean_distance);
-								std::cout << "Mcl cov " << loc->cov.block(0, 0, 2, 2).matrix() << " euclidean distance "
-								          << euclidean_distance << " cov used for observation " << cov.matrix()
-								          << std::endl;
 
-								g2o::EdgeLandmark_malcolm *observation_mcl = addLandmarkObservation(loc->observation,
-								                                                                    loc->vertex_mcl_pose,
-								                                                                    prior_corner, cov);
-								//To know link was already done !
+
+								//Calculating collision probability as in the space paper. Doesn't work so no citation for you :(. Just remove the factor and we actually get the proba distribution ;)
+
+								double radius_around_landmark = 1;
+//								double factor = radius_around_landmark * radius_around_landmark / (2 * std::sqrt(loc->determinant) );
+								double mahalanobis_distance = (pose_prior - pose_landmark).dot( cov_inv_2d * (pose_prior - pose_landmark));
+
+								double pdf_collision = std::exp( - mahalanobis_distance ) ;
+
+								assert(pdf_collision >= 0);
+								assert(pdf_collision <= 1);
+
+								std::cout << "Poses : " << pose_prior << " - " << pose_landmark
+								          << " ( actual landmark pose: " << pose_landmark_test << " ) inverse cov\n"
+								          << cov_inv_2d.matrix() << "\n and cov\n" << loc->cov.matrix()
+								          << " \nprobabilistic_distance " << mahalanobis_distance
+		                                    << " euclidean distance " << euclidean_distance << " threshold "
+		                                    << " score " << pdf_collision << " threshold "
+								          << _threshold_of_score_for_creating_a_link << std::endl;
+
+
+//								if (mahalanobis_distance <= euclidean_distance) {
+								if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
+									int aa;
+									std::cin >> aa;
+
+									std::cout << "CREATING OBSERVATION " << std::endl;
+									//Cov is cov factor square of distance
+									Eigen::Matrix2d cov =
+											loc->cov.block(0, 0, 2, 2) * (euclidean_distance * euclidean_distance);
+									std::cout << "Mcl cov " << loc->cov.block(0, 0, 2, 2).matrix()
+									          << " euclidean distance "
+									          << euclidean_distance << " cov used for observation " << cov.matrix()
+									          << std::endl;
+
+									g2o::EdgeLandmark_malcolm *observation_mcl = addLandmarkObservation(
+											loc->observation,
+											loc->vertex_robot_pose,
+											prior_corner, cov);
+									//To know link was already done !
 //							loc->link_created = true;
-								loc->_prior_linked_using_landmark.insert(prior_corner);
+									loc->_prior_linked_using_landmark.insert(prior_corner);
 
-								prior_corner->landmarks.insert(landmark);
-								_number_of_links_to_prior++;
+									prior_corner->landmarks.insert(landmark);
+									_number_of_links_to_prior++;
+								}
+
 							}
-
 						}
 
 					}
