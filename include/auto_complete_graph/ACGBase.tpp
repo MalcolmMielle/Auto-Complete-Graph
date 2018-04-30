@@ -63,7 +63,7 @@ inline VertexPrior* AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePri
 //	priorlandmark->setEstimate(se2);
 //	priorlandmark->priorattr = priorAttr;
 //
-	auto landmark = _prior->addPriorLandmarkPose(se2, priorAttr, new_id_);
+	auto landmark = _prior->addPose(se2, priorAttr, new_id_);
 	++new_id_;
 	_optimizable_graph.addVertex(landmark);
 //	_nodes_prior.push_back(priorlandmark);
@@ -234,7 +234,7 @@ inline g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline EdgePrior* AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 
-	auto priorObservation = _prior->addEdgePrior(se2, v1, v2);
+	auto priorObservation = _prior->addEdge(se2, v1, v2);
 // 	priorObservation->interface.setAge(_age_start_value);
 // 	priorObservation->interface.setOriginalValue(se2);
 	_optimizable_graph.addEdge(priorObservation);
@@ -380,10 +380,10 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::add
 
 	new_id_ = _prior->addPriorGraph(graph, new_id_);
 
-	for(auto node : _prior->getPriorNodes()){
+	for(auto node : _prior->getNodes()){
 		_optimizable_graph.addVertex(node);
 	}
-	for(auto edge : _prior->getPriorEdges()){
+	for(auto edge : _prior->getEdges()){
 		_optimizable_graph.addEdge(edge);
 	}
 
@@ -961,8 +961,8 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::tes
     _prior->testNoNanInPrior(before);
 
 //	std::cout << "Test No nan in prior after " << before << std::endl;
-//	auto it = _prior->getPriorNodes().begin();
-//	for(it ; it != _prior->getPriorNodes().end() ; ++it){
+//	auto it = _prior->getNodes().begin();
+//	for(it ; it != _prior->getNodes().end() ; ++it){
 //		VertexPrior* v_ptr = dynamic_cast<VertexPrior*>((*it));
 //		if(v_ptr == NULL){
 //			throw std::runtime_error("not good vertex type");
@@ -976,7 +976,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::tes
 //
 //	std::cout << "Testing the edges now" << std::endl;
 //
-//	auto edges = _prior->getPriorEdges();
+//	auto edges = _prior->getEdges();
 //	auto it_edge = edges.begin();
 //	for(it_edge ; it_edge != edges.end() ; ++it_edge){
 //		VertexPrior* v_ptr = dynamic_cast<VertexPrior*>((*it_edge)->vertices()[0]);
@@ -1043,7 +1043,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::upd
 //	testNoNanInPrior("no dtat");
 //	assert(false);
 //
-//	auto edges = _prior->getPriorEdges();
+//	auto edges = _prior->getEdges();
 //	auto it = edges.begin();
 //	for(it ; it != edges.end() ; ++it){
 //		VertexPrior* v_ptr = dynamic_cast<VertexPrior*>((*it)->vertices()[0]);
@@ -1228,7 +1228,7 @@ inline void  AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::se
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::getExtremaPrior(double& size_x, double& size_y) const{
-	auto edges = _prior->getPriorEdges();
+	auto edges = _prior->getEdges();
 
 	double max_x, min_x, max_y, min_y;
 	bool flag_init = false;
@@ -1480,12 +1480,12 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::cle
 	std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 //	int i = 0;
 
-	for(auto vertex : _prior->getPriorNodes()){
+	for(auto vertex : _prior->getNodes()){
 		_optimizable_graph.removeVertex(vertex, false);
 	}
 	_prior->clear();
 // 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
-	assert(_prior->getPriorNodes().size() == 0);
+	assert(_prior->getNodes().size() == 0);
 
 // 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
 // 				_optimizable_graph.removeVertex(it, true);

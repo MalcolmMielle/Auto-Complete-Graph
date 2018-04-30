@@ -28,7 +28,7 @@ namespace AASS {
 			void getNodes(const AutoCompleteGraphLocalization& acg){
 
 				Eigen::Vector2d pose2d_p; pose2d_p << _prior.x, _prior.y;
-				auto prior_nodes = acg.getPrior()->getPriorNodes();
+				auto prior_nodes = acg.getPrior()->getNodes();
 
 				double norm_p = -1;
 

@@ -167,7 +167,7 @@ namespace AASS {
 // 	std::vector < std::pair < g2o::VertexLandmarkNDT*, VertexPrior*> > links;
 
 					std::cout << "Number new landmarks " << this->_nodes_landmark.size() << std::endl;
-					std::cout << "Prior " << this->_prior->getPriorNodes().size() << std::endl;
+					std::cout << "Prior " << this->_prior->getNodes().size() << std::endl;
 // 	if(_nodes_prior.size() > 0){
 
 					//Update ALL links
@@ -175,8 +175,8 @@ namespace AASS {
 					for (it; it != this->_nodes_landmark.end(); it++) {
 // 		std::cout << "Working on links " << std::endl;
 						Eigen::Vector2d pose_landmark = (*it)->estimate();
-						auto it_prior = this->_prior->getPriorNodes().begin();
-						for (it_prior; it_prior != this->_prior->getPriorNodes().end(); ++it_prior) {
+						auto it_prior = this->_prior->getNodes().begin();
+						for (it_prior; it_prior != this->_prior->getNodes().end(); ++it_prior) {
 
 							//Don't add the same link twice
 							if (this->linkAlreadyExist(*it, *it_prior) == false) {
@@ -348,8 +348,8 @@ namespace AASS {
 				auto it = _nodes_landmark.begin();
 				for(it ; it != _nodes_landmark.end() ; it++){
 					Eigen::Vector2d pose_landmark = (*it)->estimate();
-					auto it_prior = _prior->getPriorNodes().begin();
-					for(it_prior ; it_prior != _prior->getPriorNodes().end() ; ++it_prior){
+					auto it_prior = _prior->getNodes().begin();
+					for(it_prior ; it_prior != _prior->getNodes().end() ; ++it_prior){
 
 						Eigen::Vector3d pose_tmp = (*it_prior)->estimate().toVector();
 						Eigen::Vector2d pose_prior; pose_prior << pose_tmp(0), pose_tmp(1);

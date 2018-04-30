@@ -203,6 +203,8 @@ namespace acg{
 //		AutoCompleteGraphPriorSE2* _prior;
 		Prior* _prior;
 
+//		RobotPoses* _robot_poses;
+
 		///@brief vector storing all node from the landarks
 		std::vector<g2o::VertexLandmarkNDT*> _nodes_landmark;
 		///@brief vector storing all node from the ndt ndt_feature_graph
@@ -384,8 +386,8 @@ namespace acg{
 		Prior* getPrior(){return _prior;}
 		const Prior* getPrior() const {return _prior;}
 
-//		std::set<VertexPrior*>& getPriorNodes(){return _prior->getPriorNodes();}
-//		const std::set<VertexPrior*>& getPriorNodes() const {return _prior->getPriorNodes();}
+//		std::set<VertexPrior*>& getNodes(){return _prior->getNodes();}
+//		const std::set<VertexPrior*>& getNodes() const {return _prior->getNodes();}
 		///@brief vector storing all node from the prior
 		std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes(){return _nodes_landmark;}
 		const std::vector<g2o::VertexLandmarkNDT*>& getLandmarkNodes() const {return _nodes_landmark;}
@@ -397,8 +399,8 @@ namespace acg{
 		std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges(){return _edge_landmark;}
 		const std::vector<g2o::EdgeLandmark_malcolm*>& getLandmarkEdges() const {return _edge_landmark;}
 		///@brief vector storing all edge between the prior nodes
-//		std::vector<EdgePrior*>& getPriorEdges(){ return _prior->getPriorEdges();}
-//		const std::vector<EdgePrior*>& getPriorEdges() const { return _prior->getPriorEdges();}
+//		std::vector<EdgePrior*>& getEdges(){ return _prior->getEdges();}
+//		const std::vector<EdgePrior*>& getEdges() const { return _prior->getEdges();}
 		///@brief vector storing the odometry
 		std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges(){return _edge_odometry;}
 		const std::vector<g2o::EdgeOdometry_malcolm*>& getOdometryEdges() const {return _edge_odometry;}
@@ -576,13 +578,13 @@ namespace acg{
 		}
 
 
-		void setFirst(){
+		virtual void setFirst(){
 			g2o::OptimizableGraph::Vertex *fRobot;
 			if(_nodes_ndt.size() > 0) {
 				fRobot = _nodes_ndt[0];
 			}
 			else {
-				fRobot = *(_prior->getPriorNodes().begin());
+				fRobot = *(_prior->getNodes().begin());
 			}
 			_optimizable_graph.setFirst(fRobot);
 		}

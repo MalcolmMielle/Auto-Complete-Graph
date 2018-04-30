@@ -123,6 +123,17 @@ namespace acg{
 //		    return false;
 	    }
 
+	    void setFirst(){
+		    g2o::OptimizableGraph::Vertex *fRobot;
+		    if(_nodes_localization.size() > 0) {
+			    fRobot = _nodes_localization[0];
+		    }
+		    else {
+			    fRobot = *(_prior->getNodes().begin());
+		    }
+		    _optimizable_graph.setFirst(fRobot);
+	    }
+
 	    void doOwnRegistrationBetweenSubmaps(bool setter){_do_own_registration = setter;}
 	    void extractCorners(bool setter){_extract_corners = setter;}
 	    void useCornerCovariance(bool setter){ _use_corner_covariance = setter;}
@@ -140,9 +151,9 @@ namespace acg{
 	    const std::vector<g2o::VertexSE2RobotLocalization*>& getRobotPoseLocalization() const {return _nodes_localization;}
 
 	    /***FUNCTIONS TO ADD THE NODES***/
-	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const g2o::SE2& se2, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* equivalent_robot_pose);
-	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const Eigen::Vector3d& rob_localization, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* equivalent_robot_pose);
-	    g2o::VertexSE2RobotLocalization* addRobotLocalization(double x, double y, double theta, const Eigen::Affine3d& affine, const Eigen::Matrix3d& cov, const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* equivalent_robot_pose);
+	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const g2o::SE2& se2_robot_pose, const Eigen::Affine3d& affine_original_robot_pose, Eigen::Vector3d to_robot_localization, const Eigen::Matrix3d& cov_localization, const std::shared_ptr< perception_oru::NDTMap >& map);
+	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const Eigen::Vector3d& rob_localization, const Eigen::Affine3d& affine_original_robot_pose, Eigen::Vector3d to_robot_localization, const Eigen::Matrix3d& cov_localization, const std::shared_ptr< perception_oru::NDTMap >& map);
+	    g2o::VertexSE2RobotLocalization* addRobotLocalization(double x, double y, double theta, const Eigen::Affine3d& affine_original_robot_pose, Eigen::Vector3d to_robot_localization, const Eigen::Matrix3d& cov_localization, const std::shared_ptr< perception_oru::NDTMap >& map);
 		
 		/** FUNCTION TO ADD THE EGDES **/
 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information);
@@ -179,9 +190,9 @@ namespace acg{
 		void addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization);
 
 
-		std::tuple<g2o::VertexSE2RobotPose*, g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDTMap> > addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element);
+		std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDTMap> > addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element);
 
-		void extractCornerNDTMap(const std::shared_ptr< perception_oru::NDTMap >& map, g2o::VertexSE2RobotPose* robot_ptr, g2o::VertexSE2RobotLocalization* robot_localization);
+		void extractCornerNDTMap(const std::shared_ptr< perception_oru::NDTMap >& map, g2o::VertexSE2RobotLocalization* robot_localization);
 
 		/**
 		 * Add all new localization edges
@@ -191,7 +202,7 @@ namespace acg{
 		 */
 		g2o::VertexSE2RobotLocalization* addLocalizationVertex(
 				const auto_complete_graph::GraphMapLocalizationMsg &ndt_graph_localization, int element,
-				const std::shared_ptr<perception_oru::NDTMap> &shared_map, g2o::VertexSE2RobotPose* robot_ptr);
+				const std::shared_ptr<perception_oru::NDTMap> &shared_map, const g2o::SE2& robot_pose);
 
 		std::tuple<Eigen::Affine3d, Eigen::MatrixXd> registerSubmaps(const g2o::VertexSE2RobotPose& from,
 		                                                             const g2o::VertexSE2RobotPose& toward,

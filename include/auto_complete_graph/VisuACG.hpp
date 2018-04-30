@@ -64,7 +64,7 @@ namespace acg{
 		std::string _image_file;
 		
 	public:
-		VisuAutoCompleteGraphBase(ros::NodeHandle nh) : _nb_of_zone(0), _resolution(0.1){
+		VisuAutoCompleteGraphBase(ros::NodeHandle nh) : _nb_of_zone(-1), _resolution(0.1){
 			_nh = nh;
 			_last_ndtmap_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg_occ", 10);
 			_last_ndtmap = _nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
@@ -313,6 +313,7 @@ namespace acg{
 		
 		void updateRviz(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg){
 
+//			std::cout << "Drawing the prior " << std::endl;
 			drawPrior(acg);
 				
 			drawCornersNdt(acg);
@@ -1102,7 +1103,7 @@ namespace acg{
 		inline void AASS::acg::VisuAutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>::drawPrior(const AASS::acg::AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>& acg)
 		{
 			_prior_edge_markers.header.stamp = ros::Time::now();
-			auto edges = acg.getPrior()->getPriorEdges();
+			auto edges = acg.getPrior()->getEdges();
 			if(edges.size() != _prior_edge_markers.points.size()){
 				_prior_edge_markers.points.clear();
 
@@ -1120,7 +1121,7 @@ namespace acg{
 					}
 				}
 
-				auto prior_node = acg.getPrior()->getPriorNodes();
+				auto prior_node = acg.getPrior()->getNodes();
 				_prior_node_markers.points.clear();
 				_angles_prior_markers.points.clear();
 				_anglesw_prior_markers.points.clear();

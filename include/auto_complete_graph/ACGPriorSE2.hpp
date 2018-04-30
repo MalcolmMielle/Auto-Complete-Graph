@@ -37,11 +37,11 @@ namespace AASS {
 //			const std::vector<g2o::EdgeSE2Prior_malcolm*>& getPriorEdges() const { return _edge_prior;}
 
 
-			virtual g2o::VertexSE2Prior* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index);
-			virtual g2o::VertexSE2Prior* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index);
-			virtual g2o::VertexSE2Prior* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr, int index);
+			virtual g2o::VertexSE2Prior* addPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index);
+			virtual g2o::VertexSE2Prior* addPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index);
+			virtual g2o::VertexSE2Prior* addPose(double x, double y, double theta, const PriorAttr& priorAttr, int index);
 
-			virtual g2o::EdgeSE2Prior_malcolm* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+			virtual g2o::EdgeSE2Prior_malcolm* addEdge(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
 
 			//FUNTION TO ADD A PRIOR GRAPH INTO THE GRAPH
 			/**

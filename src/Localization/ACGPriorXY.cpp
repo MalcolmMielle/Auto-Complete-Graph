@@ -1,8 +1,8 @@
 #include "auto_complete_graph/Localization/ACGPriorXY.hpp"
 
-g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdge(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
 
-	for(auto prior_edge : _edge_prior){
+	for(auto prior_edge : _edges){
 		if(v1 == prior_edge->vertices()[0] && v2 == prior_edge->vertices()[1]){
 			throw std::runtime_error("Edge link already added");
 		}
@@ -72,7 +72,7 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdgePrior(const g2o
 //	_optimizable_graph.addEdge(priorObservation);
 
 // 	EdgePriorAndInitialValue epiv(priorObservation, se2);
-	_edge_prior.insert(priorObservation);
+	_edges.insert(priorObservation);
 
 	std::cout << "After adding an edge" << std::endl;
 	checkNoRepeatingPriorEdge();
@@ -81,23 +81,23 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdgePrior(const g2o
 }
 
 
-g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index){
+g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index){
 	g2o::VertexXYPrior* priorlandmark = new g2o::VertexXYPrior();
 	priorlandmark->setId(index);
 	Eigen::Vector2d pose = se2.toVector().head(2);
 	priorlandmark->setEstimate(pose);
 	priorlandmark->priorattr = priorAttr;
-	_nodes_prior.insert(priorlandmark);
+	_nodes.insert(priorlandmark);
 	return priorlandmark;
 }
-g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index){
+g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index){
 	g2o::SE2 se2(lan(0), lan(1), lan(2));
-	return addPriorLandmarkPose(se2, priorAttr, index);
+	return addPose(se2, priorAttr, index);
 }
-g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPriorLandmarkPose(double x, double y, double theta, const AASS::acg::PriorAttr& priorAttr, int index){
+g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPose(double x, double y, double theta, const AASS::acg::PriorAttr& priorAttr, int index){
 	Eigen::Vector3d lan;
 	lan << x, y, theta;
-	return addPriorLandmarkPose(lan, priorAttr, index);
+	return addPose(lan, priorAttr, index);
 }
 
 
@@ -113,7 +113,7 @@ int AASS::acg::AutoCompleteGraphPriorXY::addPriorGraph(const PriorLoaderInterfac
 
 //	std::cout << "NOOOOOOW" << _optimizable_graph.vertices().size() << std::endl << std::endl;
 
-	assert( _nodes_prior.size() == 0 );
+	assert( _nodes.size() == 0 );
 
 	for (vp = boost::vertices(graph); vp.first != vp.second; ++vp.first) {
 // 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Vertex v = *vp.first;
@@ -123,14 +123,14 @@ int AASS::acg::AutoCompleteGraphPriorXY::addPriorGraph(const PriorLoaderInterfac
 // 		std::cout << "Prior Landmark : " << graph[v].getX() << " " << graph[v].getY() << std::endl;
 
 
-		g2o::VertexXYPrior* res = addPriorLandmarkPose(graph[v].getX(), graph[v].getY(), 0, graph[v], first_index);
+		g2o::VertexXYPrior* res = addPose(graph[v].getX(), graph[v].getY(), 0, graph[v], first_index);
 		first_index++;
 		vec_deque.push_back(v);
 		out_prior.push_back(res);
-// 		_nodes_prior.push_back(res);
+// 		_nodes.push_back(res);
 	}
 
-	assert( _edge_prior.size() == 0);
+	assert( _edges.size() == 0);
 
 	int count = 0;
 	int self_link = 0 ;
@@ -191,20 +191,20 @@ int AASS::acg::AutoCompleteGraphPriorXY::addPriorGraph(const PriorLoaderInterfac
 
 // 				std::cout << "SE2 pushed in edge \n" << se2.toVector() << std::endl;
 
-				auto edge_out = addEdgePrior(se2, from, toward);
-// 				_edge_prior.push_back(edge_out);
+				auto edge_out = addEdge(se2, from, toward);
+// 				_edges.push_back(edge_out);
 			}
 
 		}
 		++count;
 	}
 
-// 	std::cout << _edge_prior.size() << " == " << graph.getNumEdges() << " - " << self_link / 2 << std::endl;
-// 	std::cout << _nodes_prior.size() << " == " << graph.getNumVertices() << std::endl;
+// 	std::cout << _edges.size() << " == " << graph.getNumEdges() << " - " << self_link / 2 << std::endl;
+// 	std::cout << _nodes.size() << " == " << graph.getNumVertices() << std::endl;
 
-	assert( _nodes_prior.size() == graph.getNumVertices() );
+	assert( _nodes.size() == graph.getNumVertices() );
 	//Self link / 2 because they are seen twice
-	assert( _edge_prior.size() == graph.getNumEdges() - (self_link / 2) );
+	assert( _edges.size() == graph.getNumEdges() - (self_link / 2) );
 
 	std::cout << "After update graph prior" << std::endl;
 	checkNoRepeatingPriorEdge();
@@ -216,41 +216,41 @@ int AASS::acg::AutoCompleteGraphPriorXY::addPriorGraph(const PriorLoaderInterfac
 //void AASS::acg::AutoCompleteGraphPriorXY::clear(){
 ////	std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
 //	int i = 0;
-//	for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ; ++it){
+//	for(auto it = _nodes.begin() ; it != _nodes.end() ; ++it){
 //
-//		for(auto it1 = it + 1 ; it1 != _nodes_prior.end() ;++it1){
+//		for(auto it1 = it + 1 ; it1 != _nodes.end() ;++it1){
 //			assert(*it != *it1);
 //			++i;
 //		}
 //	}
 //
 //
-//	for(auto it = _nodes_prior.begin() ; it != _nodes_prior.end() ;){
+//	for(auto it = _nodes.begin() ; it != _nodes.end() ;){
 //// 				auto it_tmp = it;
 //// 				assert(*it_tmp == *it);
 //// 				++it;
 //// 				assert(*it_tmp != *it);
 //// 				std::cout <<"removing the vertex " << *it << std::endl;
-//// 				if (it != _nodes_prior.end()) {
-//// 					std::cout <<"Done " << _nodes_prior.size() <<std::endl;
+//// 				if (it != _nodes.end()) {
+//// 					std::cout <<"Done " << _nodes.size() <<std::endl;
 //		//DIESNT WORK :(
 //// 					this->removeVertex(*it);
 //		_optimizable_graph.removeVertex(*it, false);
-//		it = _nodes_prior.erase(it);
+//		it = _nodes.erase(it);
 //// 					std::cout <<"removed the vertex " << std::endl;
 //// 				}
 //// 				it = it_tmp;
 //// 				++it;
 //
 //	}
-//// 			std::cout <<"Done final " << _nodes_prior.size() << " i " << i <<std::endl;
-//	assert(_nodes_prior.size() == 0);
+//// 			std::cout <<"Done final " << _nodes.size() << " i " << i <<std::endl;
+//	assert(_nodes.size() == 0);
 //
-//// 			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+//// 			for(auto it = _edges.begin() ; it != _edges.end() ; ++it){
 //// 				_optimizable_graph.removeVertex(it, true);
 //// 			}
 //// 			std::cout <<"clearing the edges " << std::endl;
-//	_edge_prior.clear();
+//	_edges.clear();
 //	_edge_link.clear();
 //	_edge_interface_of_links.clear();
 //
@@ -266,7 +266,7 @@ int AASS::acg::AutoCompleteGraphPriorXY::addPriorGraph(const PriorLoaderInterfac
 //}
 
 //void AASS::acg::AutoCompleteGraphPriorXY::checkNoRepeatingPriorEdge(){
-//	for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
+//	for(auto it_vertex = _nodes.begin() ; it_vertex != _nodes.end() ; ++it_vertex){
 //		std::vector<std::pair<double, double> > out;
 //		// 			std::cout << "edges " << std::endl;
 //		auto edges = (*it_vertex)->edges();
@@ -294,10 +294,10 @@ int AASS::acg::AutoCompleteGraphPriorXY::addPriorGraph(const PriorLoaderInterfac
 //			}
 //		}
 //	}
-//	for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+//	for(auto it = _edges.begin() ; it != _edges.end() ; ++it){
 //		auto ite2 = it;
 //		ite2++;
-//		for(; ite2 != _edge_prior.end() ; ++ite2 ){
+//		for(; ite2 != _edges.end() ; ++ite2 ){
 //			assert(it != ite2);
 //		}
 //	}
@@ -312,7 +312,7 @@ void AASS::acg::AutoCompleteGraphPriorXY::updatePriorEdgeCovariance()
 	testNoNanInPrior("no dtat");
 	assert(false);
 
-	auto edges = getPriorEdges();
+	auto edges = getEdges();
 	auto it = edges.begin();
 	for(it ; it != edges.end() ; ++it){
 		g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>((*it)->vertices()[0]);
@@ -445,8 +445,8 @@ void AASS::acg::AutoCompleteGraphPriorXY::updatePriorEdgeCovariance()
 void AASS::acg::AutoCompleteGraphPriorXY::testNoNanInPrior(const std::string& before) const {
 
 	std::cout << "Test No nan in prior after " << before << std::endl;
-	auto it = getPriorNodes().begin();
-	for(it ; it != getPriorNodes().end() ; ++it){
+	auto it = getNodes().begin();
+	for(it ; it != getNodes().end() ; ++it){
 		g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>((*it));
 		if(v_ptr == NULL){
 			throw std::runtime_error("not good vertex type");
@@ -460,7 +460,7 @@ void AASS::acg::AutoCompleteGraphPriorXY::testNoNanInPrior(const std::string& be
 
 	std::cout << "Testing the edges now" << std::endl;
 
-	auto edges = getPriorEdges();
+	auto edges = getEdges();
 	auto it_edge = edges.begin();
 	for(it_edge ; it_edge != edges.end() ; ++it_edge){
 		g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>((*it_edge)->vertices()[0]);
@@ -489,7 +489,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr AASS::acg::AutoCompleteGraphPriorXY::toPoint
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pc(new pcl::PointCloud<pcl::PointXYZ>);
 	int nb_points = 0;
-	auto edges = getPriorEdges();
+	auto edges = getEdges();
 	std::cout << "Converting edges : " << edges.size() << std::endl;
 
 	for(auto it = edges.begin(); it != edges.end() ; ++it){

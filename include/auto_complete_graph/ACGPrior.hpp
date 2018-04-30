@@ -18,6 +18,8 @@
 #include "PriorLoaderInterface.hpp"
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+
+#include "GraphElements.hpp"
 //#include "ndt_feature_finder/conversion.hpp"
 //#include "utils.hpp"
 //#include "VertexAndEdge/EdgeInterfaceMalcolm.hpp"
@@ -35,42 +37,42 @@ namespace AASS {
 		 * @brief The graph class containing all elements from the prior. Needed for the templated version of ACGLocalization :(.
 		 */
 		template<typename VERTEXTYPE, typename EDGETYPE>
-		class AutoCompleteGraphPrior {
+		class AutoCompleteGraphPrior : public GraphElements<VERTEXTYPE, EDGETYPE> {
 
 		protected:
 			///@brief vector storing all node from the prior
-			std::set<VERTEXTYPE*> _nodes_prior;
-			///@brief vector storing all edge between the prior nodes
-			std::set<EDGETYPE*> _edge_prior;
+//			std::set<VERTEXTYPE*> _nodes_prior;
+//			/@brief vector storing all edge between the prior nodes
+//			std::set<EDGETYPE*> _edges;
 
 			Eigen::Vector2d _priorNoise;
 			double _prior_rot;
-			g2o::ParameterSE2Offset* _sensorOffset;
+//			g2o::ParameterSE2Offset* _sensorOffset;
 
 			bool _use_user_prior_cov = false;
 
 		public:
 
-			AutoCompleteGraphPrior(const Eigen::Vector2d& pn, double rp, const g2o::SE2& sensoffset) : _priorNoise(pn), _prior_rot(rp){
+			AutoCompleteGraphPrior(const Eigen::Vector2d& pn, double rp, const g2o::SE2& sensoffset) : _priorNoise(pn), _prior_rot(rp), GraphElements<VERTEXTYPE, EDGETYPE>(sensoffset){
 				// add the parameter representing the sensor offset ATTENTION was ist das ?
-				_sensorOffset = new g2o::ParameterSE2Offset;
-				_sensorOffset->setOffset(sensoffset);
-				_sensorOffset->setId(0);
+//				_sensorOffset = new g2o::ParameterSE2Offset;
+//				_sensorOffset->setOffset(sensoffset);
+//				_sensorOffset->setId(0);
 			}
-			AutoCompleteGraphPrior(const g2o::SE2& sensoffset){
+			AutoCompleteGraphPrior(const g2o::SE2& sensoffset) : GraphElements<VERTEXTYPE, EDGETYPE>(sensoffset){
 				// add the parameter representing the sensor offset ATTENTION was ist das ?
-				_sensorOffset = new g2o::ParameterSE2Offset;
-				_sensorOffset->setOffset(sensoffset);
-				_sensorOffset->setId(0);
+//				_sensorOffset = new g2o::ParameterSE2Offset;
+//				_sensorOffset->setOffset(sensoffset);
+//				_sensorOffset->setId(0);
 			};
 
 
 			/** Accessor**/
-			typename std::set<VERTEXTYPE*>& getPriorNodes(){return _nodes_prior;}
-			const typename std::set<VERTEXTYPE*>& getPriorNodes() const {return _nodes_prior;}
+//			typename std::set<VERTEXTYPE*>& getPriorNodes(){return _nodes_prior;}
+//			const typename std::set<VERTEXTYPE*>& getPriorNodes() const {return _nodes_prior;}
 			///@brief vector storing all edge between the prior nodes
-			typename std::set<EDGETYPE*>& getPriorEdges(){ return _edge_prior;}
-			const typename std::set<EDGETYPE*>& getPriorEdges() const { return _edge_prior;}
+//			typename std::set<EDGETYPE*>& getPriorEdges(){ return _edges;}
+//			const typename std::set<EDGETYPE*>& getPriorEdges() const { return _edges;}
 
 			void setPriorNoise(double a, double b){_priorNoise << a, b;}
 			void setPriorRot(double r){_prior_rot = r;}
@@ -79,11 +81,11 @@ namespace AASS {
 			bool isUsingUserCovForPrior() const {return _use_user_prior_cov;}
 
 
-			virtual VERTEXTYPE* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index) = 0;
-			virtual VERTEXTYPE* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index) = 0;
-			virtual VERTEXTYPE* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr, int index) = 0;
+//			virtual VERTEXTYPE* addPriorLandmarkPose(const g2o::SE2& se2, const PriorAttr& priorAttr, int index) = 0;
+//			virtual VERTEXTYPE* addPriorLandmarkPose(const Eigen::Vector3d& lan, const PriorAttr& priorAttr, int index) = 0;
+//			virtual VERTEXTYPE* addPriorLandmarkPose(double x, double y, double theta, const PriorAttr& priorAttr, int index) = 0;
 
-			virtual EDGETYPE* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2) = 0;
+//			virtual EDGETYPE* addEdgePrior(const g2o::SE2& se2, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2) = 0;
 
 			//FUNTION TO ADD A PRIOR GRAPH INTO THE GRAPH
 			/**
@@ -93,74 +95,95 @@ namespace AASS {
 			virtual int addPriorGraph(const PriorLoaderInterface::PriorGraph& graph, int first_index) = 0;
 			///@remove the prior and all link edges
 //			virtual void clearPrior() = 0;
-			virtual void checkNoRepeatingPriorEdge();
+			virtual void checkNoRepeatingPriorEdge() {
+				for (auto edge : this->_edges) {
+					auto vertex = edge->vertices()[0];
+					auto vertex2 = edge->vertices()[1];
+					for (auto edge_second : this->_edges) {
+
+						if (edge != edge_second) {
+							auto vertex_second = edge_second->vertices()[0];
+							auto vertex_second2 = edge_second->vertices()[1];
+
+							if (vertex_second == vertex && vertex_second2 == vertex2) {
+								throw std::runtime_error("Same prior edge");
+							} else if (vertex_second == vertex2 && vertex_second2 == vertex) {
+								throw std::runtime_error("Same prior edge");
+							}
+
+						}
+
+					}
+
+				}
+			}
 
 			virtual pcl::PointCloud<pcl::PointXYZ>::Ptr toPointCloud(double resolution, double z_elevation, double varz) const  = 0;
 
-			virtual void clear(){
-				//It's a set so not needed
-//				for(typename std::set<VERTEXTYPE*>::iterator it = getPriorNodes().begin() ; it != getPriorNodes().end() ; ++it){
+//			virtual void clear(){
+//				//It's a set so not needed
+////				for(typename std::set<VERTEXTYPE*>::iterator it = getPriorNodes().begin() ; it != getPriorNodes().end() ; ++it){
+////
+//////					for(auto it1 = it + 1 ; it1 != getPriorNodes().end() ;++it1){
+//////						assert(*it != *it1);
+////////						++i;
+//////					}
+////				}
+//				std::cout << "Clear the prior" << std::endl;
+//				_nodes_prior.clear();
+//				_edges.clear();
+//				std::cout << "Prior cleared" << std::endl;
+//			}
 //
-////					for(auto it1 = it + 1 ; it1 != getPriorNodes().end() ;++it1){
-////						assert(*it != *it1);
-//////						++i;
-////					}
+//			bool removeVertex(g2o::HyperGraph::Vertex* v1){
+//				//Prior
+////				VERTEXTYPE* ptr = dynamic_cast<VERTEXTYPE*>(v1);
+//
+//				if(v1 != NULL){
+//					std::cout <<"Found vertex" << std::endl;
+//					auto it = _nodes_prior.find(v1);
+//
+//					if(it != _nodes_prior.end()) {
+////					int index = findPriorNode(v1);
+//						_nodes_prior.erase(it);
+//					}
+//					else{
+//						return false;
+//					}
 //				}
-				std::cout << "Clear the prior" << std::endl;
-				_nodes_prior.clear();
-				_edge_prior.clear();
-				std::cout << "Prior cleared" << std::endl;
-			}
-
-			bool removeVertex(g2o::HyperGraph::Vertex* v1){
-				//Prior
-//				VERTEXTYPE* ptr = dynamic_cast<VERTEXTYPE*>(v1);
-
-				if(v1 != NULL){
-					std::cout <<"Found vertex" << std::endl;
-					auto it = _nodes_prior.find(v1);
-
-					if(it != _nodes_prior.end()) {
-//					int index = findPriorNode(v1);
-						_nodes_prior.erase(it);
-					}
-					else{
-						return false;
-					}
-				}
-//				return NULL;
-				return true;
-			}
+////				return NULL;
+//				return true;
+//			}
 
 
 		};
 
-
-		template<typename VERTEXTYPE, typename EDGETYPE>
-		inline void AASS::acg::AutoCompleteGraphPrior<VERTEXTYPE, EDGETYPE>::checkNoRepeatingPriorEdge(){
-
-
-			for(auto edge : _edge_prior){
-				auto vertex = edge->vertices()[0];
-				auto vertex2 = edge->vertices()[1];
-				for(auto edge_second : _edge_prior){
-
-					if(edge != edge_second){
-						auto vertex_second = edge_second->vertices()[0];
-						auto vertex_second2 = edge_second->vertices()[1];
-
-						if(vertex_second == vertex && vertex_second2 == vertex2){
-							throw std::runtime_error("Same prior edge");
-						}
-						else if(vertex_second == vertex2 && vertex_second2 == vertex){
-							throw std::runtime_error("Same prior edge");
-						}
-
-					}
-
-				}
-
-			}
+//
+//		template<typename VERTEXTYPE, typename EDGETYPE>
+//		inline void AASS::acg::AutoCompleteGraphPrior<VERTEXTYPE, EDGETYPE>::checkNoRepeatingPriorEdge(){
+//
+//
+//			for(auto edge : _edges){
+//				auto vertex = edge->vertices()[0];
+//				auto vertex2 = edge->vertices()[1];
+//				for(auto edge_second : _edges){
+//
+//					if(edge != edge_second){
+//						auto vertex_second = edge_second->vertices()[0];
+//						auto vertex_second2 = edge_second->vertices()[1];
+//
+//						if(vertex_second == vertex && vertex_second2 == vertex2){
+//							throw std::runtime_error("Same prior edge");
+//						}
+//						else if(vertex_second == vertex2 && vertex_second2 == vertex){
+//							throw std::runtime_error("Same prior edge");
+//						}
+//
+//					}
+//
+//				}
+//
+//			}
 
 
 //			for(auto it_vertex = _nodes_prior.begin() ; it_vertex != _nodes_prior.end() ; ++it_vertex){
@@ -191,14 +214,14 @@ namespace AASS {
 //					}
 //				}
 //			}
-//			for(auto it = _edge_prior.begin() ; it != _edge_prior.end() ; ++it){
+//			for(auto it = _edges.begin() ; it != _edges.end() ; ++it){
 //				auto ite2 = it;
 //				ite2++;
-//				for(; ite2 != _edge_prior.end() ; ++ite2 ){
+//				for(; ite2 != _edges.end() ; ++ite2 ){
 //					assert(it != ite2);
 //				}
 //			}
-		}
+//		}
 	}
 }
 
