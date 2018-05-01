@@ -49,6 +49,7 @@ namespace AASS{
 			double _deviation;
 			double _angle;
 			double _scale;
+			double _max_deviation_for_corner;
 			cv::Point2f _center;
 			
 // 			KeypointPriorDetector _keypoints;
@@ -56,10 +57,34 @@ namespace AASS{
 // 			bool _extractKeypoints;
 			
 		public: 
-			PriorLoaderInterface(const std::string& file) : _file(file)
+			PriorLoaderInterface(const std::string& file) : _file(file), _max_deviation_for_corner((45 * M_PI) / 180)
 //             , _extractKeypoints(false)
-            {		
+            {
 			}
+
+			PriorLoaderInterface(const std::string& file, double deviation, double anglet, double scalet, cv::Point2f center) : _file(file), _max_deviation_for_corner((45 * M_PI) / 180)
+//             , _extractKeypoints(false)
+			{
+				std::vector<cv::Point2f> pt_slam;
+				std::vector<cv::Point2f> pt_prior;
+
+				pt_slam.push_back(cv::Point2f(19.36, 6.25));
+				pt_prior.push_back(cv::Point2f(786, 373));
+
+				pt_slam.push_back(cv::Point2f(19.14, 2.25));
+				pt_prior.push_back(cv::Point2f(788, 311));
+
+// 				pt_slam.push_back(cv::Point2f(7.64, 3.63));
+// 				pt_prior.push_back(cv::Point2f(614, 306));
+//
+// 				pt_slam.push_back(cv::Point2f(9.5, 16));
+// 				pt_prior.push_back(cv::Point2f(637, 529));
+
+				initialize(pt_slam, pt_prior, deviation, anglet, scalet, center);
+
+			}
+
+			void setMaxDeviationForCornerInRad(double setter){_max_deviation_for_corner = setter;}
 			
 // 			void extractSIFTFeature(bool ext){_extractKeypoints = ext;}
 // 			bool useFeatures(){return _extractKeypoints;}

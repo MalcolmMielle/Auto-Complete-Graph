@@ -92,7 +92,8 @@ void AASS::acg::PriorLoaderInterface::extractCornerPrior()
 	
 	AASS::vodigrex::LineFollowerGraphCorners<> graph_corners;
 	graph_corners.setD(2);
-	graph_corners.setMaxDeviation((45 * M_PI) / 180);
+//	graph_corners.setMaxDeviation((45 * M_PI) / 180);
+	graph_corners.setMaxDeviation(_max_deviation_for_corner);
 	graph_corners.inputMap(_img_gray);
 	graph_corners.thin();
 	auto prior_graph = graph_corners.getGraph();

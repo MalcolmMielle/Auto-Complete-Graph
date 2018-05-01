@@ -3,7 +3,7 @@
 
 g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const g2o::SE2& se2_robot_pose, const Eigen::Affine3d& affine_original_robot_pose, Eigen::Vector3d to_robot_localization, const Eigen::Matrix3d& cov_localization, const std::shared_ptr< perception_oru::NDTMap >& map){
 
-	std::cout << "Adding the robot pose localization" << std::endl;
+//	std::cout << "Adding the robot pose localization" << std::endl;
 	g2o::VertexSE2RobotLocalization* robotlocalization =  new g2o::VertexSE2RobotLocalization(to_robot_localization);
 //	robotlocalization->setEquivalentRobotPose(equivalent_robot_pose);
 
@@ -26,7 +26,7 @@ g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRo
 	//PLEASE OWN SELF; REMOVE THIS ONE DAY !!!!!
 	_nodes_ndt.push_back(robotlocalization);
 
-	std::cout << "Localization added " << std::endl;
+//	std::cout << "Localization added " << std::endl;
 
 	return robotlocalization;
 }
@@ -180,8 +180,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 //			g2o::SE2 robot_pos;
 				std::tie(robot_localization_ptr, map) = addElementNDT(ndt_graph_localization, i);
 				assert(robot_localization_ptr != NULL);
-				std::cout << "TEST pointer " << std::endl;
-				std::cout << robot_localization_ptr->getPose().matrix() << std::endl;
+//				std::cout << "TEST pointer " << std::endl;
+//				std::cout << robot_localization_ptr->getPose().matrix() << std::endl;
 				//********************** Extract the corners *****************//
 				if (_extract_corners) {
 					extractCornerNDTMap(map, robot_localization_ptr);
@@ -215,7 +215,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDTMap> > AASS::acg::AutoCompleteGraphLocalization::addElementNDT(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization, int element)
 {
 	///ATTENTION Indexes start at 1 instead of 0 :/
-	std::cout << "good indexes " << ndt_graph_localization.graph_map.nodes[element].id.data << " = " << element << " voilaaa " << std::endl;
+//	std::cout << "good indexes " << ndt_graph_localization.graph_map.nodes[element].id.data << " = " << element << " voilaaa " << std::endl;
 	assert(ndt_graph_localization.graph_map.nodes[element].id.data == element);
 	//Return Gaussian white noise
 // 	auto randomNoise = [](double mean, double deviationt) -> double {
@@ -228,11 +228,11 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 	
 	//Calculate noise
 
-	std::cout << "Checking node nb " << element << std::endl;
+//	std::cout << "Checking node nb " << element << std::endl;
 	
 	//RObot pose
 // 			ndt_feature::NDTFeatureNode& feature = dynamic_cast<ndt_feature::NDTFeatureNode&>(ndt_graph.getNodeInterface(i));
-	std::cout << "Copy feature" << std::endl;
+//	std::cout << "Copy feature" << std::endl;
 	
 	auto geometry_pose = ndt_graph_localization.graph_map.nodes[element].pose;
 	Eigen::Affine3d affine;
@@ -246,7 +246,7 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 // 			isometry2d =  diff * isometry2d;
 	
 	//BUG IS AFTER
-	std::cout << "print" << std::endl;
+//	std::cout << "print" << std::endl;
 	
 	auto robot_pos = g2o::SE2(isometry2d);
 // 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
@@ -255,7 +255,7 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 
 	///WARNING trying to change this to fit GraphMap model. Node are at the exact pose so no need to translate them AND factor I don't know yet
 	robot_pos = robot_pos * diff_vec_se2;
-	std::cout << "multiply" << std::endl;
+//	std::cout << "multiply" << std::endl;
 		
 	auto map_msg =  ndt_graph_localization.graph_map.nodes[element].ndt_map;
 
@@ -304,10 +304,10 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 			g2o::SE2 toward_vec = toward->estimate();
 			g2o::SE2 odom = from_vec.inverse() * toward_vec;
 
-			std::cout << "From " << from_vec.toVector() << " toward " << toward_vec.toVector() << " thus odom " << odom.toVector() << std::endl;
-			std::cout << "Make sure that this is correct before moving forward" << std::endl;
-			int waitwait;
-			std::cin >> waitwait;
+//			std::cout << "From " << from_vec.toVector() << " toward " << toward_vec.toVector() << " thus odom " << odom.toVector() << std::endl;
+//			std::cout << "Make sure that this is correct before moving forward" << std::endl;
+//			int waitwait;
+//			std::cin >> waitwait;
 
 
 			Eigen::Affine3d odom_affine = se2ToAffine3d(odom);
@@ -319,23 +319,23 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 			Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(odom_register);
 			g2o::SE2 odometry(isometry2d_odometry);
 
-			std::cout << "Saving cov to 2d" << std::endl;
+//			std::cout << "Saving cov to 2d" << std::endl;
 			Eigen::Matrix3d cov_2d;
 			cov_2d << odom_cov(0, 0), odom_cov(0, 1), 0,
 					odom_cov(1, 0), odom_cov(1, 1), 0,
 					0, 0, odom_cov(5, 5);
 
 // 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
-			std::cout << "Saving information " << std::endl;
+//			std::cout << "Saving information " << std::endl;
 			Eigen::Matrix3d information = cov_2d.inverse();
 
-			std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward << " info " << information << " " << std::endl;
+//			std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward << " info " << information << " " << std::endl;
 			addOdometry(odometry, from, toward, information);
 
 		}
 		else {
 
-			std::cout << "adding the odometry" << std::endl;
+//			std::cout << "adding the odometry" << std::endl;
 
 			//The factors are expressed as transformation between the node expressed in the world frame. They need to be translated to the robot frame I believe?
 			auto geometry_pose_factor = ndt_graph_localization.graph_map.factors[element - 1].diff;
@@ -364,14 +364,14 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 //
 //		std::cout << "Odom " << odom_2d_translation_robot_frame[0] << " " << odom_2d_translation_robot_frame[1] << std::endl;
 
-			std::cout << "ODOM " << odometry.toVector() << std::endl;
+//			std::cout << "ODOM " << odometry.toVector() << std::endl;
 //		exit(0);
 
 // 		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
 
-			std::cout << " ref " << ndt_graph_localization.graph_map.factors[element - 1].prev.data << " and mov "
-			          << ndt_graph_localization.graph_map.factors[element - 1].next.data << " ndt node size "
-			          << _nodes_localization.size() << std::endl;
+//			std::cout << " ref " << ndt_graph_localization.graph_map.factors[element - 1].prev.data << " and mov "
+//			          << ndt_graph_localization.graph_map.factors[element - 1].next.data << " ndt node size "
+//			          << _nodes_localization.size() << std::endl;
 
 			///ATTENTION Indexes of graph_map start at 1 instead of 0 :/
 			assert(ndt_graph_localization.graph_map.factors[element - 1].prev.data < _nodes_localization.size());
@@ -388,15 +388,15 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 			auto from_vec = from->estimate().toVector();
 			auto toward_vec = toward->estimate().toVector();
 			g2o::SE2 odom_tmp = toward->estimate() * (from->estimate()).inverse();
-			std::cout << "TRansof" << from_vec << " toward " << toward_vec << " is " << toward_vec - from_vec
-			          << std::endl;
-			std::cout << "But the composition is " << (odometry * from->estimate()).toVector() << std::endl;
-			std::cout << "But the composition is " << (odom_tmp * from->estimate()).toVector() << std::endl;
-			int wait = 0;
-			std::cin >> wait;
+//			std::cout << "TRansof" << from_vec << " toward " << toward_vec << " is " << toward_vec - from_vec
+//			          << std::endl;
+//			std::cout << "But the composition is " << (odometry * from->estimate()).toVector() << std::endl;
+//			std::cout << "But the composition is " << (odom_tmp * from->estimate()).toVector() << std::endl;
+//			int wait = 0;
+//			std::cin >> wait;
 
 
-			std::cout << "Saving cov " << std::endl;
+//			std::cout << "Saving cov " << std::endl;
 			//TODO : transpose to 3d and use in odometry!
 
 			auto cov_msg = ndt_graph_localization.graph_map.factors[element - 1].covariance;
@@ -418,24 +418,24 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 				}
 			}
 
-			std::cout << "Saving cov to 2d" << std::endl;
+//			std::cout << "Saving cov to 2d" << std::endl;
 			Eigen::Matrix3d cov_2d;
 			cov_2d << cov_3d(0, 0), cov_3d(0, 1), 0,
 					cov_3d(1, 0), cov_3d(1, 1), 0,
 					0, 0, cov_3d(5, 5);
 
 // 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
-			std::cout << "Saving information " << std::endl;
+//			std::cout << "Saving information " << std::endl;
 			Eigen::Matrix3d information = cov_2d.inverse();
 
 // 				if(noise_flag = true && i != 0){
 // 					odometry = odometry * noise_se2;
 // 				}
 
-			std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward
-			          << " info " << information << " " << std::endl;
+//			std::cout << "Saving odometry " << odometry.toVector() << " from " << from << " toward " << toward
+//			          << " info " << information << " " << std::endl;
 			addOdometry(odometry, from, toward, information);
-			std::cout << ">Done" << std::endl;
+//			std::cout << ">Done" << std::endl;
 		}
 	}
 
@@ -452,12 +452,12 @@ g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addLo
 	auto localization_msg = ndt_graph_localization.localizations[element];
 	AASS::acg::Localization localization;
 	AASS::acg::fromMessage(localization_msg, localization);
-	std::cout << "Reading MCL Localization position_in_robot_frame : " << localization.mean[0] << ", " << localization.mean[1] << ", " << localization.mean[2] << std::endl;
+//	std::cout << "Reading MCL Localization position_in_robot_frame : " << localization.mean[0] << ", " << localization.mean[1] << ", " << localization.mean[2] << std::endl;
 	g2o::SE2 se2loc_global_frame(localization.mean[0], localization.mean[1], localization.mean[2]);
 	Eigen::Matrix3d cov = localization.cov;
 	g2o::SE2 se2loc = robot_pose.inverse() * se2loc_global_frame ;
 
-	std::cout << (robot_pose * se2loc).toVector() << " == " << se2loc_global_frame.toVector() << std::endl;
+//	std::cout << (robot_pose * se2loc).toVector() << " == " << se2loc_global_frame.toVector() << std::endl;
 //	assert( (robot_pose * se2loc).toVector() == se2loc_global_frame.toVector());
 
 
@@ -478,10 +478,10 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 
 	//HACK For now : we translate the Corner extracted and not the ndt-maps
 	auto cells = map->getAllCellsShared();
-	std::cout << "got all cell shared " <<  cells.size() << std::endl;
+//	std::cout << "got all cell shared " <<  cells.size() << std::endl;
 	double x2, y2, z2;
 	map->getCellSizeInMeters(x2, y2, z2);
-	std::cout << "got all cell sized" << std::endl;
+//	std::cout << "got all cell sized" << std::endl;
 	double cell_size = x2;
 
 	std::vector<AASS::acg::NDTCornerGraphElement> corners_end;
@@ -563,7 +563,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				//END OF TEST
 
 				corner_seen_here.insert(ptr);
-				std::cout << "Adding corner " << ptr << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
+//				std::cout << "Adding corner " << ptr << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
 
 				g2o::EdgeLandmark_malcolm* edge_landmark;
 				if(_use_corner_covariance) {
@@ -591,7 +591,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 				g2o::EdgeLandmark_malcolm* edge_landmark;
 
 
-				std::cout << "Point seen: " << ptr_landmark_seen << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
+//				std::cout << "Point seen: " << ptr_landmark_seen << " from " << corner.getNodeLinkedPtr() << " and " << robot_localization << std::endl;
 				if(_use_corner_covariance) {
 					//Use the covariance given by the corner itself
 					edge_landmark = addLandmarkObservation(corner.getObservations(), corner.getNodeLinkedPtr(), ptr_landmark_seen, cov_landmark);
@@ -614,7 +614,7 @@ void AASS::acg::AutoCompleteGraphLocalization::extractCornerNDTMap(const std::sh
 			}
 		}
 		else{
-			std::cout << "Created in this loop" << std::endl;
+//			std::cout << "Created in this loop" << std::endl;
 		}
 	}
 //	assert(corners_added * 2 == observations_added);
@@ -626,17 +626,17 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 {
 
 	perception_oru::ndt_feature_finder::NDTCorner cornersExtractor;
-	std::cout << "hopidy" << std::endl;
+//	std::cout << "hopidy" << std::endl;
 	auto ret_export = cornersExtractor.getAllCorners(*map);
-	std::cout << "gotall corner" << std::endl;
+//	std::cout << "gotall corner" << std::endl;
 // 	auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();
-	std::cout << "got all accurate corners" << std::endl;
+//	std::cout << "got all accurate corners" << std::endl;
 // 	auto angles = cornersExtractor.getAngles();
 // 	std::cout << "got all angles" << std::endl;
 
 	auto it = ret_export.begin();
 
-	std::cout << "Found " << ret_export.size() << " corners " << std::endl;
+//	std::cout << "Found " << ret_export.size() << " corners " << std::endl;
 	//Find all the observations :
 
 	//**************** HACK: translate the corners now : **************//
@@ -657,7 +657,7 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 			Eigen::Vector3d landmark_globalframe;
 			translateFromRobotFrameToGlobalFrame(landmark_robot_frame, robot_ptr->estimate(), landmark_globalframe);
 
-			std::cout << "Corner size " << std::endl;
+//			std::cout << "Corner size " << std::endl;
 			p_out.x = landmark_globalframe(0);
 			p_out.y = landmark_globalframe(1);
 
@@ -670,11 +670,11 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 
 //			std::cout << "Corner size " << std::endl;
 			for(auto it_orientation = it->getOrientations().begin() ; it_orientation != it->getOrientations().end() ; ++it_orientation){
-				std::cout << "Pushing back orientation" << std::endl;
+//				std::cout << "Pushing back orientation" << std::endl;
 				orientations.push_back((*it_orientation));
 			}
 			for(auto it_angles = it->getAngles().begin() ; it_angles != it->getAngles().end() ; ++it_angles){
-				std::cout << "Pushing back angle" << std::endl;
+//				std::cout << "Pushing back angle" << std::endl;
 				angles_width.push_back((*it_angles));
 			}
 
@@ -697,8 +697,8 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 
 
 			// 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
-			std::cout << "Position node " << robot_ptr->estimate().toVector() << std::endl;
-			std::cout << " vec " << landmark_robot_frame << std::endl;
+//			std::cout << "Position node " << robot_ptr->estimate().toVector() << std::endl;
+//			std::cout << " vec " << landmark_robot_frame << std::endl;
 			// 		std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
 
 			//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
@@ -708,8 +708,8 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 
 			NDTCornerGraphElement cor(p_out, *it);
 
-			std::cout << cor.getEigenValues()  << " == " << it->getEigenValues()  << std::endl;
-			std::cout << cor.getEigenVectors() << " == " << it->getEigenVectors() << std::endl;
+//			std::cout << cor.getEigenValues()  << " == " << it->getEigenValues()  << std::endl;
+//			std::cout << cor.getEigenVectors() << " == " << it->getEigenVectors() << std::endl;
 			assert(cor.getEigenValues() == it->getEigenValues());
 			assert(cor.getEigenVectors() == it->getEigenVectors());
 
@@ -813,28 +813,32 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 				0, 		0, 		0,	  0,    0,    0.02;
 // 		exit(0);
 	}
-	std::cout << "Size of Covariance : " << cov.rows() << " AND COLS " << cov.cols() << std::endl;
+//	std::cout << "Size of Covariance : " << cov.rows() << " AND COLS " << cov.cols() << std::endl;
 
 	assert(cov.rows() == 6);
 	assert(cov.cols() == 6);
 	std::cout << "PAUSE got cov : " << cov << "\n";
-	std::cout << "COVARIANCE BY MATCHER " << cov.inverse() << "\n";
+//	std::cout << "COVARIANCE BY MATCHER " << cov.inverse() << "\n";
 
 	if(!converged){
 // 		throw std::runtime_error("ndt_map registration didn't converge");
-		std::cout << "USing odometry input a number to continue" << std::endl;
+		std::cout << "USing odometry input a number to continue. That is bad :/" << std::endl;
+
+		transformation = before_T;
+		cov = Eigen::MatrixXd::Identity(6, 6);
+
 		int a;
 		std::cin >> a;
 	}
 	if(same){
 		std::cout << "Manually created the covariance because the matching returned the same transof as before." << std::endl;
-		int a;
-		std::cin >> a;
+//		int a;
+//		std::cin >> a;
 	}
 // 	exit(0);
 // 	std::cin >> a;
 
-	std::cout << "End of link" << std::endl;
+//	std::cout << "End of link" << std::endl;
 
 	return std::tuple<Eigen::Affine3d, Eigen::MatrixXd>(transformation, cov);
 }
@@ -926,7 +930,7 @@ void AASS::acg::AutoCompleteGraphLocalization::AddObservationsMCLPrior() {
 
 void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark) {
 
-	std::cout << "Start for landmark " << landmark << " at pose " << landmark->estimate() << std::endl;
+//	std::cout << "Start for landmark " << landmark << " at pose " << landmark->estimate() << std::endl;
 //
 //	if(_use_mcl_cov_to_find_prior_observed) {
 //		for (auto prior_corner : _prior->getNodes()) {
@@ -1081,7 +1085,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 //	}
 //	else{
 
-		std::cout << "New corner matching " << std::endl;
+//		std::cout << "New corner matching " << std::endl;
 
 		std::unordered_set <std::shared_ptr<AASS::acg::LocalizationPointer>> localization = landmark->getLocalization();
 
@@ -1089,7 +1093,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 
 //			assert(loc->vertex_robot_pose == loc->vertex_mcl_pose->getEquivalentRobotPose());
 
-			std::cout << "Number of landmark observation" << _edge_landmark.size() << std::endl;
+//			std::cout << "Number of landmark observation" << _edge_landmark.size() << std::endl;
 
 			for(auto edge : _edge_landmark){
 
@@ -1157,27 +1161,28 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 								assert(pdf_collision >= 0);
 								assert(pdf_collision <= 1);
 
-								std::cout << "Poses : " << pose_prior << " - " << pose_landmark
-								          << " ( actual landmark pose: " << pose_landmark_test << " ) inverse cov\n"
-								          << cov_inv_2d.matrix() << "\n and cov\n" << loc->cov.matrix()
-								          << " \nprobabilistic_distance " << mahalanobis_distance
-		                                    << " euclidean distance " << euclidean_distance << " threshold "
-		                                    << " score " << pdf_collision << " threshold "
-								          << _threshold_of_score_for_creating_a_link << std::endl;
+//								std::cout << "Poses : " << pose_prior << " - " << pose_landmark
+//								          << " ( actual landmark pose: " << pose_landmark_test << " ) inverse cov\n"
+//								          << cov_inv_2d.matrix() << "\n and cov\n" << loc->cov.matrix()
+//								          << " \nprobabilistic_distance " << mahalanobis_distance
+//		                                    << " euclidean distance " << euclidean_distance << " threshold "
+//		                                    << " score " << pdf_collision << " threshold "
+//								          << _threshold_of_score_for_creating_a_link << std::endl;
 
 
 //								if (mahalanobis_distance <= euclidean_distance) {
 								if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
 
 
-									std::cout << "CREATING OBSERVATION " << std::endl;
+//									std::cout << "CREATING OBSERVATION " << std::endl;
 									//Cov is cov factor square of distance
 									Eigen::Matrix2d cov =
 											loc->cov.block(0, 0, 2, 2); // * (euclidean_distance * euclidean_distance);
-									std::cout << "Mcl cov " << loc->cov.block(0, 0, 2, 2).matrix()
-									          << " euclidean distance "
-									          << euclidean_distance << " cov used for observation " << cov.matrix()
-									          << std::endl;
+
+//									std::cout << "Mcl cov " << loc->cov.block(0, 0, 2, 2).matrix()
+//									          << " euclidean distance "
+//									          << euclidean_distance << " cov used for observation " << cov.matrix()
+//									          << std::endl;
 
 
 									//Making sure the observation doesn't already exist !
@@ -1208,7 +1213,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 										}
 									}
 
-									std::cout << "Old observation " << loc->observation << " and new observation " << current_landmark_observation->measurement() << std::endl;
+//									std::cout << "Old observation " << loc->observation << " and new observation " << current_landmark_observation->measurement() << std::endl;
 
 									g2o::EdgePriorObservation *observation_mcl = addPriorObservation(
 											loc->observation,
@@ -1221,8 +1226,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 //									prior_corner->landmarks.insert(landmark);
 									_number_of_links_to_prior++;
 
-									int aa;
-									std::cin >> aa;
+//									int aa;
+//									std::cin >> aa;
 
 								}
 
@@ -1235,9 +1240,9 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 		}
 //	}
 
-	std::cout << "Stop" << std::endl;
-	int aaa;
-	std::cin >> aaa;
+//	std::cout << "Stop" << std::endl;
+//	int aaa;
+//	std::cin >> aaa;
 
 
 }

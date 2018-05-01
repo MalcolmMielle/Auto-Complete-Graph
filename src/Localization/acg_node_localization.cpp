@@ -503,7 +503,15 @@ int main(int argc, char **argv)
 	nh.param<double>("angle", angle, 0);
 	double scale = 1;
 	nh.param<double>("scale", scale, 1.0);
-	cv::Point2f center(19.5, 4.5);
+	cv::Point2f center(0, 0);
+
+
+	double max_deviation_corner_in_prior = 1;
+	nh.param<double>("max_deviation_corner_in_prior", max_deviation_corner_in_prior, 45 * 3.14159 / 180);
+
+
+	std::string prior_file = "";
+	nh.param<std::string>("prior_file",prior_file,"/home/malcolm/ros_catkin_ws/lunar_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png");
 
 //	if(argc > 1){
 //		deviation = strtod(argv[1], NULL);
@@ -519,10 +527,11 @@ int main(int argc, char **argv)
 //		}
 //	}
 
-	AASS::acg::BasementFull basement(deviation, angle, scale, center);
-	basement.extractCornerPrior();
-	basement.transformOntoSLAM();
-	auto graph_prior = basement.getGraph();
+	AASS::acg::PriorLoaderInterface priormap(prior_file, deviation, angle, scale, center);
+	priormap.setMaxDeviationForCornerInRad(max_deviation_corner_in_prior);
+	priormap.extractCornerPrior();
+	priormap.transformOntoSLAM();
+	auto graph_prior = priormap.getGraph();
 
 	auto sensor_pose = getPoseTFTransform(world_frame, sensor_frame);
 	//Create graph instance
@@ -601,7 +610,7 @@ int main(int argc, char **argv)
 		
 		if(initialiser.size() >= 2){
 			was_init = true;
-			initAll(oacg, initialiser, basement);
+			initAll(oacg, initialiser, priormap);
 			visu.updateRvizNoNDT(oacg);
 		}
 		
