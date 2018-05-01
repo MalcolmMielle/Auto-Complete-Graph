@@ -236,7 +236,7 @@ namespace AASS {
 
 			_prior_observations.points.clear();
 			_prior_observations.header.stamp = ros::Time::now();
-			auto observations = acg.getLandmarkEdges();
+			auto observations = acg.getPriorObservations();
 			for(auto obs : observations) {
 
 				bool from_mcl = false;

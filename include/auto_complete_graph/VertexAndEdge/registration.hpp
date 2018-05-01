@@ -42,6 +42,7 @@
 #include <auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgePointXYACG.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeXYPrior.hpp>
+#include <auto_complete_graph/VertexAndEdge/EdgePriorObservation.hpp>
 
 
 //EdgeXYPrior e;

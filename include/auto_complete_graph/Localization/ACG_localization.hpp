@@ -5,6 +5,7 @@
 #include <cmath>
 #include "auto_complete_graph/ACG.hpp"
 #include "auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp"
+#include "auto_complete_graph/VertexAndEdge/EdgePriorObservation.hpp"
 #include "auto_complete_graph/VertexAndEdge/VertexSE2RobotLocalization.hpp"
 //#include "graph_map/graph_map.h"
 #include "auto_complete_graph/Localization/Localization.hpp"
@@ -48,6 +49,9 @@ namespace acg{
 	    bool _use_mcl_cov_to_find_prior_observed;
 
 	    std::vector<g2o::EdgeLocalization*> _edges_localization;
+
+	    ///@brief prior observation
+	    std::vector<g2o::EdgePriorObservation*> _edge_prior_observation;
 	    std::vector<g2o::VertexSE2RobotLocalization*> _nodes_localization;
 	    g2o::VertexXYPrior* _vertex_reference_for_montecarlo;
         
@@ -147,6 +151,8 @@ namespace acg{
 
 	    std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 	    const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
+	    std::vector<g2o::EdgePriorObservation*>& getPriorObservations(){return _edge_prior_observation;}
+	    const std::vector<g2o::EdgePriorObservation*>& getPriorObservations() const {return  _edge_prior_observation;}
 	    std::vector<g2o::VertexSE2RobotLocalization*>& getRobotPoseLocalization(){return _nodes_localization;}
 	    const std::vector<g2o::VertexSE2RobotLocalization*>& getRobotPoseLocalization() const {return _nodes_localization;}
 
@@ -159,6 +165,10 @@ namespace acg{
 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, g2o::HyperGraph::Vertex* v1, const Eigen::Matrix3d& information);
 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, int from_id, const Eigen::Matrix3d& information);
 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information);
+
+	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
+	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
+	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, int from_id, int toward_id, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
 
 	    /**
 	     * @brief Uses the covariance from MCL instead of a user chosen one.
@@ -224,6 +234,17 @@ namespace acg{
 
 //		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark) const;
 		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark);
+
+
+		/**
+		 * Update all measurements in prior observation and create new observation
+		 */
+		void updatePriorObservations();
+
+		/**
+		 * @brief update all prior observation ot have the same measurment as the equivalent landmark observation from the mcl pose.
+		 */
+		void updateExistingPriorObservations();
 
 
 //		int createNewLinks();
