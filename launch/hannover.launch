@@ -19,16 +19,18 @@
 <node pkg="auto_complete_graph" type="graph_map_publisher_localization_ac" name="graph_node" output="screen">
 
 <!-- 	MCL -->
-	<param name="use_mcl" value="false" />
-	<param name="use_graph_map_registration" value="true" />
-	<param name="zfilter_min" value="-1000" />
-	<param name="fraction" value="1" />
-	<param name="cutoff" value="-10" />
-	<param name="init_var" value="1" />
-	<param name="scale_gaussian_mcl" value="0.05" />
-	<param name="cell_neighborhood_size_mcl" value="1" />
-	<param name="use_euclidean_mcl" value="false" />
-	<param name="use_mean_score_mcl" value="false" />
+	<param name="use_mcl" value="true" />
+    <param name="use_graph_map_registration" value="true" />
+    <param name="zfilter_min" value="-1000" />
+    <param name="fraction" value="1" />
+    <param name="cutoff" value="-10" />
+    <param name="init_var" value="1" />
+    <param name="scale_gaussian_mcl" value="0.05" />
+    <param name="cell_neighborhood_size_mcl_in_meters" value="1.5" />
+    <param name="use_euclidean_mcl" value="false" />
+    <param name="use_mean_score_mcl" value="false" /> <!-- GET STUCK IF TRUE AND DON'T USE EUCLIDEAN :( -->
+    <param name="use_euclidean_for_long_distances" value="false" />
+    <param name="use_hybrid_strategy_mcl" value="true" />
 
 	<param name="cov_x_mcl" value="0.5" />
 	<param name="cov_y_mcl" value="0.5" />
