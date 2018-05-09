@@ -35,6 +35,11 @@ ros::Publisher last_ndtmap_full;
 ros::Publisher occupancy_grid;
 ros::Publisher occ_send;
 ros::Publisher prior_cloud, prior_ndt;
+ros::Publisher acg_gdim;
+ros::Publisher acg_gdim_om;
+
+ros::Publisher last_grid_map;
+ros::Publisher last_ndtmap;
 
 ros::Time timef;
 
@@ -114,6 +119,46 @@ void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
 void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization& oacg) {
 	publishPriorNDT(oacg);
+	if(optimize_prior == false){
+		oacg.clearPrior();
+	}
+}
+
+void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
+
+	//Puclish message for GDIM
+	auto_complete_graph::ACGMaps mapmsg;
+	std::cout << "PUSH acg maps message" << std::endl;
+	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg);
+	acg_gdim.publish(mapmsg);
+
+
+	auto_complete_graph::ACGMapsOM mapmsg_om;
+	std::cout << "PUSH acg maps OM message" << std::endl;
+	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om);
+	acg_gdim_om.publish(mapmsg_om);
+
+	//Publish the last grid map as a message to make sure that they look like something
+	int size_g = mapmsg_om.ndt_maps_om.size();
+	if(size_g > 0) {
+		std::cout << "Last grid map" << std::endl;
+		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
+
+		//Publish last occ grid to make sure that they look like something
+		int size_o = mapmsg.ndt_maps.maps.size();
+// 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
+// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+//                 perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
+		std::cout << "Last ndtmap" << std::endl;
+		last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o - 1]);
+
+
+	}
+}
+
+
+void publishACGOM(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization& oacg) {
+	publishACGOM(oacg);
 	if(optimize_prior == false){
 		oacg.clearPrior();
 	}
@@ -369,6 +414,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 				std::cout << "RVIZ " << std::endl;
 				visu.updateRviz(*oacg);
+				publishACGOM(*oacg);
 				std::cout << "RVIZ DONE" << std::endl;
 
 				if(testing_pause) {
@@ -468,7 +514,7 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
-	ros::Subscriber call_for_publish_occ, publish_prior_ndt;
+	ros::Subscriber call_for_publish_occ, publish_prior_ndt, publish_acg_om_maps;
     ros::NodeHandle nh("~");
 
 	/**************PARAMETERS**************/
@@ -595,10 +641,18 @@ int main(int argc, char **argv)
 	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_node/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
 	publish_prior_ndt = nh.subscribe<std_msgs::Bool>("/publish_prior_ndt", 1, boost::bind(&publishPriorNDT, _1, boost::ref(oacg) ));
+	publish_acg_om_maps = nh.subscribe<std_msgs::Bool>("/publish_acg_om_maps", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
 	// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);
 	occ_send = nh.advertise<nav_msgs::OccupancyGrid>("/occupancy_map_asif", 10, true);
+
+
+	acg_gdim = nh.advertise<auto_complete_graph::ACGMaps>("acg_maps", 10);
+	acg_gdim_om = nh.advertise<auto_complete_graph::ACGMapsOM>("acg_maps_om", 10);
+	last_ndtmap = nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
+
+	last_grid_map = nh.advertise<grid_map_msgs::GridMap>("last_grid_map", 10);
 
 	last_ndtmap_full = nh.advertise<nav_msgs::OccupancyGrid>("occ_grid_ndt", 10);
 

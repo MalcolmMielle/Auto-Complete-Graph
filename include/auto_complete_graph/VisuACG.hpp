@@ -18,7 +18,6 @@ namespace acg{
 	
 	protected:
 		ros::NodeHandle _nh;
-		ros::Publisher _last_ndtmap;
 		ros::Publisher _last_ndtmap_occ;
 		ros::Publisher _last_ndtmap2_occ;
 		ros::Publisher _last_ndtmap_full_occ;
@@ -39,8 +38,7 @@ namespace acg{
 		ros::Publisher _acg_gdim_om;
 		ros::Publisher _observation_edge_pub;
 		
-		ros::Publisher _last_grid_map;
-		
+
 // 		nav_msgs::OccupancyGrid omap;
 		int _nb_of_zone;
 //		AutoCompleteGraph* _acg;
@@ -67,7 +65,6 @@ namespace acg{
 		VisuAutoCompleteGraphBase(ros::NodeHandle nh) : _nb_of_zone(-1), _resolution(0.1){
 			_nh = nh;
 			_last_ndtmap_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg_occ", 10);
-			_last_ndtmap = _nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
 			_last_ndtmap2_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2_occ", 10);
 			_last_ndtmap_full_occ = _nh.advertise<nav_msgs::OccupancyGrid>("occ_full", 10);
 			_prior_map_occ = _nh.advertise<nav_msgs::OccupancyGrid>("occ_prior", 10);
@@ -84,10 +81,7 @@ namespace acg{
 			_gaussian_pub = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners", 10);
 			_gaussian_pub2 = _nh.advertise<visualization_msgs::Marker>("gaussian_that_gave_corners2", 10);
 			_observation_edge_pub = _nh.advertise<visualization_msgs::Marker>("observation_edge", 10);
-			_acg_gdim = _nh.advertise<auto_complete_graph::ACGMaps>("acg_maps", 10);
-			_acg_gdim_om = _nh.advertise<auto_complete_graph::ACGMapsOM>("acg_maps_om", 10);
-			_last_grid_map = _nh.advertise<grid_map_msgs::GridMap>("last_grid_map", 10);
-			
+
 //			_acg = acg;
 
 			_prior_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
@@ -341,30 +335,9 @@ namespace acg{
 				_nb_of_zone = acg.getRobotNodes().size();
 // 				exit(0);
 				
-				//Puclish message for GDIM
-				auto_complete_graph::ACGMaps mapmsg;
-				std::cout << "PUSH acg maps message" << std::endl;
-				AASS::acg::ACGToACGMapsMsg(acg, mapmsg);
-				_acg_gdim.publish(mapmsg);
+
 				
-				
-				auto_complete_graph::ACGMapsOM mapmsg_om;
-				std::cout << "PUSH acg maps OM message" << std::endl;
-				AASS::acg::ACGToACGMapsOMMsg(acg, mapmsg_om);
-				_acg_gdim_om.publish(mapmsg_om);
-				
-				//Publish the last grid map as a message to make sure that they look like something
-				int size_g = mapmsg_om.ndt_maps_om.size();
-				std::cout << "Last grid map" << std::endl;
-				_last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
-				
-				//Publish last occ grid to make sure that they look like something
-				int size_o = mapmsg.ndt_maps.maps.size();
-// 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
-// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-//                 perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
-				std::cout << "Last ndtmap" << std::endl;
-				_last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o -1]);
+
 // 				delete omap;
 				std::cout << "Done" << std::endl;
 				

@@ -1178,13 +1178,13 @@ namespace acg{
 				grid_map::GridMapRosConverter::fromOccupancyGrid(*omap, "ndt", mapNDT);
 				delete omap;
 
-				grid_map::Matrix& data = mapNDT["ndt"];
-				for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
-					const grid_map::Index index(*iterator);
-					if(std::isnan(data(index(0), index(1)))){
-						data(index(0), index(1)) = -1;
-					}
-				}
+//				grid_map::Matrix& data = mapNDT["ndt"];
+//				for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
+//					const grid_map::Index index(*iterator);
+//					if(std::isnan(data(index(0), index(1)))){
+//						data(index(0), index(1)) = -1;
+//					}
+//				}
 
 // 				std::cout << "ADDING A MAP" << std::endl;
 // 				///Copy map

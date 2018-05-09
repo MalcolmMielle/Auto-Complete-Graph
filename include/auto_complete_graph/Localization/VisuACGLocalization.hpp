@@ -113,6 +113,15 @@ namespace AASS {
 					drawPoseLocalizations(acg);
 					drawPriorObservations(acg);
 					drawLocalizationLandmarks(acg);
+
+// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+					if(acg.getRobotPoseLocalization().size() > 0) {
+						nav_msgs::OccupancyGrid omap_occ;
+						int size_rl = acg.getRobotPoseLocalization().size();
+						perception_oru::toOccupancyGrid(acg.getRobotPoseLocalization()[size_rl - 1]->getMap().get(), omap_occ, 0.1,
+						                                "/world");
+						_last_ndtmap2_occ.publish(omap_occ);
+					}
 //					_nb_of_zone = acg.getRobotNodes().size();
 				}
 
