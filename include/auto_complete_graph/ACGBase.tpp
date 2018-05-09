@@ -1298,7 +1298,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 	int count = 0;
 	std::deque<double> _chi_kernel;
 	for ( ; count < max_iter && count < 2 ; ++count){
-		std::cout << "Optimizing because we need to " << std::endl;
+		std::cout << "Optimizing two times at least because we need to " << std::endl;
 		_optimizable_graph.optimize(1);
 		_optimizable_graph.computeActiveErrors();
 		_chi_kernel.push_back(_optimizable_graph.chi2());
@@ -1322,9 +1322,16 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 			testNoNanInPrior("update prior edge cov after opti huber");
 		}
 	}
-	int a;
-	std::cout << "Enter anything to pass " <<count << std::endl;
-	std::cin >> a;
+
+	if(count >= max_iter){
+
+	    std::cout << "\n\n****** ATTENTION THE OPTIMIZATION PROBABLY FAILED. It iterated for too long, please double check the resulting map ! *****\n" << std::endl;
+
+	}
+
+	//int a;
+	//std::cout << "Enter anything to pass " <<count << std::endl;
+	//std::cin >> a;
 
 }
 

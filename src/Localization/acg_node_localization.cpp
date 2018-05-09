@@ -28,6 +28,7 @@
 
 bool optimize_prior = true;
 bool abort_f = false;
+bool testing_pause = false;
 
 ros::Publisher map_pub_;
 ros::Publisher last_ndtmap_full;
@@ -310,11 +311,11 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		
 //		if(oacg->getRobotNodes().size() > 0){
 
-
-		std::cout << "RVIZ " << std::endl;
-		visu.updateRviz(*oacg);
-		std::cout << "RVIZ DONE" << std::endl;
-		
+		if(testing_pause) {
+			std::cout << "RVIZ " << std::endl;
+			visu.updateRviz(*oacg);
+			std::cout << "RVIZ DONE" << std::endl;
+		}
 		
 		// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
 		// 	std::ostringstream convert;   // stream used for the conversion
@@ -338,13 +339,16 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				//Prepare the graph : marginalize + initializeOpti
 				
 				ros::Time start_opti = ros::Time::now();
-				bool optiquest = false;
-				std::cout << "Optimize ?" << std::endl;
-				std::cin >> optiquest;
+				bool optiquest = true;
+				if(testing_pause) {
+					std::cout << "Optimize ?" << std::endl;
+					std::cin >> optiquest;
+				}
 				if( /*oacg->checkAbleToOptimize() &&*/  optiquest) {
 					oacg->setFirst();
 					oacg->prepare();
 					oacg->optimize();
+
 				}
 				ros::Time end_opti = ros::Time::now();	
 				double opti = (start_opti - end_opti).toSec();
@@ -366,6 +370,12 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				std::cout << "RVIZ " << std::endl;
 				visu.updateRviz(*oacg);
 				std::cout << "RVIZ DONE" << std::endl;
+
+				if(testing_pause) {
+					std::cout << "Result of optimization. Enter a number to continue" << std::endl;
+					int aaa;
+					std::cin >> aaa;
+				}
 		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
 		// 		std::cin >>a;
 				
@@ -447,6 +457,8 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 	oacg.addPriorGraph(graph_prior);
 	
 	initialiser.clear();
+
+	publishPriorNDT(oacg);
 	
 }
 
@@ -460,6 +472,7 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("~");
 
 	/**************PARAMETERS**************/
+	nh.param("pause_for_testing",testing_pause,false);
 	bool use_prior = true;
 	nh.param("use_prior",use_prior,true);
 	bool use_robot_maps = true;
