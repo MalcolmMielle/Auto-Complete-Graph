@@ -95,7 +95,7 @@ nav_msgs::OccupancyGrid::Ptr createOccupancyMap(const AASS::acg::AutoCompleteGra
 
 	nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
 	nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
-	int size_rl = acg.getRobotPoseLocalization().size();
+	int size_rl = oacg.getRobotPoseLocalization().size();
 	if(size_rl > 0){
 		perception_oru::toOccupancyGrid(oacg.getRobotPoseLocalization()[size_rl - 1]->getMap().get(), *occ_out, 0.1, "/world");
 	}
@@ -107,7 +107,7 @@ nav_msgs::OccupancyGrid::Ptr createOccupancyMap(const AASS::acg::AutoCompleteGra
 void sendMapAsOcc(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 	
 	if(updated == true){
-		occ_map_global = createOccupancyMap();
+		occ_map_global = createOccupancyMap(oacg);
 		updated = false;
 	}
 	//Just to make sure
