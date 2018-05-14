@@ -52,6 +52,11 @@ std::vector<double> time_extract_corner_ndt;
 std::vector<double> time_opti;
 std::vector<double> all_node_times;
 
+nav_msgs::OccupancyGrid::Ptr occ_map_global;
+
+bool updated = true;
+
+
 inline bool exists_test3 (const std::string& name) {
 	struct stat buffer;   
 	return (stat (name.c_str(), &buffer) == 0); 
@@ -76,13 +81,24 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 	return transform;
 }
 
-void sendMapAsOcc(const AASS::acg::AutoCompleteGraphLocalization& oacg){
+nav_msgs::OccupancyGrid::Ptr createOccupancyMap(){
+
+	std::cout << "Creating occ grid" << std::endl;
 	grid_map::GridMap gridMap;
 	AASS::acg::ACGToGridMap(oacg, gridMap);
 	nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
 	nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
 	grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+	std::cout << "Occupancy grid sent ! " << std::endl;
 
+}
+
+void sendMapAsOcc(const AASS::acg::AutoCompleteGraphLocalization& oacg){
+	
+	if(updated == true){
+		occ_map_global = createOccupancyMap();
+		updated = false;
+	}
 	//Just to make sure
 	occ_send.publish<nav_msgs::OccupancyGrid>(*occ_out);
 }
@@ -332,6 +348,8 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 // 	try{
+
+		updated = true;
 		new_node = true;
 	// 	abort_f = true;
 		std::cout << "Got a new graph " << std::endl;
