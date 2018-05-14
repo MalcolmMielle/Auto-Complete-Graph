@@ -81,15 +81,26 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 	return transform;
 }
 
-nav_msgs::OccupancyGrid::Ptr createOccupancyMap(){
+nav_msgs::OccupancyGrid::Ptr createOccupancyMap(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
-	std::cout << "Creating occ grid" << std::endl;
-	grid_map::GridMap gridMap;
-	AASS::acg::ACGToGridMap(oacg, gridMap);
+	//std::cout << "Creating occ grid" << std::endl;
+	//grid_map::GridMap gridMap;
+	//AASS::acg::ACGToGridMap(oacg, gridMap);
+	//nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
+	//nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
+	//grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+
+
+	//nav_msgs::OccupancyGrid::Ptr omap_occ;
+
 	nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
 	nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
-	grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
+	int size_rl = acg.getRobotPoseLocalization().size();
+	if(size_rl > 0){
+		perception_oru::toOccupancyGrid(acg.getRobotPoseLocalization()[size_rl - 1]->getMap().get(), *occ_out, 0.1, "/world");
+	}
 	std::cout << "Occupancy grid sent ! " << std::endl;
+	return occ_out;
 
 }
 
@@ -100,7 +111,7 @@ void sendMapAsOcc(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 		updated = false;
 	}
 	//Just to make sure
-	occ_send.publish<nav_msgs::OccupancyGrid>(*occ_out);
+	occ_send.publish<nav_msgs::OccupancyGrid>(*occ_map_global);
 }
 
 void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg){
