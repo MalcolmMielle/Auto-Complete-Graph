@@ -97,7 +97,7 @@ nav_msgs::OccupancyGrid::Ptr createOccupancyMap(const AASS::acg::AutoCompleteGra
 	nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
 	int size_rl = acg.getRobotPoseLocalization().size();
 	if(size_rl > 0){
-		perception_oru::toOccupancyGrid(acg.getRobotPoseLocalization()[size_rl - 1]->getMap().get(), *occ_out, 0.1, "/world");
+		perception_oru::toOccupancyGrid(oacg.getRobotPoseLocalization()[size_rl - 1]->getMap().get(), *occ_out, 0.1, "/world");
 	}
 	std::cout << "Occupancy grid sent ! " << std::endl;
 	return occ_out;
