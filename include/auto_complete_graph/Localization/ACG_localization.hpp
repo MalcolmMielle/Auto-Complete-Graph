@@ -34,8 +34,12 @@ namespace acg{
 	    ///@brief Use the gaussian of the corner approximated by ndt_feature_finder
 	    bool _use_corner_covariance;
 	    ///@brief Use the covariance of MCL into the link between corner in submaps and prior. NOT WORKING :)
+
+		//UNUSED
 		bool _use_covariance_for_links;
 	    ///@brief Add an observation between mcl poses and prior corner if the prior is close enough to a NDT corner. The obervation is the corner observation from the robot to the NDT corner.
+		
+//UNUSED
 	    bool _use_mcl_observation_on_prior;
 	    ///@brief Add link in between ndt corner and prior corner based on a distance threshold.
 	    bool _use_links_prior_classic_ssrr;
@@ -46,6 +50,7 @@ namespace acg{
 
 	    bool _use_robot_maps;
 
+		//UNUSED
 	    bool _use_mcl_cov_to_find_prior_observed;
 
 	    std::vector<g2o::EdgeLocalization*> _edges_localization;

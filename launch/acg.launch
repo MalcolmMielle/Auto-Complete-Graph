@@ -12,7 +12,7 @@
 	<param name="use_corner_orientation" value="false" />
 	<param name="corner_covariance" value="false" /> <!-- DOESNT WORK -->
 	<param name="own_registration" value="true" />
-	<param name="link_to_prior" value="false" />
+	<!--param name="link_to_prior" value="false" /-->
 	<param name="mcl_observation_on_prior" value="true" />
 	<param name="links_prior_classic_ssrr" value="false" />
 	<param name="use_mcl_cov_to_find_prior_observed" value="false" />
