@@ -179,7 +179,7 @@ protected:
   std::string map_name="graph_map";
   std::string points_topic, laser_topic, map_dir, odometry_topic,odometry_adjusted_topic, robot_frame;
   std::string file_format_map=".JFF";
-  std::string world_link_id, odometry_link_id, fuser_base_link_id,laser_link_id, init_pose_frame, gt_topic, bag_name,state_base_link_id;
+  std::string world_link_id, map_link_id, odometry_link_id, fuser_base_link_id,laser_link_id, init_pose_frame, gt_topic, bag_name,state_base_link_id;
   double size_x, size_y, size_z, resolution, sensor_range, min_laser_range_;
   bool visualize, match2D, matchLaser, beHMT, useOdometry,
   initPoseFromGT, initPoseFromTF, initPoseSet, gt_mapping;
@@ -331,7 +331,8 @@ public:
 
     //the frame to initialize to
 
-    param_nh.param<std::string>("world_frame",world_link_id,"/world");
+	  param_nh.param<std::string>("world_frame",world_link_id,"/world");
+	  param_nh.param<std::string>("map_frame",map_link_id,"/map");
     //our frame
     param_nh.param<std::string>("fuser_frame_id",fuser_base_link_id,"/fuser_base_link");
     param_nh.param<std::string>("laser_frame_id",laser_link_id,"/velodyne");
@@ -930,7 +931,7 @@ public:
 		return T;
 	}
 
-  void processFrame(pcl::PointCloud<pcl::PointXYZ> &cloud, Eigen::Affine3d Tmotion) {
+  void processFrame(pcl::PointCloud<pcl::PointXYZ> &cloud, Eigen::Affine3d Tmotion, const ros::Time& time=ros::Time(0)) {
 
 	  std::cout << "MOTION !!! " << Tmotion.matrix() << std::endl;
 
@@ -1026,17 +1027,23 @@ public:
 			 // 	std::cout << "Transform " << Transform.getOrigin().getX() << " " << Transform.getOrigin().getY() << " " << Transform.getOrigin().getZ() << " between " << world_link_id << " " << fuser_base_link_id << std::endl;
 
 
-			 tf_.sendTransform(tf::StampedTransform(Transform, tplot, world_link_id, fuser_base_link_id));
+			 tf_.sendTransform(tf::StampedTransform(Transform, time, world_link_id, fuser_base_link_id));
 			 // 	auto pose_tmp = getPose(world_link_id, fuser_base_link_id, tplot);
 			 // 	std::cout << "Trans NOW" << pose_tmp.matrix() << std::endl;
 			 // 	assert(pose_tmp == pose_);
 			 // 	exit(0);
 			 //I'm not sure why this transformation is published :/
 			 //     tf_.sendTransform(tf::StampedTransform(tf_sensor_pose_, tplot, fuser_base_link_id, "/fuser_laser_link"));
-			 fuser_odom.header.stamp = tplot;
+			 fuser_odom.header.stamp = time;
 
 			 tf::poseEigenToMsg(pose_, fuser_odom.pose.pose);
 			 fuser_odom_publisher_.publish(fuser_odom);
+
+
+			 //Publish transform from map to world.
+			 auto robot_pose = getPose(world_link_id, robot_frame, time);
+			 Eigen::Affine3d map_to_world = robot_pose.inverse() * pose_;
+			 tf_.sendTransform(tf::StampedTransform(Transform, tplot, map_link_id, world_link_id));
 
 
 			 auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
@@ -1160,7 +1167,7 @@ public:
     }
     T.setIdentity();
     cout<<"node: laser call back, process frame"<<endl;
-    this->processFrame(pcl_cloud,T);
+    this->processFrame(pcl_cloud,T, msg_in->header.stamp);
 
 
   }
@@ -1202,7 +1209,7 @@ public:
         pcl_cloud.points.push_back(pt);
       }
     }
-    this->processFrame(pcl_cloud,Tm);
+    this->processFrame(pcl_cloud,Tm, msg_in->header.stamp);
     cout<< "publish fuser data"<<endl;
   }
 
@@ -1232,7 +1239,7 @@ public:
     }
     last_odom = this_odom;
     pcl::fromROSMsg (*msg_in, cloud);
-    this->processFrame(cloud,Tm);
+    this->processFrame(cloud,Tm, msg_in->header.stamp);
     ros::Time tend=ros::Time::now();
     cout<<"Total execution time= "<<tend-tstart<<endl;
   }
@@ -1251,7 +1258,7 @@ public:
     last_odom_found=found_odom;
 
     last_odom = this_odom;
-    this->processFrame(cloud,Tm);
+    this->processFrame(cloud,Tm, msg_in->header.stamp);
     cout<<"TF callback Point2Odom"<<endl;
   }
 
