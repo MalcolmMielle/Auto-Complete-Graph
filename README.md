@@ -1,6 +1,5 @@
 # Auto Complete Graph (ACG).
 
-
 Using emergency maps to help robots save you in emergencies
 
 ## Description
@@ -13,24 +12,65 @@ The goal of this program is described [in this blog post](https://malcolmmielle.
 
 ## Paper
 
-The auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv.
+The auto-complete graph uses a circular strategy to integrate an emergency map and a robot build map in a global representation. The robot build a map of the environment using NDT mapping, and in parallel do localization in the emergency map using Monte-Carlo Localization. Corners are extracted in both the robot map and the emergency map. Using the information from the localization, a graph-SLAM is created where observation of the emergency map corner are determined using the localization covariance and the position of the emergency map's corners compared to the position of corners detected in the robot map. The graph is further constrained by having emergency map walls able to stretch or shrink but being hard to rotate. This is done because emergency maps have usually local scaling problems but do have correct topology.
 
+A first version of the auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv and was publish in [SSRR2017]() where it got the best student paper award. This version integrates the emergency map in the robot map using a specific graph matching strategy.
+
+
+## To run the code
+
+Two launch file are used to run the code: one for the mapping and localization, and another for the graph-SLAM optimization.
+
+### Mapping and localization parameters:
+
+* use\_mcl: if true, use MCL in the emergency map.
+* use\_graph\_map\_registration: if true, use NDT mapping.
+* zfilter\_min: 
+* fraction:
+* cutoff:
+* init\_var:
+* scale\_gaussian\_mcl: scaling factor for the gaussian in MCL localization
+* cell\_neighborhood\_size\_mcl\_in\_meters: if mcl is allozed to use cell further away from the actual cell scan, the parameter is the size of the neighbor that MCL is allowed to search.
+* use\_euclidean\_mcl: use the euclidean distance as a measure for the cell fitness in MCL.
+* use\_mean\_score\_mcl: use the mean value of all cell within the neighbor
+* use\_euclidean\_for\_long\_distances: only use the euclidean distance if the cell is further than the distance\_euclid parameter.
+* use\_hybrid\_strategy\_mcl: use an hybrid strategy in MCL where either we find a cell corresponding exactly to the scan and we use it as is, or we consider the neighbor and use the mean of all cell fitness. This parameter forces the use of the euclidean distance.
+* cov\_x\_mcl: starting cov along the x axis for the MCL.
+* cov\_y\_mcl: starting cov along the y axis for the MCL.
+* cov\_yaw\_mcl: starting cov along the yaw axis for the MCL.
+
+
+### ACG parameters
+
+* pause\_for\_testing: if true, the program will stop at every step.
+* use\_prior: if true, integrate the emergency map.
+* optimize\_prior: if true, the emergency map is optimized to fit the robot map.
+* use\_robot\_maps: if true, the mapping given by the robot is used.
+* use\_corner: extract corners from the robot map.
+* use\_corner\_orientation: use the corner orientation as a parameter for corner matching.
+* corner\_covariance: use an approximation of the corner covariance given the NDT used to find it.
+* own\_registration: register the submaps.
+* mcl\_observation\_on\_prior: use MCL to find correspondences between the emergency map and the robot map. UNUSED
+* links\_prior\_classic\_ssrr: use old strategy. DOESN'T WORK ANYMORE.
+* use\_mcl\_cov\_to\_find\_prior\_observed: UNUSED
+* world\_frame: the world frame
+* sensor\_frame: the sensor frame
+* covariance\_to\_find\_links: UNUSED
+* gaussian\_scaling\_factor: scaling factor of the MCL covariance.
+* threshold\_score\_link\_creation: probability above which the corner are considered the same and matched. This should be only slightly above zero.
+* prior\_file: file localization for the emergency map image.
+* max\_deviation\_corner\_in\_prior: minimum angle to extract a corner from the emergency map.
+* scale: scale of the emergency map.
+
+<remap from="acg_node_localization/prior_ndt" to ="/ndt_map_init_mcl"/>
 
 ## Run the code example
 
-This should all be soon ros parameters but for now here is how you can test the code:
-
-* Use `roslaunch ndt_feature gustav_radar_tf.launch` to create the ndt_graph that is going to be processed by the ACG. Modify the file so that it reads your bag file. Use this [bag file](http://aass.oru.se/Research/mro/data/tutorials/mapping.bag) if your only testing the algorithm.
+Run both launch files `hannover.launch` and `acg.launch`
 
 * The parameters for ACG are loaded from a file. The file is determined by a string in `acg_node_review.cpp` named `parameters_for_ACG`. An example of parameter file is present in `ACG_params/param.txt`
 
-* Use `rosrun auto_complete_graph acg_node_review` to run the algorithm.
-
-* In Rviz, one can give an approximation of the position_in_robot_frame of the prior compared to robot map using the Publish point button. Only two links are needed to initialize.
-
-### How to use your own prior
-
-The class `PriorLoaderInterface.hpp` is used to load prior image and detected corners. Just inherit from this class to create your own prior loader. See an example in the class `basementFull.hpp`. This only argument needed for PriorLoaderInterface is the name of the file image where the prior is.
+* In Rviz, one can give an approximation of the position\_in\_robot\_frame of the prior compared to robot map using the Publish point button. Only two links are needed to initialize. First click on corner in the emergency map and then in the equivalent corner in the robot map.
 
 ## Dependencies
 
@@ -69,4 +109,6 @@ geometry_msgs/Pose[] robot_poses #transformation between the previous submap and
 grid_map_msgs/GridMap prior #Prior map as a gridMap with resolution 0.1 and origin frame "/world"
 ```
 Each ndt map is centered where the corresponding robot pose node is situated.
+
+The results can be visualized using the [auto-complete-graph visualization]() package.
 
