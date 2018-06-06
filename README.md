@@ -112,3 +112,17 @@ Each ndt map is centered where the corresponding robot pose node is situated.
 
 The results can be visualized using the [auto-complete-graph visualization]() package.
 
+## Details about the method
+
+### Corner matching using MCL
+
+The MCL poses can be considered as _"where the robot thinks he is in the emergency map when considering the laser scanner input"_. Hence, here is the strategy used to find association between the emergency map and the robot map:
+
+* Every MCL pose is associated with an equivalent robot map pose and a submap.
+* For every corner in the submap, its coordinate are changed to assume it is seen from the MCL position instead of the robot map pose, i.e. we translate the submap from the robot map pose to the MCL pose.
+* We score the likeliness that a corner correspond to a emergency map corner by using the MCL covariance:
+	* We calculate the mahalanobis distance using the MCL covariance: `(pose_prior - pose_landmark).dot( mcl_cov_inverse * (pose_prior - pose_landmark));`
+	* We then calculate the probability of the corners being the same: `prob = exp(mahalanobis distance)`
+	This probability will be only slightly superior to zero if the corner pose _"fit in the covariance"_. Hence we only need to look for a score slightly superior to zero to get a matching ; we use 5%.
+* If the corner match we create an observation from the robot pose to emergency map corner. This observation's covariance is the equivalent MCL pose covariance.
+
