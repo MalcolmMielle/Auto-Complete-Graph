@@ -62,7 +62,7 @@ namespace acg{
 		std::string _image_file;
 		
 	public:
-		VisuAutoCompleteGraphBase(ros::NodeHandle nh) : _nb_of_zone(-1), _resolution(0.1){
+		VisuAutoCompleteGraphBase(ros::NodeHandle nh, const std::string& world_frame_id = "/world") : _nb_of_zone(-1), _resolution(0.1){
 			_nh = nh;
 			_last_ndtmap_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg_occ", 10);
 			_last_ndtmap2_occ = _nh.advertise<nav_msgs::OccupancyGrid>("lastgraphmap_acg2_occ", 10);
@@ -85,7 +85,7 @@ namespace acg{
 //			_acg = acg;
 
 			_prior_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
-			_prior_edge_markers.header.frame_id = "/world";
+			_prior_edge_markers.header.frame_id = world_frame_id ;
 			_prior_edge_markers.ns = "acg";
 			_prior_edge_markers.id = 0;
 			_prior_edge_markers.scale.x = 0.2;
@@ -94,7 +94,7 @@ namespace acg{
 			_prior_edge_markers.color.a = 1.0;
 
 			_observation_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
-			_observation_edge_markers.header.frame_id = "/world";
+			_observation_edge_markers.header.frame_id = world_frame_id ;
 			_observation_edge_markers.ns = "acg";
 			_observation_edge_markers.id = 0;
 			_observation_edge_markers.scale.x = 0.2;
@@ -103,7 +103,7 @@ namespace acg{
 			_observation_edge_markers.color.a = 1.0;
 			
 			_ndt_node_markers.type = visualization_msgs::Marker::POINTS;
-			_ndt_node_markers.header.frame_id = "/world";
+			_ndt_node_markers.header.frame_id = world_frame_id ;
 			_ndt_node_markers.ns = "acg";
 			_ndt_node_markers.id = 1;
 			_ndt_node_markers.scale.x = 0.2;
@@ -112,7 +112,7 @@ namespace acg{
 			_ndt_node_markers.color.a = 1.0;
 			
 			_prior_node_markers.type = visualization_msgs::Marker::POINTS;
-			_prior_node_markers.header.frame_id = "/world";
+			_prior_node_markers.header.frame_id = world_frame_id ;
 			_prior_node_markers.ns = "acg";
 			_prior_node_markers.id = 1;
 			_prior_node_markers.scale.x = 0.5;
@@ -121,7 +121,7 @@ namespace acg{
 			_prior_node_markers.color.a = 1.0;
 			
 			_corner_ndt_node_markers.type = visualization_msgs::Marker::POINTS;
-			_corner_ndt_node_markers.header.frame_id = "/world";
+			_corner_ndt_node_markers.header.frame_id = world_frame_id ;
 			_corner_ndt_node_markers.ns = "acg";
 			_corner_ndt_node_markers.id = 2;
 			_corner_ndt_node_markers.scale.x = 0.5;
@@ -141,7 +141,7 @@ namespace acg{
 //			_link_markers.color.a = 1.0;
 			
 			_angles_markers.type = visualization_msgs::Marker::LINE_LIST;
-			_angles_markers.header.frame_id = "/world";
+			_angles_markers.header.frame_id = world_frame_id ;
 			_angles_markers.ns = "acg";
 			_angles_markers.id = 4;
 			_angles_markers.scale.x = 0.2;
@@ -151,7 +151,7 @@ namespace acg{
 			_angles_markers.color.a = 1.0;
 			
 			_anglesw_markers.type = visualization_msgs::Marker::LINE_LIST;
-			_anglesw_markers.header.frame_id = "/world";
+			_anglesw_markers.header.frame_id = world_frame_id ;
 			_anglesw_markers.ns = "acg";
 			_anglesw_markers.id = 5;
 			_anglesw_markers.scale.x = 0.1;
@@ -161,7 +161,7 @@ namespace acg{
 			_anglesw_markers.color.a = 1.0;
 			
 			_angles_prior_markers.type = visualization_msgs::Marker::LINE_LIST;
-			_angles_prior_markers.header.frame_id = "/world";
+			_angles_prior_markers.header.frame_id = world_frame_id ;
 			_angles_prior_markers.ns = "acg";
 			_angles_prior_markers.id = 6;
 			_angles_prior_markers.scale.x = 0.2;
@@ -171,7 +171,7 @@ namespace acg{
 			_angles_prior_markers.color.a = 1.0;
 			
 			_anglesw_prior_markers.type = visualization_msgs::Marker::LINE_LIST;
-			_anglesw_prior_markers.header.frame_id = "/world";
+			_anglesw_prior_markers.header.frame_id = world_frame_id ;
 			_anglesw_prior_markers.ns = "acg";
 			_anglesw_prior_markers.id = 6;
 			_anglesw_prior_markers.scale.x = 0.1;
@@ -181,7 +181,7 @@ namespace acg{
 			_anglesw_prior_markers.color.a = 1.0;
 			
 			_gaussian_that_gave_corners.type = visualization_msgs::Marker::LINE_LIST;
-			_gaussian_that_gave_corners.header.frame_id = "/world";
+			_gaussian_that_gave_corners.header.frame_id = world_frame_id ;
 			_gaussian_that_gave_corners.ns = "acg";
 			_gaussian_that_gave_corners.id = 7;
 			_gaussian_that_gave_corners.scale.x = 0.2;
@@ -191,7 +191,7 @@ namespace acg{
 			_gaussian_that_gave_corners.color.a = 1.0;
 			
 			_gaussian_that_gave_corners2.type = visualization_msgs::Marker::LINE_LIST;
-			_gaussian_that_gave_corners2.header.frame_id = "/world";
+			_gaussian_that_gave_corners2.header.frame_id = world_frame_id;
 			_gaussian_that_gave_corners2.ns = "acg";
 			_gaussian_that_gave_corners2.id = 7;
 			_gaussian_that_gave_corners2.scale.x = 0.2;

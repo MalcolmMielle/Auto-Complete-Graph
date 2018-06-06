@@ -666,7 +666,7 @@ int main(int argc, char **argv)
 	AASS::acg::RvizPointsLocalization initialiser(nh, &oacg);
 	
 	
-	AASS::acg::VisuAutoCompleteGraphLocalization visu(nh);
+	AASS::acg::VisuAutoCompleteGraphLocalization visu(nh, world_frame);
 	std::string path_images = path_to_acg + "/ACG_folder/Images";
 	visu.setImageFileNameOut(path_images);
 	

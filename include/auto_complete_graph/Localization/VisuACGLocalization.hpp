@@ -30,8 +30,8 @@ namespace AASS {
 
 
 		public:
-			VisuAutoCompleteGraphLocalization(const ros::NodeHandle &nh)
-					: VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(nh) {
+			VisuAutoCompleteGraphLocalization(const ros::NodeHandle &nh, const std::string& world_frame_id = "/world")
+					: VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(nh, world_frame_id) {
 
 //				_acg = acg;
 
@@ -42,7 +42,7 @@ namespace AASS {
 				_last_landmark = _nh.advertise<visualization_msgs::Marker>("mcl_landmark", 10);
 
 				_localization_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
-				_localization_edge_markers.header.frame_id = "/world";
+				_localization_edge_markers.header.frame_id = world_frame_id;
 				_localization_edge_markers.ns = "acg";
 				_localization_edge_markers.id = 0;
 				_localization_edge_markers.scale.x = 0.1;
@@ -52,7 +52,7 @@ namespace AASS {
 
 
 				_prior_observations.type = visualization_msgs::Marker::LINE_LIST;
-				_prior_observations.header.frame_id = "/world";
+				_prior_observations.header.frame_id = world_frame_id;
 				_prior_observations.ns = "acg";
 				_prior_observations.id = 0;
 				_prior_observations.scale.x = 0.1;
@@ -61,7 +61,7 @@ namespace AASS {
 				_prior_observations.color.a = 1.0;
 
 				_last_seen_landmark_in_mcl_pose.type = visualization_msgs::Marker::POINTS;
-				_last_seen_landmark_in_mcl_pose.header.frame_id = "/world";
+				_last_seen_landmark_in_mcl_pose.header.frame_id = world_frame_id;
 				_last_seen_landmark_in_mcl_pose.ns = "acg";
 				_last_seen_landmark_in_mcl_pose.id = 0;
 				_last_seen_landmark_in_mcl_pose.scale.x = 0.5;
@@ -71,7 +71,7 @@ namespace AASS {
 
 
 				_mcl_angles_markers.type = visualization_msgs::Marker::LINE_LIST;
-				_mcl_angles_markers.header.frame_id = "/world";
+				_mcl_angles_markers.header.frame_id = world_frame_id;
 				_mcl_angles_markers.ns = "acg";
 				_mcl_angles_markers.id = 0;
 				_mcl_angles_markers.scale.x = 0.1;
@@ -82,7 +82,7 @@ namespace AASS {
 
 
 				_ndt_node_localization_markers.type = visualization_msgs::Marker::POINTS;
-				_ndt_node_localization_markers.header.frame_id = "/world";
+				_ndt_node_localization_markers.header.frame_id = world_frame_id;
 				_ndt_node_localization_markers.ns = "acg";
 				_ndt_node_localization_markers.id = 1;
 				_ndt_node_localization_markers.scale.x = 0.2;

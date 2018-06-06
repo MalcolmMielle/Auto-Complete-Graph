@@ -1046,7 +1046,9 @@ public:
 			 //Publish transform from map to world.
 			 auto robot_pose = getPose(world_link_id, robot_frame, time);
 			 Eigen::Affine3d map_to_world = robot_pose.inverse() * pose_;
-			 tf_.sendTransform(tf::StampedTransform(Transform, tplot, map_link_id, world_link_id));
+			 tf::Transform Transform_map;
+			 tf::transformEigenToTF(map_to_world, Transform_map);
+			 tf_.sendTransform(tf::StampedTransform(Transform_map, time, map_link_id, world_link_id));
 
 
 			 auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();

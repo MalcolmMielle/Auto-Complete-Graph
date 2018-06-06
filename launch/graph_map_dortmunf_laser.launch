@@ -12,7 +12,7 @@
 	
 <include file="$(find gustav_scripts)/URDF/urdf_basement.launch"/>
 	
-<node pkg="tf" type="static_transform_publisher" name="world_odom_frame" args="0 0 0 0 0 0 /world /odom 10"/>
+<!--node pkg="tf" type="static_transform_publisher" name="world_odom_frame" args="0 0 0 0 0 0 /world /odom 10"/-->
 <!-- <node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame" args="1 -50 0 0 0 0 /world /base_link_tmp 10"/> -->
 <!-- <node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame_frame" args="0 0 0 0 0 0 /base_link_tmp /laser_frame_tmp 10"/> -->
 
