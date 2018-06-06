@@ -1124,10 +1124,10 @@ namespace acg{
 	
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void ACGToACGMapsMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMaps& mapmsg){
+	inline void ACGToACGMapsMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMaps& mapmsg, const std::string& frame_id = "/world"){
 		
 		mapmsg.header.stamp = ros::Time::now();
-		mapmsg.header.frame_id = "world";
+		mapmsg.header.frame_id = frame_id;
 		
 // 		std::cout << "Vector Map" << std::endl;
 		ndt_map::NDTVectorMapMsg maps;
@@ -1154,7 +1154,7 @@ namespace acg{
 
 
 		template< typename Prior, typename VertexPrior, typename EdgePrior>
-		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1){
+		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1, const std::string& frame_id = "/world"){
 //		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
 
@@ -1171,7 +1171,7 @@ namespace acg{
 
 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, "/world");
+				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id);
 
 				grid_map::GridMap mapNDT;
 				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
@@ -1226,7 +1226,7 @@ namespace acg{
 
 
 		//THAT IS UGLY BUT I NEED IT FAST :( LOCALIZATION AND ROBOT POSE SHOULD BE THE SAME THING
-		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphLocalization& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution){
+		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphLocalization& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution, const std::string& frame_id = "/world"){
 //		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotPoseLocalization().begin() ; it != acg.getRobotPoseLocalization().end(); ++it){
 
@@ -1243,7 +1243,7 @@ namespace acg{
 
 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, "/world");
+				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id);
 
 				grid_map::GridMap mapNDT;
 				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
@@ -1299,18 +1299,18 @@ namespace acg{
 
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg){
+	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, const std::string& frame_id = "/world"){
 		
 		mapmsg.header.stamp = ros::Time::now();
-		mapmsg.header.frame_id = "world";
+		mapmsg.header.frame_id = frame_id;
 		
 // 		std::cout << "Vector Map" << std::endl;
 // 		ndt_map::NDTVectorMapMsg maps;
-		ACGToOccMaps(acg, mapmsg, 0.1);
+		ACGToOccMaps(acg, mapmsg, 0.1, frame_id);
 		
 // 		std::cout << "Grid Map" << std::endl;
 		grid_map::GridMap gridMap;
-		gridMap.setFrameId("/world");
+		gridMap.setFrameId(frame_id);
 		double size_x, size_y;
 		getPriorSizes(acg, size_x, size_y);
 		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));

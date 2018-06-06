@@ -72,6 +72,9 @@ namespace acg{
 			}
 			else{
 				std::cout << "You need to init MCL to start MCL localization" << std::endl;
+				Eigen::Matrix3d cov;
+				Eigen::Vector3d mean;
+				return std::make_tuple(mean, cov);
 			}
 		}
 		

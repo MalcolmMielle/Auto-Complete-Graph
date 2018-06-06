@@ -436,6 +436,7 @@ namespace acg{
 		bool save(const std::string& file_outt){
 			_optimizable_graph.save(file_outt.c_str());
 			std::cout << "saved to " << file_outt << "\n";
+			return true;
 		}
 
 		void useRobustKernel(bool use){_flag_use_robust_kernel = use;}

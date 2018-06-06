@@ -524,7 +524,7 @@ public:
 
 		std::cout << "Publishing" << std::endl;
 		ndt_map::NDTVectorMapMsg vector_maps;
-		perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, world_link_id);
+		perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, map_link_id);
 		graph_map_vector_.publish(vector_maps);
 
 		//Save the new pose associated with the node.
@@ -534,7 +534,7 @@ public:
 		std::cout << "PUBLISH: now" << std::endl;
 		//Publish message
 		graph_map::GraphMapMsg graphmapmsg;
-		perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, world_link_id);
+		perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, map_link_id);
 		// 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
 		//
 		if (use_mcl_ && mcl_loaded_) {
@@ -815,6 +815,9 @@ public:
 		}
 		else{
 			std::cout << "You need to init MCL to start MCL localization" << std::endl;
+			Eigen::Matrix3d cov;
+			Eigen::Vector3d mean;
+			return std::make_tuple(mean, cov);
 		}
 	}
 

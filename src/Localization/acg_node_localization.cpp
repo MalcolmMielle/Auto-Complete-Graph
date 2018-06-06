@@ -54,6 +54,10 @@ std::vector<double> all_node_times;
 
 nav_msgs::OccupancyGrid::Ptr occ_map_global;
 
+std::string world_frame;
+std::string map_frame;
+std::string sensor_frame;
+
 bool updated = true;
 
 
@@ -156,13 +160,13 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 	//Puclish message for GDIM
 	auto_complete_graph::ACGMaps mapmsg;
 	std::cout << "PUSH acg maps message" << std::endl;
-	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg);
+	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg, map_frame);
 	acg_gdim.publish(mapmsg);
 
 
 	auto_complete_graph::ACGMapsOM mapmsg_om;
 	std::cout << "PUSH acg maps OM message" << std::endl;
-	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om);
+	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om, map_frame);
 	acg_gdim_om.publish(mapmsg_om);
 
 	//Publish the last grid map as a message to make sure that they look like something
@@ -581,9 +585,8 @@ int main(int argc, char **argv)
 		std::cout << "threshold_score_link_creation needs to be between 0 and 1. Fix it" << std::endl;
 		return 0;
 	}
-	std::string world_frame;
 	nh.param<std::string>("world_frame",world_frame,"/world");
-	std::string sensor_frame;
+	nh.param<std::string>("map_frame", map_frame,"/map");
 	nh.param<std::string>("sensor_frame",sensor_frame,"/velodyne");
 	double deviation = 0;
 	nh.param<double>("deviation", deviation, 0);

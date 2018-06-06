@@ -69,6 +69,7 @@
       <param name="init_pose_tf" value="true" />
       <param name="robot_frame" value="/base_link" />
       <param name="world_frame" value="/odom" />
+      <param name="map_frame" value="/map" />
       <param name="laser_frame_id" value="/velodyne" />
 
       <param name="matchLaser" value="true" />
