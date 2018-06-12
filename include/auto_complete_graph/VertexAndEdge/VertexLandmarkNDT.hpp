@@ -117,7 +117,17 @@ namespace g2o{
 			if (!lp->inverse_cov_exist) {
 				std::cout << "Covariance " << cov << std::endl;
 				std::cout << "determinant " << lp->determinant << std::endl;
-				throw std::runtime_error("Inverse covariance not findable");
+//				throw std::runtime_error("Inverse covariance not findable");
+				std::cout << "Inverse covariance not findable switching ot a small covariance instead" << std::endl;
+				Eigen::Matrix3d temp_cov;
+				temp_cov << 0.1, 0, 0,
+						    0, 0.1, 0,
+						    0, 0, 0.1;
+				lp->cov = temp_cov;
+				cov.computeInverseAndDetWithCheck(lp->cov_inverse, lp->determinant, lp->inverse_cov_exist);
+				std::cout << "Did we find the inverse covariance now : " << lp->cov_inverse << std::endl;
+				assert(lp->inverse_cov_exist == true);
+
 			}
 			associated_localization.insert(lp);
 		}
