@@ -140,7 +140,7 @@ void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 //		assert(allcells.size() > 0);
 
 	ndt_map::NDTMapMsg priormapmsg;
-	perception_oru::toMessage(ndt_prior, priormapmsg, "world");
+	perception_oru::toMessage(ndt_prior, priormapmsg, map_frame);
 	prior_ndt.publish(priormapmsg);
 
 	delete ndt_prior;
@@ -346,7 +346,7 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 	
 	ndt_map::NDTMapMsg msgio;
 // 			ATTENTION Frame shouldn't be fixed
-	bool good = perception_oru::toMessage(graph.getNode(0).map->map, msgio, "/world");
+	bool good = perception_oru::toMessage(graph.getNode(0).map->map, msgio, map_frame);
 // 			perception_oru::NDTMap* map_copy = new perception_oru::NDTMap(new perception_oru::LazyGrid(resolution));
 	
 	perception_oru::NDTMap* map_copy;
@@ -665,8 +665,8 @@ int main(int argc, char **argv)
 	//Create initialiser
 	AASS::acg::RvizPointsLocalization initialiser(nh, &oacg);
 	
-	
-	AASS::acg::VisuAutoCompleteGraphLocalization visu(nh, world_frame);
+
+	AASS::acg::VisuAutoCompleteGraphLocalization visu(nh, map_frame);
 	std::string path_images = path_to_acg + "/ACG_folder/Images";
 	visu.setImageFileNameOut(path_images);
 	

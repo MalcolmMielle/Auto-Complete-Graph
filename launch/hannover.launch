@@ -63,6 +63,7 @@
       <param name="enable_mapping" value="true" />
 
       <param name="check_consistency" value="true" />
+      <param name="publisher_timer" value="true" />
       <param name="tf_pose_frame" value="" />
 
 

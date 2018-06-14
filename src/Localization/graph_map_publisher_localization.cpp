@@ -146,6 +146,8 @@ class GraphMapFuserNode {
 protected:
 
 
+	tf::Transform Transform_map;
+
 
 //   boost::shared_ptr<perception_oru::particle_filter> ndtmcl_;
 //   boost::shared_ptr<NDTMCL> ndtmcl_;
@@ -163,6 +165,7 @@ protected:
   ros::Subscriber gt_sub,points2OdomTfSub, publisher_graph_map;
 
   ros::Subscriber ndt_mcl_map;
+	bool publisher_timer;
 
   // Components for publishing
   tf::TransformBroadcaster tf_;
@@ -170,6 +173,8 @@ protected:
   ros::Publisher output_pub_;
   ros::Publisher graphmap_pub_, graphmap_localization_pub;
   Eigen::Affine3d pose_, T, sensorPose_;
+
+	ros::Timer timer_transformation_map;
 
 
   unsigned int frame_nr_;
@@ -378,6 +383,7 @@ public:
 	  param_nh.param("use_hybrid_strategy_mcl", _use_hybrid_strategy_mcl, true);
 	  param_nh.param("use_euclidean_mcl", _use_euclidean_mcl, false);
 	  param_nh.param("use_mean_score_mcl", _use_mean_score_mcl, false);
+	  param_nh.param("publisher_timer", publisher_timer, false);
 
     if(gt_mapping)
       use_tf_listener_= use_tf_listener_ && state_base_link_id != std::string("");// check if odometry topic exists
@@ -514,6 +520,11 @@ public:
 	else{
 		std::cout << "ATTENTION NO MCL" << std::endl;
 	}
+
+	  timer_transformation_map = nh_.createTimer(ros::Duration(0.1), &GraphMapFuserNode::timerCallback, this);
+
+	  Transform_map.setIdentity();
+
 	std::cout << "All init done 1" << std::endl;
 
   }
@@ -934,7 +945,22 @@ public:
 		return T;
 	}
 
-  void processFrame(pcl::PointCloud<pcl::PointXYZ> &cloud, Eigen::Affine3d Tmotion, const ros::Time& time=ros::Time(0)) {
+
+	void timerCallback(const ros::TimerEvent&){
+		publishMapTransform();
+	}
+
+	void publishMapTransform( const ros::Time& time=ros::Time::now() ) {
+		if (publisher_timer){
+			std::cout << "Publishing at time " << time << std::endl;
+			tf_.sendTransform(tf::StampedTransform(Transform_map, time, map_link_id, world_link_id));
+		}
+	}
+
+
+
+
+	void processFrame(pcl::PointCloud<pcl::PointXYZ> &cloud, Eigen::Affine3d Tmotion, const ros::Time& time=ros::Time::now() ) {
 
 	  std::cout << "MOTION !!! " << Tmotion.matrix() << std::endl;
 
@@ -1045,10 +1071,12 @@ public:
 
 			 //Publish transform from map to world.
 			 auto robot_pose = getPose(world_link_id, robot_frame, time);
-			 Eigen::Affine3d map_to_world = robot_pose.inverse() * pose_;
-			 tf::Transform Transform_map;
+			 Eigen::Affine3d map_to_world = pose_ * robot_pose.inverse();
+
 			 tf::transformEigenToTF(map_to_world, Transform_map);
 			 tf_.sendTransform(tf::StampedTransform(Transform_map, time, map_link_id, world_link_id));
+
+			 publishMapTransform(time);
 
 
 			 auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
