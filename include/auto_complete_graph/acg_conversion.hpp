@@ -1299,24 +1299,24 @@ namespace acg{
 
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, const std::string& frame_id = "/world"){
+	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, const std::string& frame_id = "/world", double resolution = 0.1){
 		
 		mapmsg.header.stamp = ros::Time::now();
 		mapmsg.header.frame_id = frame_id;
 		
 // 		std::cout << "Vector Map" << std::endl;
 // 		ndt_map::NDTVectorMapMsg maps;
-		ACGToOccMaps(acg, mapmsg, 0.1, frame_id);
+		ACGToOccMaps(acg, mapmsg, resolution, frame_id);
 		
 // 		std::cout << "Grid Map" << std::endl;
 		grid_map::GridMap gridMap;
 		gridMap.setFrameId(frame_id);
 		double size_x, size_y;
 		getPriorSizes(acg, size_x, size_y);
-		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));
+		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resolution, grid_map::Position(0.0, 0.0));
 		gridMap.add("prior"); 
 		gridMap["prior"].setZero(); 
-		double resolution = 0.1;
+//		double resolution = 0.1;
 		ACGPriortoGridMap(acg, gridMap, resolution);
 		grid_map::GridMapRosConverter converter;
 		grid_map_msgs::GridMap gridmapmsg;

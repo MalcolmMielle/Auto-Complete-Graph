@@ -158,10 +158,10 @@ void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoComplete
 void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
 	//Puclish message for GDIM
-	auto_complete_graph::ACGMaps mapmsg;
-	std::cout << "PUSH acg maps message" << std::endl;
-	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg, map_frame);
-	acg_gdim.publish(mapmsg);
+//	auto_complete_graph::ACGMaps mapmsg;
+//	std::cout << "PUSH acg maps message" << std::endl;
+//	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg, map_frame);
+//	acg_gdim.publish(mapmsg);
 
 
 	auto_complete_graph::ACGMapsOM mapmsg_om;
@@ -170,21 +170,22 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 	acg_gdim_om.publish(mapmsg_om);
 
 	//Publish the last grid map as a message to make sure that they look like something
-	int size_g = mapmsg_om.ndt_maps_om.size();
-	if(size_g > 0) {
-		std::cout << "Last grid map" << std::endl;
-		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
-
-		//Publish last occ grid to make sure that they look like something
-		int size_o = mapmsg.ndt_maps.maps.size();
-// 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
-// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-//                 perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
-		std::cout << "Last ndtmap" << std::endl;
-		last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o - 1]);
-
-
-	}
+//	int size_g = mapmsg_om.ndt_maps_om.size();
+//	if(size_g > 0) {
+//		std::cout << "Last grid map" << std::endl;
+//		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
+//
+//		//Publish last occ grid to make sure that they look like something
+//		int size_o = mapmsg.ndt_maps.maps.size();
+//// 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
+//// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+////                 perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
+//		std::cout << "Last ndtmap" << std::endl;
+//		last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o - 1]);
+//
+//
+//	}
+	std::cout << "Done" << std::endl;
 }
 
 
@@ -538,6 +539,7 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 	initialiser.clear();
 
 	publishPriorNDT(oacg);
+	publishACGOM(oacg);
 	
 }
 
