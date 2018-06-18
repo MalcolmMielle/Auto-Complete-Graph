@@ -40,6 +40,7 @@ ros::Publisher acg_gdim_om;
 
 ros::Publisher last_grid_map;
 ros::Publisher last_ndtmap;
+ros::Publisher last_occ_map;
 
 ros::Time timef;
 
@@ -59,6 +60,8 @@ std::string map_frame;
 std::string sensor_frame;
 
 bool updated = true;
+
+double scaling_gaussian_occ_map = 1/2;
 
 
 inline bool exists_test3 (const std::string& name) {
@@ -158,10 +161,10 @@ void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoComplete
 void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
 	//Puclish message for GDIM
-//	auto_complete_graph::ACGMaps mapmsg;
-//	std::cout << "PUSH acg maps message" << std::endl;
-//	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg, map_frame);
-//	acg_gdim.publish(mapmsg);
+	auto_complete_graph::ACGMaps mapmsg;
+	std::cout << "PUSH acg maps message" << std::endl;
+	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg, map_frame);
+	acg_gdim.publish(mapmsg);
 
 
 	auto_complete_graph::ACGMapsOM mapmsg_om;
@@ -170,21 +173,30 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 	acg_gdim_om.publish(mapmsg_om);
 
 	//Publish the last grid map as a message to make sure that they look like something
-//	int size_g = mapmsg_om.ndt_maps_om.size();
-//	if(size_g > 0) {
-//		std::cout << "Last grid map" << std::endl;
-//		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
-//
-//		//Publish last occ grid to make sure that they look like something
-//		int size_o = mapmsg.ndt_maps.maps.size();
-//// 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
-//// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-////                 perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
-//		std::cout << "Last ndtmap" << std::endl;
-//		last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o - 1]);
-//
-//
-//	}
+	int size_g = mapmsg_om.ndt_maps_om.size();
+	if(size_g > 0) {
+		std::cout << "Last grid map" << std::endl;
+		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
+
+		//Publish last occ grid to make sure that they look like something
+		int size_o = mapmsg.ndt_maps.maps.size();
+		std::cout << "Last ndtmap" << std::endl;
+		last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o - 1]);
+
+        nav_msgs::OccupancyGrid omap;
+//		= new nav_msgs::OccupancyGrid();
+		perception_oru::NDTMap* last_map = oacg.getRobotNodes()[oacg.getRobotNodes().size() - 1 ]->getMap().get();
+
+//		std::cout << "SCALIN GAUSSIAN OCC " << scaling_gaussian_occ_map << std::endl;
+		perception_oru::toOccupancyGrid(last_map, omap, 0.05, map_frame, scaling_gaussian_occ_map );
+		last_occ_map.publish(omap);
+//		delete omap;
+
+//        initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+//        perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
+
+
+	}
 	std::cout << "Done" << std::endl;
 }
 
@@ -606,6 +618,9 @@ int main(int argc, char **argv)
 	std::string prior_file = "";
 	nh.param<std::string>("prior_file",prior_file,"/home/malcolm/ros_catkin_ws/lunar_ws/src/auto_complete_graph/tests/emergbasement_flipped_nodoor.png");
 
+
+	nh.param<double>("gaussian_scaling_occ", scaling_gaussian_occ_map, 0.5);
+
 //	if(argc > 1){
 //		deviation = strtod(argv[1], NULL);
 //		if(argc > 2){
@@ -685,6 +700,7 @@ int main(int argc, char **argv)
 	acg_gdim = nh.advertise<auto_complete_graph::ACGMaps>("acg_maps", 10);
 	acg_gdim_om = nh.advertise<auto_complete_graph::ACGMapsOM>("acg_maps_om", 10);
 	last_ndtmap = nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
+	last_occ_map = nh.advertise<nav_msgs::OccupancyGrid>("occ_lastgraphmap_acg", 10);
 
 	last_grid_map = nh.advertise<grid_map_msgs::GridMap>("last_grid_map", 10);
 
