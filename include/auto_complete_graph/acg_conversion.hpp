@@ -1306,7 +1306,7 @@ namespace acg{
 		
 // 		std::cout << "Vector Map" << std::endl;
 // 		ndt_map::NDTVectorMapMsg maps;
-		ACGToOccMaps(acg, mapmsg, resolution, frame_id);
+		ACGToOccMaps(acg, mapmsg, resolution, frame_id, ndt_cell_gaussian_scaling);
 		
 // 		std::cout << "Grid Map" << std::endl;
 		grid_map::GridMap gridMap;
@@ -1317,7 +1317,7 @@ namespace acg{
 		gridMap.add("prior"); 
 		gridMap["prior"].setZero(); 
 //		double resolution = 0.1;
-		ACGPriortoGridMap(acg, gridMap, resolution, ndt_cell_gaussian_scaling);
+		ACGPriortoGridMap(acg, gridMap, resolution);
 		grid_map::GridMapRosConverter converter;
 		grid_map_msgs::GridMap gridmapmsg;
 		converter.toMessage(gridMap, mapmsg.prior);
