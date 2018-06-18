@@ -1154,7 +1154,7 @@ namespace acg{
 
 
 		template< typename Prior, typename VertexPrior, typename EdgePrior>
-		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1, const std::string& frame_id = "/world"){
+		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1, const std::string& frame_id = "/world", double ndt_cell_gaussian_scaling = 0.1){
 //		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
 
@@ -1171,7 +1171,7 @@ namespace acg{
 
 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id);
+				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id, ndt_cell_gaussian_scaling);
 
 				grid_map::GridMap mapNDT;
 				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
@@ -1226,7 +1226,7 @@ namespace acg{
 
 
 		//THAT IS UGLY BUT I NEED IT FAST :( LOCALIZATION AND ROBOT POSE SHOULD BE THE SAME THING
-		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphLocalization& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution, const std::string& frame_id = "/world"){
+		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphLocalization& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution, const std::string& frame_id = "/world", double ndt_cell_gaussian_scaling = 0.05){
 //		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotPoseLocalization().begin() ; it != acg.getRobotPoseLocalization().end(); ++it){
 
@@ -1243,7 +1243,7 @@ namespace acg{
 
 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id);
+				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id, ndt_cell_gaussian_scaling);
 
 				grid_map::GridMap mapNDT;
 				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
@@ -1299,7 +1299,7 @@ namespace acg{
 
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, const std::string& frame_id = "/world", double resolution = 0.1){
+	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, const std::string& frame_id = "/world", double resolution = 0.1, double ndt_cell_gaussian_scaling = 0.05){
 		
 		mapmsg.header.stamp = ros::Time::now();
 		mapmsg.header.frame_id = frame_id;
@@ -1317,7 +1317,7 @@ namespace acg{
 		gridMap.add("prior"); 
 		gridMap["prior"].setZero(); 
 //		double resolution = 0.1;
-		ACGPriortoGridMap(acg, gridMap, resolution);
+		ACGPriortoGridMap(acg, gridMap, resolution, ndt_cell_gaussian_scaling);
 		grid_map::GridMapRosConverter converter;
 		grid_map_msgs::GridMap gridmapmsg;
 		converter.toMessage(gridMap, mapmsg.prior);

@@ -161,7 +161,7 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const auto_complet
 void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization)
 {
 	if(_use_robot_maps == true) {
-		std::cout << "Node in graph " << ndt_graph_localization.graph_map.nodes.size() << std::endl;
+		ROS_INFO_STREAM("Node in graph " << ndt_graph_localization.graph_map.nodes.size() );
 
 		if (_previous_number_of_node_in_ndtgraph != ndt_graph_localization.graph_map.nodes.size()) {
 
@@ -202,7 +202,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 //	std::cout << "Test no double links" << std::endl;
 //	noDoubleLinks();
 
-		std::cout << "After " << std::endl;
+		ROS_INFO_STREAM("After ");
 
 		assert(_nodes_ndt.size() == _nodes_localization.size());
 
@@ -403,12 +403,12 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 
 			std::vector<double>::const_iterator it;
 			it = cov_msg.data.begin();
-			std::cout << "Cov size " << cov_msg.data.size() << std::endl;
+			ROS_INFO_STREAM("Cov size " << cov_msg.data.size() );
 			assert(cov_msg.data.size() == 36); //6x6 matrix
 
 			std::vector<double>::const_iterator it_2;
 			it_2 = cov_msg.data.begin();
-			std::cout << cov_msg.data.size() << std::endl;
+			ROS_INFO_STREAM( cov_msg.data.size() );
 			assert(cov_msg.data.size() == 36);
 
 			Eigen::MatrixXd cov_3d(6, 6);
@@ -704,7 +704,7 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 			//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
 			// 				assert (robot_pos + vec == ndt_graph.getNode(i).T * vec);
 
-			std::cout << "NEW POINT : "<< p_out << std::endl;
+//			std::cout << "NEW POINT : "<< p_out << std::endl;
 
 			NDTCornerGraphElement cor(p_out, *it);
 
@@ -727,7 +727,7 @@ void AASS::acg::AutoCompleteGraphLocalization::getAllCornersNDTTranslatedToGloba
 
 void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string& before) const {
 
-	std::cout << "Test info non nul after " << before << std::endl;
+//	std::cout << "Test info non nul after " << before << std::endl;
 	auto idmapedges = _optimizable_graph.edges();
 
 	for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
@@ -768,10 +768,10 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 	perception_oru::NDTMatcherD2D matcher_d2d;
 	matcher_d2d.n_neighbours = nb_neighbor;
 
-	std::cout << "Matching : " << from.getIndexGraphMap() << " with " << toward.getIndexGraphMap() << std::endl;
+//	std::cout << "Matching : " << from.getIndexGraphMap() << " with " << toward.getIndexGraphMap() << std::endl;
 //		Eigen::IOFormat cleanFmt(4, 0, ", ", "\n", "[", "]");
-	std::cout << "Transform between the two " <<transformation.matrix() << std::endl;
-	int a ;
+//	std::cout << "Transform between the two " <<transformation.matrix() << std::endl;
+//	int a ;
 // 	std::cout << "PAUSE before match" << std::endl;
 // 	std::cin >> a;
 
@@ -779,7 +779,7 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 
 	bool converged = matcher_d2d.match(*(from.getMap().get()), *(toward.getMap().get()), transformation, true);
 
-	std::cout << "Transform between the two new " <<transformation.matrix() << std::endl;
+//	std::cout << "Transform between the two new " <<transformation.matrix() << std::endl;
 
 // 	int a ;
 // 	std::cout << "PAUSE before cov" << std::endl;
@@ -817,7 +817,7 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 
 	assert(cov.rows() == 6);
 	assert(cov.cols() == 6);
-	std::cout << "PAUSE got cov : " << cov << "\n";
+//	std::cout << "PAUSE got cov : " << cov << "\n";
 //	std::cout << "COVARIANCE BY MATCHER " << cov.inverse() << "\n";
 
 	if(!converged){

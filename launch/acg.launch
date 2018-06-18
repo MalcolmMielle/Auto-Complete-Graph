@@ -29,6 +29,7 @@
 	<param name="scale" value="1/2" /> <!-- More or less 80deg -->
 
 	<param name="gaussian_scaling_occ" value="0.05" />
+	<param name="occupancy_grid_resolution" value="0.05" />
 
     <remap from="acg_node_localization/prior_ndt" to ="/ndt_map_init_mcl"/>
  <!-- /auto_complete_graph_rviz_small_optimi -->

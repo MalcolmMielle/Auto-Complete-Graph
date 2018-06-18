@@ -62,6 +62,7 @@ std::string sensor_frame;
 bool updated = true;
 
 double scaling_gaussian_occ_map = 1/2;
+double occupancy_grid_resolution = 0.05;
 
 
 inline bool exists_test3 (const std::string& name) {
@@ -169,18 +170,18 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
 	auto_complete_graph::ACGMapsOM mapmsg_om;
 	std::cout << "PUSH acg maps OM message" << std::endl;
-	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om, map_frame);
+	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om, map_frame, occupancy_grid_resolution, scaling_gaussian_occ_map);
 	acg_gdim_om.publish(mapmsg_om);
 
 	//Publish the last grid map as a message to make sure that they look like something
 	int size_g = mapmsg_om.ndt_maps_om.size();
 	if(size_g > 0) {
-		std::cout << "Last grid map" << std::endl;
+		ROS_INFO("Last grid map");
 		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
 
 		//Publish last occ grid to make sure that they look like something
 		int size_o = mapmsg.ndt_maps.maps.size();
-		std::cout << "Last ndtmap" << std::endl;
+		ROS_INFO("Last ndtmap");
 		last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o - 1]);
 
         nav_msgs::OccupancyGrid omap;
@@ -197,7 +198,7 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
 
 	}
-	std::cout << "Done" << std::endl;
+	ROS_INFO("Done");
 }
 
 
@@ -299,7 +300,7 @@ inline void printImages(AASS::acg::AutoCompleteGraph* oacg){
 	grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_outt_partial, "all", gridMap_partial);
 // 
 // 	
-	std::cout << "WELLL HERE IT IS : " << occ_outt_partial->info.origin.position << " ori " << occ_outt_partial->info.origin.orientation << std::endl << std::endl;	
+//	std::cout << "WELLL HERE IT IS : " << occ_outt_partial->info.origin.position << " ori " << occ_outt_partial->info.origin.orientation << std::endl << std::endl;
 // 	
 	cv::Mat originalImageP_partial;
 	grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap_partial, "all", CV_16UC1, 0.0, 1, originalImageP_partial);
@@ -326,7 +327,7 @@ inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Aff
 
 
 void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
-	std::cout << "Got a new graph " << std::endl;
+	ROS_INFO("Got a new graph ");
 	
 	ndt_feature::NDTFeatureGraph graph;
 	
@@ -403,9 +404,9 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 //		if(oacg->getRobotNodes().size() > 0){
 
 		if(testing_pause) {
-			std::cout << "RVIZ " << std::endl;
+			ROS_INFO("RVIZ ");
 			visu.updateRviz(*oacg);
-			std::cout << "RVIZ DONE" << std::endl;
+			ROS_INFO("RVIZ DONE");
 		}
 		
 		// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
@@ -450,7 +451,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		// 		}
 
 				if(optimize_prior == true) {
-					std::cout << "Publishing the new prior ndt map" << std::endl;
+					ROS_INFO("Publishing the new prior ndt map");
 					publishPriorNDT(*oacg);
 				}
 
@@ -458,10 +459,10 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 //				sendMapAsOcc(*oacg);
 
 
-				std::cout << "RVIZ " << std::endl;
+	ROS_INFO("RVIZ " );
 				visu.updateRviz(*oacg);
 				publishACGOM(*oacg);
-				std::cout << "RVIZ DONE" << std::endl;
+	ROS_INFO("RVIZ DONE");
 
 				if(testing_pause) {
 					std::cout << "Result of optimization. Enter a number to continue" << std::endl;
@@ -488,9 +489,9 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				timef = ros::Time::now();
 				all_node_times.push_back((timef - start).toSec());
 
-			std::cout << "*************** DESCRIPTION **************" << std::endl;
-			oacg->print();
-			std::cout << "*************** DESCRIPTION **************" << std::endl;
+//			std::cout << "*************** DESCRIPTION **************" << std::endl;
+//			oacg->print();
+//			std::cout << "*************** DESCRIPTION **************" << std::endl;
 
 				
 			// 	nav_msgs::OccupancyGrid omap; 
@@ -620,6 +621,7 @@ int main(int argc, char **argv)
 
 
 	nh.param<double>("gaussian_scaling_occ", scaling_gaussian_occ_map, 0.5);
+	nh.param<double>("occupancy_grid_resolution", occupancy_grid_resolution, 0.05);
 
 //	if(argc > 1){
 //		deviation = strtod(argv[1], NULL);
