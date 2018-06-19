@@ -533,7 +533,7 @@ public:
 
 	void pubGraphMap(const std_msgs::Bool::ConstPtr msg) {
 
-		ROS_DEBUG("Publishing");
+		ROS_INFO("Publishing graph map message");
 		ndt_map::NDTVectorMapMsg vector_maps;
 		perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, map_link_id);
 		graph_map_vector_.publish(vector_maps);
@@ -580,6 +580,7 @@ public:
 		}
 
 		graphmap_pub_.publish(graphmapmsg);
+		ROS_INFO("Published the graph msg");
 		// 			std::cout << "PUBLISHED" << std::endl;
 		// 		exit(0);
 	}

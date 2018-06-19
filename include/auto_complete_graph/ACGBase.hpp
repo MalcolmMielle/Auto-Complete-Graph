@@ -549,9 +549,9 @@ namespace acg{
 		 */
 		void saveErrorStep(){
 
-			std::cout << "Get final score" << std::endl;
+//			std::cout << "Get final score" << std::endl;
 			_optimizable_graph.computeActiveErrors();
-			std::cout << "Score : " << _optimizable_graph.chi2() << std::endl;
+//			std::cout << "Score : " << _optimizable_graph.chi2() << std::endl;
 			_chi2s.push_back(_optimizable_graph.chi2());
 
 		}
