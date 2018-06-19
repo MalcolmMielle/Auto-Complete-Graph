@@ -825,7 +825,7 @@ public:
 		//
 		}
 		else{
-			ROS_WARN("You need to init MCL to start MCL localization");
+			ROS_INFO("You need to init MCL to start MCL localization");
 			Eigen::Matrix3d cov;
 			Eigen::Vector3d mean;
 			return std::make_tuple(mean, cov);
@@ -1004,11 +1004,11 @@ public:
 //				 std::cout << "Fuser " << fuser_ << std::endl;
 				 assert(fuser_ == NULL);
 				 fuser_ = new GraphMapFuser(map_type_name, reg_type_name, pose_, sensorPose_);
-				 cout << "----------------------------FUSER------------------------" << endl;
-				 cout << fuser_->ToString() << endl;
+				 ROS_DEBUG_STREAM( "----------------------------FUSER------------------------" );
+				 ROS_DEBUG_STREAM( fuser_->ToString() );
 				 fuser_->Visualize(visualize, plot_marker);
 				 fuser_->SetFuserOptions(false, false);
-				 cout << "---------------------------------------------------------" << endl;
+				 ROS_DEBUG_STREAM( "---------------------------------------------------------" );
 				 initPoseSet = true;
 				 init_fuser_ = true;
 
@@ -1034,9 +1034,9 @@ public:
 			 }
 			 (void) ResetInvalidMotion(Tmotion);
 
-			 std::cout << "Last pose " << fuser_->GetPoseLastFuse().matrix() << std::endl << std::endl;
-			 std::cout << "From this " << fuser_->GetPoseLastFuse().inverse().matrix() << " * " << pose_.matrix()
-			           << std::endl;
+			 ROS_DEBUG_STREAM("Last pose " << fuser_->GetPoseLastFuse().matrix() << std::endl );
+			 ROS_DEBUG_STREAM("From this " << fuser_->GetPoseLastFuse().inverse().matrix() << " * " << pose_.matrix()
+			 );
 
 			 ROS_DEBUG_STREAM("frame=" << frame_nr_ << "movement="
 			      << (fuser_->GetPoseLastFuse().inverse() * pose_).translation().norm() );
@@ -1082,8 +1082,8 @@ public:
 			 auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
 			 // 	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[0]->GetId() << std::endl;
 			 for (int i = 0; i < nb_of_node_new; ++i) {
-				 std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id "
-				           << fuser_->GetGraphMap()->GetNodes()[i]->GetId() << std::endl;
+				 ROS_DEBUG_STREAM( "Well " << nb_of_node << " != " << nb_of_node_new << " and id "
+				           << fuser_->GetGraphMap()->GetNodes()[i]->GetId() );
 			 }
 
 			 if (use_mcl_ && mcl_loaded_) {
@@ -1170,7 +1170,7 @@ public:
     try{
       tf_listener_.lookupTransform(world_link_id, link_id, time, transform);
       tf::poseTFToEigen(transform, ret);
-      cout<<"found "<<ret.translation().transpose()<<endl;
+	    ROS_DEBUG_STREAM("found "<<ret.translation().transpose());
     }
     catch (tf::TransformException ex){
       ROS_ERROR("%s",ex.what());
@@ -1247,7 +1247,7 @@ public:
   }
 
   void plotPointcloud2(pcl::PointCloud<pcl::PointXYZ> & cloud,ros::Time time = ros::Time::now()){
-	  cout<<"plot point cloud"<<endl;
+	  ROS_DEBUG_STREAM("plot point cloud");
     sensor_msgs::PointCloud2 msg_out;
     pcl::toROSMsg(cloud,msg_out);
     msg_out.header.frame_id=laser_link_id;
@@ -1257,7 +1257,7 @@ public:
   void points2OdomCallback(const sensor_msgs::PointCloud2::ConstPtr& msg_in,
                            const nav_msgs::Odometry::ConstPtr& odo_in)//callback is used in conjunction with odometry time filter.
   {
-	  std::cout << "This function " << std::endl;
+//	  std::cout << "This function " << std::endl;
     ros::Time tstart=ros::Time::now();
 
     tf::poseMsgToEigen(odo_in->pose.pose,this_odom);
@@ -1274,10 +1274,10 @@ public:
     pcl::fromROSMsg (*msg_in, cloud);
     this->processFrame(cloud,Tm, msg_in->header.stamp);
     ros::Time tend=ros::Time::now();
-    cout<<"Total execution time= "<<tend-tstart<<endl;
+//    cout<<"Total execution time= "<<tend-tstart<<endl;
   }
   void points2OdomCallbackTF(const sensor_msgs::PointCloud2::ConstPtr& msg_in){//this callback is used to look up tf transformation for scan data
-	  cout<<"point odom callback tf"<<endl;
+//	  cout<<"point odom callback tf"<<endl;
     Eigen::Affine3d Tm;
     static bool last_odom_found=false;
     pcl::PointCloud<pcl::PointXYZ> cloud;
@@ -1292,13 +1292,13 @@ public:
 
     last_odom = this_odom;
     this->processFrame(cloud,Tm, msg_in->header.stamp);
-    cout<<"TF callback Point2Odom"<<endl;
+//    cout<<"TF callback Point2Odom"<<endl;
   }
 
   void GTLaserPointsOdomCallback(const sensor_msgs::PointCloud2::ConstPtr& msg_in,
                                  const nav_msgs::Odometry::ConstPtr& odo_in)//this callback is used for GT based mapping
   {
-    cout<<"GT diff:"<<(msg_in->header.stamp-odo_in->header.stamp).toSec()<<endl;
+//    cout<<"GT diff:"<<(msg_in->header.stamp-odo_in->header.stamp).toSec()<<endl;
     Eigen::Affine3d Tmotion;
     if(frame_nr_==0){
       Tmotion=Eigen::Affine3d::Identity();
@@ -1320,7 +1320,7 @@ public:
   }
   void GTLaserPointsOdomCallbackTF(const sensor_msgs::PointCloud2::ConstPtr& msg_in)//this callback is used for GT based mapping with TF lookup
   {
-    cout<<"GT-TF toffset:"<<sensor_offset_t_<<endl;
+//    cout<<"GT-TF toffset:"<<sensor_offset_t_<<endl;
     Eigen::Affine3d tmp_pose;
     Eigen::Affine3d Tmotion=Eigen::Affine3d::Identity();
     bool found_odom= getAffine3dTransformFromTF((msg_in->header.stamp-ros::Duration(sensor_offset_t_)),state_base_link_id,tmp_pose,ros::Duration(0.1));
@@ -1344,7 +1344,7 @@ public:
   // Callback
   void gt_callback(const nav_msgs::Odometry::ConstPtr& msg_in)//This callback is used to set initial pose from GT data.
   {
-cout<<"gt callback"<<endl;
+//cout<<"gt callback"<<endl;
 	  exit(0);
     Eigen::Affine3d gt_pose;
     tf::poseMsgToEigen(msg_in->pose.pose,gt_pose);

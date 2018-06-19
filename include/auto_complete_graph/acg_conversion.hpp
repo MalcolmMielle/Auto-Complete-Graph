@@ -1097,7 +1097,7 @@ namespace acg{
 	inline void ACGToVectorMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, ndt_map::NDTVectorMapMsg& maps){
 		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
-				std::cout << "ADDING A MAP" << std::endl;
+//				std::cout << "ADDING A MAP" << std::endl;
 				///Copy map
 				ndt_map::NDTMapMsg msg;
 				bool good = perception_oru::toMessage((*it)->getMap().get(), msg, "/world");

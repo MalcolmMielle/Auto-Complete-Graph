@@ -25,7 +25,7 @@ namespace acg{
 	 */
 	inline Eigen::Matrix2d getCovariance(const Eigen::Matrix2d& eigenvec, const std::pair<double, double>& eigenval){
 		
-		std::cout << "eigenvec after " << eigenvec << std::endl;
+//		std::cout << "eigenvec after " << eigenvec << std::endl;
 		
 		Eigen::Matrix2d eigenval_mat;
 		eigenval_mat << eigenval.first, 0,
