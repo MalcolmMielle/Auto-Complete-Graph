@@ -18,8 +18,8 @@ void AASS::acg::PriorLoaderInterface::transformOntoSLAM()
 	dstTri[0] = _same_point_slam[0];
 	dstTri[1] = _same_point_slam[1];
 
-	std::cout << "Point for transfo" << std::endl;
-	std::cout << _same_point_prior[0] << " " << _same_point_slam[0] << std::endl << _same_point_prior[1] << " " << _same_point_slam[1] << std::endl;
+//	std::cout << "Point for transfo" << std::endl;
+//	std::cout << _same_point_prior[0] << " " << _same_point_slam[0] << std::endl << _same_point_prior[1] << " " << _same_point_slam[1] << std::endl;
 					
 	//Translate to origin
 	cv::Point2d translation = - srcTri[0];
@@ -181,7 +181,7 @@ void AASS::acg::PriorLoaderInterface::initialize(const std::vector< cv::Point2f 
 	auto noise_x = randomNoise(0, _deviation);
 	auto noise_y = randomNoise(0, _deviation);
 	
-	std::cout << "Noise X Y " << noise_x << " " << noise_y << std::endl;
+//	std::cout << "Noise X Y " << noise_x << " " << noise_y << std::endl;
 // 				exit(0);
 	
 	cv::Point2f out = cv::Point2f(pt_slam[0].x + noise_x, pt_slam[0].y + noise_y);
@@ -415,7 +415,7 @@ void AASS::acg::PriorLoaderInterface::AffineTransformGraph(const cv::Mat& warp_t
 		cv::Point2d point_out;
 		point_out.x = mat_out.at<double>(0);
 		point_out.y = mat_out.at<double>(1);
-		std::cout << "reutnr point " << point_out.x << " " << point_out.y << std::endl;
+//		std::cout << "reutnr point " << point_out.x << " " << point_out.y << std::endl;
 		return point_out;
 	};
 	
@@ -456,7 +456,7 @@ void AASS::acg::PriorLoaderInterface::AffineTransformGraph(const cv::Mat& warp_t
 void AASS::acg::PriorLoaderInterface::noTwiceSameEdge(bettergraph::PseudoGraph< AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge > graph)
 {
 
-	std::cout << "No twice same edge" << std::endl;
+//	std::cout << "No twice same edge" << std::endl;
 	std::pair< 
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator,
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator > vp;
@@ -474,18 +474,18 @@ void AASS::acg::PriorLoaderInterface::noTwiceSameEdge(bettergraph::PseudoGraph< 
 		
 		std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge> edge_seen;
 		
-		std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
-		std::cout << " v has " << graph.getNumEdges(v) << std::endl;
+//		std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+//		std::cout << " v has " << graph.getNumEdges(v) << std::endl;
 		
 		for (boost::tie(out_i, out_end) = boost::out_edges(v, graph); 
 			out_i != out_end; ++out_i) {
-			std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
-			std::cout << "Removing an edge test" << std::endl;
+//			std::cout << "Vertiuce size " << vertices_out_edge.size() << std::endl;
+//			std::cout << "Removing an edge test" << std::endl;
 			e = *out_i;
 		
 			for(std::vector<bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::Edge>::iterator it = edge_seen.begin() ; it != edge_seen.end() ; ++it){
 				if(e == *it){
-					std::cout << "EDGE seen on this node :(" << std::endl;
+//					std::cout << "EDGE seen on this node :(" << std::endl;
 					assert(true == false);
 				}
 			}
@@ -502,7 +502,7 @@ void AASS::acg::PriorLoaderInterface::noTwiceSameEdge(bettergraph::PseudoGraph< 
 		}
 	}
 	
-	std::cout << "So no twice for now! " << std::endl;
+//	std::cout << "So no twice for now! " << std::endl;
 	
 }
 
@@ -516,8 +516,8 @@ void AASS::acg::PriorLoaderInterface::toSimpleGraph(bettergraph::PseudoGraph< AA
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator,
 		bettergraph::PseudoGraph<AASS::vodigrex::SimpleNode, AASS::vodigrex::SimpleEdge>::VertexIterator > vp;
 	std::deque<PriorLoaderInterface::PriorGraph::Vertex> vec_deque;
-	
-	std::cout << "prior" << prior.getNumVertices() << std::endl << std::endl; 
+
+//	std::cout << "prior" << prior.getNumVertices() << std::endl << std::endl;
 	
 	int nb = prior.getNumVertices();
 					

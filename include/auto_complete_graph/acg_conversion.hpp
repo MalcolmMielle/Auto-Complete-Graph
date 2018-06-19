@@ -1154,7 +1154,7 @@ namespace acg{
 
 
 		template< typename Prior, typename VertexPrior, typename EdgePrior>
-		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1, const std::string& frame_id = "/world", double ndt_cell_gaussian_scaling = 0.1){
+		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution = 0.1, const std::string& frame_id = "/world", double ndt_cell_gaussian_scaling = 0.1, bool euclidean_dist_occ_map = false){
 //		if(acg.getRobotNodes().size() != 0){
 			for(auto it = acg.getRobotNodes().begin() ; it != acg.getRobotNodes().end(); ++it){
 
@@ -1171,7 +1171,10 @@ namespace acg{
 
 				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id, ndt_cell_gaussian_scaling);
+
+//				std::cout << "OTHER Resolution " << resolution << " scaling " << ndt_cell_gaussian_scaling << std::endl;
+//				exit(0);
+				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id, ndt_cell_gaussian_scaling, euclidean_dist_occ_map);
 
 				grid_map::GridMap mapNDT;
 				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
@@ -1225,88 +1228,91 @@ namespace acg{
 		}
 
 
-		//THAT IS UGLY BUT I NEED IT FAST :( LOCALIZATION AND ROBOT POSE SHOULD BE THE SAME THING
-		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphLocalization& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution, const std::string& frame_id = "/world", double ndt_cell_gaussian_scaling = 0.05){
-//		if(acg.getRobotNodes().size() != 0){
-			for(auto it = acg.getRobotPoseLocalization().begin() ; it != acg.getRobotPoseLocalization().end(); ++it){
-
-// 				grid_map::GridMap gridMaptmp({"ndt"});
-// 				gridMaptmp["ndt"].setZero();
+//		//THAT IS UGLY BUT I NEED IT FAST :( LOCALIZATION AND ROBOT POSE SHOULD BE THE SAME THING
+//		inline void ACGToOccMaps(const AASS::acg::AutoCompleteGraphLocalization& acg, auto_complete_graph::ACGMapsOM& mapmsg, double resolution, const std::string& frame_id = "/world", double ndt_cell_gaussian_scaling = 0.05){
+////		if(acg.getRobotNodes().size() != 0){
+//			for(auto it = acg.getRobotPoseLocalization().begin() ; it != acg.getRobotPoseLocalization().end(); ++it){
 //
-// 		// 		auto node = acg.getRobotNodes()[0];
-// 		// 		auto vertex = node->estimate().toVector();
+//// 				grid_map::GridMap gridMaptmp({"ndt"});
+//// 				gridMaptmp["ndt"].setZero();
+////
+//// 		// 		auto node = acg.getRobotNodes()[0];
+//// 		// 		auto vertex = node->estimate().toVector();
+////
+//// 				gridMaptmp.setFrameId("/world");
+//// 				double size_x, size_y;
+//// 				getPriorSizes(acg, size_x, size_y);
+//// 				gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resolution, grid_map::Position(0.0, 0.0));
 //
-// 				gridMaptmp.setFrameId("/world");
-// 				double size_x, size_y;
-// 				getPriorSizes(acg, size_x, size_y);
-// 				gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resolution, grid_map::Position(0.0, 0.0));
-
-				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
-// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id, ndt_cell_gaussian_scaling);
-
-				grid_map::GridMap mapNDT;
-				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
-				grid_map::GridMapRosConverter::fromOccupancyGrid(*omap, "ndt", mapNDT);
-				delete omap;
-
-				grid_map::Matrix& data = mapNDT["ndt"];
-				for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
-					const grid_map::Index index(*iterator);
-					if(std::isnan(data(index(0), index(1)))){
-						data(index(0), index(1)) = -1;
-					}
-				}
-
-// 				std::cout << "ADDING A MAP" << std::endl;
-// 				///Copy map
-// 				ndt_map::NDTMapMsg msg;
-// 				bool good = perception_oru::toMessage((*it)->getMap().get(), msg, "/world");
-				grid_map::GridMapRosConverter converter;
-				grid_map_msgs::GridMap gridmapmsg;
-				converter.toMessage(mapNDT, gridmapmsg);
-
-// 				std::cout << "Layers " << std::endl;
-// 				for(int i  = 0; i < gridmapmsg.layers.size() ; ++i){
-// 					std::cout << gridmapmsg.layers[i] << std::endl;
-// 				}
+//				nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
+//// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
 //
-// 				std::cout << "Layers Basic" << std::endl;
-// 				for(int i  = 0; i < gridmapmsg.basic_layers.size() ; ++i){
-// 					std::cout << gridmapmsg.basic_layers[i] << std::endl;
-// 				}
-				//
-				mapmsg.ndt_maps_om.push_back(gridmapmsg);
-
-				auto pose = (*it)->estimate().toVector();
-				geometry_msgs::Transform transform;
-				transform.translation.x = pose(0);
-				transform.translation.y = pose(1);
-				transform.translation.z = 0;
-
-				auto quat = tf::createQuaternionFromRPY(0, 0, pose(2));
-				transform.rotation.x = quat.getX();
-				transform.rotation.y = quat.getY();
-				transform.rotation.z = quat.getZ();
-				transform.rotation.w = quat.getW();
-
-				mapmsg.robot_poses.push_back(transform);
-
-			}
+////				std::cout << "Resolution " << resolution << " scaling " << ndt_cell_gaussian_scaling << std::endl;
+////				exit(0);
+//				perception_oru::toOccupancyGrid((*it)->getMap().get(), *omap, resolution, frame_id, ndt_cell_gaussian_scaling);
+//
+//				grid_map::GridMap mapNDT;
+//				//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
+//				grid_map::GridMapRosConverter::fromOccupancyGrid(*omap, "ndt", mapNDT);
+//				delete omap;
+//
+//				grid_map::Matrix& data = mapNDT["ndt"];
+//				for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd(); ++iterator) {
+//					const grid_map::Index index(*iterator);
+//					if(std::isnan(data(index(0), index(1)))){
+//						data(index(0), index(1)) = -1;
+//					}
+//				}
+//
+//// 				std::cout << "ADDING A MAP" << std::endl;
+//// 				///Copy map
+//// 				ndt_map::NDTMapMsg msg;
+//// 				bool good = perception_oru::toMessage((*it)->getMap().get(), msg, "/world");
+//				grid_map::GridMapRosConverter converter;
+//				grid_map_msgs::GridMap gridmapmsg;
+//				converter.toMessage(mapNDT, gridmapmsg);
+//
+//// 				std::cout << "Layers " << std::endl;
+//// 				for(int i  = 0; i < gridmapmsg.layers.size() ; ++i){
+//// 					std::cout << gridmapmsg.layers[i] << std::endl;
+//// 				}
+////
+//// 				std::cout << "Layers Basic" << std::endl;
+//// 				for(int i  = 0; i < gridmapmsg.basic_layers.size() ; ++i){
+//// 					std::cout << gridmapmsg.basic_layers[i] << std::endl;
+//// 				}
+//				//
+//				mapmsg.ndt_maps_om.push_back(gridmapmsg);
+//
+//				auto pose = (*it)->estimate().toVector();
+//				geometry_msgs::Transform transform;
+//				transform.translation.x = pose(0);
+//				transform.translation.y = pose(1);
+//				transform.translation.z = 0;
+//
+//				auto quat = tf::createQuaternionFromRPY(0, 0, pose(2));
+//				transform.rotation.x = quat.getX();
+//				transform.rotation.y = quat.getY();
+//				transform.rotation.z = quat.getZ();
+//				transform.rotation.w = quat.getW();
+//
+//				mapmsg.robot_poses.push_back(transform);
+//
+//			}
+////		}
 //		}
-		}
 
 
 	///@brief transform the ACG into a message including a NDTVectorMapMsg representing all submaps and the transof between them AND the prior represented by grid centered on the origin frame
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
-	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, const std::string& frame_id = "/world", double resolution = 0.1, double ndt_cell_gaussian_scaling = 0.05){
+	inline void ACGToACGMapsOMMsg(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, auto_complete_graph::ACGMapsOM& mapmsg, const std::string& frame_id = "/world", double resolution = 0.1, double ndt_cell_gaussian_scaling = 0.05, bool euclidean_dist_occ_map = false){
 		
 		mapmsg.header.stamp = ros::Time::now();
 		mapmsg.header.frame_id = frame_id;
 		
 // 		std::cout << "Vector Map" << std::endl;
 // 		ndt_map::NDTVectorMapMsg maps;
-		ACGToOccMaps(acg, mapmsg, resolution, frame_id, ndt_cell_gaussian_scaling);
+		ACGToOccMaps(acg, mapmsg, resolution, frame_id, ndt_cell_gaussian_scaling, euclidean_dist_occ_map);
 		
 // 		std::cout << "Grid Map" << std::endl;
 		grid_map::GridMap gridMap;

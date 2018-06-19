@@ -161,7 +161,7 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const auto_complet
 void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization)
 {
 	if(_use_robot_maps == true) {
-		ROS_INFO_STREAM("Node in graph " << ndt_graph_localization.graph_map.nodes.size() );
+		ROS_DEBUG_STREAM("Node in graph " << ndt_graph_localization.graph_map.nodes.size() );
 
 		if (_previous_number_of_node_in_ndtgraph != ndt_graph_localization.graph_map.nodes.size()) {
 
@@ -202,7 +202,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 //	std::cout << "Test no double links" << std::endl;
 //	noDoubleLinks();
 
-		ROS_INFO_STREAM("After ");
+		ROS_DEBUG_STREAM("After ");
 
 		assert(_nodes_ndt.size() == _nodes_localization.size());
 
@@ -403,12 +403,12 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 
 			std::vector<double>::const_iterator it;
 			it = cov_msg.data.begin();
-			ROS_INFO_STREAM("Cov size " << cov_msg.data.size() );
+			ROS_DEBUG_STREAM("Cov size " << cov_msg.data.size() );
 			assert(cov_msg.data.size() == 36); //6x6 matrix
 
 			std::vector<double>::const_iterator it_2;
 			it_2 = cov_msg.data.begin();
-			ROS_INFO_STREAM( cov_msg.data.size() );
+			ROS_DEBUG_STREAM( cov_msg.data.size() );
 			assert(cov_msg.data.size() == 36);
 
 			Eigen::MatrixXd cov_3d(6, 6);
@@ -803,7 +803,7 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 		matcher_d2d.covariance(*(from.getMap().get()), *(toward.getMap().get()), transformation, cov);
 	}
 	else{
-		std::cout << "NOTHING HAPPENED Creating a identity matrix" << std::endl;
+		ROS_INFO_STREAM( "NOTHING HAPPENED Creating a identity matrix" );
 		cov = Eigen::MatrixXd::Identity(6, 6);
 		cov << 	0.02, 	0, 		0,    0,    0,    0,
 				0, 		0.02, 	0,    0,    0,    0,
@@ -822,7 +822,7 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 
 	if(!converged){
 // 		throw std::runtime_error("ndt_map registration didn't converge");
-		std::cout << "USing odometry input a number to continue. That is bad :/" << std::endl;
+		ROS_ERROR_STREAM( "USing odometry input a number to continue. That is bad :/" );
 
 		transformation = before_T;
 		cov = Eigen::MatrixXd::Identity(6, 6);
@@ -831,7 +831,7 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 		std::cin >> a;
 	}
 	if(same){
-		std::cout << "Manually created the covariance because the matching returned the same transof as before." << std::endl;
+		ROS_INFO_STREAM( "Manually created the covariance because the matching returned the same transof as before." );
 //		int a;
 //		std::cin >> a;
 	}
@@ -1099,7 +1099,7 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 
 				if(loc->vertex_mcl_pose == edge->vertices()[0] && landmark == edge->vertices()[1] || loc->vertex_mcl_pose == edge->vertices()[1] && landmark == edge->vertices()[0]){
 					if(loc->observation != edge->original_observation){
-						std::cout << "Not the same ? " << loc->observation << " == " << edge->original_observation << std::endl;
+						ROS_ERROR_STREAM( "Not the same ? " << loc->observation << " == " << edge->original_observation );
 					}
 					assert(loc->observation == edge->original_observation);
 				}
@@ -1203,8 +1203,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 										    landmark == edge->vertices()[0]) {
 
 											if (loc->observation != edge->original_observation) {
-												std::cout << "Not the same ? " << loc->observation << " == "
-												          << edge->original_observation << std::endl;
+												ROS_INFO_STREAM("Not the same ? " << loc->observation << " == "
+												          << edge->original_observation );
 											}
 
 											current_landmark_observation = edge;

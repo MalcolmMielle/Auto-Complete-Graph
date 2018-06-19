@@ -74,7 +74,7 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdge(const g2o::SE2
 // 	EdgePriorAndInitialValue epiv(priorObservation, se2);
 	_edges.insert(priorObservation);
 
-	std::cout << "After adding an edge" << std::endl;
+//	std::cout << "After adding an edge" << std::endl;
 	checkNoRepeatingPriorEdge();
 
 	return priorObservation;
@@ -444,7 +444,7 @@ void AASS::acg::AutoCompleteGraphPriorXY::updatePriorEdgeCovariance()
 
 void AASS::acg::AutoCompleteGraphPriorXY::testNoNanInPrior(const std::string& before) const {
 
-	std::cout << "Test No nan in prior after " << before << std::endl;
+//	std::cout << "Test No nan in prior after " << before << std::endl;
 	auto it = getNodes().begin();
 	for(it ; it != getNodes().end() ; ++it){
 		g2o::VertexXYPrior* v_ptr = dynamic_cast<g2o::VertexXYPrior*>((*it));
@@ -458,7 +458,7 @@ void AASS::acg::AutoCompleteGraphPriorXY::testNoNanInPrior(const std::string& be
 
 	}
 
-	std::cout << "Testing the edges now" << std::endl;
+//	std::cout << "Testing the edges now" << std::endl;
 
 	auto edges = getEdges();
 	auto it_edge = edges.begin();
@@ -490,7 +490,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr AASS::acg::AutoCompleteGraphPriorXY::toPoint
 	pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_pc(new pcl::PointCloud<pcl::PointXYZ>);
 	int nb_points = 0;
 	auto edges = getEdges();
-	std::cout << "Converting edges : " << edges.size() << std::endl;
+//	std::cout << "Converting edges : " << edges.size() << std::endl;
 
 	for(auto it = edges.begin(); it != edges.end() ; ++it){
 
@@ -554,7 +554,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr AASS::acg::AutoCompleteGraphPriorXY::toPoint
 
 	}
 
-	std::cout << "Adding data " << nb_points << std::endl;
+//	std::cout << "Adding data " << nb_points << std::endl;
 
 	pcl_pc_noise->width = nb_points;
 	pcl_pc_noise->height = 1;

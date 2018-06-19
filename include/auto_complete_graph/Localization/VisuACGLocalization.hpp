@@ -355,7 +355,7 @@ namespace AASS {
 //					}
 				}
 				else{
-					std::cout << "Not from mcl" << std::endl;
+					ROS_DEBUG_STREAM("Not from mcl");
 				}
 
 			}
@@ -364,7 +364,7 @@ namespace AASS {
 		}
 
 		inline void VisuAutoCompleteGraphLocalization::drawMCLAngles(const AutoCompleteGraphLocalization &acg) {
-			std::cout << "Getting the angles" << std::endl;
+			ROS_DEBUG_STREAM("Getting the angles");
 			_mcl_angles_markers.header.stamp = ros::Time::now();
 			auto localizations = acg.getRobotPoseLocalization();
 			_mcl_angles_markers.points.clear();
@@ -475,7 +475,7 @@ namespace AASS {
 
 				}
 			}else{
-				std::cout << "SAME SIZE PRIOR " << std::endl;
+				ROS_DEBUG_STREAM("SAME SIZE PRIOR " );
 			}
 //			std::cout << "Edges size prior " << _prior_edge_markers.points.size() << std::endl;
 			_marker_pub.publish(_prior_edge_markers);

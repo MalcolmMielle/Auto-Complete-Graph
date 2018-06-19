@@ -82,7 +82,7 @@ void getAngles(const std::string& base_frame, const std::string& to_frame, doubl
 }
 
 tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std::string& to_frame, ros::Time time=ros::Time(0)){
-	ROS_INFO("GEt pose ");
+	ROS_DEBUG("GEt pose ");
 	tf::TransformListener listener;
 	tf::StampedTransform transform;
 // 	int i = 0;
@@ -525,7 +525,7 @@ public:
 
 	  Transform_map.setIdentity();
 
-	std::cout << "All init done 1" << std::endl;
+	ROS_INFO("All init done 1" );
 
   }
 
@@ -533,7 +533,7 @@ public:
 
 	void pubGraphMap(const std_msgs::Bool::ConstPtr msg) {
 
-		ROS_INFO("Publishing");
+		ROS_DEBUG("Publishing");
 		ndt_map::NDTVectorMapMsg vector_maps;
 		perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, map_link_id);
 		graph_map_vector_.publish(vector_maps);
@@ -542,14 +542,14 @@ public:
 //		assert(nb_of_node_new - 1 > 0);
 
 //				 acg_localization->savePos(nb_of_node_new - 1);
-		ROS_INFO("PUBLISH: now");
+		ROS_DEBUG("PUBLISH: now");
 		//Publish message
 		graph_map::GraphMapMsg graphmapmsg;
 		perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, map_link_id);
 		// 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
 		//
 		if (use_mcl_ && mcl_loaded_) {
-			ROS_INFO("*************************** > Real Localization < ****************************");
+			ROS_DEBUG("*************************** > Real Localization < ****************************");
 
 //			std::cout << acg_localization->getLocalizations().size() << " == " <<  nb_of_node_new << std::endl;
 //			assert(acg_localization->getLocalizations().size() == nb_of_node_new);
@@ -562,7 +562,7 @@ public:
 		}
 		else{
 
-			ROS_INFO("*************************** > Mock Localization < ****************************");
+			ROS_DEBUG("*************************** > Mock Localization < ****************************");
 
 			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
 			graphmaplocalizationmsg.graph_map = graphmapmsg;
@@ -587,7 +587,7 @@ public:
 
 
 		geometry_msgs::PoseArray ParticlesToMsg(std::vector<perception_oru::particle, Eigen::aligned_allocator<perception_oru::particle> > particles){
-		//ROS_INFO("publishing particles");
+		//ROS_DEBUG("publishing particles");
 		geometry_msgs::PoseArray ret;
 		for(int i = 0; i < particles.size(); i++){
 			geometry_msgs::Pose temp;
@@ -621,7 +621,7 @@ public:
 		double numPart = 250;
 		bool forceSIR = true;
 
-		ROS_INFO("INIT MCL FROM TF");
+		ROS_DEBUG("INIT MCL FROM TF");
 		auto init_pose = getPoseTFTransform(world_link_id, laser_link_id);
 //		std::cout << "Pose found " << pose_.matrix() << std::endl;
 
@@ -672,7 +672,7 @@ public:
 		//ATTENTION MEMORY LEAK :(. But if I delete it it's deleted from the particule filter...
 // 		delete map;
 
-		ROS_INFO("MAP LOADED SUCCESSFULLY :)");
+		ROS_DEBUG("MAP LOADED SUCCESSFULLY :)");
 	}
 
 	void loadNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
@@ -778,10 +778,10 @@ public:
 			nav_msgs::Odometry mcl_pose;
 // 			Eigen::Vector3d mean_pose=ndtmcl_->GetMeanPose2D();
 
-// 			ROS_INFO_STREAM(mean_pose);
+// 			ROS_DEBUG_STREAM(mean_pose);
 
 // 			Pose2DToTF(mean_pose,time,T);
-			//ROS_INFO_STREAM(T);
+			//ROS_DEBUG_STREAM(T);
 // 			ndtmcl_->GetPoseMeanAndVariance2D(mean, cov);
 			mcl_pose = Pose2DToMsg(mean, cov, time, T);
 
@@ -914,7 +914,7 @@ public:
 		O.pose.covariance[35] = cov(2, 2);
 
 		seq++;
-		//    ROS_INFO("publishing tf");
+		//    ROS_DEBUG("publishing tf");
 // 		static tf::TransformBroadcaster br, br_mapOdom;
 		tf::Transform transform;
 		transform.setOrigin( tf::Vector3(mean[0], mean[1], 0.0) );
@@ -978,7 +978,7 @@ public:
 		 if(!use_mcl_ || (use_mcl_ && mcl_loaded_) ) {
 
 			 if (init_pose_tf_ == true && init_fuser_ == false) {
-				 ROS_INFO("INIT FROM TF");
+				 ROS_DEBUG("INIT FROM TF");
 				 // 		sensorPose_ = getPose(robot_frame, laser_link_id);
 
 				 /////USED FOR BASEMENT BAG FILES
@@ -1038,7 +1038,7 @@ public:
 			 std::cout << "From this " << fuser_->GetPoseLastFuse().inverse().matrix() << " * " << pose_.matrix()
 			           << std::endl;
 
-			 ROS_INFO_STREAM("frame=" << frame_nr_ << "movement="
+			 ROS_DEBUG_STREAM("frame=" << frame_nr_ << "movement="
 			      << (fuser_->GetPoseLastFuse().inverse() * pose_).translation().norm() );
 
 			 auto nb_of_node = fuser_->GetGraphMap()->GetNodes().size();
@@ -1089,7 +1089,7 @@ public:
 			 if (use_mcl_ && mcl_loaded_) {
 				 //If a new node was added, we save the location.
 				 if (acg_localization->getLocalizations().size() != nb_of_node_new) {
-					 ROS_INFO_STREAM(" saving pose ");
+					 ROS_DEBUG_STREAM(" saving pose ");
 					 acg_localization->savePos(nb_of_node_new - 1);
 					 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
 				 }
@@ -1106,7 +1106,7 @@ public:
 			 }
 		 }
 		 else{
-			 ROS_INFO_STREAM("NDT MCL needs to be init for the registration to start if you want to use both MCL and registration");
+			 ROS_DEBUG_STREAM("NDT MCL needs to be init for the registration to start if you want to use both MCL and registration");
 		 }
 
 	 }
@@ -1155,11 +1155,11 @@ public:
         fuser_->SaveGraphMap(path);
 
       m.unlock();
-      ROS_INFO("Current map was saved to path= %s", path);
+      ROS_DEBUG("Current map was saved to path= %s", path);
       return true;
     }
     else
-      ROS_INFO("No data to save");
+      ROS_DEBUG("No data to save");
     return false;
   }
 
@@ -1182,7 +1182,7 @@ public:
   // Callback
   void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg_in)
   {
-	  ROS_INFO_STREAM("laser callback");
+	  ROS_DEBUG_STREAM("laser callback");
 // 	exit(0);
     sensor_msgs::PointCloud2 cloud;
     pcl::PointCloud<pcl::PointXYZ> pcl_cloud_unfiltered, pcl_cloud;
@@ -1199,7 +1199,7 @@ public:
       }
     }
     T.setIdentity();
-	  ROS_INFO_STREAM("node: laser call back, process frame");
+	  ROS_DEBUG_STREAM("node: laser call back, process frame");
     this->processFrame(pcl_cloud,T, msg_in->header.stamp);
 
 
@@ -1209,20 +1209,20 @@ public:
   void laserOdomCallback(const sensor_msgs::LaserScan::ConstPtr& msg_in,
                          const nav_msgs::Odometry::ConstPtr& odo_in)
   {
-	  ROS_INFO_STREAM("laser odom callback");
+	  ROS_DEBUG_STREAM("laser odom callback");
     sensor_msgs::PointCloud2 cloud;
     pcl::PointCloud<pcl::PointXYZ> pcl_cloud, pcl_cloud_unfiltered;
     Eigen::Affine3d Tm;
 
     tf::poseMsgToEigen(odo_in->pose.pose,this_odom);
     if (frame_nr_  <= 1){
-	    ROS_INFO_STREAM("Identeity motion: " << frame_nr_ );
+	    ROS_DEBUG_STREAM("Identeity motion: " << frame_nr_ );
       Tm.setIdentity();
     }
     else{
 
       Tm = last_odom.inverse()*this_odom;
-	    ROS_INFO_STREAM("new Tmotion: " <<frame_nr_  << "\n"<< Tm.matrix() );
+	    ROS_DEBUG_STREAM("new Tmotion: " <<frame_nr_  << "\n"<< Tm.matrix() );
 	}
 
     last_odom = this_odom;
@@ -1243,7 +1243,7 @@ public:
       }
     }
     this->processFrame(pcl_cloud,Tm, msg_in->header.stamp);
-	  ROS_INFO_STREAM("publish fuser data");
+	  ROS_DEBUG_STREAM("publish fuser data");
   }
 
   void plotPointcloud2(pcl::PointCloud<pcl::PointXYZ> & cloud,ros::Time time = ros::Time::now()){
@@ -1351,7 +1351,7 @@ cout<<"gt callback"<<endl;
 
     if(initPoseFromGT && !initPoseSet) {
       pose_ = gt_pose;
-      ROS_INFO("Set initial pose from GT track");
+      ROS_DEBUG("Set initial pose from GT track");
       fuser_=new GraphMapFuser(map_type_name,reg_type_name,pose_,sensorPose_);
       cout<<"----------------------------FUSER------------------------"<<endl;
       cout<<fuser_->ToString()<<endl;

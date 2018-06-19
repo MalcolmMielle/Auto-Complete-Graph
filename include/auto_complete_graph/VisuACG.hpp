@@ -226,7 +226,7 @@ namespace acg{
 // 				grid_map::GridMap gridMap;
 // 				ACGToGridMap(*_acg, gridMap);
 				
-				std::cout << "Going to publish" << std::endl;
+				ROS_DEBUG_STREAM( "Going to publish");
 				
 // 				Eigen::Affine2d aff; aff.matrix() << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 // 				moveOccupancyMap(*occ_out, aff);
@@ -238,8 +238,8 @@ namespace acg{
 // 				nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
 // 				nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
 // 				grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1, *occ_out);
-				
-				std::cout << "WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl << std::endl;
+
+				ROS_DEBUG_STREAM("WELLL HERE IT IS : " << occ_outt->info.origin.position << " ori " << occ_outt->info.origin.orientation << std::endl );
 // 				std::cout << "WELLL HERE IT IS : " << occ_out->info.origin.position_in_robot_frame << " ori " << occ_out->info.origin.orientation << std::endl << std::endl;
 				
 // 				exit(0);
@@ -252,8 +252,8 @@ namespace acg{
 // 				cv::Mat originalImageP;
 // 				grid_map::GridMapCvConverter::toImage<unsigned short, 1>(gridMap, "all", CV_16UC1, 0.0, 1, originalImageP);
 // 				cv::imwrite("/home/malcolm/tmp_all.png", originalImageP);
-				
-				std::cout << "Pub" << std::endl;
+
+				ROS_DEBUG_STREAM("Pub");
 				_last_ndtmap_full_occ.publish<nav_msgs::OccupancyGrid>(*occ_outt);
 // 				saveImage(occ_out);
 // 				std::cout << "Image saved" << std::endl;
@@ -339,7 +339,7 @@ namespace acg{
 				
 
 // 				delete omap;
-				std::cout << "Done" << std::endl;
+				ROS_DEBUG_STREAM( "Done" );
 				
 				
 				
@@ -418,7 +418,7 @@ namespace acg{
 			
 			if(_nb_of_zone != acg.getRobotNodes().size()){
 				grids.clear();
-				std::cout <<"update the zones" << std::endl;
+				ROS_DEBUG_STREAM("update the zones" );
 				
 				for(size_t i = 0 ; i < acg.getRobotNodes().size() ; ++i){
 // 				for(size_t i = 0 ; i < 1 ; ++i){
@@ -516,8 +516,8 @@ namespace acg{
 // 			omap.header.stamp = ros::Time::now();
 			nav_msgs::OccupancyGrid::Ptr final;
 			if(grids.size() > 0){
-				
-				std::cout << "Combining " << grids.size() << std::endl;
+
+				ROS_DEBUG_STREAM("Combining " << grids.size() );
 				final = occupancy_grid_utils::combineGrids(grids);
 // 				std::cout << "Ref frame " << omap.header.frame_id << std::endl;
 				final->header.frame_id = "/world";
@@ -560,7 +560,7 @@ namespace acg{
 					auto pose = acg.getRobotNodes()[i]->getPose();
 // 					auto vertex = node->estimate().toVector();
 // 					Eigen::Vector3d vector; vector << vertex(0), vertex(1), vertex(2);
-					std::cout << "Move : " << pose.matrix() << std::endl;
+					ROS_DEBUG_STREAM("Move : " << pose.matrix() );
 // 					if(i == 2) exit(0);
 					moveOccupancyMap(*omap_tmp, pose);
 					omap_tmp->header.frame_id = "/world";
@@ -712,7 +712,7 @@ namespace acg{
 							p.x = vertex(0);
 							p.y = vertex(1);
 							p.z = acg.getZElevation();
-							std::cout << "Found Some pose at " << p.x << " " << p.y << std::endl;
+							ROS_DEBUG_STREAM("Found Some pose at " << p.x << " " << p.y );
 						}
 						else if(ptr2 != NULL) {
 							auto vertex = ptr2->estimate();
@@ -720,10 +720,10 @@ namespace acg{
 							p.x = vertex(0);
 							p.y = vertex(1);
 							p.z = acg.getZElevation();
-							std::cout << "Found landmark at " << p.x << " " << p.y << std::endl;
+							ROS_DEBUG_STREAM( "Found landmark at " << p.x << " " << p.y);
 						}
 						else{
-							std::cout << "Not found " <<std::endl;
+							ROS_ERROR_STREAM("Not found " );
 							throw std::runtime_error("Vertex type not found :O");
 						}
 						_observation_edge_markers.points.push_back(p);

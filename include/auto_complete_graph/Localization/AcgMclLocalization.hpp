@@ -36,7 +36,7 @@ namespace acg{
 		
 		void init(double xx, double yy, double yaw, double initVar, double cov_x_mcl, double cov_y_mcl, double cov_yaw_mcl, double scale_gaussian_mcl, double numPart, bool forceSIR){
 
-			std::cout << "INIT MCL ACG" << std::endl;
+//			std::cout << "INIT MCL ACG" << std::endl;
 			
 // 			perception_oru::particle_filter* pMCL = new perception_oru::particle_filter(map, numPart, true, forceSIR);
 // 			_ndtmcl = boost::shared_ptr<perception_oru::particle_filter>(pMCL);
@@ -45,12 +45,12 @@ namespace acg{
 			setMotionModelCovY(cov_y_mcl);
 			setMotionModelCovYaw(cov_yaw_mcl);
 			setScalingFactorGaussian(scale_gaussian_mcl);
-			
-	 		std::cout << "Init at " << xx << " " << yy << " " << yaw << std::endl;
+//
+//	 		std::cout << "Init at " << xx << " " << yy << " " << yaw << std::endl;
 			InitializeNormal(xx, yy, yaw, initVar);
-			std::cout << "Normal init" << std::endl;
+//			std::cout << "Normal init" << std::endl;
 			mcl_loaded_ = true;
-			std::cout << "MAP LOADED SUCCESSFULLY :)" << std::endl;
+//			std::cout << "MAP LOADED SUCCESSFULLY :)" << std::endl;
 			
 		}
 		

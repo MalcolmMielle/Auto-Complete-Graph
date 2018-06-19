@@ -3,7 +3,7 @@
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline g2o::VertexSE2RobotPose* AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::addRobotPose(const g2o::SE2& se2, const Eigen::Affine3d& affine, const std::shared_ptr< perception_oru::NDTMap >& map){
 
-	std::cout << "Adding the robot pose " << std::endl;
+	ROS_DEBUG("Adding the robot pose ");
 	g2o::VertexSE2RobotPose* robot =  new g2o::VertexSE2RobotPose();
 
 	robot->setEstimate(se2);
@@ -590,11 +590,11 @@ inline std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphBase<
 	g2o::SE2 diff_vec_se2(diff_vec);
 // 			std::cout << "diff vec done" << diff_vec << std::endl;
 	robot_pos = robot_pos * diff_vec_se2;
-	std::cout << "multiply" << std::endl;
+//	std::cout << "multiply" << std::endl;
 
 	perception_oru::NDTMap* map = ndt_graph.getMap(element);
 
-	std::cout << "get res" << std::endl;
+//	std::cout << "get res" << std::endl;
 // 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;
 // 			Use a a msg to copy to a new pointer so it doesn't get forgotten :|
 	ndt_map::NDTMapMsg msg;
@@ -610,10 +610,10 @@ inline std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphBase<
 	assert(*robot_ptr != NULL);
 	//Add Odometry if it is not the first node
 	if(element > 0 ){
-		std::cout << "adding the odometry" << std::endl;
+		ROS_DEBUG("adding the odometry");
 
 		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
-		std::cout << " ref " << links[element-1].getRefIdx() << " and mov " << links[element-1].getMovIdx() << std::endl;
+		ROS_DEBUG_STREAM(" ref " << links[element-1].getRefIdx() << " and mov " << links[element-1].getMovIdx() );
 
 		assert( links[element-1].getRefIdx() < _nodes_ndt.size() );
 		assert( links[element-1].getMovIdx() < _nodes_ndt.size() );
@@ -621,26 +621,26 @@ inline std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphBase<
 		auto from = _nodes_ndt[ links[element-1].getRefIdx() ] ;
 		auto toward = _nodes_ndt[ links[element-1].getMovIdx() ] ;
 
-		std::cout << "Saving cov " << std::endl;
+		ROS_DEBUG("Saving cov ");
 		//TODO : transpose to 3d and use in odometry!
 		Eigen::MatrixXd cov = links[element - 1].cov_3d;
 
-		std::cout << "COV " << cov << std::endl;
+		ROS_DEBUG_STREAM("COV " << cov);
 
-		std::cout << "Saving cov to 2d" << std::endl;
+		ROS_DEBUG_STREAM("Saving cov to 2d");
 		Eigen::Matrix3d cov_2d;
 		cov_2d << 	cov(0, 0), 	cov(0, 1), 	0,
 					cov(1, 0), 	cov(1, 1), 	0,
 					0, 		 	0, 			cov(5, 5);
 
-		std::cout << "Saving information " << std::endl;
+		ROS_DEBUG_STREAM("Saving information ");
 		Eigen::Matrix3d information = cov_2d.inverse();
 
 // 				if(noise_flag = true && i != 0){
 // 					odometry = odometry * noise_se2;
 // 				}
 
-		std::cout << "Saving odometry " << std::endl;
+		ROS_DEBUG_STREAM("Saving odometry ");
 		addOdometry(odometry, from, toward, information);
 	}
 
@@ -655,37 +655,37 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::get
 
 
 	perception_oru::ndt_feature_finder::NDTCorner cornersExtractor;
-	std::cout << "hopidy" << std::endl;
+	ROS_DEBUG_STREAM("hopidy");
 	auto ret_export = cornersExtractor.getAllCorners(*map);
-	std::cout << "gotall corner" << std::endl;
+	ROS_DEBUG_STREAM("gotall corner");
 // 	auto ret_opencv_point_corner = cornersExtractor.getAccurateCvCorners();
-	std::cout << "got all accurate corners" << std::endl;
+	ROS_DEBUG_STREAM("got all accurate corners");
 // 	auto angles = cornersExtractor.getAngles();
-// 	std::cout << "got all angles" << std::endl;
+// 	std::cout << "got all angles");
 
 	auto it = ret_export.begin();
 
-	std::cout << "Found " << ret_export.size() << " corners " << std::endl;
+	ROS_DEBUG_STREAM("Found " << ret_export.size() << " corners " );
 	//Find all the observations :
 
 	//**************** HACK: translate the corners now : **************//
 
 // 	int count_tmp = 0;
 	for(it ; it != ret_export.end() ; ++it){
-		std::cout << "Corner size " << it->getOrientations().size() << std::endl;
+		ROS_DEBUG_STREAM("Corner size " << it->getOrientations().size() );
 		//Limited to corners that possess an orientation.
 		if(it->getOrientations().size() > 0){
 			Eigen::Vector3d vec;
 	// 		vec << it->x, it->y, angles[count_tmp].second;
-			std::cout << "Corner size " << std::endl;
+			ROS_DEBUG_STREAM("Corner size " );
 			vec << it->getMeanOpenCV().x, it->getMeanOpenCV().y, it->getOrientations()[0];
 
-			std::cout << "Corner size " << std::endl;
+			ROS_DEBUG_STREAM("Corner size " );
 			cv::Point2f p_out;
 			Eigen::Vector3d landmark_robotframe;
 			translateFromRobotFrameToGlobalFrame(vec, robot_pos, landmark_robotframe);
 
-			std::cout << "Corner size " << std::endl;
+			ROS_DEBUG_STREAM("Corner size " );
 			p_out.x = landmark_robotframe(0);
 			p_out.y = landmark_robotframe(1);
 
@@ -693,16 +693,16 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::get
 			std::vector<double> orientations;
 			std::vector<double> angles_width;
 
-			std::cout << "Corner size " << std::endl;
+			ROS_DEBUG_STREAM("Corner size " );
 			double angle_landmark = vec(2);
 
-			std::cout << "Corner size " << std::endl;
+			ROS_DEBUG_STREAM("Corner size " );
 			for(auto it_orientation = it->getOrientations().begin() ; it_orientation != it->getOrientations().end() ; ++it_orientation){
-				std::cout << "Pushing back orientation" << std::endl;
+				ROS_DEBUG_STREAM("Pushing back orientation" );
 				orientations.push_back((*it_orientation));
 			}
 			for(auto it_angles = it->getAngles().begin() ; it_angles != it->getAngles().end() ; ++it_angles){
-				std::cout << "Pushing back angle" << std::endl;
+				ROS_DEBUG_STREAM("Pushing back angle" );
 				angles_width.push_back((*it_angles));
 			}
 
@@ -750,14 +750,14 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::get
 
 
 	// 		std::cout << "Node transfo " << ndt_graph.getNode(i).T.matrix() << std::endl;
-			std::cout << "Position node " << robot_pos.toVector() << std::endl;
-			std::cout << " vec " << vec << std::endl;
+			ROS_DEBUG_STREAM("Position node " << robot_pos.toVector() );
+			ROS_DEBUG_STREAM(" vec " << vec );
 	// 		std::cout << "Well " << robot_pos.toVector() + vec << "==" << ndt_graph.getNode(i).T * vec << std::endl;
 
 			//ATTENTION THIS IS NOT TRUE BUT REALLY CLOSE
 	// 				assert (robot_pos + vec == ndt_graph.getNode(i).T * vec);
 
-					std::cout << "NEW POINT : "<< p_out << std::endl;
+					ROS_DEBUG_STREAM("NEW POINT : "<< p_out);
 
 			NDTCornerGraphElement cor(p_out, *it);
 			cor.addAllObserv(robot_ptr, observation);
@@ -806,7 +806,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::ext
 
 			double res = cv::norm(point_land - corners_end[i].position_in_robot_frame);
 
-			std::cout << "res : " << std::endl;
+			ROS_DEBUG_STREAM("res : ");
 
 			//If we found the landmark, we save the data
 			if( res < cell_size * 2){
@@ -815,18 +815,18 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::ext
 			}
 		}
 		if(seen == false){
-			std::cout << "New point " << i << std::endl;
+			ROS_DEBUG_STREAM( "New point " << i );
 // 			assert(i < ret_export.size());
 			g2o::Vector2 position_globalframe;
 			position_globalframe << corners_end[i].position_in_robot_frame.x, corners_end[i].position_in_robot_frame.y ;
 // 			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(vec, ret_export[i].getMeanOpenCV(), 1);
 
 			cv::Point2f p_observation;
-			std::cout << "New point " << i << std::endl;
+			ROS_DEBUG_STREAM("New point " << i );
 			p_observation.x = corners_end[i].getObservations()(0);
-			std::cout << "New point " << i << std::endl;
+			ROS_DEBUG_STREAM("New point " << i );
 			p_observation.y = corners_end[i].getObservations()(1);
-			std::cout << "New point " << i << std::endl;
+			ROS_DEBUG_STREAM("New point " << i );
 			g2o::VertexLandmarkNDT* ptr = addLandmarkPose(position_globalframe, p_observation, 1);
 			ptr->addAnglesOrientations(corners_end[i].getAngles(), corners_end[i].getOrientations());
 			ptr->first_seen_from = robot_ptr;
@@ -844,7 +844,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::ext
 		}
 		else{
 			//TODO
-			std::cout << "Point seen " << std::endl;
+			ROS_DEBUG_STREAM("Point seen " );
 			addLandmarkObservation(corners_end[i].getObservations(), corners_end[i].getNodeLinkedPtr(), ptr_landmark_seen);
 		}
 	}
@@ -858,15 +858,15 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::ext
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
 
-	std::cout << "BEfore " << std::endl;
+	ROS_DEBUG_STREAM("BEfore " );
 // 	printCellsNum();
-	std::cout << "Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph << std::endl;
+	ROS_DEBUG_STREAM("Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph );
 
 	//************* Add and create all new nodes, and extract the corners from the new NDT maps *********//
 
 	if(ndt_graph.getNbNodes() > _previous_number_of_node_in_ndtgraph){
 
-		std::cout << "Found new nodes" << std::endl;
+		ROS_DEBUG_STREAM("Found new nodes");
 
 		//TODO just get the links that are interesting for you instead of all of them !
 		//Doing the registration here myself
@@ -879,7 +879,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::upd
 		if(_previous_number_of_node_in_ndtgraph >= 2){
 			//Ignore last link
 			for (size_t i = _previous_number_of_node_in_ndtgraph - 2; i < links.size() - 1; i++) {
-		      std::cout << "updating link : " << i << " (size of links :" << links.size() << ")" << std::endl;
+		      ROS_DEBUG_STREAM("updating link : " << i << " (size of links :" << links.size() << ")" );
 				ndt_graph.updateLinkUsingNDTRegistration(links[i], 10, true);
 			}
 		}
@@ -904,7 +904,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::upd
 			g2o::SE2 robot_pos;
 			auto map = addElementNDT(ndt_graph, links, i, deviation, &robot_ptr, robot_pos);
 			assert(robot_ptr != NULL);
-			std::cout << "TEST pointer " << std::endl; std::cout << robot_ptr->getPose().matrix() << std::endl;
+			ROS_DEBUG_STREAM("TEST pointer " << robot_ptr->getPose().matrix() );
 			//********************** Extract the corners *****************//
 			extractCornerNDTMap(map, robot_ptr, robot_pos);
 			//********************** Add the time stamp ******************//
@@ -1298,7 +1298,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 	int count = 0;
 	std::deque<double> _chi_kernel;
 	for ( ; count < max_iter && count < 2 ; ++count){
-		std::cout << "Optimizing two times at least because we need to " << std::endl;
+		ROS_INFO( "Optimizing two times at least because we need to " );
 		_optimizable_graph.optimize(1);
 		_optimizable_graph.computeActiveErrors();
 		_chi_kernel.push_back(_optimizable_graph.chi2());
@@ -1311,7 +1311,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 	if(max_iter >= 2){
 		while(ErrorStable(_chi_kernel) == false && count < max_iter){
 			count++;
-			std::cout << "Optimizing until error stops it " << std::endl;
+			ROS_INFO( "Optimizing until error stops it " );
 			_optimizable_graph.optimize(1);
 			_optimizable_graph.computeActiveErrors();
 			_chi_kernel.push_back(_optimizable_graph.chi2());
@@ -1325,7 +1325,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 
 	if(count >= max_iter){
 
-	    std::cout << "\n\n****** ATTENTION THE OPTIMIZATION PROBABLY FAILED. It iterated for too long, please double check the resulting map ! *****\n" << std::endl;
+	    ROS_ERROR( "\n\n****** ATTENTION THE OPTIMIZATION PROBABLY FAILED. It iterated for too long, please double check the resulting map ! *****\n" );
 
 	}
 
@@ -1340,7 +1340,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 
 	_chi2s.clear();
 
-	std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;
+	ROS_DEBUG_STREAM("BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" );
 
 	/********** HUBER kernel ***********/
 
@@ -1349,7 +1349,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 	_flag_optimize = checkAbleToOptimize();
 
 	if(_flag_optimize == true){
-		std::cout << "OPTIMIZE" << std::endl;
+		ROS_DEBUG_STREAM( "OPTIMIZE" );
 // 				checkRobotPoseNotMoved("before opti");
 
 		if(_flag_use_robust_kernel){
@@ -1396,7 +1396,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 
 	}
 	else{
-		std::cout << "No Optimization :(" << std::endl;
+		ROS_DEBUG_STREAM("No Optimization :(" );
 	}
 
 
@@ -1471,11 +1471,11 @@ inline bool AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::Err
 		if(max_steps_count == max_steps){
 			break;
 		}
-		std::cout << std::abs( *it - *(it - 1) ) << " ";
+		ROS_DEBUG_STREAM(std::abs( *it - *(it - 1) ) << " ");
 		++max_steps_count;
 	}
-	std::cout << std::endl;
-	std::cout << "Error is " << error_mean << "threshold is " << _error_threshold_stop_optimization << std::endl;
+	// std::cout << std::endl;
+	ROS_INFO_STREAM("Error is " << error_mean << "threshold is " << _error_threshold_stop_optimization );
 	if(error_mean < _error_threshold_stop_optimization){
 		return true;
 	}
@@ -1484,7 +1484,7 @@ inline bool AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::Err
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::clearPrior(){
-	std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
+	ROS_DEBUG_STREAM( "IMPORTANT size " << _optimizable_graph.vertices().size() );
 //	int i = 0;
 
 	for(auto vertex : _prior->getNodes()){
@@ -1506,8 +1506,8 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::cle
 // 				std::cout << "pointer " << dynamic_cast<g2o::EdgeSE2Prior_malcolm*>(*ite) << std::endl;
 //		assert( dynamic_cast<EdgePrior*>(*ite) == NULL );
 //	}
-	std::cout << "IMPORTANT size " << _optimizable_graph.vertices().size() << std::endl;
-	std::cout << "DONE removing " << std::endl;
+	ROS_DEBUG_STREAM( "IMPORTANT size " << _optimizable_graph.vertices().size() );
+	ROS_DEBUG_STREAM( "DONE removing " );
 }
 
 
@@ -1583,7 +1583,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::cle
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::checkRobotPoseNotMoved(const std::string& when){
-	std::cout << "testing after " << when << std::endl;
+	ROS_DEBUG_STREAM("testing after " << when );
 	for(auto it = _nodes_ndt.begin() ; it != _nodes_ndt.end() ; ++it){
 		int init_x = (*it)->initial_transfo.toVector()(0) ;
 		int init_y = (*it)->initial_transfo.toVector()(1) ;
@@ -1594,7 +1594,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::che
 		int update_z = (*it)->estimate().toVector()(2) * 10;
 
 		if(init_x != update_x || init_y != update_y || init_z != update_z){
-			std::cout << " init "  << init_x << " "<< init_y << " "<< init_z <<  " == " << update_x << " "<< update_y << " "<< update_z <<  std::endl;
+			ROS_DEBUG_STREAM(" init "  << init_x << " "<< init_y << " "<< init_z <<  " == " << update_x << " "<< update_y << " "<< update_z );
 			throw std::runtime_error("MOVE BASE");
 		}
 	}

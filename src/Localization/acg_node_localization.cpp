@@ -41,6 +41,7 @@ ros::Publisher acg_gdim_om;
 ros::Publisher last_grid_map;
 ros::Publisher last_ndtmap;
 ros::Publisher last_occ_map;
+ros::Publisher last_occ_map2;
 
 ros::Time timef;
 
@@ -48,6 +49,7 @@ int count = 0;
 
 bool new_node = false;
 bool was_init = false;
+bool euclidean_dist_occ_map = false;
 
 std::vector<double> time_extract_corner_ndt;
 std::vector<double> time_opti;
@@ -163,25 +165,25 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
 	//Puclish message for GDIM
 	auto_complete_graph::ACGMaps mapmsg;
-	std::cout << "PUSH acg maps message" << std::endl;
+	ROS_INFO("PUSH acg maps message");
 	AASS::acg::ACGToACGMapsMsg(oacg, mapmsg, map_frame);
 	acg_gdim.publish(mapmsg);
 
 
 	auto_complete_graph::ACGMapsOM mapmsg_om;
-	std::cout << "PUSH acg maps OM message" << std::endl;
-	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om, map_frame, occupancy_grid_resolution, scaling_gaussian_occ_map);
+	ROS_INFO("PUSH acg maps OM message");
+	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om, map_frame, occupancy_grid_resolution, scaling_gaussian_occ_map, euclidean_dist_occ_map);
 	acg_gdim_om.publish(mapmsg_om);
 
 	//Publish the last grid map as a message to make sure that they look like something
 	int size_g = mapmsg_om.ndt_maps_om.size();
 	if(size_g > 0) {
-		ROS_INFO("Last grid map");
+		ROS_DEBUG("Last grid map");
 		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
 
 		//Publish last occ grid to make sure that they look like something
 		int size_o = mapmsg.ndt_maps.maps.size();
-		ROS_INFO("Last ndtmap");
+		ROS_DEBUG("Last ndtmap");
 		last_ndtmap.publish(mapmsg.ndt_maps.maps[size_o - 1]);
 
         nav_msgs::OccupancyGrid omap;
@@ -189,9 +191,19 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 		perception_oru::NDTMap* last_map = oacg.getRobotNodes()[oacg.getRobotNodes().size() - 1 ]->getMap().get();
 
 //		std::cout << "SCALIN GAUSSIAN OCC " << scaling_gaussian_occ_map << std::endl;
-		perception_oru::toOccupancyGrid(last_map, omap, 0.05, map_frame, scaling_gaussian_occ_map );
+		perception_oru::toOccupancyGrid(last_map, omap, occupancy_grid_resolution, map_frame, scaling_gaussian_occ_map, euclidean_dist_occ_map);
 		last_occ_map.publish(omap);
 //		delete omap;
+
+
+		nav_msgs::OccupancyGrid omap2;
+		grid_map::GridMap mapNDT;
+		grid_map::GridMapRosConverter converter;
+		converter.fromMessage(mapmsg_om.ndt_maps_om[mapmsg_om.ndt_maps_om.size() - 1], mapNDT);
+		//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
+		grid_map::GridMapRosConverter::toOccupancyGrid(mapNDT, "ndt", 0, 255, omap2);
+		last_occ_map2.publish(omap2);
+
 
 //        initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
 //        perception_oru::toOccupancyGrid(&mapmsg.ndt_maps.maps[size_o -1], *omap, 0.1, "/world");
@@ -327,7 +339,7 @@ inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Aff
 
 
 void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
-	ROS_INFO("Got a new graph ");
+	ROS_DEBUG("Got a new graph ");
 	
 	ndt_feature::NDTFeatureGraph graph;
 	
@@ -381,7 +393,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		updated = true;
 		new_node = true;
 	// 	abort_f = true;
-		std::cout << "Got a new graph " << std::endl;
+		ROS_INFO("Got a new graph ");
 		
 		ros::Time start = ros::Time::now();
 		
@@ -396,7 +408,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		oacg->updateNDTGraph(*msg);
 		ros::Time end_corner = ros::Time::now();
 
-		std::cout << "MAP UPDATED in main" << std::endl;
+		ROS_DEBUG("MAP UPDATED in main");
 		
 		double corner_extract_tt = (start_corner - end_corner).toSec();
 		time_extract_corner_ndt.push_back(corner_extract_tt);
@@ -404,9 +416,9 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 //		if(oacg->getRobotNodes().size() > 0){
 
 		if(testing_pause) {
-			ROS_INFO("RVIZ ");
+			ROS_DEBUG("RVIZ ");
 			visu.updateRviz(*oacg);
-			ROS_INFO("RVIZ DONE");
+			ROS_DEBUG("RVIZ DONE");
 		}
 		
 		// 	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/oacg_before_";
@@ -451,7 +463,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		// 		}
 
 				if(optimize_prior == true) {
-					ROS_INFO("Publishing the new prior ndt map");
+					ROS_DEBUG("Publishing the new prior ndt map");
 					publishPriorNDT(*oacg);
 				}
 
@@ -459,10 +471,10 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 //				sendMapAsOcc(*oacg);
 
 
-	ROS_INFO("RVIZ " );
+	ROS_DEBUG("RVIZ " );
 				visu.updateRviz(*oacg);
 				publishACGOM(*oacg);
-	ROS_INFO("RVIZ DONE");
+	ROS_DEBUG("RVIZ DONE");
 
 				if(testing_pause) {
 					std::cout << "Result of optimization. Enter a number to continue" << std::endl;
@@ -542,11 +554,11 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 	//We use the already registered points
 // 	priorloader.extractCornerPrior();
 	priorloader.transformOntoSLAM();
-	auto graph_prior = priorloader.getGraph();	
-	
-	std::cout << "clear prior" << std::endl;
+	auto graph_prior = priorloader.getGraph();
+
+	ROS_DEBUG("clear prior");
 	oacg.clearPrior();
-	std::cout << "add prior" << std::endl;
+	ROS_DEBUG("add prior");
 	oacg.addPriorGraph(graph_prior);
 	
 	initialiser.clear();
@@ -622,6 +634,7 @@ int main(int argc, char **argv)
 
 	nh.param<double>("gaussian_scaling_occ", scaling_gaussian_occ_map, 0.5);
 	nh.param<double>("occupancy_grid_resolution", occupancy_grid_resolution, 0.05);
+	nh.param("euclidean_dist_occ_map",euclidean_dist_occ_map,false);
 
 //	if(argc > 1){
 //		deviation = strtod(argv[1], NULL);
@@ -677,9 +690,9 @@ int main(int argc, char **argv)
 //	oacg.linkToPrior(link_to_prior);
 
 
-	std::cout << "*************** DESCRIPTION INIT **************" << std::endl;
+	ROS_DEBUG("*************** DESCRIPTION INIT **************");
 	oacg.print();
-	std::cout << "*************** DESCRIPTION INIT **************" << std::endl;
+	ROS_DEBUG("*************** DESCRIPTION INIT **************");
 		
 	//Create initialiser
 	AASS::acg::RvizPointsLocalization initialiser(nh, &oacg);
@@ -703,6 +716,7 @@ int main(int argc, char **argv)
 	acg_gdim_om = nh.advertise<auto_complete_graph::ACGMapsOM>("acg_maps_om", 10);
 	last_ndtmap = nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
 	last_occ_map = nh.advertise<nav_msgs::OccupancyGrid>("occ_lastgraphmap_acg", 10);
+	last_occ_map2 = nh.advertise<nav_msgs::OccupancyGrid>("two_occ_lastgraphmap_acg", 10);
 
 	last_grid_map = nh.advertise<grid_map_msgs::GridMap>("last_grid_map", 10);
 
