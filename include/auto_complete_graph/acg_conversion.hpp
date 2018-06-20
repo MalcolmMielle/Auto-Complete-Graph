@@ -420,7 +420,7 @@ namespace acg{
 
 		auto allcells = map_out.getAllCellsShared();
 		auto allcellsinit = map_out.getAllInitializedCellsShared();
-		std::cout << "all cells " << allcells.size() << " all cells init " << allcellsinit.size() << std::endl;
+//		std::cout << "all cells " << allcells.size() << " all cells init " << allcellsinit.size() << std::endl;
 //		assert(allcells.size() > 0);
 
 	}

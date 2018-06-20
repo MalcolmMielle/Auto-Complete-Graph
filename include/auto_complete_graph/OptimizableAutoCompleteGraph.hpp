@@ -208,7 +208,7 @@ namespace acg{
 			
 			auto idmapedges = this->edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-				std::cout << "Robust Kern" << std::endl;
+//				std::cout << "Robust Kern" << std::endl;
 				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
 				auto huber = new g2o::RobustKernelHuber();
 				e->setRobustKernel(huber);
@@ -223,7 +223,7 @@ namespace acg{
 			
 			auto idmapedges = this->edges();
 			for ( auto ite = idmapedges.begin(); ite != idmapedges.end(); ++ite ){
-				std::cout << "Robust Kern" << std::endl;
+//				std::cout << "Robust Kern" << std::endl;
 				OptimizableGraph::Edge* e = static_cast<OptimizableGraph::Edge*>(*ite);
 				auto dcs = new g2o::RobustKernelDCS();
 				e->setRobustKernel(dcs);

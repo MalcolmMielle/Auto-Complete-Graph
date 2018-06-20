@@ -17,7 +17,7 @@ namespace AASS {
 		auto_complete_graph::LocalizationMsg toMessage(const Localization& loca) {
 			auto_complete_graph::LocalizationMsg loc_msg;
 
-			std::cout << "Saving MCL Pose " << loca.mean << std::endl;
+//			std::cout << "Saving MCL Pose " << loca.mean << std::endl;
 			geometry_msgs::Point mean_msg;
 			tf::pointEigenToMsg(loca.mean, mean_msg);
 			loc_msg.mcl_mean = mean_msg;
