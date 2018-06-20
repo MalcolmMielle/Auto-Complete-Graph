@@ -1092,6 +1092,12 @@ public:
 				 if (acg_localization->getLocalizations().size() != nb_of_node_new) {
 					 ROS_DEBUG_STREAM(" saving pose ");
 					 acg_localization->savePos(nb_of_node_new - 1);
+
+					 //Taking current cov for precedent node
+					 if(acg_localization->getLocalizations().size() >= 2 ) {
+						 acg_localization->saveCov(nb_of_node_new - 2);
+					 }
+
 					 assert(acg_localization->getLocalizations().size() == nb_of_node_new);
 				 }
 				 assert(acg_localization->getLocalizations().size() == nb_of_node_new);

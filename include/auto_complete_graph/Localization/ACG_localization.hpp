@@ -126,9 +126,12 @@ namespace acg{
 	    }
 
 	    virtual bool checkAbleToOptimize(){
-//		    if(_number_of_links_to_prior > 0) {
+		    if(_number_of_links_to_prior > 0) {
 			    return true;
-//		    }
+		    }
+		    else{
+			    ROS_INFO("Can't optimize because no observation have been made for now");
+		    }
 //		    return false;
 	    }
 

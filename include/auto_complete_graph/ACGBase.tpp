@@ -1323,6 +1323,8 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 		}
 	}
 
+	ROS_INFO_STREAM("optimized " << count << " times.");
+
 	if(count >= max_iter){
 
 	    ROS_ERROR( "\n\n****** ATTENTION THE OPTIMIZATION PROBABLY FAILED. It iterated for too long, please double check the resulting map ! *****\n" );

@@ -94,6 +94,22 @@ namespace acg{
 //			_indexes.push_back(index);
 			
 		}
+
+		void saveCov(int index = -1){
+			Eigen::Matrix3d cov;
+			Eigen::Vector3d mean;
+			GetPoseMeanAndVariance2D(mean, cov);
+
+//			std::cout << "index " << index << " LOCALIZATION " << _localization[index].cov <<  " = " << cov << std::endl;
+
+			_localization[index].cov = cov;
+
+//			std::cout << "MAking sure " << _localization[index].cov << std::endl;
+//			loc.mean = mean;
+//			loc.cov = cov;
+//			loc.index = index;
+//			_localization.push_back(loc);
+		}
 		
 //		const std::vector<Eigen::Vector3d>& getMeans() const {return _mean_saved;}
 //		const std::vector<Eigen::Matrix3d>& getCovs() const {return _cov_saved;}
