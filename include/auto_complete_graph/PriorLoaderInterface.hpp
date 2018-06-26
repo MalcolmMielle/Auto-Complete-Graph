@@ -77,10 +77,10 @@ namespace AASS{
 
 
 				//Dortmund
-				pt_slam.push_back(cv::Point2f(4.55, 1.8));
+				pt_slam.push_back(cv::Point2f(5, 0.55));
 				pt_prior.push_back(cv::Point2f(2429, 736));
 
-				pt_slam.push_back(cv::Point2f(4.73, -1.5));
+				pt_slam.push_back(cv::Point2f(4.86, -2.98));
 				pt_prior.push_back(cv::Point2f(2817, 748));
 
 // 				pt_slam.push_back(cv::Point2f(7.64, 3.63));

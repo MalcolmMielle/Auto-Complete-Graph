@@ -569,6 +569,33 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 }
 
 
+//
+//void initManual() {
+//
+//	std::cout << "INIT ALL" << std::endl;
+//	std::vector<cv::Point2f> slam_pt;
+//	std::vector<cv::Point2f> prior_pt;
+//
+//	priorloader.initialize(slam_pt, prior_pt);
+//
+//	//We use the already registered points
+//// 	priorloader.extractCornerPrior();
+//	priorloader.transformOntoSLAM();
+//	auto graph_prior = priorloader.getGraph();
+//
+//	ROS_DEBUG("clear prior");
+//	oacg.clearPrior();
+//	ROS_DEBUG("add prior");
+//	oacg.addPriorGraph(graph_prior);
+//
+//	initialiser.clear();
+//
+//	publishPriorNDT(oacg);
+//	publishACGOM(oacg);
+//
+//}
+
+
 
 int main(int argc, char **argv)
 {
@@ -686,6 +713,11 @@ int main(int argc, char **argv)
 		oacg.addPriorGraph(graph_prior);
 		oacg.setPriorReference();
 	}
+
+
+	//Init GDIM and MAPPING
+	publishPriorNDT(oacg);
+	publishACGOM(oacg);
 
 //	oacg.linkToPrior(link_to_prior);
 
