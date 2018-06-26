@@ -132,6 +132,7 @@ void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGra
 
 void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
+//	std::cout << "PUB1" << std::endl;
 	//		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), 0.1, 0.1/4);
 //		sensor_msgs::PointCloud2 pcl_prior_msg;
 //		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
@@ -163,6 +164,7 @@ void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoComplete
 
 void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
+//	std::cout << "PUB2" << std::endl;
 	//Puclish message for GDIM
 	auto_complete_graph::ACGMaps mapmsg;
 	ROS_INFO("PUSH acg maps message");
@@ -389,6 +391,8 @@ void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
 void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization* oacg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
 // void gotGraphandOptimize(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* oacg){
 // 	try{
+
+//	std::cout << "GOT GRAPH" << std::endl;
 
 		updated = true;
 		new_node = true;
@@ -716,8 +720,8 @@ int main(int argc, char **argv)
 
 
 	//Init GDIM and MAPPING
-	publishPriorNDT(oacg);
-	publishACGOM(oacg);
+//	publishPriorNDT(oacg);
+//	publishACGOM(oacg);
 
 //	oacg.linkToPrior(link_to_prior);
 
@@ -763,7 +767,14 @@ int main(int argc, char **argv)
 	ros::Time time_begin = ros::Time::now();
 
 	std::cout << "READY :D" << std::endl;
-	
+
+
+
+	//Init GDIM and MAPPING
+	publishPriorNDT(oacg);
+	publishACGOM(oacg);
+
+
 	bool flag = true;
 	while(ros::ok() && flag == true ){
 // 		std::cout <<"SPIN auto_complete" << std::endl;
