@@ -132,6 +132,7 @@ void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGra
 
 void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
+	std::cout << "Publishing the prior" << std::endl;
 //	std::cout << "PUB1" << std::endl;
 	//		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), 0.1, 0.1/4);
 //		sensor_msgs::PointCloud2 pcl_prior_msg;
@@ -769,6 +770,8 @@ int main(int argc, char **argv)
 	std::cout << "READY :D" << std::endl;
 
 
+
+	ros::Duration(5).sleep();
 
 	//Init GDIM and MAPPING
 	publishPriorNDT(oacg);
