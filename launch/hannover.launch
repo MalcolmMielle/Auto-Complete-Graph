@@ -74,7 +74,7 @@
       <param name="laser_frame_id" value="/velodyne" />
 
       <param name="matchLaser" value="true" />
-      <param name="laser_topic" value="/laser_scan_with_ransac" />
+      <param name="laser_topic" value="/fused_scan_slam" />
 <!--       <param name="points_topic" value="/velodyne_points" /> -->
 
       <param name="useOdometry" value="true" />
