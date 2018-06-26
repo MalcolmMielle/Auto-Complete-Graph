@@ -68,11 +68,20 @@ namespace AASS{
 				std::vector<cv::Point2f> pt_slam;
 				std::vector<cv::Point2f> pt_prior;
 
-				pt_slam.push_back(cv::Point2f(19.36, 6.25));
-				pt_prior.push_back(cv::Point2f(786, 373));
+//				//Orebro
+//				pt_slam.push_back(cv::Point2f(19.36, 6.25));
+//				pt_prior.push_back(cv::Point2f(786, 373));
+//
+//				pt_slam.push_back(cv::Point2f(19.14, 2.25));
+//				pt_prior.push_back(cv::Point2f(788, 311));
 
-				pt_slam.push_back(cv::Point2f(19.14, 2.25));
-				pt_prior.push_back(cv::Point2f(788, 311));
+
+				//Dortmund
+				pt_slam.push_back(cv::Point2f(4.55, 1.8));
+				pt_prior.push_back(cv::Point2f(2429, 736));
+
+				pt_slam.push_back(cv::Point2f(4.73, -1.5));
+				pt_prior.push_back(cv::Point2f(2817, 748));
 
 // 				pt_slam.push_back(cv::Point2f(7.64, 3.63));
 // 				pt_prior.push_back(cv::Point2f(614, 306));
