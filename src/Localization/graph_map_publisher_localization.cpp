@@ -88,14 +88,19 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 // 	int i = 0;
 // 	while(i < 10){
 // 	++i;
-	try {
-		time=ros::Time(0);
-		bool hunm = listener.waitForTransform(base_frame, to_frame, time, ros::Duration(1.0));
-		listener.lookupTransform(base_frame, to_frame, time, transform);
-	} catch (tf::TransformException ex) {
-		ROS_ERROR("%s",ex.what());
-			exit(0);
-	}
+
+	bool good_transformation = true;
+	do {
+		try {
+			time = ros::Time(0);
+			bool hunm = listener.waitForTransform(base_frame, to_frame, time, ros::Duration(1.0));
+			listener.lookupTransform(base_frame, to_frame, time, transform);
+			good_transformation = true;
+		} catch (tf::TransformException ex) {
+			ROS_ERROR("%s", ex.what());
+			good_transformation = false;
+		}
+	} while(good_transformation == false);
 	return transform;
 }
 
@@ -679,9 +684,11 @@ public:
 	void loadNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
 
 		if(!mcl_loaded_) {
+			ROS_INFO("Init new prior map");
 			initMCL(mapmsg);
 		}
 		else{
+			ROS_INFO("Loading new prior map");
 			updateMCLNDTMap(mapmsg);
 		}
 
