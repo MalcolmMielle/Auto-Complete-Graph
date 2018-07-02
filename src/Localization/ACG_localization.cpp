@@ -79,8 +79,35 @@ g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization
 }
 
 
+g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(const Eigen::Vector2d pose){
+	g2o::VertexNDTCell* ndt_cell_v = new g2o::VertexNDTCell();
+	ndt_cell_v->setId(new_id_);
+	ndt_cell_v->setEstimate(pose);
+	_optimizable_graph.addVertex(ndt_cell_v);
+	_vertices_ndt_cell.insert(ndt_cell_v);
+	return ndt_cell_v;
+}
 
-inline g2o::EdgePriorObservation* AASS::acg::AutoCompleteGraphLocalization::addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge){
+
+g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellEdge(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall) {
+
+	g2o::EdgeNDTCell* edge_ndt = new g2o::EdgeNDTCell(wall);
+	edge_ndt->vertices()[0] = v1 ;
+	edge_ndt->vertices()[1] = v1 ;
+
+//	edge_ndt->setMeasurement(localization);
+//	edge_ndt->setInformation(information);
+
+// 	odometry->interface.setAge(_age_start_value);
+
+	_optimizable_graph.addEdge(edge_ndt);
+	_edges_ndt_cell.insert(edge_ndt);
+	return edge_ndt;
+
+}
+
+
+g2o::EdgePriorObservation* AASS::acg::AutoCompleteGraphLocalization::addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge){
 
 	//Making sure the same edge is not added twice
 
@@ -1443,4 +1470,40 @@ void AASS::acg::AutoCompleteGraphLocalization::updateExistingPriorObservations()
 		edge_observation->setMeasurement(equiv->measurement());
 
 	}
+}
+
+
+
+
+
+std::set<boost::shared_ptr<perception_oru::NDTCell> > AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotPose& robot_pose, const g2o::EdgeXYPriorACG& wall){
+
+	std::set<boost::shared_ptr<perception_oru::NDTCell> > set_ret;
+
+	Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
+	Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
+
+	auto map = robot_pose.getMap();
+	g2o::SE2 pose = robot_pose.estimate();
+
+	auto cells = map->getAllCellsShared();
+	for(auto cell : cells){
+
+		Eigen::Vector3d mean = cell->getMean();
+		g2o::SE2 mean_se2(mean);
+		Eigen::Vector2d p0 = (pose * mean_se2).toVector().head(2);
+
+		double distance = distancePointLine(p0, p1, p2);
+
+		if(distance <= _neighbor_mcl_neighbor){
+
+			set_ret.insert(cell);
+
+		}
+
+	}
+
+	return set_ret;
+
+
 }

@@ -7,6 +7,8 @@
 #include "auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp"
 #include "auto_complete_graph/VertexAndEdge/EdgePriorObservation.hpp"
 #include "auto_complete_graph/VertexAndEdge/VertexSE2RobotLocalization.hpp"
+#include "auto_complete_graph/VertexAndEdge/VertexNDTCell.hpp"
+#include "auto_complete_graph/VertexAndEdge/EdgeNDTCell.hpp"
 //#include "graph_map/graph_map.h"
 #include "auto_complete_graph/Localization/Localization.hpp"
 #include "auto_complete_graph/Localization/LocalizationConvertion.hpp"
@@ -53,11 +55,18 @@ namespace acg{
 		//UNUSED
 	    bool _use_mcl_cov_to_find_prior_observed;
 
+	    //Size of the neighbor used by the mcl in graph_map. Make sure the value is the same for both. in meter
+	    double _neighbor_mcl_neighbor;
+
 	    std::vector<g2o::EdgeLocalization*> _edges_localization;
 
 	    ///@brief prior observation
 	    std::vector<g2o::EdgePriorObservation*> _edge_prior_observation;
 	    std::vector<g2o::VertexSE2RobotLocalization*> _nodes_localization;
+
+	    std::set<g2o::EdgeNDTCell*> _edges_ndt_cell;
+	    std::set<g2o::VertexNDTCell*> _vertices_ndt_cell;
+
 	    g2o::VertexXYPrior* _vertex_reference_for_montecarlo;
         
         
@@ -69,7 +78,7 @@ namespace acg{
 						const Eigen::Vector2d& pn,
 						double rp,
 						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), _use_mcl_cov_to_find_prior_observed(false), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, ndt_graph){
+  					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), _use_mcl_cov_to_find_prior_observed(false), _neighbor_mcl_neighbor(0.5), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, ndt_graph){
 
 	        if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
 		        throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
@@ -82,7 +91,7 @@ namespace acg{
 						  const Eigen::Vector2d& ln,
 						  const Eigen::Vector2d& pn,
 						  double rp
-					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), _use_mcl_cov_to_find_prior_observed(false), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp){
+					) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), _use_mcl_cov_to_find_prior_observed(false), _neighbor_mcl_neighbor(0.5), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp){
 
 		    if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
 			    throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
@@ -90,7 +99,7 @@ namespace acg{
 
 	    }
 		
-		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), _use_mcl_cov_to_find_prior_observed(false), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, load_file){
+		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, const std::string& load_file) : _do_own_registration(true), _extract_corners(true), _use_corner_covariance(true), _use_covariance_for_links(false), _use_mcl_observation_on_prior(true), _scaling_factor_gaussian(1), _threshold_of_score_for_creating_a_link(0.5), _use_links_prior_classic_ssrr(false), _use_robot_maps(true), _use_mcl_cov_to_find_prior_observed(false), _neighbor_mcl_neighbor(0.5), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, load_file){
 
 			if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
 				throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
@@ -156,6 +165,7 @@ namespace acg{
 	    void useLinksPriorSSRR(bool setter){_use_links_prior_classic_ssrr = setter;}
 	    void useRobotMaps(bool setter){_use_robot_maps = setter;}
 	    void useMCLCovToFindPriorObserved(bool setter){_use_mcl_cov_to_find_prior_observed = setter;}
+	    void sizeMCLNeighbor(double si){_neighbor_mcl_neighbor = si;}
 
 	    std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 	    const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
@@ -174,9 +184,18 @@ namespace acg{
 		g2o::EdgeLocalization* addLocalization(const g2o::SE2& localization, int from_id, const Eigen::Matrix3d& information);
 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information);
 
+
+	    g2o::VertexNDTCell* addNDTCellVertex(const Eigen::Vector2d pose);
+	    g2o::EdgeNDTCell* addNDTCellEdge(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall);
+//	    std::tuple<g2o::VertexXYPrior, g2o::EdgeXYPriorACG> addWeakAssociation(const g2o::SE2& transformation, g2o::HyperGraph::Vertex* v1);
+
 	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
 	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
 	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, int from_id, int toward_id, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
+
+
+
+
 
 	    /**
 	     * @brief Uses the covariance from MCL instead of a user chosen one.
@@ -241,11 +260,17 @@ namespace acg{
 		void AddObservationsMCLPrior();
 
 //		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark) const;
+		/**
+		 * Update all strong links between the emergency map  and the robot map landmark
+		 * @param landmark the landmark to update
+		 */
 		void addObservationMCLToPrior(const g2o::VertexLandmarkNDT* landmark);
 
 
 		/**
-		 * Update all measurements in prior observation and create new observation
+		 * Update all measurements in prior observation and create new observation.
+		 * * Add all strong association for all landamrks
+		 * * Remove all weak association for all emergency corners if needed
 		 */
 		void updatePriorObservations();
 
@@ -255,7 +280,8 @@ namespace acg{
 		void updateExistingPriorObservations();
 
 
-//		int createNewLinks();
+
+		std::set<boost::shared_ptr<perception_oru::NDTCell> > collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotPose& robot_pose, const g2o::EdgeXYPriorACG& wall);
     };
 
 }
