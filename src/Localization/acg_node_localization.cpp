@@ -783,7 +783,7 @@ int main(int argc, char **argv)
 
 
 
-	ros::Duration(5).sleep();
+//	ros::Duration(5).sleep();
 
 	//Init GDIM and MAPPING
 	publishPriorNDT(oacg);

@@ -79,17 +79,23 @@ g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization
 }
 
 
-g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(const Eigen::Vector2d pose){
+g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(const Eigen::Vector2d pose, const boost::shared_ptr<perception_oru::NDTCell>& cell, g2o::VertexSE2RobotLocalization* robot_node){
 	g2o::VertexNDTCell* ndt_cell_v = new g2o::VertexNDTCell();
+	ndt_cell_v->setCell(cell);
 	ndt_cell_v->setId(new_id_);
 	ndt_cell_v->setEstimate(pose);
 	_optimizable_graph.addVertex(ndt_cell_v);
 	_vertices_ndt_cell.insert(ndt_cell_v);
+
+	//Add link to robot map so we had an obbservation edge
+	Eigen::Vector2d pose_landmark = cell->getMean().head(2);
+	auto edge = addNDTCellObservation(pose_landmark, robot_node, ndt_cell_v, cell->getCov().block(0,0,2,2));
+
 	return ndt_cell_v;
 }
 
 
-g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellEdge(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall) {
+g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellAssociation(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall) {
 
 	g2o::EdgeNDTCell* edge_ndt = new g2o::EdgeNDTCell(wall);
 	edge_ndt->vertices()[0] = v1 ;
@@ -157,11 +163,75 @@ inline g2o::EdgePriorObservation* AASS::acg::AutoCompleteGraphLocalization::addP
 	return addPriorObservation(pos, v1, v2, covariance_landmark, equivalent_landmark_observation_edge);
 }
 
-inline g2o::EdgePriorObservation* AASS::acg::AutoCompleteGraphLocalization::addPriorObservation(const g2o::Vector2& pos, int from_id, int toward_id, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge){
+g2o::EdgePriorObservation* AASS::acg::AutoCompleteGraphLocalization::addPriorObservation(const g2o::Vector2& pos, int from_id, int toward_id, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge){
 	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
 	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
 	return addPriorObservation(pos, from_ptr, toward_ptr, equivalent_landmark_observation_edge);
 }
+
+
+
+g2o::EdgeNDTCellObservation* AASS::acg::AutoCompleteGraphLocalization::addNDTCellObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark){
+
+	//Making sure the same edge is not added twice
+
+	//for(auto land_edge : _edge_landmark){
+	//	if(v1 == land_edge->vertices()[0] && v2 == land_edge->vertices()[1]){
+	//		throw std::runtime_error("Edge observation already added");
+	//	}
+	//	else if(v1 == land_edge->vertices()[1] && v2 == land_edge->vertices()[0]){
+	//		throw std::runtime_error("Edge observation already added");
+	//	}
+	//}
+
+	//Might have more than one observation ot hte prior
+	//assert(findObservation(v1, v2) == NULL);
+
+	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
+
+	g2o::EdgeNDTCellObservation* landmarkObservation =  new g2o::EdgeNDTCellObservation;
+	landmarkObservation->vertices()[0] = v1;
+	landmarkObservation->vertices()[1] = v2;
+	landmarkObservation->setMeasurement(pos);
+
+	assert(information_landmark.isZero(1e-10) == false);
+
+	landmarkObservation->setInformation(information_landmark);
+	landmarkObservation->setParameterId(0, _sensorOffset->id());
+
+
+// 	landmarkObservation->interface.setAge(_age_start_value);
+
+	_optimizable_graph.addEdge(landmarkObservation);
+	_edges_ndt_cell_observation.insert(landmarkObservation);
+
+	return landmarkObservation;
+}
+
+
+g2o::EdgeNDTCellObservation* AASS::acg::AutoCompleteGraphLocalization::addNDTCellObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2){
+	Eigen::Matrix2d covariance_landmark;
+	covariance_landmark.fill(0.);
+	covariance_landmark(0, 0) = _landmarkNoise[0]*_landmarkNoise[0];
+	covariance_landmark(1, 1) = _landmarkNoise[1]*_landmarkNoise[1];
+
+//	throw std::runtime_error("Do not use user inputed values in landmark observation");
+
+// 			covariance_landmark(2, 2) = 13;//<- Rotation covariance landmark is more than 4PI
+	return addNDTCellObservation(pos, v1, v2, covariance_landmark);
+}
+
+g2o::EdgeNDTCellObservation* AASS::acg::AutoCompleteGraphLocalization::addNDTCellObservation(const g2o::Vector2& pos, int from_id, int toward_id){
+	g2o::HyperGraph::Vertex* from_ptr = _optimizable_graph.vertex(from_id);
+	g2o::HyperGraph::Vertex* toward_ptr = _optimizable_graph.vertex(toward_id);
+	return addNDTCellObservation(pos, from_ptr, toward_ptr);
+}
+
+
+
+
+
+
 
 
 g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphLocalization::setPriorReference()
@@ -215,6 +285,9 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 					//NEED TO ADD OBSERVATION EDGES BETWEEN MCL AND CORNERS HERE TODO
 					AddObservationsMCLPrior();
 				}
+				//********************** Link to wall in EM ******************//
+				createWallAssociations(robot_localization_ptr);
+
 				//********************** Add the time stamp ******************//
 // 			robot_ptr->setTime(ndt_graph.nodes[i].time_last_update);
 
@@ -1473,32 +1546,81 @@ void AASS::acg::AutoCompleteGraphLocalization::updateExistingPriorObservations()
 }
 
 
+void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(){
+
+	for (auto robot : _nodes_localization){
+		createWallAssociations(robot);
+	}
+
+}
+
+void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::VertexSE2RobotLocalization* robot){
+
+	std::cout << "Create link to robot map" << std::endl;
+	for(auto wall : _prior->getEdges()){
+
+		auto cells = collisionsNDTMapWithPriorEdge(*robot, *wall);
+		for(auto cell : cells){
+
+			auto ndtcell_ver  = addNDTCellVertex(cell.second, cell.first, robot);
+			auto ndtcell_edge = addNDTCellAssociation(ndtcell_ver, wall);
+
+		}
+
+	}
+
+}
 
 
 
-std::set<boost::shared_ptr<perception_oru::NDTCell> > AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotPose& robot_pose, const g2o::EdgeXYPriorACG& wall){
 
-	std::set<boost::shared_ptr<perception_oru::NDTCell> > set_ret;
+std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d> > AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall){
+
+	std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d> > set_ret;
 
 	Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
 	Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
 
-	auto map = robot_pose.getMap();
-	g2o::SE2 pose = robot_pose.estimate();
+	auto map = robot_pose_vertex.getMap();
+	g2o::SE2 loc_pose( robot_pose_vertex.localizationInGlobalFrame() );
 
 	auto cells = map->getAllCellsShared();
 	for(auto cell : cells){
 
+		perception_oru::NDTCell *cell_closest = NULL;
+
 		Eigen::Vector3d mean = cell->getMean();
 		g2o::SE2 mean_se2(mean);
-		Eigen::Vector2d p0 = (pose * mean_se2).toVector().head(2);
+		Eigen::Vector2d p0 = (loc_pose * mean_se2).toVector().head(2);
+
+//		pcl::PointXYZ p;
+//		p.x = p0[0];
+//		p.y = p0[1];
+//		p.z = mean[2];
+//		map->getCellAtPoint(p, cell_closest);
+        Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
+		std::cout << "p1 " << p1 << std::endl;
+		Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
+		std::cout << "p2 " << p2 << std::endl;
 
 		double distance = distancePointLine(p0, p1, p2);
 
-		if(distance <= _neighbor_mcl_neighbor){
+		double cx, cy, cz;
+		map->getCellSizeInMeters(cx, cy, cz);
+		double minval = std::min(cx, std::min(cy, cz) );
 
-			set_ret.insert(cell);
+		std::cout << "min value " << minval << std::endl;
 
+		if(distance <= 2 * minval){
+			std::cout << "Close" << std::endl;
+
+			g2o::SE2 rob_pose = robot_pose_vertex.estimate();
+			Eigen::Vector2d mean_robot_pose = (rob_pose * mean_se2).toVector().head(2);
+			set_ret.push_back(std::pair<boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d>(cell, mean_robot_pose.head(2) ) );
+
+		}
+		else{
+			std::cout << "Not Close" << std::endl;
 		}
 
 	}

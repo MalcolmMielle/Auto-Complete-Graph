@@ -49,6 +49,8 @@ namespace g2o{
 //			_error = distance_point_to_line;
 		}
 
+		g2o::EdgeXYPriorACG* getPriorWall(){return _prior_edge_collinear;}
+		const g2o::EdgeXYPriorACG* getPriorWall() const {return _prior_edge_collinear;}
 
 		virtual bool read(std::istream& is);
 		virtual bool write(std::ostream& os) const;

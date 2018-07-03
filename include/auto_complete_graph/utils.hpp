@@ -74,8 +74,11 @@ namespace AASS{
 
 		inline double distancePointLine(Eigen::Vector2d point, Eigen::Vector2d p1_line, Eigen::Vector2d p2_line){
 
-			double distance_point_to_line = std::norm( ( (p2_line(1) - p1_line(1) ) * point(0) ) - ( (p2_line[0] - p1_line[0]) * point[2] ) + ( p2_line[0]*p1_line[1]) - (p2_line[1]*p1_line[1]) );
-			return distance_point_to_line / std::sqrt( ( (p2_line[1] - p1_line[1]) * (p2_line[1] - p1_line[1]) ) + ( (p2_line[0] - p1_line[0]) * (p2_line[0] - p1_line[0]) ) );
+			std::cout << "Getting the distance " <<std::endl;
+			double distance_point_to_line = std::norm( ( (p2_line[1] - p1_line[1] ) * point[0] ) - ( (p2_line[0] - p1_line[0]) * point[1] ) + ( p2_line[0]*p1_line[1]) - (p2_line[1]*p1_line[1]) );
+			distance_point_to_line = distance_point_to_line / std::sqrt( ( (p2_line[1] - p1_line[1]) * (p2_line[1] - p1_line[1]) ) + ( (p2_line[0] - p1_line[0]) * (p2_line[0] - p1_line[0]) ) );
+			std::cout << "Distance : " << distance_point_to_line << std::endl;
+			return distance_point_to_line;
 
 		}
 		

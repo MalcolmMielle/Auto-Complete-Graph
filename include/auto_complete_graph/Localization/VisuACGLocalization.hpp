@@ -20,11 +20,18 @@ namespace AASS {
 			visualization_msgs::Marker _ndt_node_localization_markers;
 			visualization_msgs::Marker _mcl_angles_markers;
 			visualization_msgs::Marker _last_seen_landmark_in_mcl_pose;
+			visualization_msgs::Marker _ndt_cells;
+			visualization_msgs::Marker _ndt_cell_observations;
+			visualization_msgs::Marker _ndt_cell_associations;
 			ros::Publisher _localization_pub;
 			ros::Publisher _localization_pose_pub;
 			ros::Publisher _prior_observations_pub;
 			ros::Publisher _mcl_angles_pub;
 			ros::Publisher _last_landmark;
+			ros::Publisher _ndt_cell_pub;
+			ros::Publisher _ndt_cell_observation_pub;
+			ros::Publisher _ndt_cell_association_pub;
+
 
 //			AutoCompleteGraphLocalization *_acg;
 
@@ -40,6 +47,9 @@ namespace AASS {
 				_prior_observations_pub = _nh.advertise<visualization_msgs::Marker>("prior_observations_markers", 10);
 				_mcl_angles_pub = _nh.advertise<visualization_msgs::Marker>("mcl_angles_markers", 10);
 				_last_landmark = _nh.advertise<visualization_msgs::Marker>("mcl_landmark", 10);
+				_ndt_cell_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell", 10);
+				_ndt_cell_observation_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_observations", 10);
+				_ndt_cell_association_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_associations", 10);
 
 				_localization_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
 				_localization_edge_markers.header.frame_id = world_frame_id;
@@ -91,6 +101,37 @@ namespace AASS {
 				_ndt_node_localization_markers.color.g = 1.0f;
 				_ndt_node_localization_markers.color.a = 1.0;
 
+
+				_ndt_cells.type = visualization_msgs::Marker::POINTS;
+				_ndt_cells.header.frame_id = world_frame_id;
+				_ndt_cells.ns = "acg";
+				_ndt_cells.id = 0;
+				_ndt_cells.scale.x = 0.5;
+				_ndt_cells.scale.y = 0.5;
+				_ndt_cells.color.g = 1.0f;
+				_ndt_cells.color.a = 1.0;
+
+				_ndt_cell_observations.type = visualization_msgs::Marker::LINE_LIST;
+				_ndt_cell_observations.header.frame_id = world_frame_id;
+				_ndt_cell_observations.ns = "acg";
+				_ndt_cell_observations.id = 0;
+				_ndt_cell_observations.scale.x = 0.1;
+				_ndt_cell_observations.scale.y = 0.1;
+				_ndt_cell_observations.color.r = 1.0f;
+				_ndt_cell_observations.color.a = 1.0;
+
+				_ndt_cell_associations.type = visualization_msgs::Marker::LINE_LIST;
+				_ndt_cell_associations.header.frame_id = world_frame_id;
+				_ndt_cell_associations.ns = "acg";
+				_ndt_cell_associations.id = 0;
+				_ndt_cell_associations.scale.x = 0.1;
+				_ndt_cell_associations.scale.y = 0.1;
+				_ndt_cell_associations.color.r = 1.0f;
+				_ndt_cell_associations.color.b = 1.0f;
+				_ndt_cell_associations.color.a = 1.0;
+
+
+
 			}
 
 			void drawLocalizations(const AutoCompleteGraphLocalization& acg);
@@ -101,6 +142,9 @@ namespace AASS {
 			void drawLocalizationLandmarks(const AutoCompleteGraphLocalization& acg);
 
 			void drawMCLAngles(const AutoCompleteGraphLocalization &acg);
+			void drawNDTCellObservations(const AutoCompleteGraphLocalization &acg);
+			void drawNDTCellAssociations(const AutoCompleteGraphLocalization &acg);
+			void drawNDTCells(const AutoCompleteGraphLocalization &acg);
 
 
 			void updateRviz(const AutoCompleteGraphLocalization& acg){
@@ -126,6 +170,10 @@ namespace AASS {
 				}
 
 				VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>::updateRviz(acg);
+
+				drawNDTCellObservations(acg);
+				drawNDTCellAssociations(acg);
+				drawNDTCells(acg);
 //
 //
 //					auto_complete_graph::ACGMaps mapmsg;
@@ -484,6 +532,105 @@ namespace AASS {
 			_anglesw_prior_pub.publish(_anglesw_prior_markers);
 
 //			exit(0);
+		}
+
+
+
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCellObservations(const AutoCompleteGraphLocalization &acg){
+			_ndt_cell_observations.header.stamp = ros::Time::now();
+			auto edges = acg.getNDTCellObservations();
+
+//			if(edges.size() != _ndt_cell_observations.points.size()){
+
+				_ndt_cell_observations.points.clear();
+
+				for(auto edge : edges){
+
+
+					for(auto ite2 = edge->vertices().begin(); ite2 != edge->vertices().end() ; ++ite2){
+
+						geometry_msgs::Point p;
+
+						g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
+						g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
+
+						if(ptr != NULL){
+// 						std::cout << "Got a VertexSE2" << std::endl;
+							auto vertex = ptr->estimate().toVector();
+							p.x = vertex(0);
+							p.y = vertex(1);
+							p.z = 0;
+						}
+						else if(ptr2 != NULL){
+// 						std::cout << "Got a VertexPOINTXY" << std::endl;
+							auto vertex = ptr2->estimate();
+							p.x = vertex(0);
+							p.y = vertex(1);
+							p.z = 0;
+						}
+						else{
+							throw std::runtime_error("Links do not have the good vertex type");
+						}
+
+						_ndt_cell_observations.points.push_back(p);
+					}
+				}
+//			}
+			_ndt_cell_observation_pub.publish(_ndt_cell_observations);
+		}
+
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCellAssociations(const AutoCompleteGraphLocalization &acg){
+			_ndt_cell_associations.header.stamp = ros::Time::now();
+			auto edges = acg.getNDTCellAssociations();
+
+//			if(edges.size() != _ndt_cell_observations.points.size()){
+
+			_ndt_cell_associations.points.clear();
+
+			for(auto edge : edges){
+
+				g2o::VertexNDTCell* cell =  dynamic_cast<g2o::VertexNDTCell*>(edge->vertices()[0]);
+
+				geometry_msgs::Point p_cell;
+				p_cell.x = cell->estimate()(0);
+				p_cell.y = cell->estimate()(1);
+				p_cell.z = 0;
+
+				auto wall = edge->getPriorWall();
+
+				for(auto vert : wall->vertices()){
+					g2o::VertexPointXYACG* ptr = dynamic_cast<g2o::VertexPointXYACG*>(vert);
+
+					geometry_msgs::Point p;
+					auto vertex = ptr->estimate();
+					p.x = vertex(0);
+					p.y = vertex(1);
+					p.z = 0;
+
+					_ndt_cell_associations.points.push_back(p);
+					_ndt_cell_associations.points.push_back(p_cell);
+				}
+			}
+//			}
+			_ndt_cell_association_pub.publish(_ndt_cell_associations);
+		}
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCells(const AutoCompleteGraphLocalization &acg){
+			_ndt_cells.header.stamp = ros::Time::now();
+			_ndt_cells.points.clear();
+			auto node_ndtcell = acg.getNDTCells();
+			for(auto cell : node_ndtcell) {
+
+				geometry_msgs::Point p;
+//				g2o::VertexSE2RobotLocalization* ptr = dynamic_cast<g2o::VertexSE2RobotLocalization*>(cell);
+				auto vertex = cell->estimate();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+				p.x = vertex(0);
+				p.y = vertex(1);
+				p.z = acg.getZElevation();
+				_ndt_cells.points.push_back(p);
+
+			}
+			_ndt_cell_pub.publish(_ndt_cells);
 		}
 
 

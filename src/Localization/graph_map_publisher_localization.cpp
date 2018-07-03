@@ -1088,7 +1088,7 @@ public:
 
 
 			 auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
-			 // 	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[0]->GetId() << std::endl;
+			  	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[0]->GetId() << std::endl;
 			 for (int i = 0; i < nb_of_node_new; ++i) {
 				 ROS_DEBUG_STREAM( "Well " << nb_of_node << " != " << nb_of_node_new << " and id "
 				           << fuser_->GetGraphMap()->GetNodes()[i]->GetId() );

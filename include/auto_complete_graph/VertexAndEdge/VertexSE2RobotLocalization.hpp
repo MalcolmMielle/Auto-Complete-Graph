@@ -43,7 +43,7 @@ namespace g2o{
 			_to_robot_localization = loc;
 		}
 
-		Eigen::Vector3d localizationInGlobalFrame() {
+		Eigen::Vector3d localizationInGlobalFrame() const {
 
 //			Eigen::Vector3d original_pose_in_robot_frame_3d;
 			Eigen::Vector3d robot_frame_pose = this->estimate().toVector();

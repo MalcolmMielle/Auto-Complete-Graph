@@ -9,6 +9,7 @@
 #include "auto_complete_graph/VertexAndEdge/VertexSE2RobotLocalization.hpp"
 #include "auto_complete_graph/VertexAndEdge/VertexNDTCell.hpp"
 #include "auto_complete_graph/VertexAndEdge/EdgeNDTCell.hpp"
+#include "auto_complete_graph/VertexAndEdge/EdgeNDTCellObservation.hpp"
 //#include "graph_map/graph_map.h"
 #include "auto_complete_graph/Localization/Localization.hpp"
 #include "auto_complete_graph/Localization/LocalizationConvertion.hpp"
@@ -66,6 +67,7 @@ namespace acg{
 
 	    std::set<g2o::EdgeNDTCell*> _edges_ndt_cell;
 	    std::set<g2o::VertexNDTCell*> _vertices_ndt_cell;
+	    std::set<g2o::EdgeNDTCellObservation*> _edges_ndt_cell_observation;
 
 	    g2o::VertexXYPrior* _vertex_reference_for_montecarlo;
         
@@ -132,10 +134,12 @@ namespace acg{
 		    std::cout << "Scaling factor for gaussians: " << _scaling_factor_gaussian << std::endl;
 
 		    std::cout << "Number of links to prior: " << _number_of_links_to_prior << std::endl;
+
+		    std::cout << "Number of link to prior walls" << _edges_ndt_cell.size() << std::endl;
 	    }
 
 	    virtual bool checkAbleToOptimize(){
-		    if(_number_of_links_to_prior > 0) {
+		    if(_number_of_links_to_prior > 0 || _edges_ndt_cell.size() > 0) {
 			    return true;
 		    }
 		    else{
@@ -173,6 +177,12 @@ namespace acg{
 	    const std::vector<g2o::EdgePriorObservation*>& getPriorObservations() const {return  _edge_prior_observation;}
 	    std::vector<g2o::VertexSE2RobotLocalization*>& getRobotPoseLocalization(){return _nodes_localization;}
 	    const std::vector<g2o::VertexSE2RobotLocalization*>& getRobotPoseLocalization() const {return _nodes_localization;}
+	    std::set<g2o::VertexNDTCell*>& getNDTCells() {return _vertices_ndt_cell;}
+	    const std::set<g2o::VertexNDTCell*>& getNDTCells() const {return _vertices_ndt_cell;}
+	    std::set<g2o::EdgeNDTCellObservation*>& getNDTCellObservations() {return _edges_ndt_cell_observation;}
+	    const std::set<g2o::EdgeNDTCellObservation*>& getNDTCellObservations() const {return _edges_ndt_cell_observation;}
+	    std::set<g2o::EdgeNDTCell*>& getNDTCellAssociations() {return _edges_ndt_cell;}
+	    const std::set<g2o::EdgeNDTCell*>& getNDTCellAssociations() const {return _edges_ndt_cell;}
 
 	    /***FUNCTIONS TO ADD THE NODES***/
 	    g2o::VertexSE2RobotLocalization* addRobotLocalization(const g2o::SE2& se2_robot_pose, const Eigen::Affine3d& affine_original_robot_pose, Eigen::Vector3d to_robot_localization, const Eigen::Matrix3d& cov_localization, const std::shared_ptr< perception_oru::NDTMap >& map);
@@ -185,9 +195,13 @@ namespace acg{
 		g2o::EdgeLocalization* addLocalization(double x, double y, double theta, int from_id, const Eigen::Matrix3d& information);
 
 
-	    g2o::VertexNDTCell* addNDTCellVertex(const Eigen::Vector2d pose);
-	    g2o::EdgeNDTCell* addNDTCellEdge(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall);
+	    g2o::VertexNDTCell* addNDTCellVertex(const Eigen::Vector2d pose, const boost::shared_ptr<perception_oru::NDTCell>& cell, g2o::VertexSE2RobotLocalization* robot_node);
+	    g2o::EdgeNDTCell* addNDTCellAssociation(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall);
 //	    std::tuple<g2o::VertexXYPrior, g2o::EdgeXYPriorACG> addWeakAssociation(const g2o::SE2& transformation, g2o::HyperGraph::Vertex* v1);
+
+		virtual g2o::EdgeNDTCellObservation* addNDTCellObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark);
+		virtual g2o::EdgeNDTCellObservation* addNDTCellObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2);
+		virtual g2o::EdgeNDTCellObservation* addNDTCellObservation(const g2o::Vector2& pos, int from_id, int toward_id);
 
 	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
 	    virtual g2o::EdgePriorObservation* addPriorObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, g2o::EdgeLandmark_malcolm* equivalent_landmark_observation_edge);
@@ -281,7 +295,10 @@ namespace acg{
 
 
 
-		std::set<boost::shared_ptr<perception_oru::NDTCell> > collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotPose& robot_pose, const g2o::EdgeXYPriorACG& wall);
+		void createWallAssociations();
+		void createWallAssociations(g2o::VertexSE2RobotLocalization* robot);
+
+		std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d> > collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall);
     };
 
 }
