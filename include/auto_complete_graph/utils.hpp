@@ -1,6 +1,7 @@
 #ifndef AUTOCOMPLETEGRAPH_UTILS_11042017
 #define AUTOCOMPLETEGRAPH_UTILS_11042017
 
+#include <iostream>
 #include "opencv2/core/core.hpp"
 #include "Eigen/Core"
 #include "g2o/types/slam2d/se2.h"
@@ -74,10 +75,10 @@ namespace AASS{
 
 		inline double distancePointLine(Eigen::Vector2d point, Eigen::Vector2d p1_line, Eigen::Vector2d p2_line){
 
-			std::cout << "Getting the distance " <<std::endl;
-			double distance_point_to_line = std::norm( ( (p2_line[1] - p1_line[1] ) * point[0] ) - ( (p2_line[0] - p1_line[0]) * point[1] ) + ( p2_line[0]*p1_line[1]) - (p2_line[1]*p1_line[1]) );
+//			std::cout << "Getting the distance " <<std::endl;
+			double distance_point_to_line = std::abs( ( (p2_line[1] - p1_line[1] ) * point[0] ) - ( (p2_line[0] - p1_line[0]) * point[1] ) + ( p2_line[0]*p1_line[1]) - (p2_line[1]*p1_line[0]) );
 			distance_point_to_line = distance_point_to_line / std::sqrt( ( (p2_line[1] - p1_line[1]) * (p2_line[1] - p1_line[1]) ) + ( (p2_line[0] - p1_line[0]) * (p2_line[0] - p1_line[0]) ) );
-			std::cout << "Distance : " << distance_point_to_line << std::endl;
+//			std::cout << "Distance : " << distance_point_to_line << "points distance " << std::sqrt( ( (p2_line[1] - p1_line[1]) * (p2_line[1] - p1_line[1]) ) + ( (p2_line[0] - p1_line[0]) * (p2_line[0] - p1_line[0]) ) ) << " numerator " << std::norm( ( (p2_line[1] - p1_line[1] ) * point[0] ) - ( (p2_line[0] - p1_line[0]) * point[1] ) + ( p2_line[0]*p1_line[1]) - (p2_line[1]*p1_line[0]) ) << std::endl;
 			return distance_point_to_line;
 
 		}
