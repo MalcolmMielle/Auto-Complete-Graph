@@ -98,6 +98,21 @@ int main(){
 
 	std::cout << "distance should be 0 : " << distance << std::endl;
 
+	Eigen::Vector2d p1p0 = p0 - p1_line;
+	Eigen::Vector2d p1p2 = p2_line - p1_line;
+	Eigen::Vector2d p2p0 = p0 - p2_line;
+
+	std::cout << "vecs " << p1p0 << " \n" << p1p2 << " \n" << p2p0 << " \n" << -p1p2 << std::endl;
+	std::cout << p1p2.dot(p2p0) << ">= 0 && " << (- p1p2).dot(p1p0) << " >= 0 " << std::endl;
+
+	//Check if closest segment point is on the line segment of the wall:
+	if(p1p2.dot(p2p0) <= 0 && (- p1p2).dot(p1p0) <= 0) {
+		std::cout << "INSIDE GOOD" << std::endl;
+	}
+	else{
+		std::cout << "OUTSIDE BUG " << std::endl;
+	}
+
 	p0 << 0, 0;
 	p1_line << -1, 1;
 	p2_line << 3, 1;
@@ -105,6 +120,18 @@ int main(){
 	distance = AASS::acg::distancePointLine(p0, p1_line, p2_line);
 
 	std::cout << "distance should be 1 : " << distance << std::endl;
+
+	p1p0 = p0 - p1_line;
+	p1p2 = p2_line - p1_line;
+	p2p0 = p0 - p2_line;
+
+	//Check if closest segment point is on the line segment of the wall:
+	if(p1p2.dot(p2p0) <= 0 && (- p1p2).dot(p1p0) <= 0) {
+		std::cout << "INSIDE GOOD" << std::endl;
+	}
+	else{
+		std::cout << "OUTSIDE BUG " << std::endl;
+	}
 
 	p0 << 0, 0;
 	p1_line << -1, 1;
@@ -114,6 +141,19 @@ int main(){
 
 	std::cout << "distance should be 0 : " << distance << std::endl;
 
+	p1p0 = p0 - p1_line;
+	p1p2 = p2_line - p1_line;
+	p2p0 = p0 - p2_line;
+
+	//Check if closest segment point is on the line segment of the wall:
+	if(p1p2.dot(p2p0) <= 0 && (- p1p2).dot(p1p0) <= 0) {
+		std::cout << "INSIDE GOOD" << std::endl;
+	}
+	else{
+		std::cout << "OUTSIDE BUG " << std::endl;
+	}
+
+
 
 	p0 << 5, 0;
 	p1_line << -1, -1;
@@ -122,6 +162,20 @@ int main(){
 	distance = AASS::acg::distancePointLine(p0, p1_line, p2_line);
 
 	std::cout << "distance should be 1 : " << distance << std::endl;
+
+	p1p0 = p0 - p1_line;
+	p1p2 = p2_line - p1_line;
+	p2p0 = p0 - p2_line;
+
+	//Check if closest segment point is on the line segment of the wall:
+	if(p1p2.dot(p2p0) <= 0 && (- p1p2).dot(p1p0) <= 0) {
+		std::cout << "INSIDE SO BUG" << std::endl;
+	}
+	else{
+		std::cout << "GOOD " << std::endl;
+	}
+
+
 
 
 // 	assert(input_in_robotframe_eigen(0) == 8);

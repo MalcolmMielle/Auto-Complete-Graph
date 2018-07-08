@@ -8,6 +8,29 @@
 
 namespace AASS{
 	namespace acg{
+
+
+		/**
+		 * @brief return the abgle between two vector in rad. clockwise
+		 */
+		inline double getAngle(const Eigen::Vector3d& base, const Eigen::Vector3d& toward)
+		{
+
+			// 	std::cout << "Minor Axis " << std::endl << vec << std::endl;
+			// 	std::cout << "Compared to  " << std::endl << vec2 << std::endl;
+			//dot product with vertical axis gives us the angle
+			double d = base.dot(toward);
+			double l = base.norm() * toward.norm();
+
+			// 	std::cout << " d : " << d << " norm " << l << std::endl;
+			double ac = d/l;
+			ac = std::acos(ac);
+			return ac;
+
+		}
+
+
+
 		inline std::string type2str(int type) {
 			std::string r;
 
