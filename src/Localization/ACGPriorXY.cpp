@@ -47,7 +47,7 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdge(const g2o::SE2
 
 
 
- 			std::cout << "Covariance prior " << std::endl << cov << std::endl;
+// 			std::cout << "Covariance prior " << std::endl << cov << std::endl;
 //	Eigen::Matrix2d covariance_prior;
 //	covariance_prior.fill(0.);
 //	covariance_prior(0, 0) = cov(0, 0);
@@ -66,7 +66,7 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdge(const g2o::SE2
 
 
 
- 			std::cout << "Information prior " << std::endl << information_prior << std::endl;
+// 			std::cout << "Information prior " << std::endl << information_prior << std::endl;
 
 	assert(information_prior.isZero(1e-10) == false);
 	assert(information_prior == information_prior.transpose());

@@ -145,7 +145,7 @@ int main(){
 	p1p0p = a1 * (p1p2 / p1p2.norm() );
 	p0p0p = -p1p0 + p1p0p;
 
-	std::cout << "Projection point 1 0 -> " << p1p0p << "Projection from p0 0 1 -> " << p0p0p << std::endl;
+	std::cout << "Projection point 1 0 -> " << p1p0p << "Projection from p0 0 1 -> " << p0p0p << "distance 1  " << std::get<1>( AASS::acg::distancePointSegment(p0, p1_line, p2_line) ) << std::endl;
 
 	p0 << 0, 0;
 	p1_line << -1, 1;
@@ -170,7 +170,7 @@ int main(){
 	p1p0p = a1 * (p1p2 / p1p2.norm() );
 	p0p0p = -p1p0 + p1p0p;
 
-	std::cout << "Projection point 1 -1 -> " << p1p0p << "Projection from p0 0 0 -> " << p0p0p << std::endl;
+	std::cout << "Projection point 1 -1 -> " << p1p0p << "Projection from p0 0 0 -> " << p0p0p << "distance 0  " << std::get<1>( AASS::acg::distancePointSegment(p0, p1_line, p2_line) )<< std::endl;
 
 
 
@@ -204,8 +204,55 @@ int main(){
 		p0p0p = -p1p0 + p1p0p;
 	}
 
-	std::cout << "Projection point 6 0 -> " << p1p0p << "Projection from p0 -4 -1 -> " << p0p0p << std::endl;
+	std::cout << "Projection point 6 0 -> " << p1p0p << "Projection from p0 -4 -1 -> " << p0p0p << "distance 5.099  " << std::get<1>(AASS::acg::distancePointSegment(p0, p1_line, p2_line) ) << std::endl;
 
+
+	p0 << -0.909635,
+	      -38.2811;
+//	3.6253
+//	-0.397038
+	p1_line << -4.57298,
+	           -38.2312;
+	p2_line << 0.88458,
+	           -38.8289;
+
+
+	distance = AASS::acg::distancePointLine(p0, p1_line, p2_line);
+
+	std::cout << "distance should be ? : " << distance << std::endl;
+
+	p1p0 = p0 - p1_line;
+	p1p2 = p2_line - p1_line;
+	p2p0 = p0 - p2_line;
+
+	//Check if closest segment point is on the line segment of the wall:
+	if(p1p2.dot(p2p0) <= 0 && (- p1p2).dot(p1p0) <= 0) {
+		std::cout << "INSIDE" << std::endl;
+	}
+	else{
+		std::cout << "OUTSIDE BUG " << std::endl;
+	}
+	if(p1p2.dot(p2p0) >= 0){
+		p0p0p = -p2p0;
+	}else if( (-p1p2).dot(p1p0) >= 0 ){
+		p0p0p = -p1p0;
+	}else {
+		//Vector to line
+		a1 = p1p0.dot(p1p2 / p1p2.norm() );
+		p1p0p = a1 * (p1p2 / p1p2.norm() );
+		p0p0p = -p1p0 + p1p0p;
+	}
+
+	std::cout << "Projection point ? ? -> " << p1p0p << "Projection from p0 -? ? -> " << p0p0p << "distance ?  " << p0p0p.norm() << " and " << std::get<1>(AASS::acg::distancePointSegment(p0, p1_line, p2_line) ) << std::endl;
+
+
+//	1 -4.57298
+//	-38.2312
+//	p2  0.88458
+//	    -38.8289
+//	p0 -0.909635
+//	-38.2811
+//	min value 0.5 distance 0
 
 
 

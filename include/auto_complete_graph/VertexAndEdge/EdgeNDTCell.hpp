@@ -26,6 +26,7 @@ namespace g2o{
 		EdgeNDTCell(g2o::EdgeXYPriorACG* edge_prior);
 
 		g2o::EdgeXYPriorACG* _prior_edge_collinear = NULL;
+		double resolution_of_map;
 
 		//Compute the distance to a certain edge
 		virtual void computeError()
@@ -49,23 +50,32 @@ namespace g2o{
 
 			Eigen::Matrix<double, 2, 1, Eigen::ColMajor> error;
 
-			Eigen::Vector2d AB = B - A;
-			Eigen::Vector2d AC = C - A;
-			Eigen::Vector2d BC = C - B;
-
+//			Eigen::Vector2d AB = B - A;
+//			Eigen::Vector2d AC = C - A;
+//			Eigen::Vector2d BC = C - B;
+//
 			Eigen::Vector2d CCp = Eigen::Vector2d::Zero();
-			//Check if closest segment point is on the line segment of the wall
-//			First, check to see if the nearest point on the line AB is beyond B (as in the example above) by taking AB ⋅ BC. If this value is greater than 0, it means that the angle between AB and BC is between -90 and 90, exclusive, and therefore the nearest point on the segment AB will be B
-			if(AB.dot(BC) >= 0){
-				CCp = -BC;
-			}else if( (-AB).dot(AC) >= 0 ){
-				CCp = -AC;
-			}else {
-				//Vector to line
-				double a1 = AC.dot(AB / AB.norm());
-				Eigen::Vector2d ACp = a1 * (AB / AB.norm());
-				Eigen::Vector2d CCp = -AC + ACp;
-			}
+//			//Check if closest segment point is on the line segment of the wall
+////			First, check to see if the nearest point on the line AB is beyond B (as in the example above) by taking AB ⋅ BC. If this value is greater than 0, it means that the angle between AB and BC is between -90 and 90, exclusive, and therefore the nearest point on the segment AB will be B
+//			if(AB.dot(BC) >= 0){
+//				CCp = -BC;
+//			}else if( (-AB).dot(AC) >= 0 ){
+//				CCp = -AC;
+//			}else {
+//				//Vector to line
+//				double a1 = AC.dot(AB / AB.norm());
+//				Eigen::Vector2d ACp = a1 * (AB / AB.norm());
+//				Eigen::Vector2d CCp = -AC + ACp;
+//			}
+//
+			std::tie (std::ignore, CCp) = AASS::acg::distancePointSegment(C, A, B);
+
+			//If less than the size of the cells than ignore the error !!!!
+//			if(CCp.norm() < resolution_of_map){
+//				CCp = Eigen::Vector2d::Zero();
+//			}
+
+
 
 //			error << AASS::acg::distancePointLine(C, A, B) - _measurement;
 			error << CCp(0), CCp(1);
