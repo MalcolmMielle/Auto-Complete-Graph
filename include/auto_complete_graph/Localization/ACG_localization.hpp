@@ -52,6 +52,7 @@ namespace acg{
 	    double _scaling_factor_gaussian;
 
 	    bool _use_robot_maps;
+	    bool _match_robot_maps;
 
 		//UNUSED
 	    bool _use_mcl_cov_to_find_prior_observed;
@@ -145,7 +146,7 @@ namespace acg{
 		    else{
 			    ROS_INFO("Can't optimize because no observation have been made for now");
 		    }
-//		    return false;
+		    return true;
 	    }
 
 	    void setFirst(){
@@ -168,6 +169,7 @@ namespace acg{
 	    void useMCLObservationOnPrior(bool setter){_use_mcl_observation_on_prior = setter;}
 	    void useLinksPriorSSRR(bool setter){_use_links_prior_classic_ssrr = setter;}
 	    void useRobotMaps(bool setter){_use_robot_maps = setter;}
+	    void matchRobotMaps(bool setter){_match_robot_maps = setter;}
 	    void useMCLCovToFindPriorObserved(bool setter){_use_mcl_cov_to_find_prior_observed = setter;}
 	    void sizeMCLNeighbor(double si){_neighbor_mcl_neighbor = si;}
 
@@ -196,7 +198,7 @@ namespace acg{
 
 
 	    g2o::VertexNDTCell* addNDTCellVertex(const Eigen::Vector2d pose, const boost::shared_ptr<perception_oru::NDTCell>& cell, g2o::VertexSE2RobotLocalization* robot_node);
-	    g2o::EdgeNDTCell* addNDTCellAssociation(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall);
+	    g2o::EdgeNDTCell* addNDTCellAssociation(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall, const Eigen::Matrix2d& covariance_landmark);
 //	    std::tuple<g2o::VertexXYPrior, g2o::EdgeXYPriorACG> addWeakAssociation(const g2o::SE2& transformation, g2o::HyperGraph::Vertex* v1);
 
 		virtual g2o::EdgeNDTCellObservation* addNDTCellObservation(const g2o::Vector2& pos, g2o::HyperGraph::Vertex* v1, g2o::HyperGraph::Vertex* v2, const Eigen::Matrix2d& covariance_landmark);
@@ -298,7 +300,41 @@ namespace acg{
 		void createWallAssociations();
 		void createWallAssociations(g2o::VertexSE2RobotLocalization* robot);
 
-		std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d> > collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall);
+		std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall);
+
+
+		//FOR TESTING
+		virtual bool verifyInformationMatrices(bool verbose) const;
+
+		std::string getEdgeType(g2o::OptimizableGraph::Edge* edge) const{
+			g2o::EdgeLandmark_malcolm* ptr = dynamic_cast<g2o::EdgeLandmark_malcolm*>(edge);
+			g2o::EdgeXYPriorACG* ptr1 = dynamic_cast<g2o::EdgeXYPriorACG*>(edge);
+			g2o::EdgeOdometry_malcolm* ptr2 = dynamic_cast<g2o::EdgeOdometry_malcolm*>(edge);
+			g2o::EdgeLinkXY_malcolm* ptr3 = dynamic_cast<g2o::EdgeLinkXY_malcolm*>(edge);
+			g2o::EdgeNDTCellObservation* ptr4 = dynamic_cast<g2o::EdgeNDTCellObservation*>(edge);
+			g2o::EdgeNDTCell* ptr5 = dynamic_cast<g2o::EdgeNDTCell*>(edge);
+			if(ptr != NULL){
+				return "edge Landmark";
+			}
+			else if(ptr1 != NULL){
+				return "edge xy prior";
+			}
+			else if(ptr2 != NULL){
+				return "edge odometry";
+			}
+			else if(ptr3 != NULL){
+				return "edge link xy";
+			}
+			else if(ptr4 != NULL){
+//			std::cout << "EDGE NDT CELL OBSERVATION" << std::endl;
+//			std::cout << "INFO : " << ptr3->information() << std::endl;
+				return "edge ndt cell observation";
+			}
+			else if(ptr5 != NULL){
+//			std::cout << "EDGE NDT CELL" << std::endl;
+				return "edge ndt cell";
+			}
+		}
     };
 
 }

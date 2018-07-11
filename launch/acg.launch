@@ -4,11 +4,12 @@
 
 <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
 
-	<param name="pause_for_testing" value="true" />
+	<param name="pause_for_testing" value="false" />
 	<param name="use_prior" value="true" />
 	<param name="optimize_prior" value="true"/>
 	<param name="use_robot_maps" value="true"/>
-	<param name="use_corner" value="false" />
+	<param name="match_ndt_maps" value="true"/>
+	<param name="use_corner" value="true" />
 	<param name="use_corner_orientation" value="false" />
 	<param name="corner_covariance" value="false" /> <!-- DOESNT WORK -->
 	<param name="own_registration" value="true" />

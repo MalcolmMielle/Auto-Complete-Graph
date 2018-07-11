@@ -124,7 +124,10 @@ inline g2o::EdgeOdometry_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 // 	odometry->interface.setAge(_age_start_value);
 
 	_optimizable_graph.addEdge(odometry);
-	_edge_odometry.push_back(odometry);     
+	_edge_odometry.push_back(odometry);
+
+	assert(verifyInformationMatrices(true) == true);
+
 	return odometry;
 }
 
@@ -207,6 +210,8 @@ inline g2o::EdgeLandmark_malcolm* AASS::acg::AutoCompleteGraphBase<Prior, Vertex
 	_optimizable_graph.addEdge(landmarkObservation);
 	_edge_landmark.push_back(landmarkObservation);
 
+	assert(verifyInformationMatrices(true) == true);
+
 	return landmarkObservation;
 }
 
@@ -243,6 +248,8 @@ inline EdgePrior* AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior
 //	_edge_prior.push_back(priorObservation);
 //	std::cout << "After adding an edge" << std::endl;
 //	checkNoRepeatingPriorEdge();
+
+    assert(verifyInformationMatrices(true) == true);
 
 	return priorObservation;
 }
@@ -1295,6 +1302,10 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::pre
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize_simple(int max_iter){
+
+    std::cout << "Check before optimization" << std::endl;
+    testInfoNonNul("At first");
+
 	int count = 0;
 	std::deque<double> _chi_kernel;
 	for ( ; count < max_iter && count < 2 ; ++count){
@@ -1341,6 +1352,8 @@ template< typename Prior, typename VertexPrior, typename EdgePrior>
 inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize(int max_iter){
 
 	_chi2s.clear();
+	std::cout << "Checking that all info mat are positive semi def" << std::endl;
+	assert(_optimizable_graph.verifyInformationMatrices(true) == true);
 
 	ROS_DEBUG_STREAM("BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" );
 

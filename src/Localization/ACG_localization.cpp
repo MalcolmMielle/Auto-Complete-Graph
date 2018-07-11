@@ -1,5 +1,46 @@
 #include "auto_complete_graph/Localization/ACG_localization.hpp"
 
+bool AASS::acg::AutoCompleteGraphLocalization::verifyInformationMatrices(bool verbose) const
+{
+	bool allEdgeOk = true;
+	Eigen::SelfAdjointEigenSolver<g2o::MatrixX> eigenSolver;
+	for (g2o::OptimizableGraph::EdgeSet::const_iterator it = _optimizable_graph.edges().begin(); it != _optimizable_graph.edges().end(); ++it) {
+		g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*it);
+		g2o::MatrixX::MapType information(e->informationData(), e->dimension(), e->dimension());
+		// test on symmetry
+
+		information = information * 1000;
+		information = information.array().round();
+		information = information / 1000;
+
+		bool isSymmetric = information.transpose() == information;
+		bool okay = isSymmetric;
+		if (isSymmetric) {
+			// compute the eigenvalues
+			eigenSolver.compute(information, Eigen::EigenvaluesOnly);
+			bool isSPD = eigenSolver.eigenvalues()(0) >= 0.;
+			okay = okay && isSPD;
+		}
+		allEdgeOk = allEdgeOk && okay;
+		if (! okay) {
+			if (verbose) {
+				std::cerr << "In a " << getEdgeType(e) << " ";
+				if (! isSymmetric)
+					std::cerr << "Information Matrix for an edge is not symmetric:";
+				else
+					std::cerr << "Information Matrix for an edge is not SPD:";
+				for (size_t i = 0; i < e->vertices().size(); ++i)
+					std::cerr << " " << e->vertex(i)->id();
+				if (isSymmetric)
+					std::cerr << "\teigenvalues: " << eigenSolver.eigenvalues().transpose();
+				std::cerr << " information :\n" << information << "\n" << std::endl;
+			}
+		}
+	}
+	return allEdgeOk;
+}
+
+
 
 g2o::VertexSE2RobotLocalization* AASS::acg::AutoCompleteGraphLocalization::addRobotLocalization(const g2o::SE2& se2_robot_pose, const Eigen::Affine3d& affine_original_robot_pose, Eigen::Vector3d to_robot_localization, const Eigen::Matrix3d& cov_localization, const std::shared_ptr< perception_oru::NDTMap >& map){
 
@@ -82,6 +123,7 @@ g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization
 g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(const Eigen::Vector2d pose, const boost::shared_ptr<perception_oru::NDTCell>& cell, g2o::VertexSE2RobotLocalization* robot_node){
 	std::cout << "Adding vertex ndt cell" << std::endl;
 	g2o::VertexNDTCell* ndt_cell_v = new g2o::VertexNDTCell();
+	std::cout << "Set cell " << std::endl;
 	ndt_cell_v->setCell(cell);
 	ndt_cell_v->setId(new_id_);
 	++new_id_;
@@ -89,6 +131,7 @@ g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(c
 	_optimizable_graph.addVertex(ndt_cell_v);
 	_vertices_ndt_cell.insert(ndt_cell_v);
 
+	std::cout << "Set landmark " << std::endl;
 	//Add link to robot map so we had an obbservation edge
 	Eigen::Vector2d pose_landmark = cell->getMean().head(2);
 	//TODO CRASH :(
@@ -101,12 +144,14 @@ g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(c
 }
 
 
-g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellAssociation(g2o::HyperGraph::Vertex* v1, g2o::EdgeXYPriorACG* wall) {
+g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellAssociation(g2o::HyperGraph::Vertex* v_ndt_cell, g2o::EdgeXYPriorACG* wall, const Eigen::Matrix2d& covariance_landmark) {
 
 	g2o::EdgeNDTCell* edge_ndt = new g2o::EdgeNDTCell(wall);
-	edge_ndt->vertices()[0] = v1 ;
-	edge_ndt->vertices()[1] = v1 ;
+	edge_ndt->vertices()[0] = v_ndt_cell ;
+	edge_ndt->vertices()[1] = wall->vertices()[0] ;
 
+	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
+	edge_ndt->setInformation(information_landmark);
 //	edge_ndt->setMeasurement(localization);
 //	edge_ndt->setInformation(information);
 
@@ -114,6 +159,9 @@ g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellAssociatio
 
 	_optimizable_graph.addEdge(edge_ndt);
 	_edges_ndt_cell.insert(edge_ndt);
+
+	assert(verifyInformationMatrices(true) == true);
+
 	return edge_ndt;
 
 }
@@ -152,6 +200,8 @@ g2o::EdgePriorObservation* AASS::acg::AutoCompleteGraphLocalization::addPriorObs
 
 	_optimizable_graph.addEdge(landmarkObservation);
 	_edge_prior_observation.push_back(landmarkObservation);
+
+	assert(verifyInformationMatrices(true) == true);
 
 	return landmarkObservation;
 }
@@ -210,6 +260,9 @@ g2o::EdgeNDTCellObservation* AASS::acg::AutoCompleteGraphLocalization::addNDTCel
 
 	_optimizable_graph.addEdge(landmarkObservation);
 	_edges_ndt_cell_observation.insert(landmarkObservation);
+
+	std::cout << "Testing before adding OBSERVATIOn" << std::endl;
+	assert(landmarkObservation->information().isZero(1e-10) == false);
 
 	return landmarkObservation;
 }
@@ -292,8 +345,9 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 					AddObservationsMCLPrior();
 				}
 				//********************** Link to wall in EM ******************//
-				createWallAssociations(robot_localization_ptr);
-
+				if(_match_robot_maps) {
+					createWallAssociations(robot_localization_ptr);
+				}
 				//********************** Add the time stamp ******************//
 // 			robot_ptr->setTime(ndt_graph.nodes[i].time_last_update);
 
@@ -859,12 +913,13 @@ void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string&
 			assert(ptr3->information().isZero(1e-10) == false);
 		}
 		else if(ptr4 != NULL){
-			std::cout << "EDGE NDT CELL OBSERVATION" << std::endl;
-			assert(ptr3->information().isZero(1e-10) == false);
+//			std::cout << "EDGE NDT CELL OBSERVATION" << std::endl;
+//			std::cout << "INFO : " << ptr3->information() << std::endl;
+			assert(ptr4->information().isZero(1e-10) == false);
 		}
 		else if(ptr5 != NULL){
-			std::cout << "EDGE NDT CELL" << std::endl;
-			assert(ptr3->information().isZero(1e-10) == false);
+//			std::cout << "EDGE NDT CELL" << std::endl;
+			assert(ptr5->information().isZero(1e-10) == false);
 		}
 //		else if(ptr4 != NULL){
 //			assert(ptr4->information().isZero(1e-10) == false);
@@ -873,6 +928,8 @@ void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string&
 			throw std::runtime_error("Didn't find the type of the edge :S");
 		}
 	}
+
+	assert(verifyInformationMatrices(true) == true);
 
 
 }
@@ -1577,36 +1634,62 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 	for(auto wall : _prior->getEdges()){
 
 		auto cells = collisionsNDTMapWithPriorEdge(*robot, *wall);
-		std::cout << "Found links " << cells.size() << std::endl;
+//		std::cout << "Found links " << cells.size() << std::endl;
 		for(auto cell : cells){
 
-			auto ndtcell_ver  = addNDTCellVertex(cell.second, cell.first, robot);
-			auto ndtcell_edge = addNDTCellAssociation(ndtcell_ver, wall);
+			auto ndtcell_ver  = addNDTCellVertex(std::get<1>(cell), std::get<0>(cell), robot);
+
+			//Use cell size for covariance
+//			double cx, cy, cz;
+//			robot->getMap()->getCellSizeInMeters(cx, cy, cz);
+//			double minval = std::min(cx, std::min(cy, cz));
+
+//			Eigen::Matrix3d ndt_cov = cell.first->getCov();
+			Eigen::Matrix3d ndt_cov = robot->getCovariance() * _scaling_factor_gaussian;
+			Eigen::Matrix2d ndt_cov_2d;
+			ndt_cov_2d << ndt_cov(0,0), ndt_cov(0,1),
+					ndt_cov(1,0), ndt_cov(1,1);
+			ndt_cov_2d.array() = ndt_cov_2d.array() + std::get<2>(cell);
+
+
+			auto ndtcell_edge = addNDTCellAssociation(ndtcell_ver, wall, ndt_cov_2d);
 			count_walls++;
 
 		}
 
 	}
 
-	std::cout << count_walls << " walls have been linked" << std::endl;
+//	std::cout << count_walls << " cells have been linked" << std::endl;
 }
 
 
 
 //https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-basic-concepts/
 // First, check to see if the nearest point on the line AB is beyond B (as in the example above) by taking AB ⋅ BC. If this value is greater than 0, it means that the angle between AB and BC is between -90 and 90, exclusive, and therefore the nearest point on the segment AB will be B
-std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d> > AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall){
+std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall){
 
-	std::cout << "Collsision with prior wall" << std::endl;
-	std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d> > set_ret;
+//	std::cout << "Collsision with prior wall" << std::endl;
+	std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > set_ret;
 
 	Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
 	Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
 
 	auto map = robot_pose_vertex.getMap();
+	double cx, cy, cz;
+	map->getCellSizeInMeters(cx, cy, cz);
+	double minval = std::min(cx, std::min(cy, cz));
+
 	g2o::SE2 loc_pose( robot_pose_vertex.localizationInGlobalFrame() );
 
-	auto cells = map->getAllCellsShared();
+	auto cells_all = map->getAllCellsShared();
+
+	std::vector<boost::shared_ptr<perception_oru::NDTCell> > cells;
+
+	//Keep one cell every three
+//	for(int i = 0 ; i < cells_all.size() ; i = i + 3){
+//		cells.push_back(cells_all[i]);
+//	}
+
 	for(auto cell : cells){
 
 		perception_oru::NDTCell *cell_closest = NULL;
@@ -1615,12 +1698,22 @@ std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector
 		g2o::SE2 mean_se2(mean);
 		Eigen::Vector2d p0 = (loc_pose * mean_se2).toVector().head(2);
 
-		Eigen::Vector2d p1p0 = p0 - p1;
-		Eigen::Vector2d p1p2 = p2 - p1;
-		Eigen::Vector2d p2p0 = p0 - p2;
+		bool cell_close_by = false;
+		//Only add if no node at the place of the cell
+		for(auto cell_nodes : _vertices_ndt_cell){
+			if(cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
+					cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)){
+				cell_close_by = true;
+			}
+		}
 
-		//Check if closest segment point is on the line segment of the wall:
-		if(p1p2.dot(p2p0) <= 0 && (- p1p2).dot(p1p0) <= 0) {
+		if(cell_close_by == false) {
+//			Eigen::Vector2d p1p0 = p0 - p1;
+//			Eigen::Vector2d p1p2 = p2 - p1;
+//			Eigen::Vector2d p2p0 = p0 - p2;
+//
+//			//Check if closest segment point is on the line segment of the wall:
+//			if (p1p2.dot(p2p0) <= 0 && (-p1p2).dot(p1p0) <= 0) {
 
 
 //		pcl::PointXYZ p;
@@ -1629,32 +1722,31 @@ std::vector<std::pair< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector
 //		p.z = mean[2];
 //		map->getCellAtPoint(p, cell_closest);
 //        Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
-			std::cout << "p1 " << p1 << std::endl;
+//			std::cout << "p1 " << p1 << std::endl;
 //		Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
-			std::cout << "p2 " << p2 << std::endl;
+//			std::cout << "p2 " << p2 << std::endl;
 
-			double distance = distancePointLine(p0, p1, p2);
+				double distance = distancePointSegment(p0, p1, p2);
 
-			double cx, cy, cz;
-			map->getCellSizeInMeters(cx, cy, cz);
-			double minval = std::min(cx, std::min(cy, cz));
+//		std::cout << "min value " << minval << std::endl;
 
-		std::cout << "min value " << minval << std::endl;
-
-			if (distance <= 2 * minval) {
+				if (distance <= minval) {
 //			std::cout << "Close" << std::endl;
 
 
 
-				g2o::SE2 rob_pose = robot_pose_vertex.estimate();
-				Eigen::Vector2d mean_robot_pose = (rob_pose * mean_se2).toVector().head(2);
-				set_ret.push_back(std::pair<boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d>(cell,
-				                                                                                         mean_robot_pose.head(
-						                                                                                         2)));
+					g2o::SE2 rob_pose = robot_pose_vertex.estimate();
+					Eigen::Vector2d mean_robot_pose = (rob_pose * mean_se2).toVector().head(2);
+					auto resultat = std::make_tuple(cell, mean_robot_pose.head(2), distance);
+					set_ret.push_back(resultat);
 
-			} else {
+				} else {
 //			std::cout << "Not Close" << std::endl;
-			}
+				}
+//			}
+		}
+		else{
+			std::cout << "Ignoring cell" << std::endl;
 		}
 
 	}

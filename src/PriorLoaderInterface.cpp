@@ -118,6 +118,20 @@ void AASS::acg::PriorLoaderInterface::extractCornerPrior()
 	//Very convulted code TODO
 	AASS::acg::PriorLoaderInterface::PriorGraph simple_graph;
 	bettergraph::toSimpleGraph<PriorAttr, AASS::vodigrex::SimpleEdge>(prior_out, simple_graph);
+
+	//Check if same vertex twice
+
+	for(auto vp = boost::vertices(simple_graph); vp.first != vp.second; ++vp.first){
+		auto vp1 = vp;
+		++vp1.first;
+		for(vp1; vp1.first != vp1.second; ++vp1.first){
+			if(simple_graph[*vp.first].x == simple_graph[*vp1.first].x && simple_graph[*vp.first].y == simple_graph[*vp1.first].y){
+				throw std::runtime_error("Same vertex twice in input prior graph" );
+			}
+		}
+	}
+
+
 	
 // 	if(_extractKeypoints == true){
 // 		extractKeypoints(simple_graph);

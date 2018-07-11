@@ -41,7 +41,13 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdge(const g2o::SE2
 
 	Eigen::Matrix2d cov = getCovarianceSingleEigenVector(eigenvec, eigenval);
 
-// 			std::cout << "Covariance prior " << std::endl << cov.format(cleanFmt) << std::endl;
+	cov = cov * 1000;
+	cov = cov.array().round();
+	cov = cov / 1000;
+
+
+
+ 			std::cout << "Covariance prior " << std::endl << cov << std::endl;
 //	Eigen::Matrix2d covariance_prior;
 //	covariance_prior.fill(0.);
 //	covariance_prior(0, 0) = cov(0, 0);
@@ -53,9 +59,17 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdge(const g2o::SE2
 
 	//CHECK INVERTIBILITY OF THE MATRIX
 	Eigen::Matrix2d information_prior = cov.inverse();
-// 			std::cout << "Information prior " << std::endl << cov.format(cleanFmt) << std::endl;
+
+	information_prior = information_prior * 1000;
+	information_prior = information_prior.array().round();
+	information_prior = information_prior / 1000;
+
+
+
+ 			std::cout << "Information prior " << std::endl << information_prior << std::endl;
 
 	assert(information_prior.isZero(1e-10) == false);
+	assert(information_prior == information_prior.transpose());
 
 	g2o::EdgeXYPriorACG* priorObservation =  new g2o::EdgeXYPriorACG;
 	priorObservation->vertices()[0] = v1;
@@ -87,6 +101,12 @@ g2o::VertexXYPrior* AASS::acg::AutoCompleteGraphPriorXY::addPose(const g2o::SE2&
 	Eigen::Vector2d pose = se2.toVector().head(2);
 	priorlandmark->setEstimate(pose);
 	priorlandmark->priorattr = priorAttr;
+
+	//Check that the node is not here in double
+	for(auto node : _nodes){
+		assert(node->estimate() != priorlandmark->estimate() );
+	}
+
 	_nodes.insert(priorlandmark);
 	return priorlandmark;
 }

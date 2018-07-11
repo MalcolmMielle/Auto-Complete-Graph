@@ -72,7 +72,7 @@ namespace g2o{
 					auto ite = edges_prior.begin();
 					auto ite_end = edges_prior.back();
 					out.push_back( angle( (*ite_end), *(*ite) ) );
-					assert(out.back().first >= 0.08);
+					assert(out.back().first >= 0);
 					assert(out.back().second >= 0);
 					assert(out.back().first <= 2 * M_PI);
 					assert(out.back().second <= 2 * M_PI);
@@ -80,7 +80,7 @@ namespace g2o{
 					for ( auto ite = edges_prior.begin(); ite != edges_prior.end() - 1 ; ++ite ){
 // 						std::cout << "angle more " << edges.size() << std::endl;
 						out.push_back( angle( **ite, **(ite + 1) ) );
-						assert(out.back().first >= 0.08);
+						assert(out.back().first >= 0);
 						assert(out.back().second >= 0);
 						assert(out.back().first <= 2 * M_PI);
 						assert(out.back().second <= 2 * M_PI);

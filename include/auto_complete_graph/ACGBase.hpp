@@ -732,6 +732,47 @@ namespace acg{
 		 */
 		virtual void getAllCornersNDTTranslatedToGlobalAndRobotFrame(const std::shared_ptr<perception_oru::NDTMap>& map, g2o::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos, std::vector<AASS::acg::NDTCornerGraphElement>& corners_end);
 
+
+
+
+		//FOR TESTING
+
+		virtual bool verifyInformationMatrices(bool verbose) const
+		{
+			bool allEdgeOk = true;
+			Eigen::SelfAdjointEigenSolver<g2o::MatrixX> eigenSolver;
+			for (g2o::OptimizableGraph::EdgeSet::const_iterator it = _optimizable_graph.edges().begin(); it != _optimizable_graph.edges().end(); ++it) {
+				g2o::OptimizableGraph::Edge* e = static_cast<g2o::OptimizableGraph::Edge*>(*it);
+				g2o::MatrixX::MapType information(e->informationData(), e->dimension(), e->dimension());
+				// test on symmetry
+				bool isSymmetric = information.transpose() == information;
+				bool okay = isSymmetric;
+				if (isSymmetric) {
+					// compute the eigenvalues
+					eigenSolver.compute(information, Eigen::EigenvaluesOnly);
+					bool isSPD = eigenSolver.eigenvalues()(0) >= 0.;
+					okay = okay && isSPD;
+				}
+				allEdgeOk = allEdgeOk && okay;
+				if (! okay) {
+					if (verbose) {
+						if (! isSymmetric)
+							std::cerr << "Information Matrix for an edge is not symmetric:";
+						else
+							std::cerr << "Information Matrix for an edge is not SPD:";
+						for (size_t i = 0; i < e->vertices().size(); ++i)
+							std::cerr << " " << e->vertex(i)->id();
+						if (isSymmetric)
+							std::cerr << "\teigenvalues: " << eigenSolver.eigenvalues().transpose();
+						std::cerr << " information :\n" << information << "\n" << std::endl;
+					}
+				}
+			}
+			return allEdgeOk;
+		}
+
+
+
 	};
 
 	#include "ACGBase.tpp"

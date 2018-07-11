@@ -471,6 +471,9 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 					oacg->optimize();
 
 				}
+				else{
+					oacg->testInfoNonNul("Just making sure");
+				}
 				ros::Time end_opti = ros::Time::now();	
 				double opti = (start_opti - end_opti).toSec();
 				time_opti.push_back(opti);
@@ -582,6 +585,10 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 
 	publishPriorNDT(oacg);
 	publishACGOM(oacg);
+
+	if(optimize_prior == false){
+		oacg.clearPrior();
+	}
 	
 }
 
@@ -666,6 +673,8 @@ int main(int argc, char **argv)
 	double scale = 1;
 	nh.param<double>("scale", scale, 1.0);
 	cv::Point2f center(0, 0);
+	bool match_ndt_maps = false;
+	nh.param("match_ndt_maps",match_ndt_maps,false);
 
 
 	double max_deviation_corner_in_prior = 1;
@@ -717,6 +726,8 @@ int main(int argc, char **argv)
 	oacg.useLinksPriorSSRR(use_links_prior_classic_ssrr);
 	oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
 	oacg.useRobotMaps(use_robot_maps);
+	oacg.matchRobotMaps(match_ndt_maps);
+
 //	oacg.optimizePrior(optimize_prior);
 
 	oacg.useMCLCovToFindPriorObserved(use_mcl_cov_to_find_prior_observed);

@@ -113,6 +113,15 @@ int main(){
 		std::cout << "OUTSIDE BUG " << std::endl;
 	}
 
+//	Eigen::Vector2d AB = B - A;
+//	Eigen::Vector2d AC = C - A;
+
+	double a1 = p1p0.dot(p1p2 / p1p2.norm() );
+	Eigen::Vector2d p1p0p = a1 * (p1p2 / p1p2.norm() );
+	Eigen::Vector2d p0p0p = -p1p0 + p1p0p;
+
+	std::cout << " Projection point 1 0 -> " << p1p0p << "Projection from p0 0 0 -> " << p0p0p << std::endl;
+
 	p0 << 0, 0;
 	p1_line << -1, 1;
 	p2_line << 3, 1;
@@ -132,6 +141,11 @@ int main(){
 	else{
 		std::cout << "OUTSIDE BUG " << std::endl;
 	}
+	a1 = p1p0.dot(p1p2 / p1p2.norm() );
+	p1p0p = a1 * (p1p2 / p1p2.norm() );
+	p0p0p = -p1p0 + p1p0p;
+
+	std::cout << "Projection point 1 0 -> " << p1p0p << "Projection from p0 0 1 -> " << p0p0p << std::endl;
 
 	p0 << 0, 0;
 	p1_line << -1, 1;
@@ -152,6 +166,11 @@ int main(){
 	else{
 		std::cout << "OUTSIDE BUG " << std::endl;
 	}
+	a1 = p1p0.dot(p1p2 / p1p2.norm() );
+	p1p0p = a1 * (p1p2 / p1p2.norm() );
+	p0p0p = -p1p0 + p1p0p;
+
+	std::cout << "Projection point 1 -1 -> " << p1p0p << "Projection from p0 0 0 -> " << p0p0p << std::endl;
 
 
 
@@ -174,6 +193,18 @@ int main(){
 	else{
 		std::cout << "GOOD " << std::endl;
 	}
+	if(p1p2.dot(p2p0) >= 0){
+		p0p0p = -p2p0;
+	}else if( (-p1p2).dot(p1p0) >= 0 ){
+		p0p0p = -p1p0;
+	}else {
+		//Vector to line
+		a1 = p1p0.dot(p1p2 / p1p2.norm() );
+		p1p0p = a1 * (p1p2 / p1p2.norm() );
+		p0p0p = -p1p0 + p1p0p;
+	}
+
+	std::cout << "Projection point 6 0 -> " << p1p0p << "Projection from p0 -4 -1 -> " << p0p0p << std::endl;
 
 
 
