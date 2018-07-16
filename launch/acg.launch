@@ -5,6 +5,7 @@
 <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
 
 	<param name="pause_for_testing" value="false" />
+	<param name="export_iteration_count" value="true" />
 	<param name="use_prior" value="true" />
 	<param name="optimize_prior" value="true"/>
 	<param name="use_robot_maps" value="true"/>

@@ -24,7 +24,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
-
+#include <fstream>
 
 bool optimize_prior = true;
 bool abort_f = false;
@@ -50,6 +50,7 @@ int count = 0;
 bool new_node = false;
 bool was_init = false;
 bool euclidean_dist_occ_map = false;
+bool export_iteration_count = false;
 
 std::vector<double> time_extract_corner_ndt;
 std::vector<double> time_opti;
@@ -101,6 +102,39 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 		}
 	} while(good_transformation == false);
 	return transform;
+}
+
+
+
+bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg, int iterations, double time){
+
+	std::cout << "Exporting number of iterations and time" << std::endl;
+
+	std::string file_out = "/home/malcolm/ros_catkin_ws/lunar_ws/iterations.dat";
+	std::ostringstream convert;   // stream used for the conversion
+	int node_number = oacg.getRobotPoseLocalization().size();
+	node_number += oacg.getLandmarkNodes().size();
+	node_number += oacg.getPrior()->getNodes().size();
+	node_number += oacg.getNDTCells().size();
+
+	int edge_number = oacg.getOdometryEdges().size();
+	edge_number += oacg.getPrior()->getEdges().size();
+	edge_number += oacg.getPriorObservations().size();
+	edge_number += oacg.getLandmarkEdges().size();
+	edge_number += oacg.getNDTCellAssociations().size();
+	edge_number += oacg.getNDTCellObservations().size();
+
+	convert << oacg.getRobotNodes().size();
+//	file_out = file_out + convert.str();
+//	file_out = file_out + ".txt";
+	std::ofstream infile(file_out, std::ofstream::app);
+// 			int co = 0;
+	std::cout << node_number << " " << edge_number << " " << iterations << " " << time << std::endl;
+	infile << node_number << " " << edge_number << " " << iterations << " " << time << std::endl;
+	infile.close();
+
+	std::cout << "Done" << std::endl;
+	return true;
 }
 
 nav_msgs::OccupancyGrid::Ptr createOccupancyMap(const AASS::acg::AutoCompleteGraphLocalization& oacg){
@@ -427,7 +461,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 		ROS_DEBUG("MAP UPDATED in main");
 		
-		double corner_extract_tt = (start_corner - end_corner).toSec();
+		double corner_extract_tt = (end_corner - start_corner).toSec();
 		time_extract_corner_ndt.push_back(corner_extract_tt);
 		
 //		if(oacg->getRobotNodes().size() > 0){
@@ -458,7 +492,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 			// 	oacg->initialGuess();
 				
 				//Prepare the graph : marginalize + initializeOpti
-				
+				int iterations = 0;
 				ros::Time start_opti = ros::Time::now();
 				bool optiquest = true;
 				if(testing_pause) {
@@ -468,14 +502,14 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				if( /*oacg->checkAbleToOptimize() &&*/  optiquest) {
 					oacg->setFirst();
 					oacg->prepare();
-					oacg->optimize();
+					iterations = oacg->optimize();
 
 				}
 				else{
 					oacg->testInfoNonNul("Just making sure");
 				}
 				ros::Time end_opti = ros::Time::now();	
-				double opti = (start_opti - end_opti).toSec();
+				double opti = (end_opti - start_opti).toSec();
 				time_opti.push_back(opti);
 				
 		// 		if(was_init == true){
@@ -500,6 +534,13 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 					std::cout << "Result of optimization. Enter a number to continue" << std::endl;
 					int aaa;
 					std::cin >> aaa;
+				}
+
+
+
+
+				if(export_iteration_count == true){
+					bool done = exportIterationCOunt(*oacg, iterations, corner_extract_tt + opti);
 				}
 		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
 		// 		std::cin >>a;
@@ -631,6 +672,8 @@ int main(int argc, char **argv)
 	/**************PARAMETERS**************/
 	nh.param("pause_for_testing",testing_pause,false);
 	bool use_prior = true;
+	nh.param("export_iteration_count",export_iteration_count,false);
+	bool export_iteration_count = false;
 	nh.param("use_prior",use_prior,true);
 	bool use_robot_maps = true;
 	nh.param("use_robot_maps",use_robot_maps,true);

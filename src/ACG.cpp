@@ -349,7 +349,7 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 
 }
 
-void AASS::acg::AutoCompleteGraph::optimize(int max_iter){
+int AASS::acg::AutoCompleteGraph::optimize(int max_iter){
 
 
 	std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;

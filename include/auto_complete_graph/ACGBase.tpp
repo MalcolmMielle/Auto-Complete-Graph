@@ -1301,7 +1301,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::pre
 
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
-inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize_simple(int max_iter){
+inline int AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize_simple(int max_iter){
 
     std::cout << "Check before optimization" << std::endl;
     testInfoNonNul("At first");
@@ -1342,6 +1342,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 
 	}
 
+    return count;
 	//int a;
 	//std::cout << "Enter anything to pass " <<count << std::endl;
 	//std::cin >> a;
@@ -1349,7 +1350,9 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 }
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
-inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize(int max_iter){
+inline int AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize(int max_iter){
+
+    int count = 0;
 
 	_chi2s.clear();
 	std::cout << "Checking that all info mat are positive semi def" << std::endl;
@@ -1375,7 +1378,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 		testInfoNonNul("set age in huber kernel");
 		testNoNanInPrior("update prior edge cov");
 
-		optimize_simple(max_iter);
+		count = count + optimize_simple(max_iter);
 
 // 				//Avoid overshoot of the cov
 // 				for(size_t i = 0 ; i < iter ; ++i){
@@ -1395,7 +1398,7 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 		}
 		testNoNanInPrior("set age in DCS kernel");
 
-		optimize_simple(max_iter);
+		count = count + optimize_simple(max_iter);
 
 // 				for(size_t i = 0 ; i < iter*2 ; ++i){
 // 					_optimizable_graph.optimize(1);
@@ -1415,7 +1418,10 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opt
 	}
 
 
-	exportChi2s();
+	//exportChi2s();
+
+	return count;
+
 // 			checkRobotPoseNotMoved("after opti");
 // 			cv::Mat d;
 // 			createDescriptorNDT(d);

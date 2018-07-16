@@ -236,6 +236,8 @@ namespace acg{
 		//Iterator on ID
 		int new_id_;
 
+
+
 	public:
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -595,7 +597,7 @@ namespace acg{
 		 * @param[in] max_iter maximum number of iteration for huber and DCS. Default at 100. Needs to be more than 2.
 		 *
 		 */
-		virtual void optimize(int max_iter = 100);
+		virtual int optimize(int max_iter = 100);
 
 		void setAgeingHuberKernel();
 
@@ -635,7 +637,7 @@ namespace acg{
 
 		void prepare();
 
-		void optimize_simple(int max_iter);
+		virtual int optimize_simple(int max_iter);
 
 		/**
 		 * @brief Check if the error in the graph was stable over time
