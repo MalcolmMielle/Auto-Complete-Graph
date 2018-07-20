@@ -597,7 +597,7 @@ namespace acg{
 		 * @param[in] max_iter maximum number of iteration for huber and DCS. Default at 100. Needs to be more than 2.
 		 *
 		 */
-		virtual int optimize(int max_iter = 100);
+		virtual std::pair<int, int> optimize(int max_iter = 100);
 
 		void setAgeingHuberKernel();
 

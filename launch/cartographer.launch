@@ -12,14 +12,15 @@
 
 <!--include file="$(find gustav_scripts)/URDF/urdf_basement.launch"/-->
 
-<!--node pkg="tf" type="static_transform_publisher" name="world_odom_frame" args="0 0 0 0 0 0 /world /odom 10"/-->
+<node pkg="tf" type="static_transform_publisher" name="bl_odom_frame" args="0 0 0 0 0 0 /base_link /odom 10"/>
+<node pkg="tf" type="static_transform_publisher" name="bl_laser_frame" args="0 0 0 0 0 0 /base_link /horizontal_laser_link 10"/>
 <!-- <node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame" args="1 -50 0 0 0 0 /world /base_link_tmp 10"/> -->
-<node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame_frame" args="0 0 0 0 0 0 /base_link /velodyne 10"/>
+<!--node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame_frame" args="0 0 0 0 0 0 /base_link /velodyne 10"/-->
 
 <node pkg="auto_complete_graph" type="graph_map_publisher_localization_ac" name="graph_node" output="screen">
 
 <!-- 	MCL -->
-	<param name="use_mcl" value="true" />
+	<param name="use_mcl" value="false" />
     <param name="use_graph_map_registration" value="true" />
     <param name="zfilter_min" value="-1000" />
     <param name="fraction" value="1" />
@@ -71,13 +72,13 @@
       <param name="robot_frame" value="/base_link" />
       <param name="world_frame" value="/odom" />
       <param name="map_frame" value="/map" />
-      <param name="laser_frame_id" value="/velodyne" />
+      <param name="laser_frame_id" value="/horizontal_laser_link" />
 
       <param name="matchLaser" value="true" />
-      <param name="laser_topic" value="/laser_scan_with_ransac" />
+      <param name="laser_topic" value="/most_intense" />
 <!--       <param name="points_topic" value="/velodyne_points" /> -->
 
-      <param name="useOdometry" value="true" />
+      <param name="useOdometry" value="false" />
       <param name="odometry_topic" value="/odom" />
       <param name="use_tf_listener" value="false" />
 

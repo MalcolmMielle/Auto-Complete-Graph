@@ -121,9 +121,9 @@ g2o::EdgeLocalization* AASS::acg::AutoCompleteGraphLocalization::addLocalization
 
 
 g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(const Eigen::Vector2d pose, const boost::shared_ptr<perception_oru::NDTCell>& cell, g2o::VertexSE2RobotLocalization* robot_node){
-	std::cout << "Adding vertex ndt cell" << std::endl;
+//	std::cout << "Adding vertex ndt cell" << std::endl;
 	g2o::VertexNDTCell* ndt_cell_v = new g2o::VertexNDTCell();
-	std::cout << "Set cell " << std::endl;
+//	std::cout << "Set cell " << std::endl;
 	ndt_cell_v->setCell(cell);
 	ndt_cell_v->setId(new_id_);
 	++new_id_;
@@ -131,7 +131,7 @@ g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(c
 	_optimizable_graph.addVertex(ndt_cell_v);
 	_vertices_ndt_cell.insert(ndt_cell_v);
 
-	std::cout << "Set landmark " << std::endl;
+//	std::cout << "Set landmark " << std::endl;
 	//Add link to robot map so we had an obbservation edge
 	Eigen::Vector2d pose_landmark = cell->getMean().head(2);
 	//TODO CRASH :(
@@ -261,7 +261,7 @@ g2o::EdgeNDTCellObservation* AASS::acg::AutoCompleteGraphLocalization::addNDTCel
 	_optimizable_graph.addEdge(landmarkObservation);
 	_edges_ndt_cell_observation.insert(landmarkObservation);
 
-	std::cout << "Testing before adding OBSERVATIOn" << std::endl;
+//	std::cout << "Testing before adding OBSERVATIOn" << std::endl;
 	assert(landmarkObservation->information().isZero(1e-10) == false);
 
 	return landmarkObservation;
@@ -336,6 +336,9 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 //			g2o::SE2 robot_pos;
 				std::tie(robot_localization_ptr, map) = addElementNDT(ndt_graph_localization, i);
 				assert(robot_localization_ptr != NULL);
+
+				robot_localization_ptr->time = ndt_graph_localization.graph_map.nodes[i].time.data;
+
 //				std::cout << "TEST pointer " << std::endl;
 //				std::cout << robot_localization_ptr->getPose().matrix() << std::endl;
 				//********************** Extract the corners *****************//
@@ -486,6 +489,37 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 			cov_2d << odom_cov(0, 0), odom_cov(0, 1), 0,
 					odom_cov(1, 0), odom_cov(1, 1), 0,
 					0, 0, odom_cov(5, 5);
+
+
+			if(_add_odometry_noise){
+
+				double rand_num_perc = _dis(_gen);
+
+				//FOR TESTING REMOVE!
+				if(rand_num_perc > 0) {
+					rand_num_perc = 0.2;
+				}else{
+					rand_num_perc = -0.2;
+				}
+				std::cout << "Percentage of noise: " << rand_num_perc << std::endl;
+
+				double length = odometry.translation().norm();
+				double angle = odometry.rotation().angle();
+
+				Eigen:: Vector2d new_odo; new_odo.array() = odometry.translation().array() + (length * rand_num_perc);
+				odometry.setTranslation(new_odo);
+				double new_rot = odometry.rotation().angle() + (angle * rand_num_perc);
+				Eigen::Rotation2D<double> ro(new_rot);
+				odometry.setRotation(ro);
+
+				cov_2d.block(1,1,2,2).array() = cov_2d.block(1,1,2,2).array() + (length * std::abs(rand_num_perc));
+				cov_2d(2, 2) = cov_2d(2, 2) + (std::abs(angle) * std::abs(rand_num_perc));
+
+			}
+
+
+
+
 
 // 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
 //			std::cout << "Saving information " << std::endl;
@@ -1730,10 +1764,10 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 	//		p.z = mean[2];
 	//		map->getCellAtPoint(p, cell_closest);
 	//        Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
-				std::cout << "p1 " << p1 << std::endl;
+//				std::cout << "p1 " << p1 << std::endl;
 	//		Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
-				std::cout << "p2 " << p2 << std::endl;
-				std::cout << "p0 " << p0 << std::endl;
+//				std::cout << "p2 " << p2 << std::endl;
+//				std::cout << "p0 " << p0 << std::endl;
 
 				double distance = -1;
 				Eigen::Vector2d ccp;
@@ -1764,7 +1798,7 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 					set_ret.push_back(resultat);
 
 				} else {
-					std::cout << "Not Close" << std::endl;
+//					std::cout << "Not Close" << std::endl;
 				}
 			}
 		}

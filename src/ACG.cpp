@@ -349,13 +349,13 @@ void  AASS::acg::AutoCompleteGraph::setKernelSizeDependingOnAge(g2o::Optimizable
 
 }
 
-int AASS::acg::AutoCompleteGraph::optimize(int max_iter){
+std::pair<int, int > AASS::acg::AutoCompleteGraph::optimize(int max_iter){
 
 
 	std::cout << "BEFORE THE OPTIMIZATION BUT AFTER ADDING A NODE" << std::endl;
 	overCheckLinks();
 
-	AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>::optimize(max_iter);
+	auto ret = AutoCompleteGraphBase<AutoCompleteGraphPriorSE2, g2o::VertexSE2Prior, g2o::EdgeSE2Prior_malcolm>::optimize(max_iter);
 
 	std::cout << "AFTER THE OPTIMIZATION CREATE" << std::endl;
 	int count = countLinkToMake();
@@ -369,6 +369,8 @@ int AASS::acg::AutoCompleteGraph::optimize(int max_iter){
 	removeBadLinks();
 	std::cout << "AFTER THE OPTIMIZATION REMOVE" << std::endl;
 	overCheckLinks();
+
+	return ret;
 
 // 			checkRobotPoseNotMoved("after opti");
 // 			cv::Mat d;

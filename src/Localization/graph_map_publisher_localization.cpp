@@ -63,6 +63,8 @@
  *
  */
 
+std::vector<float> times;
+
 
 void getAngles(const std::string& base_frame, const std::string& to_frame, double& roll, double& pitch, double& yaw){
 	tf::TransformListener listener;
@@ -551,6 +553,16 @@ public:
 		//Publish message
 		graph_map::GraphMapMsg graphmapmsg;
 		perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, map_link_id);
+
+		assert(times.size() == graphmapmsg.nodes.size());
+		int count = 0;
+		for(auto time : times){
+			graphmapmsg.nodes[count].time.data = time;
+			std::cout << "Adding the time " << time << std::endl;
+			count++;
+		}
+
+
 		// 			std::cout << "PUBLISH " << graphmapmsg.nodes.size() << std::endl;
 		//
 		if (use_mcl_ && mcl_loaded_) {
@@ -1020,6 +1032,8 @@ public:
 				 initPoseSet = true;
 				 init_fuser_ = true;
 
+				 times.push_back(time.toSec());
+
 //				 std::cout << "Pose " << pose_.matrix() << std::endl;
 //				 std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
 
@@ -1061,7 +1075,7 @@ public:
 			 tf::transformEigenToTF(pose_, Transform);
 
 			 // 	std::cout << "POSE NOW" << pose_.matrix() << std::endl;
-			 // 	std::cout << "Transform " << Transform.getOrigin().getX() << " " << Transform.getOrigin().getY() << " " << Transform.getOrigin().getZ() << " between " << world_link_id << " " << fuser_base_link_id << std::endl;
+			  	std::cout << "Transform " << Transform.getOrigin().getX() << " " << Transform.getOrigin().getY() << " " << Transform.getOrigin().getZ() << " between " << world_link_id << " " << fuser_base_link_id << std::endl;
 
 
 			 tf_.sendTransform(tf::StampedTransform(Transform, time, world_link_id, fuser_base_link_id));
@@ -1114,6 +1128,7 @@ public:
 
 
 			 if (nb_of_node != nb_of_node_new) {
+				 times.push_back(time.toSec());
 			    std_msgs::Bool::Ptr bool_msg;
 				pubGraphMap(bool_msg);
 

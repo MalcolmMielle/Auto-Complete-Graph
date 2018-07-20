@@ -1,20 +1,12 @@
 <?xml version="1.0"?>
 <launch>
 
-<!--<node pkg="velodyne_pointcloud" type="cloud_node" name="convert_veloscans">
-<param name="calibration" value="$(find ndt_fuser)/launch/velo32.yaml" />
-</node>-->
 
-<!-- <node pkg="tf" type="static_transform_publisher" name="world_odom_frame" args="0 0 0 0 0 0 /world /odom 10"/> -->
-<!-- <node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame" args="0 0 0 3.14159 0 0 /base_link /velodyne_tmp 10"/> -->
 
-<!-- //Launch basement bag file !!!!!-->
+<node pkg="tf" type="static_transform_publisher" name="iliad_laser_frame" args="0 0 0 0 0 0 /base_link /robot3/laser2d_floor_link 10"/>
+<node pkg="auto_complete_graph" type="publish_odom_to_tf" name="publish_odometry_to_tf" />
 
-<!--include file="$(find gustav_scripts)/URDF/urdf_basement.launch"/-->
 
-<!--node pkg="tf" type="static_transform_publisher" name="world_odom_frame" args="0 0 0 0 0 0 /world /odom 10"/-->
-<!-- <node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame" args="1 -50 0 0 0 0 /world /base_link_tmp 10"/> -->
-<node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame_frame" args="0 0 0 0 0 0 /base_link /velodyne 10"/>
 
 <node pkg="auto_complete_graph" type="graph_map_publisher_localization_ac" name="graph_node" output="screen">
 
@@ -71,14 +63,14 @@
       <param name="robot_frame" value="/base_link" />
       <param name="world_frame" value="/odom" />
       <param name="map_frame" value="/map" />
-      <param name="laser_frame_id" value="/velodyne" />
+      <param name="laser_frame_id" value="/robot3/laser2d_floor_link" />
 
       <param name="matchLaser" value="true" />
-      <param name="laser_topic" value="/laser_scan_with_ransac" />
+      <param name="laser_topic" value="/robot3/sensors/laser2d_floor" />
 <!--       <param name="points_topic" value="/velodyne_points" /> -->
 
       <param name="useOdometry" value="true" />
-      <param name="odometry_topic" value="/odom" />
+      <param name="odometry_topic" value="/robot3/control/odom" />
       <param name="use_tf_listener" value="false" />
 
       <param name="max_translation_norm" value="0.4" />
@@ -132,12 +124,6 @@
 
   </node>
 
-<!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find graph_map)/launch/3d.rviz" /> -->
 
-<!--<arg name="path" default="$(find graph_map)/data/" />
-<arg name="file_1" default="3d_laser_short.bag" />
-<node pkg="rosbag" type="play" name="player" output="screen" args="clock -r 1.0 -q $(arg path)$(arg file_1)"/>-->
-
-<!--<node pkg="tf2_ros" type="static_transform_publisher" name="laser_scan_fuser" args="0.3 -0.01 1.3 0 0 -0.72429 0.6895 state_base_link velodyne" />--> <!--for plotting purposes -->
 
 </launch>

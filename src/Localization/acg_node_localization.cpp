@@ -106,7 +106,7 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 
 
 
-bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg, int iterations, double time){
+bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg, const std::pair<int, int>& iterations, double time){
 
 	std::cout << "Exporting number of iterations and time" << std::endl;
 
@@ -129,8 +129,8 @@ bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg, 
 //	file_out = file_out + ".txt";
 	std::ofstream infile(file_out, std::ofstream::app);
 // 			int co = 0;
-	std::cout << node_number << " " << edge_number << " " << iterations << " " << time << std::endl;
-	infile << node_number << " " << edge_number << " " << iterations << " " << time << std::endl;
+	std::cout << node_number << " " << edge_number << " " << iterations.first << " " << iterations.second << time << std::endl;
+	infile << node_number << " " << edge_number << " " << iterations.first << " " << iterations.second << " " << time << std::endl;
 	infile.close();
 
 	std::cout << "Done" << std::endl;
@@ -492,7 +492,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 			// 	oacg->initialGuess();
 				
 				//Prepare the graph : marginalize + initializeOpti
-				int iterations = 0;
+				std::pair<int, int> iterations;
 				ros::Time start_opti = ros::Time::now();
 				bool optiquest = true;
 				if(testing_pause) {
@@ -673,6 +673,8 @@ int main(int argc, char **argv)
 	nh.param("pause_for_testing",testing_pause,false);
 	bool use_prior = true;
 	nh.param("export_iteration_count",export_iteration_count,false);
+	bool add_noise_odometry = false;
+	nh.param("add_noise_odometry",add_noise_odometry,false);
 	bool export_iteration_count = false;
 	nh.param("use_prior",use_prior,true);
 	bool use_robot_maps = true;
@@ -770,6 +772,7 @@ int main(int argc, char **argv)
 	oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
 	oacg.useRobotMaps(use_robot_maps);
 	oacg.matchRobotMaps(match_ndt_maps);
+	oacg.addNoiseToOdometryMeasurements(add_noise_odometry);
 
 //	oacg.optimizePrior(optimize_prior);
 

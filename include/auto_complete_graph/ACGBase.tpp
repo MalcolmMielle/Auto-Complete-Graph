@@ -1350,9 +1350,10 @@ inline int AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opti
 }
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
-inline int AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize(int max_iter){
+inline std::pair<int, int> AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::optimize(int max_iter){
 
-    int count = 0;
+    int count_huber = 0;
+    int count_dcs = 0;
 
 	_chi2s.clear();
 	std::cout << "Checking that all info mat are positive semi def" << std::endl;
@@ -1378,7 +1379,7 @@ inline int AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opti
 		testInfoNonNul("set age in huber kernel");
 		testNoNanInPrior("update prior edge cov");
 
-		count = count + optimize_simple(max_iter);
+		count_huber = optimize_simple(max_iter);
 
 // 				//Avoid overshoot of the cov
 // 				for(size_t i = 0 ; i < iter ; ++i){
@@ -1398,7 +1399,7 @@ inline int AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opti
 		}
 		testNoNanInPrior("set age in DCS kernel");
 
-		count = count + optimize_simple(max_iter);
+		count_dcs = optimize_simple(max_iter);
 
 // 				for(size_t i = 0 ; i < iter*2 ; ++i){
 // 					_optimizable_graph.optimize(1);
@@ -1420,7 +1421,7 @@ inline int AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::opti
 
 	//exportChi2s();
 
-	return count;
+	return std::pair<int, int >(count_huber, count_dcs);
 
 // 			checkRobotPoseNotMoved("after opti");
 // 			cv::Mat d;

@@ -153,7 +153,7 @@ namespace AASS {
 			}
 
 			virtual void testInfoNonNul(const std::string& before = "no data") const ;
-			virtual int optimize(int max_iter = 100);
+			virtual std::pair<int, int > optimize(int max_iter = 100);
 			virtual void clearPrior();
 			virtual void updateLinks();
 			virtual void setKernelSizeDependingOnAge(g2o::OptimizableGraph::Edge* e, bool step);

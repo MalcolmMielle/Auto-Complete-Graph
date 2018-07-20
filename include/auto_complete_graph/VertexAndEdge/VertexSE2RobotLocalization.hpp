@@ -27,6 +27,9 @@ namespace g2o{
 		Eigen::Vector3d _to_robot_localization;
 
 	public:
+
+		double time = -1;
+
 //		g2o::SE2 initial_transfo;
 //		cv::Mat img;
 
