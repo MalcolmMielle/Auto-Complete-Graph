@@ -1105,18 +1105,51 @@ namespace acg{
 				maps.maps.push_back(msg);
 				
 				auto pose = (*it)->estimate().toVector();
-				geometry_msgs::Transform transform;
-				transform.translation.x = pose(0);
-				transform.translation.y = pose(1);
-				transform.translation.z = 0;
+				geometry_msgs::Pose geo_pose;
+				geo_pose.position.x = pose(0);
+				geo_pose.position.y = pose(1);
+				geo_pose.position.z = acg.getZElevation();
 				
 				auto quat = tf::createQuaternionFromRPY(0, 0, pose(2));
-				transform.rotation.x = quat.getX();
-				transform.rotation.y = quat.getY();
-				transform.rotation.z = quat.getZ();
-				transform.rotation.w = quat.getW();
+				geo_pose.orientation.x = quat.getX();
+				geo_pose.orientation.y = quat.getY();
+				geo_pose.orientation.z = quat.getZ();
+				geo_pose.orientation.w = quat.getW();
 				
-				maps.transformations.push_back(transform);
+				maps.poses.push_back(geo_pose);
+
+			}
+		}
+		if(acg.getOdometryEdges().size() != 0 && acg.getRobotNodes() >= 2){
+
+			geometry_msgs::Transform trans;
+			trans.translation.x = 0;
+			trans.translation.y = 0;
+			trans.translation.z = acg.getZElevation();
+
+			auto quat = tf::createQuaternionFromRPY(0, 0, 0);
+			trans.rotation.x = quat.getX();
+			trans.rotation.y = quat.getY();
+			trans.rotation.z = quat.getZ();
+			trans.rotation.w = quat.getW();
+
+			maps.transformations.push_back(trans);
+
+
+			for(auto odom : acg.getOdometryEdges()){
+
+				geometry_msgs::Transform trans;
+				trans.translation.x = odom->measurement().toVector()(0);
+				trans.translation.y = odom->measurement().toVector()(1);
+				trans.translation.z = acg.getZElevation();
+
+				auto quat = tf::createQuaternionFromRPY(0, 0, odom->measurement().toVector()(2));
+				trans.rotation.x = quat.getX();
+				trans.rotation.y = quat.getY();
+				trans.rotation.z = quat.getZ();
+				trans.rotation.w = quat.getW();
+
+				maps.transformations.push_back(trans);
 
 			}
 		}
@@ -1132,20 +1165,25 @@ namespace acg{
 // 		std::cout << "Vector Map" << std::endl;
 		ndt_map::NDTVectorMapMsg maps;
 		ACGToVectorMaps(acg, mapmsg.ndt_maps);
+
+		perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
+		AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorXY>(*acg.getPrior(), *ndt_prior, acg.getZElevation(), 0.1);
+
+		mapmsg.prior = ndt_prior;
 		
 // 		std::cout << "Grid Map" << std::endl;
-		grid_map::GridMap gridMap;
-		gridMap.setFrameId("/world");
-		double size_x, size_y;
-		getPriorSizes<Prior, VertexPrior, EdgePrior>(acg, size_x, size_y);
-		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));
-		gridMap.add("prior"); 
-		gridMap["prior"].setZero(); 
-		double resolution = 0.1;
-		ACGPriortoGridMap<Prior, VertexPrior, EdgePrior>(acg, gridMap, resolution);
-		grid_map::GridMapRosConverter converter;
-		grid_map_msgs::GridMap gridmapmsg;
-		converter.toMessage(gridMap, mapmsg.prior);
+//		grid_map::GridMap gridMap;
+//		gridMap.setFrameId("/world");
+//		double size_x, size_y;
+//		getPriorSizes<Prior, VertexPrior, EdgePrior>(acg, size_x, size_y);
+//		gridMap.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), 0.1, grid_map::Position(0.0, 0.0));
+//		gridMap.add("prior");
+//		gridMap["prior"].setZero();
+//		double resolution = 0.1;
+//		ACGPriortoGridMap<Prior, VertexPrior, EdgePrior>(acg, gridMap, resolution);
+//		grid_map::GridMapRosConverter converter;
+//		grid_map_msgs::GridMap gridmapmsg;
+//		converter.toMessage(gridMap, mapmsg.prior);
 		
 		
 	}

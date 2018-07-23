@@ -176,38 +176,38 @@ void latchOccGrid(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGra
 	}
 }
 
-void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
+//void publishPriorNDT(const AASS::acg::AutoCompleteGraphLocalization& oacg){
+//
+//	std::cout << "Publishing the prior" << std::endl;
+////	std::cout << "PUB1" << std::endl;
+//	//		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), 0.1, 0.1/4);
+////		sensor_msgs::PointCloud2 pcl_prior_msg;
+////		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
+////		pcl_prior_msg.header.frame_id = "world";
+////		pcl_prior_msg.header.stamp = ros::Time::now();
+////		prior_cloud.publish(pcl_prior_msg);
+//
+//	perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
+//	AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorXY>(*oacg.getPrior(), *ndt_prior, oacg.getZElevation(), 0.1);
+//
+////		auto allcells = ndt_prior->getAllCellsShared();
+////		assert(allcells.size() > 0);
+//
+//	ndt_map::NDTMapMsg priormapmsg;
+//	perception_oru::toMessage(ndt_prior, priormapmsg, map_frame);
+//	prior_ndt.publish(priormapmsg);
+//
+//	delete ndt_prior;
+//}
 
-	std::cout << "Publishing the prior" << std::endl;
-//	std::cout << "PUB1" << std::endl;
-	//		pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_prior = AASS::acg::ACGPriortoPointCloud<AASS::acg::AutoCompleteGraphPriorSE2>(*oacg.getPrior(), 0.1, 0.1/4);
-//		sensor_msgs::PointCloud2 pcl_prior_msg;
-//		pcl::toROSMsg<pcl::PointXYZ>(*pcl_prior, pcl_prior_msg);
-//		pcl_prior_msg.header.frame_id = "world";
-//		pcl_prior_msg.header.stamp = ros::Time::now();
-//		prior_cloud.publish(pcl_prior_msg);
-
-	perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
-	AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorXY>(*oacg.getPrior(), *ndt_prior, oacg.getZElevation(), 0.1);
-
-//		auto allcells = ndt_prior->getAllCellsShared();
-//		assert(allcells.size() > 0);
-
-	ndt_map::NDTMapMsg priormapmsg;
-	perception_oru::toMessage(ndt_prior, priormapmsg, map_frame);
-	prior_ndt.publish(priormapmsg);
-
-	delete ndt_prior;
-}
 
 
-
-void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization& oacg) {
-	publishPriorNDT(oacg);
-	if(optimize_prior == false){
-		oacg.clearPrior();
-	}
-}
+//void publishPriorNDT(const std_msgs::Bool::ConstPtr msg, AASS::acg::AutoCompleteGraphLocalization& oacg) {
+//	publishPriorNDT(oacg);
+//	if(optimize_prior == false){
+//		oacg.clearPrior();
+//	}
+//}
 
 void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 
@@ -219,10 +219,10 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 	acg_gdim.publish(mapmsg);
 
 
-	auto_complete_graph::ACGMapsOM mapmsg_om;
-	ROS_INFO("PUSH acg maps OM message");
-	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om, map_frame, occupancy_grid_resolution, scaling_gaussian_occ_map, euclidean_dist_occ_map);
-	acg_gdim_om.publish(mapmsg_om);
+//	auto_complete_graph::ACGMapsOM mapmsg_om;
+//	ROS_INFO("PUSH acg maps OM message");
+//	AASS::acg::ACGToACGMapsOMMsg(oacg, mapmsg_om, map_frame, occupancy_grid_resolution, scaling_gaussian_occ_map, euclidean_dist_occ_map);
+//	acg_gdim_om.publish(mapmsg_om);
 
 	//Publish the last grid map as a message to make sure that they look like something
 	int size_g = mapmsg_om.ndt_maps_om.size();
@@ -518,7 +518,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 				if(optimize_prior == true) {
 					ROS_DEBUG("Publishing the new prior ndt map");
-					publishPriorNDT(*oacg);
+					publishACGOM(*oacg);
 				}
 
 //				std::cout << "Publish an occupancy grid for you Asif :3 ! " << std::endl;
@@ -624,7 +624,7 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg, AASS::acg::RvizPoin
 	
 	initialiser.clear();
 
-	publishPriorNDT(oacg);
+//	publishPriorNDT(oacg);
 	publishACGOM(oacg);
 
 	if(optimize_prior == false){
@@ -810,7 +810,7 @@ int main(int argc, char **argv)
 	
 	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_node/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
-	publish_prior_ndt = nh.subscribe<std_msgs::Bool>("/publish_prior_ndt", 1, boost::bind(&publishPriorNDT, _1, boost::ref(oacg) ));
+	publish_prior_ndt = nh.subscribe<std_msgs::Bool>("/publish_prior_ndt", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
 	publish_acg_om_maps = nh.subscribe<std_msgs::Bool>("/publish_acg_om_maps", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
 	// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
@@ -843,7 +843,7 @@ int main(int argc, char **argv)
 //	ros::Duration(5).sleep();
 
 	//Init GDIM and MAPPING
-	publishPriorNDT(oacg);
+//	publishPriorNDT(oacg);
 	publishACGOM(oacg);
 
 

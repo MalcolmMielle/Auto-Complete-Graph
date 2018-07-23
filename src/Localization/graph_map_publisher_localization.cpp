@@ -44,6 +44,7 @@
 #include "graph_map/graph_map_conversion.h"
 
 #include "auto_complete_graph/Localization/AcgMclLocalization.hpp"
+#include "auto_complete_graph/conversion.hpp"
 
 #include "ndt_mcl/particle_filter.hpp"
 
@@ -508,7 +509,7 @@ public:
 // 		NDTMCL* ndtmcl = new NDTMCL();
 // 		std::cout << "new mcl done" << std::endl;
 // 		ndtmcl_ = boost::shared_ptr<NDTMCL>(ndtmcl);
-		ndt_mcl_map = nh_.subscribe<ndt_map::NDTMapMsg>("ndt_map_init_mcl", 10, &GraphMapFuserNode::loadNDTMap, this);
+		ndt_mcl_map = nh_.subscribe<auto_complete_graph::ACGMaps>("ndt_map_init_mcl", 10, &GraphMapFuserNode::UpdateAll, this);
 
 		mcl_pub_ = nh_.advertise<nav_msgs::Odometry>("ndt_mcl",10);
 
@@ -620,6 +621,14 @@ public:
 		}
 		ret.header.frame_id = world_link_id;
 		return ret;
+	}
+
+	void updateAll(const auto_complete_graph::ACGMaps::ConstPtr& acg_maps){
+
+		std::cout << "Updating the prior and graph map" << std::endl;
+		loadNDTMap(acg_maps->prior);
+		AASS::acg::updateGraphMap(acg_maps, fuser_);
+
 	}
 
 	void updateMCLNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){

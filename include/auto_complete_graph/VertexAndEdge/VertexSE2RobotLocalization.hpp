@@ -46,6 +46,7 @@ namespace g2o{
 			_to_robot_localization = loc;
 		}
 
+		//Localization pose once optimized
 		Eigen::Vector3d localizationInGlobalFrame() const {
 
 //			Eigen::Vector3d original_pose_in_robot_frame_3d;
@@ -60,6 +61,9 @@ namespace g2o{
 			return mcl_pose_inglobal_frame;
 
 		}
+
+		//Unoptimized localizatino pose. Needed because the mapping doesn't optimize it's map.
+		Eigen::Vector3d originalLocalization
 
 
 //		void setEquivalentRobotPose(g2o::VertexSE2RobotPose* eq){_equivalent_robot_pose = eq;}

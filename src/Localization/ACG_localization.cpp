@@ -138,7 +138,7 @@ g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(c
 //	auto edge = addNDTCellObservation(pose_landmark, robot_node, ndt_cell_v, cell->getCov().block(0,0,2,2));
 	auto edge = addNDTCellObservation(pose_landmark, robot_node, ndt_cell_v);
 
-	std::cout << "Added vertex ndt cell" << std::endl;
+//	std::cout << "Added vertex ndt cell" << std::endl;
 
 	return ndt_cell_v;
 }
@@ -512,8 +512,12 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 				Eigen::Rotation2D<double> ro(new_rot);
 				odometry.setRotation(ro);
 
-				cov_2d.block(1,1,2,2).array() = cov_2d.block(1,1,2,2).array() + (length * std::abs(rand_num_perc));
+				std::cout << "Old cov " << cov_2d << std::endl;
+
+				cov_2d.block(0,0,2,2).array() = cov_2d.block(0,0,2,2).array() + (length * std::abs(rand_num_perc));
 				cov_2d(2, 2) = cov_2d(2, 2) + (std::abs(angle) * std::abs(rand_num_perc));
+
+				std::cout << "New cov " << cov_2d << std::endl;
 
 			}
 

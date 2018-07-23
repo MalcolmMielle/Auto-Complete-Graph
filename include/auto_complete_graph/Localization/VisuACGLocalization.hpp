@@ -23,6 +23,7 @@ namespace AASS {
 			visualization_msgs::Marker _ndt_cells;
 			visualization_msgs::Marker _ndt_cell_observations;
 			visualization_msgs::Marker _ndt_cell_associations;
+			visualization_msgs::Marker _correct_robot_pose;
 			ros::Publisher _localization_pub;
 			ros::Publisher _localization_pose_pub;
 			ros::Publisher _prior_observations_pub;
@@ -31,6 +32,7 @@ namespace AASS {
 			ros::Publisher _ndt_cell_pub;
 			ros::Publisher _ndt_cell_observation_pub;
 			ros::Publisher _ndt_cell_association_pub;
+			ros::Publisher _correct_robot_pose_pub;
 
 
 //			AutoCompleteGraphLocalization *_acg;
@@ -50,6 +52,7 @@ namespace AASS {
 				_ndt_cell_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell", 10);
 				_ndt_cell_observation_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_observations", 10);
 				_ndt_cell_association_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_associations", 10);
+				_correct_robot_pose_pub = _nh.advertise<visualization_msgs::Marker>("initial_robot_pose", 10);
 
 				_localization_edge_markers.type = visualization_msgs::Marker::LINE_LIST;
 				_localization_edge_markers.header.frame_id = world_frame_id;
@@ -106,8 +109,8 @@ namespace AASS {
 				_ndt_cells.header.frame_id = world_frame_id;
 				_ndt_cells.ns = "acg";
 				_ndt_cells.id = 0;
-				_ndt_cells.scale.x = 0.5;
-				_ndt_cells.scale.y = 0.5;
+				_ndt_cells.scale.x = 0.15;
+				_ndt_cells.scale.y = 0.15;
 				_ndt_cells.color.g = 1.0f;
 				_ndt_cells.color.a = 1.0;
 
@@ -124,12 +127,21 @@ namespace AASS {
 				_ndt_cell_associations.header.frame_id = world_frame_id;
 				_ndt_cell_associations.ns = "acg";
 				_ndt_cell_associations.id = 0;
-				_ndt_cell_associations.scale.x = 0.1;
-				_ndt_cell_associations.scale.y = 0.1;
+				_ndt_cell_associations.scale.x = 0.05;
+				_ndt_cell_associations.scale.y = 0.05;
 				_ndt_cell_associations.color.r = 1.0f;
 				_ndt_cell_associations.color.b = 1.0f;
 				_ndt_cell_associations.color.a = 1.0;
 
+
+				_correct_robot_pose.type = visualization_msgs::Marker::POINTS;
+				_correct_robot_pose.header.frame_id = world_frame_id;
+				_correct_robot_pose.ns = "acg";
+				_correct_robot_pose.id = 0;
+				_correct_robot_pose.scale.x = 0.1;
+				_correct_robot_pose.scale.y = 0.1;
+				_correct_robot_pose.color.b = 1.0f;
+				_correct_robot_pose.color.a = 1.0;
 
 
 			}
@@ -137,6 +149,7 @@ namespace AASS {
 			void drawLocalizations(const AutoCompleteGraphLocalization& acg);
 			void drawPoseLocalizations(const AutoCompleteGraphLocalization& acg);
 			void drawPriorObservations(const AutoCompleteGraphLocalization& acg);
+			void drawCorrectRobotPoses(const AutoCompleteGraphLocalization& acg);
 
 			void drawPrior(const AutoCompleteGraphLocalization& acg);
 			void drawLocalizationLandmarks(const AutoCompleteGraphLocalization& acg);
@@ -157,6 +170,7 @@ namespace AASS {
 					drawPoseLocalizations(acg);
 					drawPriorObservations(acg);
 					drawLocalizationLandmarks(acg);
+					drawCorrectRobotPoses(acg);
 
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
 					if(acg.getRobotPoseLocalization().size() > 0) {
@@ -232,6 +246,30 @@ namespace AASS {
 				}
 			}
 			_localization_pub.publish(_localization_edge_markers);
+		}
+
+
+		inline void VisuAutoCompleteGraphLocalization::drawCorrectRobotPoses(const AutoCompleteGraphLocalization& acg)
+		{
+			_correct_robot_pose.header.stamp = ros::Time::now();
+			auto poses = acg.getRobotPoseLocalization();
+			if(poses.size() != _correct_robot_pose.points.size()){
+			_correct_robot_pose.points.clear();
+			for(auto pose : poses){
+//					for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+
+				geometry_msgs::Point p;
+				Eigen::Affine3d pose_affine = pose->getPose();
+				Eigen::Isometry2d pose_iso = Affine3d2Isometry2d(pose_affine);
+				g2o::SE2 pose_se2(pose_iso);
+				p.x = pose_se2.toVector()(0);
+				p.y = pose_se2.toVector()(1);
+				p.z = 0;
+				_correct_robot_pose.points.push_back(p);
+				}
+			}
+
+			_correct_robot_pose_pub.publish(_correct_robot_pose);
 		}
 
 		inline void VisuAutoCompleteGraphLocalization::drawLocalizationLandmarks(const AutoCompleteGraphLocalization& acg)
