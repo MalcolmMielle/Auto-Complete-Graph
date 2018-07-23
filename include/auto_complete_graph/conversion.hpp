@@ -8,7 +8,8 @@
 #include "g2o/types/slam2d/edge_se2.h"
 
 
-#include "graph_map/graph_map.h"
+#include "graph_map/graph_map_navigator.h"
+#include "auto_complete_graph/ACGMaps.h"
 
 namespace AASS{
 namespace acg{
@@ -66,11 +67,11 @@ namespace acg{
 	}
 	
 
-	inline void updateGraphMap(const auto_complete_graph::ACGMaps::ConstPtr& acg_maps, perception_oru::libgraphMap::GraphMap& graph_map){
+	inline void updateGraphMap(const auto_complete_graph::ACGMaps::ConstPtr& acg_maps, boost::shared_ptr<perception_oru::libgraphMap::GraphMapNavigator>& graph_map){
 
 		int count = 0;
-		for(auto pose : acg_maps.ndt_maps.poses){
-			auto node_ptr_gm = graph_map.GetNode(count);
+		for(auto pose : acg_maps->ndt_maps.poses){
+			auto node_ptr_gm = graph_map->GetNode(count);
 			Eigen::Affine3d pose_affine;
 			tf::poseMsgToEigen (pose, pose_affine);
 			node_ptr_gm->SetPose(pose_affine);
@@ -78,8 +79,8 @@ namespace acg{
 		}
 
 		count = 0;
-		for(auto transf : acg_maps.ndt_maps.transformations){
-			auto node_odom_ptr = graph_map.GetFactors()[count];
+		for(auto transf : acg_maps->ndt_maps.transformations){
+			auto node_odom_ptr = graph_map->GetFactors()[count];
 			Eigen::Affine3d transf_affine;
 			tf::transformMsgToEigen (transf, transf_affine);
 			node_odom_ptr->UpdateFactor(transf_affine);

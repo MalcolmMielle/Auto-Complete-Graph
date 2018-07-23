@@ -1120,7 +1120,7 @@ namespace acg{
 
 			}
 		}
-		if(acg.getOdometryEdges().size() != 0 && acg.getRobotNodes() >= 2){
+		if(acg.getOdometryEdges().size() != 0 && acg.getRobotNodes().size() >= 2){
 
 			geometry_msgs::Transform trans;
 			trans.translation.x = 0;
@@ -1169,7 +1169,10 @@ namespace acg{
 		perception_oru::NDTMap* ndt_prior = new perception_oru::NDTMap(new perception_oru::LazyGrid(0.5));
 		AASS::acg::ACGPriorToNDTMap<AASS::acg::AutoCompleteGraphPriorXY>(*acg.getPrior(), *ndt_prior, acg.getZElevation(), 0.1);
 
-		mapmsg.prior = ndt_prior;
+		ndt_map::NDTMapMsg mapmsgndt;
+		perception_oru::toMessage(ndt_prior, mapmsgndt, frame_id);
+
+		mapmsg.prior = mapmsgndt;
 		
 // 		std::cout << "Grid Map" << std::endl;
 //		grid_map::GridMap gridMap;

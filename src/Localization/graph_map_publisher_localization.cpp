@@ -509,7 +509,7 @@ public:
 // 		NDTMCL* ndtmcl = new NDTMCL();
 // 		std::cout << "new mcl done" << std::endl;
 // 		ndtmcl_ = boost::shared_ptr<NDTMCL>(ndtmcl);
-		ndt_mcl_map = nh_.subscribe<auto_complete_graph::ACGMaps>("ndt_map_init_mcl", 10, &GraphMapFuserNode::UpdateAll, this);
+		ndt_mcl_map = nh_.subscribe<auto_complete_graph::ACGMaps>("acg_maps", 10, &GraphMapFuserNode::updateAll, this);
 
 		mcl_pub_ = nh_.advertise<nav_msgs::Odometry>("ndt_mcl",10);
 
@@ -627,24 +627,24 @@ public:
 
 		std::cout << "Updating the prior and graph map" << std::endl;
 		loadNDTMap(acg_maps->prior);
-		AASS::acg::updateGraphMap(acg_maps, fuser_);
+		AASS::acg::updateGraphMap(acg_maps, fuser_->GetGraph());
 
 	}
 
-	void updateMCLNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
+	void updateMCLNDTMap(const ndt_map::NDTMapMsg& mapmsg){
 		if (use_mcl_ && mcl_loaded_) {
 
 			perception_oru::NDTMap* map;
 			perception_oru::LazyGrid* lz;
 			std::string frame;
-			perception_oru::fromMessage(lz, map, *mapmsg, frame, false, false);
+			perception_oru::fromMessage(lz, map, mapmsg, frame, false, false);
 			acg_localization->setMap(*map);
 			delete map;
 
 		}
 	}
 
-	void initMCL(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
+	void initMCL(const ndt_map::NDTMapMsg& mapmsg){
 		double numPart = 250;
 		bool forceSIR = true;
 
@@ -655,7 +655,7 @@ public:
 		perception_oru::NDTMap *map;
 		perception_oru::LazyGrid *lz;
 		std::string frame;
-		perception_oru::fromMessage(lz, map, *mapmsg, frame, false, false);
+		perception_oru::fromMessage(lz, map, mapmsg, frame, false, false);
 
 //		std::cout << "GOT MAP FROM MESSAGE" << std::endl;
 
@@ -702,7 +702,7 @@ public:
 		ROS_DEBUG("MAP LOADED SUCCESSFULLY :)");
 	}
 
-	void loadNDTMap(const ndt_map::NDTMapMsg::ConstPtr& mapmsg){
+	void loadNDTMap(const ndt_map::NDTMapMsg& mapmsg){
 
 		if(!mcl_loaded_) {
 			ROS_INFO("Init new prior map");

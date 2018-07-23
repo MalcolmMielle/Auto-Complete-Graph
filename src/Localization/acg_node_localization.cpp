@@ -225,10 +225,10 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 //	acg_gdim_om.publish(mapmsg_om);
 
 	//Publish the last grid map as a message to make sure that they look like something
-	int size_g = mapmsg_om.ndt_maps_om.size();
+	int size_g = mapmsg.ndt_maps.maps.size();
 	if(size_g > 0) {
-		ROS_DEBUG("Last grid map");
-		last_grid_map.publish(mapmsg_om.ndt_maps_om[size_g - 1]);
+//		ROS_DEBUG("Last grid map");
+//		last_grid_map.publish(mapmsg.ndt_maps.maps[size_g - 1]);
 
 		//Publish last occ grid to make sure that they look like something
 		int size_o = mapmsg.ndt_maps.maps.size();
@@ -245,13 +245,13 @@ void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg){
 //		delete omap;
 
 
-		nav_msgs::OccupancyGrid omap2;
-		grid_map::GridMap mapNDT;
-		grid_map::GridMapRosConverter converter;
-		converter.fromMessage(mapmsg_om.ndt_maps_om[mapmsg_om.ndt_maps_om.size() - 1], mapNDT);
+//		nav_msgs::OccupancyGrid omap2;
+//		grid_map::GridMap mapNDT;
+//		grid_map::GridMapRosConverter converter;
+//		converter.fromMessage(mapmsg.ndt_maps.maps[mapmsg.ndt_maps.maps.size() - 1], mapNDT);
 		//THis ruin prior because they are of different sizes ! Need my custom fuse function :)
-		grid_map::GridMapRosConverter::toOccupancyGrid(mapNDT, "ndt", 0, 255, omap2);
-		last_occ_map2.publish(omap2);
+//		grid_map::GridMapRosConverter::toOccupancyGrid(mapNDT, "ndt", 0, 255, omap2);
+//		last_occ_map2.publish(omap2);
 
 
 //        initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
@@ -810,7 +810,7 @@ int main(int argc, char **argv)
 	
 	ndt_graph_sub = nh.subscribe<auto_complete_graph::GraphMapLocalizationMsg>("/graph_node/graph_map_localization", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg, visu));
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
-	publish_prior_ndt = nh.subscribe<std_msgs::Bool>("/publish_prior_ndt", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
+	publish_prior_ndt = nh.subscribe<std_msgs::Bool>("/publish_acg_maps", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
 	publish_acg_om_maps = nh.subscribe<std_msgs::Bool>("/publish_acg_om_maps", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
 	// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
