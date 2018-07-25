@@ -138,6 +138,8 @@ g2o::VertexNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellVertex(c
 //	auto edge = addNDTCellObservation(pose_landmark, robot_node, ndt_cell_v, cell->getCov().block(0,0,2,2));
 	auto edge = addNDTCellObservation(pose_landmark, robot_node, ndt_cell_v);
 
+	robot_node->ndt_cells.push_back(ndt_cell_v);
+
 //	std::cout << "Added vertex ndt cell" << std::endl;
 
 	return ndt_cell_v;
@@ -314,6 +316,69 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const auto_complet
 
 }
 
+
+void AASS::acg::AutoCompleteGraphLocalization::addNoiseOdometry(g2o::EdgeOdometry_malcolm* edge_odometry, g2o::VertexSE2RobotLocalization* robot) {
+
+	double rand_num_perc = _dis(_gen);
+	//FOR TESTING REMOVE!
+	if (rand_num_perc > 0) {
+		rand_num_perc = 0.2;
+	} else {
+		rand_num_perc = -0.2;
+	}
+	std::cout << "Percentage of noise: " << rand_num_perc << std::endl;
+
+	g2o::SE2 old_odom_se2 = edge_odometry->measurement();
+
+	std::cout << "Get length and angle" << std::endl;
+	double length = edge_odometry->measurement().toVector().head(2).norm();
+	double angle = edge_odometry->measurement().toVector()(2);
+
+	std::cout << "New odo" << std::endl;
+	Eigen::Vector3d new_odo;
+	new_odo.head(2).array() = edge_odometry->measurement().toVector().head(2).array() + (length * rand_num_perc);
+//		odometry.setTranslation(new_odo);
+	new_odo(2) = angle + (angle * rand_num_perc);
+//		Eigen::Rotation2D<double> ro(new_rot);
+//		odometry.setRotation(ro);
+	edge_odometry->setMeasurement(new_odo);
+
+	std::cout << "info" << std::endl;
+
+	Eigen::Matrix3d inf_2d = edge_odometry->information();
+	Eigen::Matrix3d cov_2d = inf_2d.inverse();
+	std::cout << "Old cov " << cov_2d << std::endl;
+
+	cov_2d.block(0, 0, 2, 2).array() = cov_2d.block(0, 0, 2, 2).array() + (length * std::abs(rand_num_perc));
+	cov_2d(2, 2) = cov_2d(2, 2) + (std::abs(angle) * std::abs(rand_num_perc));
+
+	std::cout << "New cov " << cov_2d << std::endl;
+	edge_odometry->setInformation(cov_2d.inverse());
+
+
+	std::cout << "move robot pose" << std::endl;
+	//move robot pose and ndt cells !
+	g2o::SE2 new_odom_se2 = edge_odometry->measurement();
+	g2o::SE2 noise = old_odom_se2.inverse() * new_odom_se2;
+
+//	g2o::VertexSE2RobotLocalization* loc = edge_odometry->vertices()[1];
+	robot->setEstimate(robot->estimate() * noise);
+	robot->initial_noisy_estimate = robot->estimate() * noise;
+
+	std::cout << "move ndt cells" << std::endl;
+	for(auto ndt_cell: robot->ndt_cells){
+		Eigen::Vector3d mean = ndt_cell->getCell()->getMean();
+		mean(2) = 0;
+		g2o::SE2 mean_se2(mean);
+		g2o::SE2 rob_pose = robot->estimate();
+		Eigen::Vector2d mean_ndt_pose = (rob_pose * mean_se2).toVector().head(2);
+//		Eigen::Vector2d ndt_pose = ndt_cell->estimate();
+//		ndt_pose = ndt_pose * noise;
+		ndt_cell->setEstimate(mean_ndt_pose);
+	}
+
+}
+
 void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_graph::GraphMapLocalizationMsg& ndt_graph_localization)
 {
 	if(_use_robot_maps == true) {
@@ -389,7 +454,30 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 // 		return dist(engine);
 // 	};
 	
-	Eigen::Vector3d diff_vec = getLastTransformation();
+	Eigen::Vector3d diff_vec;
+	if(!_add_odometry_noise) {
+		diff_vec = getLastTransformation();
+	}else{
+		//Ignore the previous noise on the odometry. A bit HACKY
+		diff_vec << 0, 0, 0;
+		//**************** Calculate the previous transformations if there has already been something added *** //
+
+// 	if(_previous_number_of_node_in_ndtgraph != 0){
+//		if(_nodes_localization.size() != 0){
+//			auto node = _nodes_localization[_nodes_localization.size() - 1];
+//			auto original3d = _nodes_localization[_nodes_localization.size() - 1]->getPose();
+//
+//			/*******' Using Vec********/
+//			Eigen::Isometry2d original2d_aff = Affine3d2Isometry2d(original3d);
+//			auto shift_vec = node->estimate().toVector();
+//			g2o::SE2 se2_tmptmp(original2d_aff);
+//			auto original3d_vec = se2_tmptmp.toVector();
+//			diff_vec = original3d_vec - shift_vec;
+//
+//			/*****************************/
+//		}
+
+	}
 	
 	//Calculate noise
 
@@ -489,41 +577,6 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 			cov_2d << odom_cov(0, 0), odom_cov(0, 1), 0,
 					odom_cov(1, 0), odom_cov(1, 1), 0,
 					0, 0, odom_cov(5, 5);
-
-
-			if(_add_odometry_noise){
-
-				double rand_num_perc = _dis(_gen);
-
-				//FOR TESTING REMOVE!
-				if(rand_num_perc > 0) {
-					rand_num_perc = 0.2;
-				}else{
-					rand_num_perc = -0.2;
-				}
-				std::cout << "Percentage of noise: " << rand_num_perc << std::endl;
-
-				double length = odometry.translation().norm();
-				double angle = odometry.rotation().angle();
-
-				Eigen:: Vector2d new_odo; new_odo.array() = odometry.translation().array() + (length * rand_num_perc);
-				odometry.setTranslation(new_odo);
-				double new_rot = odometry.rotation().angle() + (angle * rand_num_perc);
-				Eigen::Rotation2D<double> ro(new_rot);
-				odometry.setRotation(ro);
-
-				std::cout << "Old cov " << cov_2d << std::endl;
-
-				cov_2d.block(0,0,2,2).array() = cov_2d.block(0,0,2,2).array() + (length * std::abs(rand_num_perc));
-				cov_2d(2, 2) = cov_2d(2, 2) + (std::abs(angle) * std::abs(rand_num_perc));
-
-				std::cout << "New cov " << cov_2d << std::endl;
-
-			}
-
-
-
-
 
 // 		tf::matrixEigenToMsg(cov, ndt_graph.factors[element - 1].covariance);
 //			std::cout << "Saving information " << std::endl;
@@ -1702,8 +1755,22 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 			count_walls++;
 
 		}
-
 	}
+
+	if(_add_odometry_noise){
+		int count = 0;
+//		std::cout << "Loc poses : " << _nodes_localization.size() << " " << _edge_odometry.size() << std::endl;
+		for(auto odom_edge : _edge_odometry){
+			if(odom_edge->vertices()[0] == robot || odom_edge->vertices()[1] == robot){
+				addNoiseOdometry(odom_edge, robot);
+				count++;
+			}
+		}
+		if(_edge_odometry.size() > 0) {
+			assert(count == 1);
+		}
+	}
+
 
 	std::cout << count_walls << " cells have been linked" << std::endl;
 }
@@ -1741,17 +1808,19 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 		perception_oru::NDTCell *cell_closest = NULL;
 
 		Eigen::Vector3d mean = cell->getMean();
+		mean(2) = 0;
 		g2o::SE2 mean_se2(mean);
 		Eigen::Vector2d p0 = (loc_pose * mean_se2).toVector().head(2);
 
 		bool cell_close_by = false;
 		//Only add if no node at the place of the cell
-		for(auto cell_nodes : _vertices_ndt_cell){
-			if(cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
-					cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)){
-				cell_close_by = true;
-			}
-		}
+
+//		for(auto cell_nodes : _vertices_ndt_cell){
+//			if(cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
+//					cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)){
+//				cell_close_by = true;
+//			}
+//		}
 
 		if(cell_close_by == false) {
 			Eigen::Vector2d p1p0 = p0 - p1;

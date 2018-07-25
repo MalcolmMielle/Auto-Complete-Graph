@@ -1125,7 +1125,7 @@ namespace acg{
 			geometry_msgs::Transform trans;
 			trans.translation.x = 0;
 			trans.translation.y = 0;
-			trans.translation.z = acg.getZElevation();
+			trans.translation.z = 0;
 
 			auto quat = tf::createQuaternionFromRPY(0, 0, 0);
 			trans.rotation.x = quat.getX();
@@ -1141,7 +1141,7 @@ namespace acg{
 				geometry_msgs::Transform trans;
 				trans.translation.x = odom->measurement().toVector()(0);
 				trans.translation.y = odom->measurement().toVector()(1);
-				trans.translation.z = acg.getZElevation();
+				trans.translation.z = 0;
 
 				auto quat = tf::createQuaternionFromRPY(0, 0, odom->measurement().toVector()(2));
 				trans.rotation.x = quat.getX();

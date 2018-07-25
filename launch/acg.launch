@@ -6,7 +6,7 @@
 
 	<param name="pause_for_testing" value="true" />
 	<param name="export_iteration_count" value="true" />
-	<param name="add_noise_odometry" value="false" />
+	<param name="add_noise_odometry" value="true" />
 	<param name="use_prior" value="true" />
 	<param name="optimize_prior" value="true"/>
 	<param name="use_robot_maps" value="true"/>

@@ -66,6 +66,7 @@ bool updated = true;
 
 double scaling_gaussian_occ_map = 1/2;
 double occupancy_grid_resolution = 0.05;
+bool add_noise_odometry = false;
 
 
 inline bool exists_test3 (const std::string& name) {
@@ -103,6 +104,58 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 	} while(good_transformation == false);
 	return transform;
 }
+
+
+bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oacg){
+
+	std::string file_out = "/home/malcolm/ros_catkin_ws/lunar_ws/acg_error_odometry.dat";
+//	std::ostringstream convert;   // stream used for the conversion
+	std::ofstream infile(file_out, std::ofstream::app);
+
+	infile << std::endl << std::endl;
+
+	double error_t_mean = 0;
+	double error_a_mean = 0;
+	double error_tn_mean = 0;
+	double error_an_mean = 0;
+
+	int count = 0;
+	infile << "# node_number error_translation error_translation_noisy error_angle error_angle_noisy" << std::endl;
+
+	for(auto robot_vertex : oacg.getRobotPoseLocalization()){
+
+		Eigen::Affine3d pose_original = robot_vertex->getPose();
+		Eigen::Isometry2d pose_original_iso = AASS::acg::Affine3d2Isometry2d(pose_original);
+		g2o::SE2 pose_original_se2(pose_original_iso);
+		g2o::SE2 robot_pose = robot_vertex->estimate();
+		g2o::SE2 robot_pose_noisy = robot_vertex->initial_noisy_estimate;
+
+		double error_t = (robot_pose.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
+		double error_a = std::abs(robot_pose.toVector()(2) - pose_original_se2.toVector()(2));
+		double error_t_n = (robot_pose_noisy.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
+		double error_a_n = std::abs(robot_pose_noisy.toVector()(2) - pose_original_se2.toVector()(2));
+
+		error_t_mean += error_t;
+		error_tn_mean += error_t_n;
+		error_a_mean += error_a;
+		error_an_mean += error_a_n;
+
+		infile << count << " " << error_t << " " << error_t_n << " " << error_a << " " << error_a_n << std::endl;
+		++count;
+
+	}
+
+	error_t_mean = error_t_mean / oacg.getRobotPoseLocalization().size();
+	error_tn_mean = error_tn_mean / oacg.getRobotPoseLocalization().size();
+	error_a_mean = error_a_mean / oacg.getRobotPoseLocalization().size();
+	error_an_mean = error_an_mean / oacg.getRobotPoseLocalization().size();
+
+	infile << std::endl << "# number_of_nodes mean_error_translation mean_error_translation_noisy mean_error_angle mean_error_angle_noisy" << std::endl;
+	infile << oacg.getRobotPoseLocalization().size() << " " << error_t_mean << " " << error_tn_mean << " " << error_a_mean << " " << error_an_mean << std::endl;
+
+	infile.close();
+}
+
 
 
 
@@ -591,6 +644,10 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 // // 		int a;
 // // 		std::cin >> a;
 // 	}
+
+	if(optiquest && add_noise_odometry){
+		exportErrorNoiseOdometry(*oacg);
+	}
 }
 
 
@@ -673,7 +730,7 @@ int main(int argc, char **argv)
 	nh.param("pause_for_testing",testing_pause,false);
 	bool use_prior = true;
 	nh.param("export_iteration_count",export_iteration_count,false);
-	bool add_noise_odometry = false;
+
 	nh.param("add_noise_odometry",add_noise_odometry,false);
 	bool export_iteration_count = false;
 	nh.param("use_prior",use_prior,true);

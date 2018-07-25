@@ -239,6 +239,7 @@ namespace acg{
 		**/
 		g2o::VertexXYPrior* setPriorReference();
 
+		void addNoiseOdometry(g2o::EdgeOdometry_malcolm* edge_odometry, g2o::VertexSE2RobotLocalization* robot);
 		/**
 		 * @brief Incrementally update the NDTGraph UPDATED TO THE NEW VERSION :)
 		 * Localization and the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.

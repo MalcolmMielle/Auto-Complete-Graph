@@ -8,6 +8,8 @@
 #include "ndt_map/ndt_map.h"
 #include "auto_complete_graph/utils.hpp"
 
+#include "VertexNDTCell.hpp"
+
 namespace g2o{
 
 	class VertexSE2RobotLocalization : public g2o::VertexSE2RobotPose
@@ -27,6 +29,9 @@ namespace g2o{
 		Eigen::Vector3d _to_robot_localization;
 
 	public:
+
+		std::vector<VertexNDTCell*> ndt_cells;
+		g2o::SE2 initial_noisy_estimate;
 
 		double time = -1;
 
