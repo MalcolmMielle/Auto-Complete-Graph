@@ -46,7 +46,7 @@
 #include "auto_complete_graph/Localization/AcgMclLocalization.hpp"
 #include "auto_complete_graph/conversion.hpp"
 
-#include "ndt_mcl/particle_filter.hpp"
+#include "ndt_localization/particle_filter.hpp"
 
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>

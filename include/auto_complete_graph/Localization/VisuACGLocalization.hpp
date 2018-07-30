@@ -24,11 +24,13 @@ namespace AASS {
 			visualization_msgs::Marker _ndt_cell_observations;
 			visualization_msgs::Marker _ndt_cell_associations;
 			visualization_msgs::Marker _correct_robot_pose;
+			visualization_msgs::Marker _mcl_poses;
 			ros::Publisher _localization_pub;
 			ros::Publisher _localization_pose_pub;
 			ros::Publisher _prior_observations_pub;
 			ros::Publisher _mcl_angles_pub;
 			ros::Publisher _last_landmark;
+			ros::Publisher _mcl_localization;
 			ros::Publisher _ndt_cell_pub;
 			ros::Publisher _ndt_cell_observation_pub;
 			ros::Publisher _ndt_cell_association_pub;
@@ -49,6 +51,7 @@ namespace AASS {
 				_prior_observations_pub = _nh.advertise<visualization_msgs::Marker>("prior_observations_markers", 10);
 				_mcl_angles_pub = _nh.advertise<visualization_msgs::Marker>("mcl_angles_markers", 10);
 				_last_landmark = _nh.advertise<visualization_msgs::Marker>("mcl_landmark", 10);
+				_mcl_localization = _nh.advertise<visualization_msgs::Marker>("mcl_localization", 10);
 				_ndt_cell_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell", 10);
 				_ndt_cell_observation_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_observations", 10);
 				_ndt_cell_association_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_associations", 10);
@@ -143,6 +146,16 @@ namespace AASS {
 				_correct_robot_pose.color.b = 1.0f;
 				_correct_robot_pose.color.a = 1.0;
 
+				_mcl_poses.type = visualization_msgs::Marker::POINTS;
+				_mcl_poses.header.frame_id = world_frame_id;
+				_mcl_poses.ns = "acg";
+				_mcl_poses.id = 0;
+				_mcl_poses.scale.x = 0.5;
+				_mcl_poses.scale.y = 0.5;
+				_mcl_poses.color.b = 0.5f;
+				_mcl_poses.color.g = 0.5f;
+				_mcl_poses.color.a = 1.0;
+
 
 			}
 
@@ -153,7 +166,7 @@ namespace AASS {
 
 			void drawPrior(const AutoCompleteGraphLocalization& acg);
 			void drawLocalizationLandmarks(const AutoCompleteGraphLocalization& acg);
-
+			void drawMCL(const AutoCompleteGraphLocalization& acg);
 			void drawMCLAngles(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCellObservations(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCellAssociations(const AutoCompleteGraphLocalization &acg);
@@ -171,6 +184,7 @@ namespace AASS {
 					drawPriorObservations(acg);
 					drawLocalizationLandmarks(acg);
 					drawCorrectRobotPoses(acg);
+					drawMCL(acg);
 
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
 					if(acg.getRobotPoseLocalization().size() > 0) {
@@ -447,6 +461,22 @@ namespace AASS {
 			}
 //			std::cout << "Prior observatrion print " << _prior_observations.points.size() << std::endl;
 			_prior_observations_pub.publish(_prior_observations);
+		}
+
+		inline void VisuAutoCompleteGraphLocalization::drawMCL(const AutoCompleteGraphLocalization &acg){
+			_mcl_poses.header.stamp = ros::Time::now();
+			_mcl_poses.points.clear();
+			for(auto robotpose : acg.getRobotPoseLocalization()){
+				Eigen::Vector3d loc = robotpose->localizationInGlobalFrame();
+
+				geometry_msgs::Point p;
+				p.x = loc(0);
+				p.y = loc(1);
+				p.z = acg.getZElevation();
+				_mcl_poses.points.push_back(p);
+			}
+
+			_mcl_localization.publish(_mcl_poses);
 		}
 
 		inline void VisuAutoCompleteGraphLocalization::drawMCLAngles(const AutoCompleteGraphLocalization &acg) {

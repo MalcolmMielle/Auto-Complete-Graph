@@ -2,7 +2,7 @@
 #define AUTOCOMPLETEGRAPH_ACGMCLLOCALIZATION_26072018
 
 #include <pcl/common/transforms.h>
-#include <ndt_mcl/particle_filter.hpp>
+#include <ndt_localization/particle_filter.hpp>
 
 #include "auto_complete_graph/Localization/Localization.hpp"
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
@@ -47,7 +47,7 @@ namespace acg{
 			setScalingFactorGaussian(scale_gaussian_mcl);
 //
 //	 		std::cout << "Init at " << xx << " " << yy << " " << yaw << std::endl;
-			InitializeNormal(xx, yy, yaw, initVar);
+			InitializeNormalConstantAngle(xx, yy, yaw, initVar);
 //			std::cout << "Normal init" << std::endl;
 			mcl_loaded_ = true;
 //			std::cout << "MAP LOADED SUCCESSFULLY :)" << std::endl;

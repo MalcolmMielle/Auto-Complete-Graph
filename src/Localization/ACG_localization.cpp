@@ -455,11 +455,11 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 // 	};
 	
 	Eigen::Vector3d diff_vec;
-	if(!_add_odometry_noise) {
-		diff_vec = getLastTransformation();
+	if(_add_odometry_noise && _not_incremental) {
+		diff_vec << 0, 0, 0;
 	}else{
 		//Ignore the previous noise on the odometry. A bit HACKY
-		diff_vec << 0, 0, 0;
+		diff_vec = getLastTransformation();
 		//**************** Calculate the previous transformations if there has already been something added *** //
 
 // 	if(_previous_number_of_node_in_ndtgraph != 0){
@@ -1815,12 +1815,16 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 		bool cell_close_by = false;
 		//Only add if no node at the place of the cell
 
-//		for(auto cell_nodes : _vertices_ndt_cell){
-//			if(cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
-//					cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)){
-//				cell_close_by = true;
-//			}
-//		}
+		//TODO: HACK FOR NOT HAVING TO MANY NDT CELL REDUNDANT. Change it so that it links to only one ndt cell and multiple pose.
+		//When adding noise, we need all ndt because the maps are so far apart.
+		if(!_add_odometry_noise) {
+			for (auto cell_nodes : _vertices_ndt_cell) {
+				if (cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
+				    cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)) {
+					cell_close_by = true;
+				}
+			}
+		}
 
 		if(cell_close_by == false) {
 			Eigen::Vector2d p1p0 = p0 - p1;

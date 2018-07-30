@@ -150,8 +150,40 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 	error_a_mean = error_a_mean / oacg.getRobotPoseLocalization().size();
 	error_an_mean = error_an_mean / oacg.getRobotPoseLocalization().size();
 
-	infile << std::endl << "# number_of_nodes mean_error_translation mean_error_translation_noisy mean_error_angle mean_error_angle_noisy" << std::endl;
-	infile << oacg.getRobotPoseLocalization().size() << " " << error_t_mean << " " << error_tn_mean << " " << error_a_mean << " " << error_an_mean << std::endl;
+	double sum_sqd_t = 0;
+	double sum_sqd_tn = 0;
+	double sum_sqd_a = 0;
+	double sum_sqd_an = 0;
+
+	for(auto robot_vertex : oacg.getRobotPoseLocalization()){
+
+		Eigen::Affine3d pose_original = robot_vertex->getPose();
+		Eigen::Isometry2d pose_original_iso = AASS::acg::Affine3d2Isometry2d(pose_original);
+		g2o::SE2 pose_original_se2(pose_original_iso);
+		g2o::SE2 robot_pose = robot_vertex->estimate();
+		g2o::SE2 robot_pose_noisy = robot_vertex->initial_noisy_estimate;
+
+		double error_t = (robot_pose.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
+		double error_a = std::abs(robot_pose.toVector()(2) - pose_original_se2.toVector()(2));
+		double error_t_n = (robot_pose_noisy.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
+		double error_a_n = std::abs(robot_pose_noisy.toVector()(2) - pose_original_se2.toVector()(2));
+
+		sum_sqd_t = sum_sqd_t + ( (error_t - error_t_mean) * (error_t - error_t_mean) );
+		sum_sqd_tn = sum_sqd_tn + ( (error_t_n - error_tn_mean) * (error_t_n - error_tn_mean) );
+		sum_sqd_a = sum_sqd_a + ( (error_a - error_a_mean) * (error_a - error_a_mean) );
+		sum_sqd_an = sum_sqd_an + ( (error_a_n - error_an_mean) * (error_a_n - error_an_mean) );
+
+		++count;
+
+	}
+
+	sum_sqd_t = std::sqrt(sum_sqd_t / (count + 1));
+	sum_sqd_a = std::sqrt(sum_sqd_a / (count + 1));
+	sum_sqd_tn = std::sqrt(sum_sqd_tn / (count + 1));
+	sum_sqd_an = std::sqrt(sum_sqd_an / (count + 1));
+
+	infile << std::endl << "# number_of_nodes mean_error_translation std mean_error_translation_noisy std mean_error_angle std mean_error_angle_noisy std" << std::endl;
+	infile << oacg.getRobotPoseLocalization().size() << " " << error_t_mean << " " << sum_sqd_t << " " << error_tn_mean << " " << sum_sqd_tn << " " << error_a_mean << " " << sum_sqd_a << " " << error_an_mean << " " << sum_sqd_an << std::endl;
 
 	infile.close();
 }
@@ -732,6 +764,8 @@ int main(int argc, char **argv)
 	nh.param("export_iteration_count",export_iteration_count,false);
 
 	nh.param("add_noise_odometry",add_noise_odometry,false);
+	bool not_incremental_optimization = false;
+	nh.param("not_incremental_optimization",not_incremental_optimization,false);
 	bool export_iteration_count = false;
 	nh.param("use_prior",use_prior,true);
 	bool use_robot_maps = true;
@@ -830,6 +864,7 @@ int main(int argc, char **argv)
 	oacg.useRobotMaps(use_robot_maps);
 	oacg.matchRobotMaps(match_ndt_maps);
 	oacg.addNoiseToOdometryMeasurements(add_noise_odometry);
+	oacg.addIncrementalOptimization(not_incremental_optimization);
 
 //	oacg.optimizePrior(optimize_prior);
 
