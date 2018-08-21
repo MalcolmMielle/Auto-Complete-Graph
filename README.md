@@ -43,6 +43,9 @@ Two launch file are used to run the code: one for the mapping and localization, 
 ### ACG parameters
 
 * pause\_for\_testing: if true, the program will stop at every step.
+* export\_iteration\_count: if true, export the number of iteration per kernel in the file "/home/malcolm/ros_catkin_ws/lunar_ws/iterations.dat". The file needs to exist.
+* add\_noise\_odometry: if true, noise is added to the odometry edges.
+* not\_incremental\_optimization: if true, and if add\_noise\_odometry is true, the graph will use the position of the previous node in the graph_map instead of the previous node in acg when adding new node. This is useful if, when adding noise, the graph is not updated at each turn. Indeed, since the localization is based on the position in the graph map but the position in the ACG has noise, the prior matching will be wrong otherwise.
 * use\_prior: if true, integrate the emergency map.
 * optimize\_prior: if true, the emergency map is optimized to fit the robot map.
 * use\_robot\_maps: if true, the mapping given by the robot is used.

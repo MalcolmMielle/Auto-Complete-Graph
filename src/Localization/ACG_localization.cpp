@@ -402,7 +402,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addNDTGraph(const auto_complete_g
 				std::tie(robot_localization_ptr, map) = addElementNDT(ndt_graph_localization, i);
 				assert(robot_localization_ptr != NULL);
 
-				robot_localization_ptr->time = ndt_graph_localization.graph_map.nodes[i].time.data;
+				robot_localization_ptr->time_sec = ndt_graph_localization.graph_map.nodes[i].time_sec.data;
+				robot_localization_ptr->time_nsec = ndt_graph_localization.graph_map.nodes[i].time_nsec.data;
 
 //				std::cout << "TEST pointer " << std::endl;
 //				std::cout << robot_localization_ptr->getPose().matrix() << std::endl;

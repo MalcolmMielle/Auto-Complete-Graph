@@ -19,6 +19,8 @@
 #include "auto_complete_graph/Localization/VisuACGLocalization.hpp"
 #include "auto_complete_graph/Localization/GoodMatchingLocalization.hpp"
 
+#include <nav_msgs/Odometry.h>
+
 #include <ros/package.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -51,6 +53,7 @@ bool new_node = false;
 bool was_init = false;
 bool euclidean_dist_occ_map = false;
 bool export_iteration_count = false;
+bool use_gt_for_odom = false;
 
 std::vector<double> time_extract_corner_ndt;
 std::vector<double> time_opti;
@@ -69,9 +72,20 @@ double occupancy_grid_resolution = 0.05;
 bool add_noise_odometry = false;
 
 
+std::vector<std::pair <double, double > > times_of_nodes;
+
+std::vector<nav_msgs::Odometry> gt_odometry;
+
+
 inline bool exists_test3 (const std::string& name) {
 	struct stat buffer;   
 	return (stat (name.c_str(), &buffer) == 0); 
+}
+
+
+void getGroundTruth(const nav_msgs::OdometryConstPtr& odom){
+	std::cout << "Savong odom" << std::endl;
+	gt_odometry.push_back(*odom);
 }
 
 
@@ -118,9 +132,11 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 	double error_a_mean = 0;
 	double error_tn_mean = 0;
 	double error_an_mean = 0;
+	double error_t_mean_gt = 0;
+	double error_a_mean_gt = 0;
 
 	int count = 0;
-	infile << "# node_number error_translation error_translation_noisy error_angle error_angle_noisy" << std::endl;
+	infile << "# node_number error_translation error_translation_noisy error_translation_gt error_angle error_angle_noisy error_angle_gt time_sec time_nsec" << std::endl;
 
 	for(auto robot_vertex : oacg.getRobotPoseLocalization()){
 
@@ -140,20 +156,84 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 		error_a_mean += error_a;
 		error_an_mean += error_a_n;
 
-		infile << count << " " << error_t << " " << error_t_n << " " << error_a << " " << error_a_n << std::endl;
+		if(use_gt_for_odom == false) {
+			infile << count << " " << error_t << " " << error_t_n << " " << -1 << " " << error_a << " " << error_a_n << " " << -1 << " "
+			       << std::fixed << std::setprecision(8) << times_of_nodes[count].first << " "
+			       << times_of_nodes[count].second << std::endl;
+		}
+		else{
+
+			double sec = robot_vertex->time_sec;
+			double nsec = robot_vertex->time_nsec;
+
+			std::cout << "sec: " << sec << std::endl;
+			assert(sec != -1);
+			assert(gt_odometry.size() > 0);
+
+			int place_in_vec = 0;
+			int iteration_tmp = 0;
+			double diff_sec = times_of_nodes[0].first - sec;
+			double diff_nsec = times_of_nodes[0].second - nsec;
+
+			for(int i = 0; i < gt_odometry.size() ; ++i){
+				double diff_sec_tmp = gt_odometry[i].header.stamp.sec - sec;
+				double diff_nsec_tmp = gt_odometry[i].header.stamp.nsec - nsec;
+
+				if(diff_sec_tmp <= diff_sec){
+					if(diff_nsec_tmp <= diff_nsec){
+						place_in_vec = i;
+						diff_sec = diff_sec_tmp;
+						diff_nsec = diff_nsec_tmp;
+					}
+				}
+			}
+
+			nav_msgs::Odometry gt_pose = gt_odometry[place_in_vec];
+
+			double x = gt_pose.pose.pose.position.x;
+			double y = gt_pose.pose.pose.position.y;
+
+			tf::Quaternion quat;
+			tf::quaternionMsgToTF(gt_pose.pose.pose.orientation, quat);
+			// the tf::Quaternion has a method to acess roll pitch and yaw
+			double roll, pitch, yaw;
+			tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
+
+			std::cout << "RPY " << roll << " " << pitch << " " << yaw << std::endl;
+
+			Eigen::Vector2d position_gt; position_gt << x, y;
+//			double angle_gt; angle_gt << roll;
+
+			double error_t_gt = (robot_pose.toVector().head(2) - position_gt).norm();
+			double error_a_gt = std::abs(robot_pose.toVector()(2) - roll);
+
+			error_t_mean_gt += error_t_gt;
+			error_a_mean_gt += error_a_gt;
+
+
+			infile << count << " " << error_t << " " << error_t_n << " " << error_t_gt << " " << error_a << " " << error_a_n << " " << error_a_gt << " "
+			       << std::fixed << std::setprecision(8) << times_of_nodes[count].first << " "
+			       << times_of_nodes[count].second << std::endl;
+		}
 		++count;
 
 	}
 
+	count = 0;
+
 	error_t_mean = error_t_mean / oacg.getRobotPoseLocalization().size();
 	error_tn_mean = error_tn_mean / oacg.getRobotPoseLocalization().size();
+	error_t_mean_gt = error_t_mean_gt / oacg.getRobotPoseLocalization().size();
 	error_a_mean = error_a_mean / oacg.getRobotPoseLocalization().size();
 	error_an_mean = error_an_mean / oacg.getRobotPoseLocalization().size();
+	error_a_mean_gt = error_a_mean_gt / oacg.getRobotPoseLocalization().size();
 
 	double sum_sqd_t = 0;
 	double sum_sqd_tn = 0;
 	double sum_sqd_a = 0;
 	double sum_sqd_an = 0;
+	double sum_sqd_t_gt = 0;
+	double sum_sqd_a_gt = 0;
 
 	for(auto robot_vertex : oacg.getRobotPoseLocalization()){
 
@@ -173,6 +253,49 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 		sum_sqd_a = sum_sqd_a + ( (error_a - error_a_mean) * (error_a - error_a_mean) );
 		sum_sqd_an = sum_sqd_an + ( (error_a_n - error_an_mean) * (error_a_n - error_an_mean) );
 
+		if(use_gt_for_odom == true){
+
+			double sec = robot_vertex->time_sec;
+			double nsec = robot_vertex->time_nsec;
+
+			int place_in_vec = 0;
+			int iteration_tmp = 0;
+			double diff_sec = times_of_nodes[0].first - sec;
+			double diff_nsec = times_of_nodes[0].second - nsec;
+
+			for(int i = 0; i < gt_odometry.size() ; ++i){
+				double diff_sec_tmp = gt_odometry[i].header.stamp.sec - sec;
+				double diff_nsec_tmp = gt_odometry[i].header.stamp.nsec - nsec;
+
+				if(diff_sec_tmp <= diff_sec){
+					if(diff_nsec_tmp <= diff_nsec){
+						place_in_vec = i;
+						diff_sec = diff_sec_tmp;
+						diff_nsec = diff_nsec_tmp;
+					}
+				}
+			}
+
+			nav_msgs::Odometry gt_pose = gt_odometry[place_in_vec];
+			double x = gt_pose.pose.pose.position.x;
+			double y = gt_pose.pose.pose.position.y;
+
+			tf::Quaternion quat;
+			tf::quaternionMsgToTF(gt_pose.pose.pose.orientation, quat);
+			// the tf::Quaternion has a method to acess roll pitch and yaw
+			double roll, pitch, yaw;
+			tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
+//			std::cout << "RPY " << roll << " " << pitch << " " << yaw << std::endl;
+			Eigen::Vector2d position_gt; position_gt << x, y;
+//			double angle_gt; angle_gt << roll;
+
+			double error_t_gt = (robot_pose.toVector().head(2) - position_gt).norm();
+			double error_a_gt = std::abs(robot_pose.toVector()(2) - roll);
+
+			sum_sqd_t_gt = sum_sqd_tn + ( (error_t_gt - error_t_mean_gt) * (error_t_gt - error_t_mean_gt) );
+			sum_sqd_a_gt = sum_sqd_a + ( (error_a_gt - error_a_mean_gt) * (error_a_gt - error_a_mean_gt) );
+		}
+
 		++count;
 
 	}
@@ -182,8 +305,8 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 	sum_sqd_tn = std::sqrt(sum_sqd_tn / (count + 1));
 	sum_sqd_an = std::sqrt(sum_sqd_an / (count + 1));
 
-	infile << std::endl << "# number_of_nodes mean_error_translation std mean_error_translation_noisy std mean_error_angle std mean_error_angle_noisy std" << std::endl;
-	infile << oacg.getRobotPoseLocalization().size() << " " << error_t_mean << " " << sum_sqd_t << " " << error_tn_mean << " " << sum_sqd_tn << " " << error_a_mean << " " << sum_sqd_a << " " << error_an_mean << " " << sum_sqd_an << std::endl;
+	infile << std::endl << "# number_of_nodes mean_error_translation std mean_error_translation_noisy std mean_error_gt std mean_error_angle std mean_error_angle_noisy std mean_error_angle_gt std" << std::endl;
+	infile << oacg.getRobotPoseLocalization().size() << " " << error_t_mean << " " << sum_sqd_t << " " << error_tn_mean << " " << sum_sqd_tn << " " << error_t_mean_gt << " " << sum_sqd_t_gt << " " << error_a_mean << " " << sum_sqd_a << " " << error_an_mean << " " << sum_sqd_an << " " << error_a_mean_gt << " " << sum_sqd_a_gt << std::endl;
 
 	infile.close();
 }
@@ -526,6 +649,14 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 //	std::cout << "GOT GRAPH" << std::endl;
 
+		times_of_nodes.clear();
+
+		for(auto node : msg->graph_map.nodes){
+			std::cout << "TIME : " << node.time_sec.data << std::endl;
+			times_of_nodes.push_back(std::pair <double, double>(node.time_sec.data, node.time_nsec.data) );
+		}
+
+
 		updated = true;
 		new_node = true;
 	// 	abort_f = true;
@@ -755,7 +886,7 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "auto_complete_graph_rviz_small_optimi");
 	ros::Subscriber ndt_graph_sub;
-	ros::Subscriber call_for_publish_occ, publish_prior_ndt, publish_acg_om_maps;
+	ros::Subscriber call_for_publish_occ, publish_prior_ndt, publish_acg_om_maps, gt_odom;
     ros::NodeHandle nh("~");
 
 	/**************PARAMETERS**************/
@@ -763,6 +894,7 @@ int main(int argc, char **argv)
 	bool use_prior = true;
 	nh.param("export_iteration_count",export_iteration_count,false);
 
+	nh.param("use_gt_for_odom", use_gt_for_odom, false);
 	nh.param("add_noise_odometry",add_noise_odometry,false);
 	bool not_incremental_optimization = false;
 	nh.param("not_incremental_optimization",not_incremental_optimization,false);
@@ -904,6 +1036,11 @@ int main(int argc, char **argv)
 	call_for_publish_occ = nh.subscribe<std_msgs::Bool>("/publish_occ_acg", 1, boost::bind(&latchOccGrid, _1, &oacg));
 	publish_prior_ndt = nh.subscribe<std_msgs::Bool>("/publish_acg_maps", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
 	publish_acg_om_maps = nh.subscribe<std_msgs::Bool>("/publish_acg_om_maps", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
+
+	if(use_gt_for_odom){
+		gt_odom = nh.subscribe<nav_msgs::Odometry>("/vmc_navserver/state", 10, getGroundTruth);
+	}
+
 	// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));
 // 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&gotGraphandOptimize, _1, &oacg));
 	map_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("map_grid", 1000);

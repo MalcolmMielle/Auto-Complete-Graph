@@ -64,7 +64,7 @@
  *
  */
 
-std::vector<float> times;
+std::vector<std::pair <float, float > > times;
 
 
 void getAngles(const std::string& base_frame, const std::string& to_frame, double& roll, double& pitch, double& yaw){
@@ -558,8 +558,9 @@ public:
 		assert(times.size() == graphmapmsg.nodes.size());
 		int count = 0;
 		for(auto time : times){
-			graphmapmsg.nodes[count].time.data = time;
-			std::cout << "Adding the time " << time << std::endl;
+			graphmapmsg.nodes[count].time_sec.data = time.first;
+			graphmapmsg.nodes[count].time_nsec.data = time.second;
+			std::cout << "Adding the time " << time.first << " " << time.second << std::endl;
 			count++;
 		}
 
@@ -992,6 +993,7 @@ public:
 	void processFrame(pcl::PointCloud<pcl::PointXYZ> &cloud, Eigen::Affine3d Tmotion, const ros::Time& time=ros::Time::now() ) {
 
 //	  std::cout << "MOTION !!! " << Tmotion.matrix() << std::endl;
+		std::cout << "Time : " << time.toSec() << " or " << time.sec << " " << time.nsec << std::endl;
 
 	 Eigen::Vector3d mcl_mean;
 	 Eigen::Matrix3d mcl_cov;
@@ -1041,7 +1043,7 @@ public:
 				 initPoseSet = true;
 				 init_fuser_ = true;
 
-				 times.push_back(time.toSec());
+				 times.push_back(std::pair<float, float>(time.sec, time.nsec) );
 
 //				 std::cout << "Pose " << pose_.matrix() << std::endl;
 //				 std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
@@ -1137,7 +1139,7 @@ public:
 
 
 			 if (nb_of_node != nb_of_node_new) {
-				 times.push_back(time.toSec());
+				 times.push_back(std::pair<float, float>(time.sec, time.nsec));
 			    std_msgs::Bool::Ptr bool_msg;
 				pubGraphMap(bool_msg);
 
