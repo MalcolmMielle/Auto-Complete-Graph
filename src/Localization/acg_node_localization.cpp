@@ -72,7 +72,7 @@ double occupancy_grid_resolution = 0.05;
 bool add_noise_odometry = false;
 
 
-std::vector<std::pair <double, double > > times_of_nodes;
+std::vector<std::pair <uint32_t, uint32_t> > times_of_nodes;
 
 std::vector<nav_msgs::Odometry> gt_odometry;
 
@@ -84,7 +84,7 @@ inline bool exists_test3 (const std::string& name) {
 
 
 void getGroundTruth(const nav_msgs::OdometryConstPtr& odom){
-	std::cout << "Savong odom" << std::endl;
+//	std::cout << "Savong odom " << odom->header.stamp.sec << " " << odom->header.stamp.nsec << std::endl;
 	gt_odometry.push_back(*odom);
 }
 
@@ -117,6 +117,57 @@ tf::StampedTransform getPoseTFTransform(const std::string& base_frame, const std
 		}
 	} while(good_transformation == false);
 	return transform;
+}
+
+int getClosestTime(g2o::VertexSE2RobotLocalization* robot_vertex){
+
+	uint32_t sec = robot_vertex->time_sec;
+	uint32_t nsec = robot_vertex->time_nsec;
+
+	ros::Time node_time; node_time.sec = sec; node_time.nsec = nsec;
+
+//	std::cout << "sec: " << sec << " size " << gt_odometry.size() << std::endl;
+	assert(sec != -1);
+	assert(gt_odometry.size() > 0);
+
+	int place_in_vec = 0;
+	int iteration_tmp = 0;
+	ros::Duration diff_duration = node_time - gt_odometry[0].header.stamp;
+	double diff = std::abs(diff_duration.toSec());
+
+
+//	std::cout << "close ? " << gt_odometry[0].header.stamp.sec << " robot " << sec << " nsec " << gt_odometry[0].header.stamp.nsec << " robot " << nsec << std::endl;
+
+//			std::cout << "Sec Diff " << diff_sec << std::endl;
+
+	for(int i = 0; i < gt_odometry.size() ; ++i){
+		ros::Duration diff_duration_tmp = node_time - gt_odometry[i].header.stamp;
+		double diff_tmp = std::abs(diff_duration_tmp.toSec());
+
+//				if(count > 0) {
+//					std::cout << "Sec Diff_tmo " << diff_sec_tmp << std::endl;
+//					std::cout << "Sec Diff " << diff_sec << std::endl;
+//					std::cout << "Sec Diffn_tmo " << diff_nsec_tmp << std::endl;
+//					std::cout << "Sec Diffn " << diff_nsec << std::endl;
+//				}
+
+		assert(diff >= 0);
+		assert(diff_tmp >= 0);
+
+		if(diff_tmp <= diff){
+
+//					std::cout << "Sec Diff " << diff << std::endl;
+//					std::cout << "Sec Diff_tmp " << diff_tmp << std::endl;
+//					std::cout << "close ? " << gt_odometry[i].header.stamp.sec << " robot " << sec << " nsec " << gt_odometry[i].header.stamp.nsec << " robot " << nsec << std::endl;
+
+			place_in_vec = i;
+			diff = diff_tmp;
+
+		}
+	}
+
+	std::cout << "CLosest " << place_in_vec << std::endl;
+	return place_in_vec;
 }
 
 
@@ -163,30 +214,7 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 		}
 		else{
 
-			double sec = robot_vertex->time_sec;
-			double nsec = robot_vertex->time_nsec;
-
-			std::cout << "sec: " << sec << std::endl;
-			assert(sec != -1);
-			assert(gt_odometry.size() > 0);
-
-			int place_in_vec = 0;
-			int iteration_tmp = 0;
-			double diff_sec = times_of_nodes[0].first - sec;
-			double diff_nsec = times_of_nodes[0].second - nsec;
-
-			for(int i = 0; i < gt_odometry.size() ; ++i){
-				double diff_sec_tmp = gt_odometry[i].header.stamp.sec - sec;
-				double diff_nsec_tmp = gt_odometry[i].header.stamp.nsec - nsec;
-
-				if(diff_sec_tmp <= diff_sec){
-					if(diff_nsec_tmp <= diff_nsec){
-						place_in_vec = i;
-						diff_sec = diff_sec_tmp;
-						diff_nsec = diff_nsec_tmp;
-					}
-				}
-			}
+			int place_in_vec = getClosestTime(robot_vertex);
 
 			nav_msgs::Odometry gt_pose = gt_odometry[place_in_vec];
 
@@ -200,12 +228,14 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 			tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
 
 			std::cout << "RPY " << roll << " " << pitch << " " << yaw << std::endl;
+			std::cout << "xy" << x << " " << y << std::endl;
+			std::cout << "Robot pose " << robot_pose.toVector().head(2) << std::endl;
 
 			Eigen::Vector2d position_gt; position_gt << x, y;
 //			double angle_gt; angle_gt << roll;
 
 			double error_t_gt = (robot_pose.toVector().head(2) - position_gt).norm();
-			double error_a_gt = std::abs(robot_pose.toVector()(2) - roll);
+			double error_a_gt = std::abs(robot_pose.toVector()(2) - yaw);
 
 			error_t_mean_gt += error_t_gt;
 			error_a_mean_gt += error_a_gt;
@@ -255,26 +285,7 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 
 		if(use_gt_for_odom == true){
 
-			double sec = robot_vertex->time_sec;
-			double nsec = robot_vertex->time_nsec;
-
-			int place_in_vec = 0;
-			int iteration_tmp = 0;
-			double diff_sec = times_of_nodes[0].first - sec;
-			double diff_nsec = times_of_nodes[0].second - nsec;
-
-			for(int i = 0; i < gt_odometry.size() ; ++i){
-				double diff_sec_tmp = gt_odometry[i].header.stamp.sec - sec;
-				double diff_nsec_tmp = gt_odometry[i].header.stamp.nsec - nsec;
-
-				if(diff_sec_tmp <= diff_sec){
-					if(diff_nsec_tmp <= diff_nsec){
-						place_in_vec = i;
-						diff_sec = diff_sec_tmp;
-						diff_nsec = diff_nsec_tmp;
-					}
-				}
-			}
+			int place_in_vec = getClosestTime(robot_vertex);
 
 			nav_msgs::Odometry gt_pose = gt_odometry[place_in_vec];
 			double x = gt_pose.pose.pose.position.x;
@@ -290,7 +301,7 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 //			double angle_gt; angle_gt << roll;
 
 			double error_t_gt = (robot_pose.toVector().head(2) - position_gt).norm();
-			double error_a_gt = std::abs(robot_pose.toVector()(2) - roll);
+			double error_a_gt = std::abs(robot_pose.toVector()(2) - yaw);
 
 			sum_sqd_t_gt = sum_sqd_tn + ( (error_t_gt - error_t_mean_gt) * (error_t_gt - error_t_mean_gt) );
 			sum_sqd_a_gt = sum_sqd_a + ( (error_a_gt - error_a_mean_gt) * (error_a_gt - error_a_mean_gt) );
@@ -314,7 +325,7 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 
 
 
-bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg, const std::pair<int, int>& iterations, double time){
+bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg, const std::pair<int, int>& iterations, double time_corner, double time_opti){
 
 	std::cout << "Exporting number of iterations and time" << std::endl;
 
@@ -337,8 +348,8 @@ bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg, 
 //	file_out = file_out + ".txt";
 	std::ofstream infile(file_out, std::ofstream::app);
 // 			int co = 0;
-	std::cout << node_number << " " << edge_number << " " << iterations.first << " " << iterations.second << time << std::endl;
-	infile << node_number << " " << edge_number << " " << iterations.first << " " << iterations.second << " " << time << std::endl;
+	std::cout << node_number << " " << edge_number << " " << iterations.first << " " << iterations.second << " " << time_corner << " " << time_opti << std::endl;
+	infile << node_number << " " << edge_number << " " << iterations.first << " " << iterations.second << " " << time_corner << " " << time_opti << std::endl;
 	infile.close();
 
 	std::cout << "Done" << std::endl;
@@ -652,8 +663,8 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 		times_of_nodes.clear();
 
 		for(auto node : msg->graph_map.nodes){
-			std::cout << "TIME : " << node.time_sec.data << std::endl;
-			times_of_nodes.push_back(std::pair <double, double>(node.time_sec.data, node.time_nsec.data) );
+			std::cout << "TIME : " << std::fixed << std::setprecision(8) << (double)node.time_sec.data << " " << (double)node.time_nsec.data << std::endl;
+			times_of_nodes.push_back(std::pair <uint32_t, uint32_t>(node.time_sec.data, node.time_nsec.data) );
 		}
 
 
@@ -724,7 +735,9 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				else{
 					oacg->testInfoNonNul("Just making sure");
 				}
-				ros::Time end_opti = ros::Time::now();	
+				ros::Time end_opti = ros::Time::now();
+	std::cout << "Start opti time " << start_opti.toSec() << " " << end_opti.toSec() << std::endl;
+	std::cout << "Start opti time " << start_opti.toNSec() << " " << end_opti.toNSec() << std::endl;
 				double opti = (end_opti - start_opti).toSec();
 				time_opti.push_back(opti);
 				
@@ -756,7 +769,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 
 				if(export_iteration_count == true){
-					bool done = exportIterationCOunt(*oacg, iterations, corner_extract_tt + opti);
+					bool done = exportIterationCOunt(*oacg, iterations, corner_extract_tt, opti);
 				}
 		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
 		// 		std::cin >>a;
@@ -1038,7 +1051,7 @@ int main(int argc, char **argv)
 	publish_acg_om_maps = nh.subscribe<std_msgs::Bool>("/publish_acg_om_maps", 1, boost::bind(&publishACGOM, _1, boost::ref(oacg) ));
 
 	if(use_gt_for_odom){
-		gt_odom = nh.subscribe<nav_msgs::Odometry>("/vmc_navserver/state", 10, getGroundTruth);
+		gt_odom = nh.subscribe<nav_msgs::Odometry>("/vmc_navserver/state", 100, getGroundTruth);
 	}
 
 	// 	ndt_graph_sub = nh.subscribe<ndt_feature::NDTGraphMsg>("/ndt_graph", 1000, boost::bind(&testMsg, _1));

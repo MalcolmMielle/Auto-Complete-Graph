@@ -33,8 +33,8 @@ namespace g2o{
 		std::vector<VertexNDTCell*> ndt_cells;
 		g2o::SE2 initial_noisy_estimate;
 
-		double time_sec = -1;
-		double time_nsec = -1;
+		uint32_t time_sec = 0;
+		uint32_t time_nsec = 0;
 
 //		g2o::SE2 initial_transfo;
 //		cv::Mat img;

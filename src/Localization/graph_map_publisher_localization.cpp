@@ -64,7 +64,7 @@
  *
  */
 
-std::vector<std::pair <float, float > > times;
+std::vector<std::pair <uint32_t, uint32_t> > times;
 
 
 void getAngles(const std::string& base_frame, const std::string& to_frame, double& roll, double& pitch, double& yaw){
@@ -560,7 +560,7 @@ public:
 		for(auto time : times){
 			graphmapmsg.nodes[count].time_sec.data = time.first;
 			graphmapmsg.nodes[count].time_nsec.data = time.second;
-			std::cout << "Adding the time " << time.first << " " << time.second << std::endl;
+			std::cout << "Adding the time "  << std::fixed << std::setprecision(8) << (double)time.first << " " << (double)time.second << std::endl;
 			count++;
 		}
 
@@ -1043,7 +1043,7 @@ public:
 				 initPoseSet = true;
 				 init_fuser_ = true;
 
-				 times.push_back(std::pair<float, float>(time.sec, time.nsec) );
+				 times.push_back(std::pair<uint32_t, uint32_t>(time.sec, time.nsec) );
 
 //				 std::cout << "Pose " << pose_.matrix() << std::endl;
 //				 std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
@@ -1139,7 +1139,7 @@ public:
 
 
 			 if (nb_of_node != nb_of_node_new) {
-				 times.push_back(std::pair<float, float>(time.sec, time.nsec));
+				 times.push_back(std::pair<uint32_t, uint32_t>(time.sec, time.nsec));
 			    std_msgs::Bool::Ptr bool_msg;
 				pubGraphMap(bool_msg);
 

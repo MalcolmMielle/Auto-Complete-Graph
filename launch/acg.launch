@@ -4,11 +4,11 @@
 
 <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
 
-	<param name="pause_for_testing" value="true" />
+	<param name="pause_for_testing" value="false" />
 	<param name="use_gt_for_odom" value="true" />
 	<param name="export_iteration_count" value="true" />
 	<param name="add_noise_odometry" value="true" />
-	<param name="not_incremental_optimization" value="true" />
+	<param name="not_incremental_optimization" value="false" />
 	<param name="use_prior" value="true" />
 	<param name="optimize_prior" value="true"/>
 	<param name="use_robot_maps" value="true"/>
