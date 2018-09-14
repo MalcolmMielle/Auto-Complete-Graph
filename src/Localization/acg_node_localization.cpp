@@ -77,6 +77,46 @@ std::vector<std::pair <uint32_t, uint32_t> > times_of_nodes;
 std::vector<nav_msgs::Odometry> gt_odometry;
 
 
+std::tuple<double, double> error_kitti_benchmark_single(const Eigen::Vector3d& pose, const Eigen::Vector3d& pose_2, const Eigen::Vector3d& gt, const Eigen::Vector3d& gt_2){
+	Eigen::Vector2d motion = pose.head(2) - pose_2.head(2);
+	Eigen::Vector2d motion_gt = gt.head(2) - gt_2.head(2);
+	double error = (motion - motion_gt).norm();
+
+	double angle = pose(2) - pose_2(2);
+	double angle_gt = gt(2) - gt_2(2);
+	double error_rot = std::abs(angle - angle_gt);
+
+	return std::make_tuple(error, error_rot);
+}
+
+std::tuple<double, double> error_kitti_benchmark_translation(const std::vector<Eigen::Vector3d>& pose, const std::vector<Eigen::Vector3d> gt){
+	assert(pose.size() == gt.size() );
+	double error_t = 0;
+	double error_rot = 0;
+	for(int i = 1 ; i < pose.size() ; ++i){
+
+		auto errors = error_kitti_benchmark_single(pose[i-1], pose[i], gt[i-1], gt[i]);
+
+		error_t = error_t + std::get<0>(errors);
+		error_rot = error_rot + std::get<1>(errors);
+
+//		Eigen::Vector2d motion = pose[i-1].head(2) - pose[i].head(2);
+//		Eigen::Vector2d motion_gt = gt[i-1].head(2) - gt[i].head(2);
+//		error = error + (motion - motion_gt).norm();
+//
+//		double angle = pose[i-1](2) - pose[i](2);
+//		double angle_gt = gt[i-1](2) - gt[i](2);
+//		error_rot = error_rot + std::abs(angle - angle_gt);
+
+	}
+	error_t = error_t / pose.size();
+	error_rot = error_rot / pose.size();
+
+	return std::make_tuple(error_t, error_rot);
+
+}
+
+
 inline bool exists_test3 (const std::string& name) {
 	struct stat buffer;   
 	return (stat (name.c_str(), &buffer) == 0); 
@@ -189,6 +229,9 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 	int count = 0;
 	infile << "# node_number error_translation error_translation_noisy error_translation_gt error_angle error_angle_noisy error_angle_gt time_sec time_nsec" << std::endl;
 
+	std::vector<Eigen::Vector3d> poses_robot;
+	std::vector<Eigen::Vector3d> poses_gt;
+
 	for(auto robot_vertex : oacg.getRobotPoseLocalization()){
 
 		Eigen::Affine3d pose_original = robot_vertex->getPose();
@@ -196,6 +239,9 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 		g2o::SE2 pose_original_se2(pose_original_iso);
 		g2o::SE2 robot_pose = robot_vertex->estimate();
 		g2o::SE2 robot_pose_noisy = robot_vertex->initial_noisy_estimate;
+
+		poses_robot.push_back(robot_pose.toVector());
+
 
 		double error_t = (robot_pose.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
 		double error_a = std::abs(robot_pose.toVector()(2) - pose_original_se2.toVector()(2));
@@ -220,28 +266,30 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 
 			double x = gt_pose.pose.pose.position.x;
 			double y = gt_pose.pose.pose.position.y;
-
 			tf::Quaternion quat;
 			tf::quaternionMsgToTF(gt_pose.pose.pose.orientation, quat);
 			// the tf::Quaternion has a method to acess roll pitch and yaw
 			double roll, pitch, yaw;
 			tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
+			Eigen::Vector3d gt_pose_save; gt_pose_save << x, y, yaw;
+			poses_gt.push_back(gt_pose_save);
 
 			std::cout << "RPY " << roll << " " << pitch << " " << yaw << std::endl;
 			std::cout << "xy" << x << " " << y << std::endl;
 			std::cout << "Robot pose " << robot_pose.toVector().head(2) << std::endl;
 
-			Eigen::Vector2d position_gt; position_gt << x, y;
+//			Eigen::Vector2d position_gt; position_gt << x, y;
 //			double angle_gt; angle_gt << roll;
 
-			double error_t_gt = (robot_pose.toVector().head(2) - position_gt).norm();
-			double error_a_gt = std::abs(robot_pose.toVector()(2) - yaw);
+			std::tuple<double, double> errors_gt = std::make_tuple(0, 0);
+			if(poses_robot.size() > 1) {
+				errors_gt = error_kitti_benchmark_single(poses_robot.back(), poses_robot.rbegin()[1],
+				                                              poses_gt.back(), poses_gt.rbegin()[1]);
+			}
+			error_t_mean_gt += std::get<0>(errors_gt);
+			error_a_mean_gt += std::get<1>(errors_gt);
 
-			error_t_mean_gt += error_t_gt;
-			error_a_mean_gt += error_a_gt;
-
-
-			infile << count << " " << error_t << " " << error_t_n << " " << error_t_gt << " " << error_a << " " << error_a_n << " " << error_a_gt << " "
+			infile << count << " " << error_t << " " << error_t_n << " " << std::get<0>(errors_gt) << " " << error_a << " " << error_a_n << " " << std::get<1>(errors_gt) << " "
 			       << std::fixed << std::setprecision(8) << times_of_nodes[count].first << " "
 			       << times_of_nodes[count].second << std::endl;
 		}
@@ -249,7 +297,10 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 
 	}
 
+
 	count = 0;
+	poses_robot.clear();
+	poses_gt.clear();
 
 	error_t_mean = error_t_mean / oacg.getRobotPoseLocalization().size();
 	error_tn_mean = error_tn_mean / oacg.getRobotPoseLocalization().size();
@@ -273,6 +324,8 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 		g2o::SE2 robot_pose = robot_vertex->estimate();
 		g2o::SE2 robot_pose_noisy = robot_vertex->initial_noisy_estimate;
 
+		poses_robot.push_back(robot_pose.toVector());
+
 		double error_t = (robot_pose.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
 		double error_a = std::abs(robot_pose.toVector()(2) - pose_original_se2.toVector()(2));
 		double error_t_n = (robot_pose_noisy.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
@@ -288,23 +341,28 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 			int place_in_vec = getClosestTime(robot_vertex);
 
 			nav_msgs::Odometry gt_pose = gt_odometry[place_in_vec];
+
 			double x = gt_pose.pose.pose.position.x;
 			double y = gt_pose.pose.pose.position.y;
-
 			tf::Quaternion quat;
 			tf::quaternionMsgToTF(gt_pose.pose.pose.orientation, quat);
 			// the tf::Quaternion has a method to acess roll pitch and yaw
 			double roll, pitch, yaw;
 			tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-//			std::cout << "RPY " << roll << " " << pitch << " " << yaw << std::endl;
-			Eigen::Vector2d position_gt; position_gt << x, y;
-//			double angle_gt; angle_gt << roll;
+			Eigen::Vector3d gt_pose_save; gt_pose_save << x, y, yaw;
 
-			double error_t_gt = (robot_pose.toVector().head(2) - position_gt).norm();
-			double error_a_gt = std::abs(robot_pose.toVector()(2) - yaw);
+			poses_gt.push_back(gt_pose_save);
 
-			sum_sqd_t_gt = sum_sqd_tn + ( (error_t_gt - error_t_mean_gt) * (error_t_gt - error_t_mean_gt) );
-			sum_sqd_a_gt = sum_sqd_a + ( (error_a_gt - error_a_mean_gt) * (error_a_gt - error_a_mean_gt) );
+			std::tuple<double, double> errors_gt = std::make_tuple(0, 0);
+			if(poses_robot.size() > 1) {
+				errors_gt = error_kitti_benchmark_single(poses_robot.back(), poses_robot.rbegin()[1],
+				                                         poses_gt.back(), poses_gt.rbegin()[1]);
+			}
+//			error_t_mean_gt += std::get<0>(errors_gt);
+//			error_a_mean_gt += std::get<1>(errors_gt);
+
+			sum_sqd_t_gt = sum_sqd_t_gt + ( (std::get<0>(errors_gt) - error_t_mean_gt) * (std::get<0>(errors_gt) - error_t_mean_gt) );
+			sum_sqd_a_gt = sum_sqd_a_gt + ( (std::get<1>(errors_gt) - error_a_mean_gt) * (std::get<1>(errors_gt) - error_a_mean_gt) );
 		}
 
 		++count;
@@ -318,6 +376,12 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 
 	infile << std::endl << "# number_of_nodes mean_error_translation std mean_error_translation_noisy std mean_error_gt std mean_error_angle std mean_error_angle_noisy std mean_error_angle_gt std" << std::endl;
 	infile << oacg.getRobotPoseLocalization().size() << " " << error_t_mean << " " << sum_sqd_t << " " << error_tn_mean << " " << sum_sqd_tn << " " << error_t_mean_gt << " " << sum_sqd_t_gt << " " << error_a_mean << " " << sum_sqd_a << " " << error_an_mean << " " << sum_sqd_an << " " << error_a_mean_gt << " " << sum_sqd_a_gt << std::endl;
+
+
+	auto error_translation_kitti = error_kitti_benchmark_translation(poses_robot, poses_gt);
+	infile << std::endl << "# kitti_translation_error kitti_rotation_error" << std::endl;
+	infile << std::get<0>(error_translation_kitti) << " " << std::get<1>(error_translation_kitti) << std::endl;
+
 
 	infile.close();
 }

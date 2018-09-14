@@ -140,8 +140,8 @@ Eigen::Affine3d getPose(const std::string& base_frame, const std::string& to_fra
 
 
 
-using namespace perception_oru;
-using namespace libgraphMap;
+using namespace perception_oru::graph_map;
+using namespace ::graph_map;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, nav_msgs::Odometry> LaserOdomSync;
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, geometry_msgs::PoseStamped> LaserPoseSync;
@@ -482,7 +482,7 @@ public:
 
 		//Publisher of graph_map message
 
-	  graphmap_pub_ = param_nh.advertise<graph_map::GraphMapMsg>("graph_map",50);
+	  graphmap_pub_ = param_nh.advertise<::graph_map::GraphMapMsg>("graph_map",50);
 	  graph_map_vector_ = param_nh.advertise<ndt_map::NDTVectorMapMsg>("graph_map_vector",50);
 	  graphmap_localization_pub = param_nh.advertise<auto_complete_graph::GraphMapLocalizationMsg>("graph_map_localization", 50);
 
@@ -543,7 +543,7 @@ public:
 
 		ROS_INFO("Publishing graph map message");
 		ndt_map::NDTVectorMapMsg vector_maps;
-		perception_oru::libgraphMap::graphMapToVectorMap(*(fuser_->GetGraphMap()), vector_maps, map_link_id);
+		perception_oru::graph_map::graphMapToVectorMap(*(fuser_->GetGraph()), vector_maps, map_link_id);
 		graph_map_vector_.publish(vector_maps);
 
 		//Save the new pose associated with the node.
@@ -552,8 +552,8 @@ public:
 //				 acg_localization->savePos(nb_of_node_new - 1);
 		ROS_DEBUG("PUBLISH: now");
 		//Publish message
-		graph_map::GraphMapMsg graphmapmsg;
-		perception_oru::libgraphMap::graphMapToMsg(*(fuser_->GetGraphMap()), graphmapmsg, map_link_id);
+		::graph_map::GraphMapMsg graphmapmsg;
+		perception_oru::graph_map::graphMapToMsg(*(fuser_->GetGraph()), graphmapmsg, map_link_id);
 
 		assert(times.size() == graphmapmsg.nodes.size());
 		int count = 0;
@@ -585,7 +585,7 @@ public:
 
 			auto_complete_graph::GraphMapLocalizationMsg graphmaplocalizationmsg;
 			graphmaplocalizationmsg.graph_map = graphmapmsg;
-			mockLocalizationMessage(graphmaplocalizationmsg, fuser_->GetGraphMap()->GetNodes().size());
+			mockLocalizationMessage(graphmaplocalizationmsg, fuser_->GetGraph()->GetNodes().size());
 			graphmap_localization_pub.publish(graphmaplocalizationmsg);
 
 //					 bool unstop = true;
@@ -649,7 +649,7 @@ public:
 		double numPart = 250;
 		bool forceSIR = true;
 
-		ROS_DEBUG("INIT MCL FROM TF");
+		ROS_INFO("INIT MCL FROM TF");
 		auto init_pose = getPoseTFTransform(world_link_id, laser_link_id);
 //		std::cout << "Pose found " << pose_.matrix() << std::endl;
 
@@ -1038,7 +1038,7 @@ public:
 				 ROS_DEBUG_STREAM( "----------------------------FUSER------------------------" );
 				 ROS_DEBUG_STREAM( fuser_->ToString() );
 				 fuser_->Visualize(visualize, plot_marker);
-				 fuser_->SetFuserOptions(false, false);
+				 fuser_->SetFuserOptions(false);
 				 ROS_DEBUG_STREAM( "---------------------------------------------------------" );
 				 initPoseSet = true;
 				 init_fuser_ = true;
@@ -1074,7 +1074,7 @@ public:
 			 ROS_DEBUG_STREAM("frame=" << frame_nr_ << "movement="
 			      << (fuser_->GetPoseLastFuse().inverse() * pose_).translation().norm() );
 
-			 auto nb_of_node = fuser_->GetGraphMap()->GetNodes().size();
+			 auto nb_of_node = fuser_->GetGraph()->GetNodes().size();
 
 			 ros::Time tplot = ros::Time::now();
 			 plotPointcloud2(cloud, tplot);
@@ -1112,11 +1112,11 @@ public:
 			 publishMapTransform(time);
 
 
-			 auto nb_of_node_new = fuser_->GetGraphMap()->GetNodes().size();
-			  	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraphMap()->GetNodes()[0]->GetId() << std::endl;
+			 auto nb_of_node_new = fuser_->GetGraph()->GetNodes().size();
+			  	std::cout << "Well " << nb_of_node << " != " << nb_of_node_new << " and id " << fuser_->GetGraph()->GetNodes()[0]->GetId() << std::endl;
 			 for (int i = 0; i < nb_of_node_new; ++i) {
 				 ROS_DEBUG_STREAM( "Well " << nb_of_node << " != " << nb_of_node_new << " and id "
-				           << fuser_->GetGraphMap()->GetNodes()[i]->GetId() );
+				           << fuser_->GetGraph()->GetNodes()[i]->GetId() );
 			 }
 
 			 if (use_mcl_ && mcl_loaded_) {

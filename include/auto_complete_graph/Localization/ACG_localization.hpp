@@ -19,6 +19,8 @@
 #include <ndt_registration/ndt_matcher_d2d_2d.h>
 #include <ndt_registration/ndt_matcher_d2d.h>
 
+#include "NDTCellsBundle.hpp"
+
 
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 
@@ -313,7 +315,7 @@ namespace acg{
 		void createWallAssociations();
 		void createWallAssociations(g2o::VertexSE2RobotLocalization* robot);
 
-		std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall);
+		std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall, std::vector<std::tuple< g2o::VertexNDTCell*, Eigen::Vector2d, double> >& already_created_ndt_cells_to_update);
 
 
 		//FOR TESTING

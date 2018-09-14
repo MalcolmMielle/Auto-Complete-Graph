@@ -53,7 +53,7 @@
  *
  */
 using namespace perception_oru;
-using namespace libgraphMap;
+using namespace graph_map;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, nav_msgs::Odometry> LaserOdomSync;
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, geometry_msgs::PoseStamped> LaserPoseSync;

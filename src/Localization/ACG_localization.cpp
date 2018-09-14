@@ -1732,7 +1732,8 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 	int count_walls = 0;
 	for(auto wall : _prior->getEdges()){
 
-		auto cells = collisionsNDTMapWithPriorEdge(*robot, *wall);
+		std::vector<std::tuple< g2o::VertexNDTCell*, Eigen::Vector2d, double> > already_created_ndt_cells_to_update;
+		auto cells = collisionsNDTMapWithPriorEdge(*robot, *wall, already_created_ndt_cells_to_update);
 //		std::cout << "Found links " << cells.size() << std::endl;
 		for(auto cell : cells){
 
@@ -1756,6 +1757,69 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 			count_walls++;
 
 		}
+		//DOESN'T WORK IN THE OPTIMIZATION STEP: Use bundle of NDT Cells
+//		for (auto cell_node : already_created_ndt_cells_to_update){
+//
+//			auto link_ndt_cell_exist = [this] (g2o::HyperGraph::Vertex* v_ndt_cell, g2o::EdgeXYPriorACG* wall) -> bool  {
+//				//Check if already exist
+//
+//				for (auto edge_ndt : _edges_ndt_cell) {
+//					if( (wall->vertices()[0] == edge_ndt->vertices()[0] && v_ndt_cell == edge_ndt->vertices()[1] ) ||
+//					    (wall->vertices()[0] == edge_ndt->vertices()[1] && v_ndt_cell == edge_ndt->vertices()[0] )	){
+//						return true;
+//					}
+//				}
+//				return false;
+//			};
+//			auto ndt_cell_observed = [this] (g2o::HyperGraph::Vertex* v_ndt_cell, g2o::VertexSE2RobotLocalization* v_robot) -> bool  {
+//				//Check if already exist
+//
+//				for (auto edge_ndt : _edges_ndt_cell_observation) {
+//					if( (v_robot == edge_ndt->vertices()[0] && v_ndt_cell == edge_ndt->vertices()[1] ) ||
+//					    (v_robot == edge_ndt->vertices()[1] && v_ndt_cell == edge_ndt->vertices()[0] )	){
+//						return true;
+//					}
+//				}
+//				return false;
+//			};
+//
+//			//Link the cell to all robot pose
+//			for(auto cells : std::get<0>(cell_node)->getEquivalentNDTCells()) {
+//				if(!ndt_cell_observed()) {
+//					Eigen::Vector2d pose_landmark = std::get<0>(cell_node)->getCell()->getMean().head(2);
+////	auto edge = addNDTCellObservation(pose_landmark, robot_node, ndt_cell_v, cell->getCov().block(0,0,2,2));
+//					auto edge = addNDTCellObservation(pose_landmark, robot, std::get<0>(cell_node));
+//				}
+//			}
+//
+//			if(!link_ndt_cell_exist(std::get<0>(cell_node), wall)) {
+//
+//				std::cout << "New ndtcell double link" << std::endl;
+//				int a = 0;
+//				std::cin >> a;
+//
+//				auto ndtcell_ver  = addNDTCellVertex(std::get<1>(cell_node), std::get<0>(cell_node)->getCell(), robot);
+//
+//				//Use cell size for covariance
+////			double cx, cy, cz;
+////			robot->getMap()->getCellSizeInMeters(cx, cy, cz);
+////			double minval = std::min(cx, std::min(cy, cz));
+//
+////			Eigen::Matrix3d ndt_cov = cell.first->getCov();
+//				Eigen::Matrix3d ndt_cov = robot->getCovariance() * _scaling_factor_gaussian;
+//				Eigen::Matrix2d ndt_cov_2d;
+//				ndt_cov_2d << ndt_cov(0,0), ndt_cov(0,1),
+//						ndt_cov(1,0), ndt_cov(1,1);
+//				ndt_cov_2d.array() = ndt_cov_2d.array() + std::get<2>(cell_node);
+//
+//				auto ndtcell_edge = addNDTCellAssociation(ndtcell_ver, wall, ndt_cov_2d);
+//				ndtcell_edge->resolution_of_map = minval;
+//
+//				count_walls++;
+//			}
+//
+//
+//		}
 	}
 
 	if(_add_odometry_noise){
@@ -1780,7 +1844,7 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 
 //https://www.topcoder.com/community/data-science/data-science-tutorials/geometry-concepts-basic-concepts/
 // First, check to see if the nearest point on the line AB is beyond B (as in the example above) by taking AB ⋅ BC. If this value is greater than 0, it means that the angle between AB and BC is between -90 and 90, exclusive, and therefore the nearest point on the segment AB will be B
-std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall){
+std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(const g2o::VertexSE2RobotLocalization& robot_pose_vertex, const g2o::EdgeXYPriorACG& wall, std::vector<std::tuple< g2o::VertexNDTCell*, Eigen::Vector2d, double> >& already_created_ndt_cells_to_update){
 
 //	std::cout << "Collsision with prior wall" << std::endl;
 	std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vector2d, double> > set_ret;
@@ -1816,8 +1880,8 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 		bool cell_close_by = false;
 		//Only add if no node at the place of the cell
 
-		//TODO: HACK FOR NOT HAVING TO MANY NDT CELL REDUNDANT. Change it so that it links to only one ndt cell and multiple pose.
-		//When adding noise, we need all ndt because the maps are so far apart.
+		//TODO: HACK FOR NOT HAVING TO MANY NDT CELL REDUNDANT. Change it so that it links to only one ndt cell and multiple pose. REMOVE WHEN USING BUNDLE OF NDT
+//		When adding noise, we need all ndt because the maps are so far apart.
 		if(!_add_odometry_noise) {
 			for (auto cell_nodes : _vertices_ndt_cell) {
 				if (cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
@@ -1827,7 +1891,7 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 			}
 		}
 
-		if(cell_close_by == false) {
+//		if(cell_close_by == false) {
 			Eigen::Vector2d p1p0 = p0 - p1;
 			Eigen::Vector2d p1p2 = p2 - p1;
 			Eigen::Vector2d p2p0 = p0 - p2;
@@ -1873,16 +1937,35 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 					g2o::SE2 rob_pose = robot_pose_vertex.estimate();
 					Eigen::Vector2d mean_robot_pose = (rob_pose * mean_se2).toVector().head(2);
 					auto resultat = std::make_tuple(cell, mean_robot_pose.head(2), distance);
-					set_ret.push_back(resultat);
+
+					auto close_ndt_cell = [this, minval] (const Eigen::Vector2d& p0) -> g2o::VertexNDTCell*  {
+						//Check if already exist
+						for (auto cell_nodes : _vertices_ndt_cell) {
+							if (cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
+							    cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)) {
+								return cell_nodes;
+							}
+						}
+						return NULL;
+					};
+
+					g2o::VertexNDTCell* cell_node = close_ndt_cell(p0);
+					if(cell_node == NULL) {
+						set_ret.push_back(resultat);
+					}
+					else{
+						auto resultat_node = std::make_tuple(cell_node, mean_robot_pose.head(2), distance);
+						already_created_ndt_cells_to_update.push_back(resultat_node);
+					}
 
 				} else {
 //					std::cout << "Not Close" << std::endl;
 				}
 			}
-		}
-		else{
-//			std::cout << "Ignoring cell" << std::endl;
-		}
+//		}
+//		else{
+////			std::cout << "Ignoring cell" << std::endl;
+//		}
 
 	}
 

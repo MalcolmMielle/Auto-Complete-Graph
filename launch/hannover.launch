@@ -68,20 +68,23 @@
 
 
       <param name="init_pose_tf" value="true" />
-      <param name="robot_frame" value="/state_base_link" />
-      <param name="world_frame" value="/world" />
+  <!--<param name="robot_frame" value="/state_base_link" />-->
+  <param name="robot_frame" value="/base_link" />
+    <!--<param name="world_frame" value="/world" />-->
+    <param name="world_frame" value="/odom" />
       <param name="map_frame" value="/map" />
-      <param name="laser_frame_id" value="/base_laser_link" />
+  <param name="laser_frame_id" value="/velodyne" />
+  <!--<param name="laser_frame_id" value="/base_laser_link" />-->
 
       <param name="matchLaser" value="true" />
-      <!--param name="laser_topic" value="/laser_scan_with_ransac" /-->
-      <param name="laser_topic" value="/laserscan" />
+      <param name="laser_topic" value="/laser_scan_with_ransac" />
+      <!--<param name="laser_topic" value="/laserscan" />-->
       <!--param name="laser_topic" value="/fused_scan_slam" /-->
 <!--       <param name="points_topic" value="/velodyne_points" /> -->
 
-      <param name="useOdometry" value="true" />
-      <!--param name="odometry_topic" value="/odom" /-->
-      <param name="odometry_topic" value="/vmc_navserver/odom" />
+      <!--<param name="useOdometry" value="true" />-->
+      <param name="odometry_topic" value="/odom" />
+      <!--<param name="odometry_topic" value="/vmc_navserver/odom" />-->
       <param name="use_tf_listener" value="false" />
 
       <param name="max_translation_norm" value="0.4" />

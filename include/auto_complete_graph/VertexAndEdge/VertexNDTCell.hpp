@@ -14,6 +14,7 @@ namespace g2o {
 	protected:
 
 		boost::shared_ptr<perception_oru::NDTCell> _cell;
+		std::set<VertexNDTCell*> _equivalent_cells;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
@@ -22,6 +23,8 @@ namespace g2o {
 
 		boost::shared_ptr<perception_oru::NDTCell>& getCell(){return _cell;}
 		const boost::shared_ptr<perception_oru::NDTCell>& getCell() const {return _cell;}
+		std::set<VertexNDTCell*>& getEquivalentNDTCells(){return _equivalent_cells;}
+		const std::set<VertexNDTCell*>& getEquivalentNDTCells() const {return _equivalent_cells;}
 
 		void setCell(const boost::shared_ptr<perception_oru::NDTCell>& cell){_cell = cell;}
 

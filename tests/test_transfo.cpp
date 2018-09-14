@@ -206,6 +206,9 @@ int main(){
 
 	std::cout << "Projection point 6 0 -> " << p1p0p << "Projection from p0 -4 -1 -> " << p0p0p << "distance 5.099  " << std::get<1>(AASS::acg::distancePointSegment(p0, p1_line, p2_line) ) << std::endl;
 
+	p1_line << -3, -1;
+	std::cout << "SAME ? Projection point 6 0 -> " << p1p0p << "Projection from p0 -4 -1 -> " << p0p0p << "distance 5.099  " << std::get<1>(AASS::acg::distancePointSegment(p0, p1_line, p2_line) ) << std::endl;
+
 
 	p0 << -0.909635,
 	      -38.2811;

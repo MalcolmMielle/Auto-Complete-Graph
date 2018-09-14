@@ -67,7 +67,7 @@ namespace acg{
 	}
 	
 
-	inline void updateGraphMap(const auto_complete_graph::ACGMaps::ConstPtr& acg_maps, boost::shared_ptr<perception_oru::libgraphMap::GraphMapNavigator>& graph_map){
+	inline void updateGraphMap(const auto_complete_graph::ACGMaps::ConstPtr& acg_maps, boost::shared_ptr<perception_oru::graph_map::GraphMapNavigator>& graph_map){
 
 		int count = 0;
 		for(auto pose : acg_maps->ndt_maps.poses){

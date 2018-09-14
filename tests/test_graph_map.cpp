@@ -13,7 +13,7 @@ using namespace std;
 using namespace Eigen;
 
 using namespace perception_oru;
-using namespace libgraphMap;
+using namespace graph_map;
 
 int main(int argc, char **argv){
 
