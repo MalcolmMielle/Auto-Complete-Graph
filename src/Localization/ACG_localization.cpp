@@ -1891,7 +1891,7 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 			}
 		}
 
-//		if(cell_close_by == false) {
+		if(cell_close_by == false) {
 			Eigen::Vector2d p1p0 = p0 - p1;
 			Eigen::Vector2d p1p2 = p2 - p1;
 			Eigen::Vector2d p2p0 = p0 - p2;
@@ -1938,34 +1938,34 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 					Eigen::Vector2d mean_robot_pose = (rob_pose * mean_se2).toVector().head(2);
 					auto resultat = std::make_tuple(cell, mean_robot_pose.head(2), distance);
 
-					auto close_ndt_cell = [this, minval] (const Eigen::Vector2d& p0) -> g2o::VertexNDTCell*  {
-						//Check if already exist
-						for (auto cell_nodes : _vertices_ndt_cell) {
-							if (cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
-							    cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)) {
-								return cell_nodes;
-							}
-						}
-						return NULL;
-					};
+//					auto close_ndt_cell = [this, minval] (const Eigen::Vector2d& p0) -> g2o::VertexNDTCell*  {
+//						//Check if already exist
+//						for (auto cell_nodes : _vertices_ndt_cell) {
+//							if (cell_nodes->estimate()(0) + minval >= p0(0) && cell_nodes->estimate()(0) - minval <= p0(0) &&
+//							    cell_nodes->estimate()(1) + minval >= p0(1) && cell_nodes->estimate()(1) - minval <= p0(1)) {
+//								return cell_nodes;
+//							}
+//						}
+//						return NULL;
+//					};
 
-					g2o::VertexNDTCell* cell_node = close_ndt_cell(p0);
-					if(cell_node == NULL) {
+//					g2o::VertexNDTCell* cell_node = close_ndt_cell(p0);
+//					if(cell_node == NULL) {
 						set_ret.push_back(resultat);
-					}
-					else{
-						auto resultat_node = std::make_tuple(cell_node, mean_robot_pose.head(2), distance);
-						already_created_ndt_cells_to_update.push_back(resultat_node);
-					}
+//					}
+//					else{
+//						auto resultat_node = std::make_tuple(cell_node, mean_robot_pose.head(2), distance);
+//						already_created_ndt_cells_to_update.push_back(resultat_node);
+//					}
 
 				} else {
 //					std::cout << "Not Close" << std::endl;
 				}
 			}
-//		}
-//		else{
-////			std::cout << "Ignoring cell" << std::endl;
-//		}
+		}
+		else{
+//			std::cout << "Ignoring cell" << std::endl;
+		}
 
 	}
 

@@ -22,7 +22,7 @@ namespace AASS {
 			NDTCellsBundle(){}
 
 			void addNDTCell(g2o::VertexNDTCell* ndt_cell){_cells.insert(ndt_cell);}
-			void addNDTCell(g2o::VertexNDTCell* robot_pose){_robot_poses.insert(robot_poses);}
+			void addNDTCell(g2o::VertexSE2RobotLocalization* robot_pose){_robot_poses.insert(robot_pose);}
 
 			std::set<g2o::VertexNDTCell*> getCells(){ return _cells;}
 			const std::set<g2o::VertexNDTCell*> getCells() const { return _cells;}
