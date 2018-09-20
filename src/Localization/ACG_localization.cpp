@@ -152,29 +152,29 @@ g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellAssociatio
 	edge_ndt->vertices()[0] = v_ndt_cell ;
 	edge_ndt->vertices()[1] = wall->vertices()[0] ;
 
-	Eigen::Matrix2d cov_tmp = covariance_landmark;
+//	Eigen::Matrix2d cov_tmp = covariance_landmark;
+//
+//	std::cout << "COV " << cov_tmp << std::endl;
+//
+//	bool low = false;
+//	double min_val = 0;
+//	for (size_t i = 0 ; i <cov_tmp.cols(); ++i){
+//		for (size_t j = 0; j < cov_tmp.rows(); ++j){
+//			if(cov_tmp(i,j) < _min_value_cov_ndt_cell && cov_tmp(i,j) > -_min_value_cov_ndt_cell){
+//				low = true;
+//				min_val = cov_tmp(i,j);
+//			}
+//		}
+//	}
+//
+//	if(low == true) {
+////		cov_tmp.array() = cov_tmp.array() * ( _min_value_cov_ndt_cell / min_val);
+//	}
+//	std::cout << "COV " << cov_tmp << std::endl;
 
-	std::cout << "COV " << cov_tmp << std::endl;
-
-	bool low = false;
-	double min_val = 0;
-	for (size_t i = 0 ; i <cov_tmp.cols(); ++i){
-		for (size_t j = 0; j < cov_tmp.rows(); ++j){
-			if(cov_tmp(i,j) < _min_value_cov_ndt_cell && cov_tmp(i,j) > -_min_value_cov_ndt_cell){
-				low = true;
-				min_val = cov_tmp(i,j);
-			}
-		}
-	}
-
-	if(low == true) {
-//		cov_tmp.array() = cov_tmp.array() * ( _min_value_cov_ndt_cell / min_val);
-	}
-	std::cout << "COV " << cov_tmp << std::endl;
 
 
-
-	Eigen::Matrix2d information_landmark = cov_tmp.inverse();
+	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
 	edge_ndt->setInformation(information_landmark);
 //	edge_ndt->setMeasurement(localization);
 //	edge_ndt->setInformation(information);
@@ -1919,7 +1919,7 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 			Eigen::Vector2d p2p0 = p0 - p2;
 
 			//AVOID CORNERS BECAUSE IT CAUSE DE GRAPH TO CRASH TEST
-			if (p1p0.norm() >= 0.1 && p2p0.norm() >= 0.1) {
+			if (p1p0.norm() >= 1 && p2p0.norm() >= 1) {
 //
 //			//Check if closest segment point is on the line segment of the wall:
 				if (p1p2.dot(p2p0) <= 0 && (-p1p2).dot(p1p0) <= 0) {
@@ -1989,7 +1989,7 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 					}
 				}
 			}else{
-				std::cout << " CELL TOO CLOSE TO WALL !! " << p0  << " and " << p1 << " " << p2 << std::endl;			}
+				std::cout << " CELL TOO CLOSE TO WALL !! " << p0  << " and " << p1 << " norms " << p1p0.norm() << " " << p2 << " norms " << p2p0.norm() << std::endl;			}
 		}
 
 	}
