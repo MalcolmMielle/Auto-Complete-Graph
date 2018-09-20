@@ -152,7 +152,29 @@ g2o::EdgeNDTCell* AASS::acg::AutoCompleteGraphLocalization::addNDTCellAssociatio
 	edge_ndt->vertices()[0] = v_ndt_cell ;
 	edge_ndt->vertices()[1] = wall->vertices()[0] ;
 
-	Eigen::Matrix2d information_landmark = covariance_landmark.inverse();
+	Eigen::Matrix2d cov_tmp = covariance_landmark;
+
+	std::cout << "COV " << cov_tmp << std::endl;
+
+	bool low = false;
+	double min_val = 0;
+	for (size_t i = 0 ; i <cov_tmp.cols(); ++i){
+		for (size_t j = 0; j < cov_tmp.rows(); ++j){
+			if(cov_tmp(i,j) < _min_value_cov_ndt_cell && cov_tmp(i,j) > -_min_value_cov_ndt_cell){
+				low = true;
+				min_val = cov_tmp(i,j);
+			}
+		}
+	}
+
+	if(low == true) {
+//		cov_tmp.array() = cov_tmp.array() * ( _min_value_cov_ndt_cell / min_val);
+	}
+	std::cout << "COV " << cov_tmp << std::endl;
+
+
+
+	Eigen::Matrix2d information_landmark = cov_tmp.inverse();
 	edge_ndt->setInformation(information_landmark);
 //	edge_ndt->setMeasurement(localization);
 //	edge_ndt->setInformation(information);
@@ -1749,7 +1771,7 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 			Eigen::Matrix2d ndt_cov_2d;
 			ndt_cov_2d << ndt_cov(0,0), ndt_cov(0,1),
 					ndt_cov(1,0), ndt_cov(1,1);
-			ndt_cov_2d.array() = ndt_cov_2d.array() + std::get<2>(cell);
+//			ndt_cov_2d.array() = ndt_cov_2d.array() * (1 + std::get<2>(cell) );
 
 			auto ndtcell_edge = addNDTCellAssociation(ndtcell_ver, wall, ndt_cov_2d);
 			ndtcell_edge->resolution_of_map = minval;
@@ -1895,48 +1917,52 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 			Eigen::Vector2d p1p0 = p0 - p1;
 			Eigen::Vector2d p1p2 = p2 - p1;
 			Eigen::Vector2d p2p0 = p0 - p2;
+
+			//AVOID CORNERS BECAUSE IT CAUSE DE GRAPH TO CRASH TEST
+			if (p1p0.norm() >= 0.1 && p2p0.norm() >= 0.1) {
 //
 //			//Check if closest segment point is on the line segment of the wall:
-			if (p1p2.dot(p2p0) <= 0 && (-p1p2).dot(p1p0) <= 0) {
+				if (p1p2.dot(p2p0) <= 0 && (-p1p2).dot(p1p0) <= 0) {
 
 
-	//		pcl::PointXYZ p;
-	//		p.x = p0[0];
-	//		p.y = p0[1];
-	//		p.z = mean[2];
-	//		map->getCellAtPoint(p, cell_closest);
-	//        Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
+					//		pcl::PointXYZ p;
+					//		p.x = p0[0];
+					//		p.y = p0[1];
+					//		p.z = mean[2];
+					//		map->getCellAtPoint(p, cell_closest);
+					//        Eigen::Vector2d p1 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
 //				std::cout << "p1 " << p1 << std::endl;
-	//		Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
+					//		Eigen::Vector2d p2 = dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
 //				std::cout << "p2 " << p2 << std::endl;
 //				std::cout << "p0 " << p0 << std::endl;
 
-				double distance = -1;
-				Eigen::Vector2d ccp;
-				std::tie (distance, ccp) = distancePointSegment(p0, p1, p2);
+					double distance = -1;
+					Eigen::Vector2d ccp;
+					std::tie(distance, ccp) = distancePointSegment(p0, p1, p2);
 
 //				std::cout << "min value " << minval << " distance " << distance << std::endl;
 //				if (distance <= minval) {
 
-				//USE COLLISION TO FIND MATCHING ?
-				Eigen::Matrix2d cov_inv_2d = robot_pose_vertex.getCovariance().inverse().block(0, 0, 2, 2) / _scaling_factor_gaussian;
-				double radius_around_landmark = 1;
+					//USE COLLISION TO FIND MATCHING ?
+					Eigen::Matrix2d cov_inv_2d =
+							robot_pose_vertex.getCovariance().inverse().block(0, 0, 2, 2) / _scaling_factor_gaussian;
+					double radius_around_landmark = 1;
 //								double factor = radius_around_landmark * radius_around_landmark / (2 * std::sqrt(loc->determinant) );
-				double mahalanobis_distance = (p0 - (p0 + ccp) ).dot( cov_inv_2d * (p0 - (p0 + ccp) ));
+					double mahalanobis_distance = (p0 - (p0 + ccp)).dot(cov_inv_2d * (p0 - (p0 + ccp)));
 
-				double pdf_collision = std::exp( - mahalanobis_distance ) ;
+					double pdf_collision = std::exp(-mahalanobis_distance);
 
-				assert(pdf_collision >= 0);
-				assert(pdf_collision <= 1);
+					assert(pdf_collision >= 0);
+					assert(pdf_collision <= 1);
 
-				if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
+					if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
 
-				//USE COVARIANCE INSTEAD
-	//			std::cout << "Close" << std::endl;
+						//USE COVARIANCE INSTEAD
+						//			std::cout << "Close" << std::endl;
 
-					g2o::SE2 rob_pose = robot_pose_vertex.estimate();
-					Eigen::Vector2d mean_robot_pose = (rob_pose * mean_se2).toVector().head(2);
-					auto resultat = std::make_tuple(cell, mean_robot_pose.head(2), distance);
+						g2o::SE2 rob_pose = robot_pose_vertex.estimate();
+						Eigen::Vector2d mean_robot_pose = (rob_pose * mean_se2).toVector().head(2);
+						auto resultat = std::make_tuple(cell, mean_robot_pose.head(2), distance);
 
 //					auto close_ndt_cell = [this, minval] (const Eigen::Vector2d& p0) -> g2o::VertexNDTCell*  {
 //						//Check if already exist
@@ -1958,13 +1984,12 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 //						already_created_ndt_cells_to_update.push_back(resultat_node);
 //					}
 
-				} else {
+					} else {
 //					std::cout << "Not Close" << std::endl;
+					}
 				}
-			}
-		}
-		else{
-//			std::cout << "Ignoring cell" << std::endl;
+			}else{
+				std::cout << " CELL TOO CLOSE TO WALL !! " << p0  << " and " << p1 << " " << p2 << std::endl;			}
 		}
 
 	}

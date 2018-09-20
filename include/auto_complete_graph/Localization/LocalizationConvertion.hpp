@@ -38,6 +38,12 @@ namespace AASS {
 			for (size_t i = 0; i < 3; ++i) {
 				for (size_t j = 0; j < 3; ++j) {
 					loca.cov(i, j) = loc_msg.mcl_cov.data[(3 * i) + j];
+//					Stupid test, covariance can be negative X)
+//					if(loca.cov(i, j) <= 0){
+//						std::cout << loca.cov(i, j) << std::endl;
+//						std::cout << loca.cov << std::endl;
+//						throw std::runtime_error("Covariance given to localization isn't positive for a coeff.");
+//					}
 				}
 			}
 

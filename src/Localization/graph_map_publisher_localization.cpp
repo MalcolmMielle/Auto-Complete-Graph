@@ -237,11 +237,17 @@ protected:
 	bool _use_euclidean_mcl, _use_euclidean_for_long_distances, _use_hybrid_strategy_mcl;
 	bool _use_mean_score_mcl;
 
+	int SIRCount = 0;
+	double var_part = 0.1;
+
 public:
   // Constructor
   GraphMapFuserNode(ros::NodeHandle param_nh) : frame_nr_(0), mcl_loaded_(false), init_fuser_(false), fuser_(NULL)
   {
 
+	  param_nh.param("SIRCount", SIRCount ,0);
+	  param_nh.param("var_new_particle", var_part ,0.1);
+//	  param_nh.param("pose_init_t",pose_init_t,0.);
 
 	  assert(fuser_ == NULL);
     ///if we want to build map reading scans directly from bagfile
@@ -628,7 +634,7 @@ public:
 
 		std::cout << "Updating the prior and graph map" << std::endl;
 		loadNDTMap(acg_maps->prior);
-		AASS::acg::updateGraphMap(acg_maps, fuser_->GetGraph());
+//		AASS::acg::updateGraphMap(acg_maps, fuser_->GetGraph());
 
 	}
 
@@ -647,7 +653,7 @@ public:
 
 	void initMCL(const ndt_map::NDTMapMsg& mapmsg){
 		double numPart = 250;
-		bool forceSIR = true;
+		bool forceSIR = false;
 
 		ROS_INFO("INIT MCL FROM TF");
 		auto init_pose = getPoseTFTransform(world_link_id, laser_link_id);
@@ -668,11 +674,13 @@ public:
 		double roll, pitch, yaw;
 		init_pose.getBasis().getRPY(roll, pitch, yaw);
 
-		AASS::acg::ACGMCLLocalization *pMCL = new AASS::acg::ACGMCLLocalization(map, numPart, true, forceSIR);
+		AASS::acg::ACGMCLLocalization *pMCL = new AASS::acg::ACGMCLLocalization(map, numPart, true, forceSIR, 0, SIRCount);
 		acg_localization = boost::shared_ptr<AASS::acg::ACGMCLLocalization>(pMCL);
 
 		acg_localization->init(xx, yy, yaw, initVar, cov_x_mcl, cov_y_mcl, cov_yaw_mcl, scale_gaussian_mcl, numPart,
 		                       forceSIR);
+
+		acg_localization->setVarNewParticle(var_part);
 
 		acg_localization->useEuclideanDistance(_use_euclidean_mcl);
 		acg_localization->setCellNeighborToConsiderInMeters(_cell_neighborhood_size_mcl_in_meters);

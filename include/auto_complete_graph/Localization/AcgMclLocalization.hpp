@@ -32,7 +32,9 @@ namespace acg{
 
 //		ACGMCLLocalization(std::string mapFile_, int particleCount_) : mcl_loaded_(false), perception_oru::particle_filter(mapFile_, particleCount_){};
 		
-		ACGMCLLocalization(perception_oru::NDTMap *ndtMap_, int particleCount_/*, init_type initializationType_*/, bool be2D_=true, bool forceSIR_=true,double varLimit_=0, int sirCount_=0) : mcl_loaded_(false), perception_oru::particle_filter(ndtMap_, particleCount_, be2D_, forceSIR_, varLimit_, sirCount_){}
+		ACGMCLLocalization(perception_oru::NDTMap *ndtMap_, int particleCount_/*, init_type initializationType_*/, bool be2D_=true, bool forceSIR_=true,double varLimit_=0, int sirCount_=0) : mcl_loaded_(false), perception_oru::particle_filter(ndtMap_, particleCount_, be2D_, forceSIR_, varLimit_, sirCount_){
+			std::cout << "FORCE SIR << forceSir_--------------->< " << forceSIR_ << std::endl;
+		}
 		
 		void init(double xx, double yy, double yaw, double initVar, double cov_x_mcl, double cov_y_mcl, double cov_yaw_mcl, double scale_gaussian_mcl, double numPart, bool forceSIR){
 
@@ -120,6 +122,7 @@ namespace acg{
 		void toMessage(auto_complete_graph::GraphMapLocalizationMsg& msg){
 
 			for(auto const& localization : _localization) {
+//				assert(localization.cov(0, 0) != -1);
 				auto_complete_graph::LocalizationMsg loc_msg = AASS::acg::toMessage(localization);
 				msg.localizations.push_back(loc_msg);
 			}

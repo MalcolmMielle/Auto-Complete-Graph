@@ -21,7 +21,9 @@ namespace AASS {
 			Eigen::Matrix3d cov;
 			int index;
 
-			Localization() : index(-1) {}
+			Localization() : index(-1) {
+				cov(0, 0) = -1;
+			}
 
 
 		};

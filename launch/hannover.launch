@@ -19,6 +19,8 @@
 <node pkg="auto_complete_graph" type="graph_map_publisher_localization_ac" name="graph_node" output="screen" >
 
 <!-- 	MCL -->
+    <param name="SIRCount" value="100" />
+    <param name="var_new_particle" value="0.1" />
 	<param name="use_mcl" value="true" />
     <param name="use_graph_map_registration" value="true" />
     <param name="zfilter_min" value="-1000" />

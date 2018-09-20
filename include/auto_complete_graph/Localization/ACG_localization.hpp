@@ -31,6 +31,7 @@ namespace acg{
     class AutoCompleteGraphLocalization : public AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>{
         protected:
 
+	    double _min_value_cov_ndt_cell = 0.1;
 	    double _number_of_links_to_prior = 0;
 
 	    ///@brief register the submaps
@@ -186,6 +187,7 @@ namespace acg{
 	    void sizeMCLNeighbor(double si){_neighbor_mcl_neighbor = si;}
 	    void addNoiseToOdometryMeasurements(bool add){_add_odometry_noise = add;}
 	    void addIncrementalOptimization(bool add){_not_incremental = add;}
+	    void minValueCovNDTCell(double m){_min_value_cov_ndt_cell = m;}
 
 	    std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 	    const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}

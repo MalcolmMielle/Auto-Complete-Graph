@@ -5,8 +5,8 @@
 <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
 
 	<param name="pause_for_testing" value="true" />
-	<param name="use_gt_for_odom" value="true" />
-	<param name="export_iteration_count" value="true" />
+	<param name="use_gt_for_odom" value="false" />
+	<param name="export_iteration_count" value="false" />
 	<param name="add_noise_odometry" value="false" />
 	<param name="not_incremental_optimization" value="false" />
 	<param name="use_prior" value="true" />
@@ -42,6 +42,7 @@
 
     <remap from="acg_node_localization/prior_ndt" to ="/ndt_map_init_mcl"/>
  <!-- /auto_complete_graph_rviz_small_optimi -->
+	<param name="min_val_cov_ndt_cell" value="1" />
 
   </node>
 

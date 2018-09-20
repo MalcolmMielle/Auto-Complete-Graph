@@ -217,9 +217,9 @@ namespace g2o{
 					
 					//They are close enough in orientation
 					if( orientation_diff <= M_PI / 4){
-						std::cout << "Same Orientation" << std::endl;
+//						std::cout << "Same Orientation" << std::endl;
 						if(angle_diff <= M_PI / 4){
-							std::cout << "Good angle" << std::endl;
+//							std::cout << "Good angle" << std::endl;
 							return true;
 						}
 					}

@@ -1020,6 +1020,8 @@ int main(int argc, char **argv)
 	cv::Point2f center(0, 0);
 	bool match_ndt_maps = false;
 	nh.param("match_ndt_maps",match_ndt_maps,false);
+	double min_val_cov = 0.1;
+	nh.param<double>("min_val_cov_ndt_cell", min_val_cov, 0.1);
 
 
 	double max_deviation_corner_in_prior = 1;
@@ -1074,6 +1076,7 @@ int main(int argc, char **argv)
 	oacg.matchRobotMaps(match_ndt_maps);
 	oacg.addNoiseToOdometryMeasurements(add_noise_odometry);
 	oacg.addIncrementalOptimization(not_incremental_optimization);
+	oacg.minValueCovNDTCell(min_val_cov);
 
 //	oacg.optimizePrior(optimize_prior);
 
