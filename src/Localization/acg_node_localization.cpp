@@ -1022,6 +1022,14 @@ int main(int argc, char **argv)
 	nh.param("match_ndt_maps",match_ndt_maps,false);
 	double min_val_cov = 0.1;
 	nh.param<double>("min_val_cov_ndt_cell", min_val_cov, 0.1);
+	double min_corner_ndt_cell_distance = 1;
+	nh.param<double>("min_corner_ndt_cell_distance", min_corner_ndt_cell_distance, 1);
+	double max_distance_ndt_cell_from_robot_pose = -1;
+	nh.param<double>("max_distance_ndt_cell_from_robot_pose", max_distance_ndt_cell_from_robot_pose, -1);
+	bool use_huber_kernel;
+	nh.param("use_huber_kernel",use_huber_kernel,true);
+	bool use_dcs_kernel;
+	nh.param("use_dcs_kernel",use_dcs_kernel,true);
 
 
 	double max_deviation_corner_in_prior = 1;
@@ -1077,6 +1085,10 @@ int main(int argc, char **argv)
 	oacg.addNoiseToOdometryMeasurements(add_noise_odometry);
 	oacg.addIncrementalOptimization(not_incremental_optimization);
 	oacg.minValueCovNDTCell(min_val_cov);
+	oacg.minDistanceToCornerNDTCell(min_corner_ndt_cell_distance);
+	oacg.maxDistanceOfNDTCellToRobotPose(max_distance_ndt_cell_from_robot_pose);
+	oacg.useHuberKernel(use_huber_kernel);
+	oacg.useDCSKernel(use_dcs_kernel);
 
 //	oacg.optimizePrior(optimize_prior);
 

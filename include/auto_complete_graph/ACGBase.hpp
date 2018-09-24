@@ -180,9 +180,12 @@ namespace acg{
 
 		bool _flag_optimize;
 
-		bool _flag_use_robust_kernel;
+		bool _flag_use_robust_kernel = true;
+		bool _flag_use_huber_kernel = true;
+		bool _flag_use_dcs_kernel = true;
 
 		bool _flag_use_corner_orientation;
+
 
 		std::deque<double> _chi2s;
 
@@ -442,6 +445,8 @@ namespace acg{
 		}
 
 		void useRobustKernel(bool use){_flag_use_robust_kernel = use;}
+		void useHuberKernel(bool use){_flag_use_huber_kernel = use;}
+		void useDCSKernel(bool use){_flag_use_dcs_kernel = use;}
 
 		///@brief the main dish : the graph
 		AASS::acg::OptimizableAutoCompleteGraph& getGraph(){return _optimizable_graph;}

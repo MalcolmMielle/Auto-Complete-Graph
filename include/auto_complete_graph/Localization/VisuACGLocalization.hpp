@@ -19,8 +19,10 @@ namespace AASS {
 			visualization_msgs::Marker _prior_observations;
 			visualization_msgs::Marker _ndt_node_localization_markers;
 			visualization_msgs::Marker _mcl_angles_markers;
+			visualization_msgs::Marker _robot_pose_angles_markers;
 			visualization_msgs::Marker _last_seen_landmark_in_mcl_pose;
 			visualization_msgs::Marker _ndt_cells;
+			visualization_msgs::Marker _ndt_cells_mcl;
 			visualization_msgs::Marker _ndt_cell_observations;
 			visualization_msgs::Marker _ndt_cell_associations;
 			visualization_msgs::Marker _correct_robot_pose;
@@ -29,9 +31,11 @@ namespace AASS {
 			ros::Publisher _localization_pose_pub;
 			ros::Publisher _prior_observations_pub;
 			ros::Publisher _mcl_angles_pub;
+			ros::Publisher _robot_pose_angles_pub;
 			ros::Publisher _last_landmark;
 			ros::Publisher _mcl_localization;
 			ros::Publisher _ndt_cell_pub;
+			ros::Publisher _mcl_ndt_cell_pub;
 			ros::Publisher _ndt_cell_observation_pub;
 			ros::Publisher _ndt_cell_association_pub;
 			ros::Publisher _correct_robot_pose_pub;
@@ -50,9 +54,11 @@ namespace AASS {
 				_localization_pose_pub = _nh.advertise<visualization_msgs::Marker>("localization_pose_markers", 10);
 				_prior_observations_pub = _nh.advertise<visualization_msgs::Marker>("prior_observations_markers", 10);
 				_mcl_angles_pub = _nh.advertise<visualization_msgs::Marker>("mcl_angles_markers", 10);
+				_robot_pose_angles_pub = _nh.advertise<visualization_msgs::Marker>("robot_pose_angles_markers", 10);
 				_last_landmark = _nh.advertise<visualization_msgs::Marker>("mcl_landmark", 10);
 				_mcl_localization = _nh.advertise<visualization_msgs::Marker>("mcl_localization", 10);
 				_ndt_cell_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell", 10);
+				_mcl_ndt_cell_pub = _nh.advertise<visualization_msgs::Marker>("mcl_ndt_cell", 10);
 				_ndt_cell_observation_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_observations", 10);
 				_ndt_cell_association_pub = _nh.advertise<visualization_msgs::Marker>("ndt_cell_associations", 10);
 				_correct_robot_pose_pub = _nh.advertise<visualization_msgs::Marker>("initial_robot_pose", 10);
@@ -95,7 +101,14 @@ namespace AASS {
 				_mcl_angles_markers.color.b = 1.0f;
 				_mcl_angles_markers.color.a = 1.0;
 
-
+				_robot_pose_angles_markers.type = visualization_msgs::Marker::LINE_LIST;
+				_robot_pose_angles_markers.header.frame_id = world_frame_id;
+				_robot_pose_angles_markers.ns = "acg";
+				_robot_pose_angles_markers.id = 0;
+				_robot_pose_angles_markers.scale.x = 0.1;
+				_robot_pose_angles_markers.scale.y = 0.1;
+				_robot_pose_angles_markers.color.b = 1.0f;
+				_robot_pose_angles_markers.color.a = 1.0;
 
 				_ndt_node_localization_markers.type = visualization_msgs::Marker::POINTS;
 				_ndt_node_localization_markers.header.frame_id = world_frame_id;
@@ -116,6 +129,16 @@ namespace AASS {
 				_ndt_cells.scale.y = 0.15;
 				_ndt_cells.color.g = 1.0f;
 				_ndt_cells.color.a = 1.0;
+
+				_ndt_cells_mcl.type = visualization_msgs::Marker::POINTS;
+				_ndt_cells_mcl.header.frame_id = world_frame_id;
+				_ndt_cells_mcl.ns = "acg";
+				_ndt_cells_mcl.id = 0;
+				_ndt_cells_mcl.scale.x = 0.15;
+				_ndt_cells_mcl.scale.y = 0.15;
+				_ndt_cells_mcl.color.b = 1.0f;
+				_ndt_cells_mcl.color.g = 1.0f;
+				_ndt_cells_mcl.color.a = 1.0;
 
 				_ndt_cell_observations.type = visualization_msgs::Marker::LINE_LIST;
 				_ndt_cell_observations.header.frame_id = world_frame_id;
@@ -171,6 +194,7 @@ namespace AASS {
 			void drawNDTCellObservations(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCellAssociations(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCells(const AutoCompleteGraphLocalization &acg);
+			void drawNDTCellsMCL(const AutoCompleteGraphLocalization &acg);
 
 
 			void updateRviz(const AutoCompleteGraphLocalization& acg){
@@ -185,6 +209,7 @@ namespace AASS {
 					drawLocalizationLandmarks(acg);
 					drawCorrectRobotPoses(acg);
 					drawMCL(acg);
+					drawNDTCellsMCL(acg);
 
 // 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
 					if(acg.getRobotPoseLocalization().size() > 0) {
@@ -290,6 +315,8 @@ namespace AASS {
 		{
 			_last_seen_landmark_in_mcl_pose.header.stamp = ros::Time::now();
 			_last_seen_landmark_in_mcl_pose.points.clear();
+
+			std::cout << "There are " << acg.getLandmarkNodes().size() << " nodes " << std::endl;
 
 			for(auto landmark : acg.getLandmarkNodes()){
 
@@ -510,8 +537,10 @@ namespace AASS {
 
 			}
 
+			_mcl_angles_pub.publish(_mcl_angles_markers);
+
 			auto robotpose = acg.getRobotNodes();
-			_mcl_angles_markers.points.clear();
+			_robot_pose_angles_markers.points.clear();
 
 			for(auto robop : robotpose){
 
@@ -522,7 +551,7 @@ namespace AASS {
 				p.x = vertex(0);
 				p.y = vertex(1);
 				p.z = acg.getZElevation();
-				_mcl_angles_markers.points.push_back(p);
+				_robot_pose_angles_markers.points.push_back(p);
 
 				// 				std::cout << "getting the angle" << std::endl;
 
@@ -534,11 +563,11 @@ namespace AASS {
 				p2.x = p.x + (2 * std::cos(angle));
 				p2.y = p.y + (2 * std::sin(angle));
 				p2.z = acg.getZElevation();
-				_mcl_angles_markers.points.push_back(p2);
+				_robot_pose_angles_markers.points.push_back(p2);
 
 			}
 //
-			_mcl_angles_pub.publish(_mcl_angles_markers);
+			_robot_pose_angles_pub.publish(_robot_pose_angles_markers);
 		}
 
 
@@ -699,6 +728,64 @@ namespace AASS {
 
 			}
 			_ndt_cell_pub.publish(_ndt_cells);
+		}
+
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCellsMCL(const AutoCompleteGraphLocalization &acg){
+			_ndt_cells_mcl.header.stamp = ros::Time::now();
+			_ndt_cells_mcl.points.clear();
+//			auto node_ndtcell = acg.getNDTCellObservations();
+			for(auto edge : acg.getNDTCellObservations()) {
+
+				g2o::VertexSE2RobotLocalization* cell_robot;
+				g2o::VertexNDTCell* cell_node;
+
+				g2o::VertexSE2RobotLocalization* cell =  dynamic_cast<g2o::VertexSE2RobotLocalization*>(edge->vertices()[0]);
+				if(cell != NULL){
+					cell_robot = cell;
+					cell_node = dynamic_cast<g2o::VertexNDTCell*>(edge->vertices()[1]);
+					assert(cell_node != NULL);
+				}
+				else{
+					cell_node = dynamic_cast<g2o::VertexNDTCell*>(edge->vertices()[0]);;
+					cell_robot = dynamic_cast<g2o::VertexSE2RobotLocalization*>(edge->vertices()[1]);
+					assert(cell_node != NULL);
+					assert(cell_robot != NULL);
+				}
+
+				Eigen::Vector3d loc = cell_robot->localizationInGlobalFrame();
+				Eigen::Vector3d loc_read = cell_robot->estimate().toVector();
+
+				Eigen::Vector3d diff = loc - loc_read;
+				g2o::SE2 diff_se2(diff);
+
+				Eigen::Vector2d cell_pose_t = cell_node->estimate();
+				Eigen::Vector3d cell_pose; cell_pose << cell_pose_t(0), cell_pose_t(1), loc_read(2);
+
+				Eigen::Vector2d cell_trans = cell_pose_t - loc_read.head(2);
+				g2o::SE2 loc_real_se2(loc_read);
+				g2o::SE2 cell_pose_real(cell_pose);
+
+				g2o::SE2 diff_se2_cell_loc = loc_real_se2.inverse() * cell_pose_real;
+
+				Eigen::Vector3d cell_trans_3d; cell_trans_3d << cell_trans(0), cell_trans(1), loc(2);
+				g2o::SE2 cell_trans_se2(cell_trans_3d);
+				g2o::SE2 loc_se2(loc);
+				g2o::SE2 new_cell_pose = loc_se2 * diff_se2_cell_loc;
+
+//				g2o::SE2 cell_pose_se2(cell_pose);
+//				cell_pose_se2 = cell_pose_se2 * diff_se2;
+
+				geometry_msgs::Point p;
+//				g2o::VertexSE2RobotLocalization* ptr = dynamic_cast<g2o::VertexSE2RobotLocalization*>(cell);
+//				auto vertex = cell->estimate();
+				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
+				p.x = new_cell_pose.toVector()(0);
+				p.y = new_cell_pose.toVector()(1);
+				p.z = acg.getZElevation();
+				_ndt_cells_mcl.points.push_back(p);
+
+			}
+			_mcl_ndt_cell_pub.publish(_ndt_cells_mcl);
 		}
 
 

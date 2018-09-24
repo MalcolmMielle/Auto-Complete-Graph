@@ -1919,7 +1919,11 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 			Eigen::Vector2d p2p0 = p0 - p2;
 
 			//AVOID CORNERS BECAUSE IT CAUSE DE GRAPH TO CRASH TEST
-			if (p1p0.norm() >= 1 && p2p0.norm() >= 1) {
+			if (p1p0.norm() >= _min_distance_to_corner &&
+				p2p0.norm() >= _min_distance_to_corner && (
+					(p0 - loc_pose.toVector().head(2) ).norm() < _max_distance_of_ndt_cell_to_robot ||
+					 _max_distance_of_ndt_cell_to_robot < 0)
+				) {
 //
 //			//Check if closest segment point is on the line segment of the wall:
 				if (p1p2.dot(p2p0) <= 0 && (-p1p2).dot(p1p0) <= 0) {
@@ -1989,7 +1993,7 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 					}
 				}
 			}else{
-				std::cout << " CELL TOO CLOSE TO WALL !! " << p0  << " and " << p1 << " norms " << p1p0.norm() << " " << p2 << " norms " << p2p0.norm() << std::endl;			}
+				std::cout << " CELL TOO CLOSE TO WALL !! " << p0  << " and " << p1 << " norms " << p1p0.norm() << " " << p2 << " norms " << p2p0.norm() << " Min allowed distance is " << _min_distance_to_corner << " and max distance to robot " << _max_distance_of_ndt_cell_to_robot << " with distance being " << (p0 - loc_pose.toVector().head(2) ).norm() << " thus condition " << ( (p0 - loc_pose.toVector().head(2) ).norm() < _max_distance_of_ndt_cell_to_robot || _max_distance_of_ndt_cell_to_robot < 0)  << std::endl;			}
 		}
 
 	}

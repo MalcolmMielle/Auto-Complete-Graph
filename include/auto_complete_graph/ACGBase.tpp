@@ -1371,47 +1371,58 @@ inline std::pair<int, int> AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, 
 		ROS_DEBUG_STREAM( "OPTIMIZE" );
 // 				checkRobotPoseNotMoved("before opti");
 
-		if(_flag_use_robust_kernel){
-			setAgeingHuberKernel();
-		}
-// 				checkRobotPoseNotMoved("set age in huber kernel");
-		testNoNanInPrior("set age in huber kernel");
-		testInfoNonNul("set age in huber kernel");
-		testNoNanInPrior("update prior edge cov");
+        if(_flag_use_robust_kernel){
+            if(_flag_use_huber_kernel){
+                std::cout << "Using Huber kernel" << std::endl;
+                setAgeingHuberKernel();
 
-		count_huber = optimize_simple(max_iter);
+    // 				checkRobotPoseNotMoved("set age in huber kernel");
+                testNoNanInPrior("set age in huber kernel");
+                testInfoNonNul("set age in huber kernel");
+                testNoNanInPrior("update prior edge cov");
 
-// 				//Avoid overshoot of the cov
-// 				for(size_t i = 0 ; i < iter ; ++i){
-// 					_optimizable_graph.optimize(1);
-// // 					checkRobotPoseNotMoved("optimized with huber");
-// 					testNoNanInPrior("optimized with huber");
-// 					testInfoNonNul("optimized with huber");
-// 					//Update prior edge covariance
-// // 					updatePriorEdgeCovariance();
-// 					testNoNanInPrior("update prior edge cov after opti huber");
-// 					saveErrorStep();
-// 				}
+                count_huber = optimize_simple(max_iter);
 
-		/********** DCS kernel ***********/
-		if(_flag_use_robust_kernel){
-			setAgeingDCSKernel();
-		}
-		testNoNanInPrior("set age in DCS kernel");
+    // 				//Avoid overshoot of the cov
+    // 				for(size_t i = 0 ; i < iter ; ++i){
+    // 					_optimizable_graph.optimize(1);
+    // // 					checkRobotPoseNotMoved("optimized with huber");
+    // 					testNoNanInPrior("optimized with huber");
+    // 					testInfoNonNul("optimized with huber");
+    // 					//Update prior edge covariance
+    // // 					updatePriorEdgeCovariance();
+    // 					testNoNanInPrior("update prior edge cov after opti huber");
+    // 					saveErrorStep();
+    // 				}
 
-		count_dcs = optimize_simple(max_iter);
+            }
+            /********** DCS kernel ***********/
+            if(_flag_use_dcs_kernel){
+                std::cout << "Using DCS kernel" << std::endl;
+                setAgeingDCSKernel();
 
-// 				for(size_t i = 0 ; i < iter*2 ; ++i){
-// 					_optimizable_graph.optimize(1);
-// // 					checkRobotPoseNotMoved("optimized with dcs");
-// 					testNoNanInPrior("optimized with dcs");
-// 					testInfoNonNul("optimized with dcs");
-// 					//Update prior edge covariance
-// // 					updatePriorEdgeCovariance();
-// 					testNoNanInPrior("update prior edge cov after opti dcs");
-// 					saveErrorStep();
-// 				}
+                testNoNanInPrior("set age in DCS kernel");
 
+                count_dcs = optimize_simple(max_iter);
+
+    // 				for(size_t i = 0 ; i < iter*2 ; ++i){
+    // 					_optimizable_graph.optimize(1);
+    // // 					checkRobotPoseNotMoved("optimized with dcs");
+    // 					testNoNanInPrior("optimized with dcs");
+    // 					testInfoNonNul("optimized with dcs");
+    // 					//Update prior edge covariance
+    // // 					updatePriorEdgeCovariance();
+    // 					testNoNanInPrior("update prior edge cov after opti dcs");
+    // 					saveErrorStep();
+    // 				}
+            }
+        }else{
+            testNoNanInPrior("set age in huber kernel");
+            testInfoNonNul("set age in huber kernel");
+            testNoNanInPrior("update prior edge cov");
+
+            count_huber = optimize_simple(max_iter);
+        }
 
 	}
 	else{
