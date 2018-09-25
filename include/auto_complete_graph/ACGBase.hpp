@@ -388,6 +388,9 @@ namespace acg{
 
 		/** Accessor**/
 
+		void setLandmarkNoise(const Eigen::Vector2d& co){_landmarkNoise = co;}
+		void setLandmarkNoise(double landmark_noise_x, double landmark_noise_y){_landmarkNoise << landmark_noise_x, landmark_noise_y;}
+
 		Prior* getPrior(){return _prior;}
 		const Prior* getPrior() const {return _prior;}
 

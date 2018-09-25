@@ -20,7 +20,7 @@
 
 <!-- 	MCL -->
     <param name="SIRCount" value="100" />
-    <param name="var_new_particle" value="0.1" />
+    <param name="var_new_particle" value="0.05" />
 	<param name="use_mcl" value="true" />
     <param name="use_graph_map_registration" value="true" />
     <param name="zfilter_min" value="-1000" />

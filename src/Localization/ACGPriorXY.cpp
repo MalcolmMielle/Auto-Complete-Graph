@@ -28,6 +28,7 @@ g2o::EdgeXYPriorACG* AASS::acg::AutoCompleteGraphPriorXY::addEdge(const g2o::SE2
 // 	double test_newnorm = newnorm_old / 2;
 	//ATTENTION NOT A MAGIC NUMBER
 	double newnorm = (newnorm_old *  _priorNoise(0)) / 100;
+//	double newnorm_other = (newnorm_old *  _priorNoise(1)) / 100;
 
 	int test_tt = newnorm * 100;
 	int test_ttt = newnorm_old * 100;

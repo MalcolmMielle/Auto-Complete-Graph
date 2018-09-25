@@ -49,6 +49,8 @@ namespace acg{
 		if(covariance(1, 1) < 0.00001){
 			covariance(1, 1) = 0.;
 		}
+
+//		std::cout << "Prio cov " << covariance << std::endl;
 		
 		return covariance;
 		

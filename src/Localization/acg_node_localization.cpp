@@ -1030,6 +1030,18 @@ int main(int argc, char **argv)
 	nh.param("use_huber_kernel",use_huber_kernel,true);
 	bool use_dcs_kernel;
 	nh.param("use_dcs_kernel",use_dcs_kernel,true);
+	bool use_robust_kernel;
+	nh.param("use_robust_kernel",use_robust_kernel,true);
+	double main_axis_prior_noise = 50;
+	nh.param<double>("main_axis_prior_noise", main_axis_prior_noise, 50);
+	double other_axis_prior_noise = 0.005;
+	nh.param<double>("other_axis_prior_noise", other_axis_prior_noise , 0.005);
+	bool use_user_cov_odometry;
+	nh.param("use_user_cov_odometry",use_user_cov_odometry,false);
+	double landmark_noise_x = 0.05;
+	nh.param<double>("landmark_noise_x", landmark_noise_x, 0.05);
+	double landmark_noise_y = 0.05;
+	nh.param<double>("landmark_noise_y", landmark_noise_y, 0.05);
 
 
 	double max_deviation_corner_in_prior = 1;
@@ -1068,8 +1080,12 @@ int main(int argc, char **argv)
 	//Create graph instance
 	//
 	std::string path_to_acg = ros::package::getPath("auto_complete_graph");
-	std::string param = path_to_acg + "/ACG_folder/param.txt";
-	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), param);
+//	std::string param = path_to_acg + "/ACG_folder/param.txt";
+
+	Eigen::Vector2d ln; ln << landmark_noise_x, landmark_noise_y;
+	Eigen::Vector2d pn; pn << main_axis_prior_noise, other_axis_prior_noise;
+
+	AASS::acg::AutoCompleteGraphLocalization oacg(g2o::SE2(0.2, 0.1, -0.1), ln, pn);
 	
 	//Use corner orientation ?
 	oacg.useCornerOrientation(use_corner_orientation);
@@ -1089,6 +1105,10 @@ int main(int argc, char **argv)
 	oacg.maxDistanceOfNDTCellToRobotPose(max_distance_ndt_cell_from_robot_pose);
 	oacg.useHuberKernel(use_huber_kernel);
 	oacg.useDCSKernel(use_dcs_kernel);
+	oacg.useRobustKernel(use_robust_kernel);
+	oacg.getPrior()->setPriorNoise(main_axis_prior_noise, other_axis_prior_noise );
+	oacg.useUserCovForRobotPose(use_user_cov_odometry);
+	oacg.setLandmarkNoise(landmark_noise_x, landmark_noise_y);
 
 //	oacg.optimizePrior(optimize_prior);
 

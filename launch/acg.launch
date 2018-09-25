@@ -4,7 +4,7 @@
 
 <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
 
-	<param name="pause_for_testing" value="true" />
+	<param name="pause_for_testing" value="false" />
 	<param name="use_gt_for_odom" value="false" />
 	<param name="export_iteration_count" value="false" />
 	<param name="add_noise_odometry" value="false" />
@@ -44,10 +44,16 @@
  <!-- /auto_complete_graph_rviz_small_optimi -->
 	<param name="min_val_cov_ndt_cell" value="1" />
 	<param name="min_corner_ndt_cell_distance" value="0" />
-	<param name="max_distance_ndt_cell_from_robot_pose" value="-1" />
+	<param name="max_distance_ndt_cell_from_robot_pose" value="5" />
 
 	<param name="use_huber_kernel" value="true" />
 	<param name="use_dcs_kernel" value="true" />
+	<param name="use_robust_kernel" value="true" />
+	<param name="main_axis_prior_noise" value="10" />
+	<param name="other_axis_prior_noise" value="0.005" />
+	<param name="use_user_cov_odometry" value="false" />
+	<param name="landmark_noise_x" value="0.05" />
+	<param name="landmark_noise_y" value="0.05" />
 
   </node>
 
