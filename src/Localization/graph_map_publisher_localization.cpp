@@ -674,6 +674,7 @@ public:
 		double roll, pitch, yaw;
 		init_pose.getBasis().getRPY(roll, pitch, yaw);
 
+
 		AASS::acg::ACGMCLLocalization *pMCL = new AASS::acg::ACGMCLLocalization(map, numPart, true, forceSIR, 0, SIRCount);
 		acg_localization = boost::shared_ptr<AASS::acg::ACGMCLLocalization>(pMCL);
 
@@ -687,6 +688,26 @@ public:
 		acg_localization->useEuclideanForLongDistances(_use_euclidean_for_long_distances);
 		acg_localization->useHybridStrategy(_use_hybrid_strategy_mcl);
 		acg_localization->useMeanOfAllScores(_use_mean_score_mcl);
+
+
+		auto sensorpose_tmp = getPoseTFTransform(robot_frame, laser_link_id);
+		//Only do the rotation:
+		double x = sensorpose_tmp.getOrigin().getX();
+		double y = sensorpose_tmp.getOrigin().getY();
+		double z = sensorpose_tmp.getOrigin().getZ();
+//			std::cout << "xyz : " << x << " " << y << " " << z << std::endl;
+		//TEST
+		// 	x = 16.6;
+		// 	y = 3.0;
+		double rollt, pitcht, yawt;
+		sensorpose_tmp.getBasis().getRPY(rollt, pitcht, yawt);
+
+
+		Eigen::Affine3d sensorpose = Eigen::Translation<double,3>(x,y,z)*
+		                             Eigen::AngleAxis<double>(rollt,Eigen::Vector3d::UnitX()) *
+		                             Eigen::AngleAxis<double>(pitcht,Eigen::Vector3d::UnitY()) *
+		                             Eigen::AngleAxis<double>(yawt,Eigen::Vector3d::UnitZ()) ;
+		acg_localization->setSensorPose(sensorpose);
 
 
 // 		perception_oru::particle_filter* pMCL = new perception_oru::particle_filter(map, numPart, true, forceSIR);
@@ -743,6 +764,7 @@ public:
 		// 	y = 3.0;
 			double roll, pitch, yaw;
 			sensorpose_tmp.getBasis().getRPY(roll, pitch, yaw);
+
 
 			Eigen::Affine3d sensorpose = Eigen::Translation<double,3>(x,y,z)*
 			Eigen::AngleAxis<double>(roll,Eigen::Vector3d::UnitX()) *
@@ -835,7 +857,7 @@ public:
 
 			pcl::PointCloud<pcl::PointXYZ> transformed_cloud2;
 
-			pcl::transformPointCloud(transformed_cloud, transformed_cloud2, sensorpose2);
+			pcl::transformPointCloud(cloud, transformed_cloud2, sensorpose2);
 
 			sensor_msgs::PointCloud2 pcloudmsg;
 			pcl::toROSMsg(transformed_cloud2, pcloudmsg);
@@ -1022,17 +1044,17 @@ public:
 
 				 /////USED FOR BASEMENT BAG FILES
 				 // 		//Probably need this because the sensor is too hight above the map otherwise. Or something equally weird.
-				 double roll = 0, pitch = 0, yaw = 3.1415;
-				 // 		getAngles(robot_frame, laser_link_id, roll, pitch, yaw);
-
-				 sensorPose_ = Eigen::Translation<double, 3>(0, 0, 0) *
-				               Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX()) *
-				               Eigen::AngleAxis<double>(pitch, Eigen::Vector3d::UnitY()) *
-				               Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ());
-
-//				 std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
-
-				 tf::poseEigenToTF(sensorPose_, tf_sensor_pose_);
+//				 double roll = 0, pitch = 0, yaw = 3.1415;
+//				 // 		getAngles(robot_frame, laser_link_id, roll, pitch, yaw);
+//
+//				 sensorPose_ = Eigen::Translation<double, 3>(0, 0, 0) *
+//				               Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX()) *
+//				               Eigen::AngleAxis<double>(pitch, Eigen::Vector3d::UnitY()) *
+//				               Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ());
+//
+////				 std::cout << "SENSOR " << sensorPose_.matrix() << std::endl;
+//
+//				 tf::poseEigenToTF(sensorPose_, tf_sensor_pose_);
 
 				 pose_ = getPose(world_link_id, robot_frame);
 //				 std::cout << "Pose found " << pose_.matrix() << std::endl;

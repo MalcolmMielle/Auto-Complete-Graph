@@ -295,7 +295,7 @@ namespace acg{
 		std::tuple<Eigen::Affine3d, Eigen::MatrixXd> registerSubmaps(const g2o::VertexSE2RobotPose& from,
 		                                                             const g2o::VertexSE2RobotPose& toward,
 		                                                             Eigen::Affine3d &transformation,
-		                                                             int nb_neighbor);
+		                                                             int nb_neighbor, const Eigen::MatrixXd& default_cov);
 
 
 		/**

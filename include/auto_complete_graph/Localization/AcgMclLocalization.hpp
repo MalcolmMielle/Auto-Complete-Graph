@@ -8,6 +8,9 @@
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 #include "auto_complete_graph/Localization/LocalizationConvertion.hpp"
 
+#include "g2o/types/slam2d/se2.h"
+#include "auto_complete_graph/conversion.hpp"
+
 namespace AASS {
 
 namespace acg{
@@ -21,6 +24,8 @@ namespace acg{
 		
 // 		boost::shared_ptr<perception_oru::particle_filter> _ndtmcl;
 		bool mcl_loaded_;
+
+		Eigen::Affine3d _sensor_pose;
 		
 		std::vector<Localization> _localization;
 
@@ -79,14 +84,27 @@ namespace acg{
 				return std::make_tuple(mean, cov);
 			}
 		}
+
+		void setSensorPose(const Eigen::Affine3d& sen){_sensor_pose = sen;}
 		
 		
 		void savePos(int index = -1){
 			Eigen::Matrix3d cov;
 			Eigen::Vector3d mean;
 			GetPoseMeanAndVariance2D(mean, cov);
+
+			Eigen::Affine3d mean_tmp = Eigen::Translation<double, 3>(mean(0), mean(1), 0) *
+                                   Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitX()) *
+                                   Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitY()) *
+                                   Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ());
+
+			mean_tmp = mean_tmp * _sensor_pose;
+			Eigen::Isometry2d iso = Affine3d2Isometry2d(mean_tmp);
+			g2o::SE2 se(iso);
+			Eigen::Vector3d mean_sensor = se.toVector();
+
 			Localization loc;
-			loc.mean = mean;
+			loc.mean = mean_sensor;
 			loc.cov = cov;
 			loc.index = index;
 			_localization.push_back(loc);

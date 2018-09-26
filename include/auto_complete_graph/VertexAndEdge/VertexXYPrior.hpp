@@ -11,12 +11,104 @@ namespace g2o{
 
 	class VertexXYPrior : public g2o::VertexPointXYACG
 	{
+
+//		struct anglesPrior{
+//			g2o::EdgeXYPriorACG* from;
+//			g2o::EdgeXYPriorACG* toward;
+//			VertexXYPrior* base;
+//			double first_angle_in_rad;
+//
+//			double diff(){
+//
+//			}
+//
+//		};
+
+
 	protected:
+
+//		std::set<anglesPrior> _angles_neighbors;
+
+
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 		VertexXYPrior() : g2o::VertexPointXYACG(){}
 		AASS::acg::PriorAttr priorattr;
+
+
+		std::vector<g2o::EdgeXYPriorACG*> getPriorEgdes() const {
+
+			auto edges = this->edges();
+			std::vector<g2o::EdgeXYPriorACG*> edges_prior;
+			//Get only prior edges
+			for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
+//					std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPriorACG*>(*ite) << std::endl;
+				g2o::EdgeXYPriorACG* ptr = dynamic_cast<g2o::EdgeXYPriorACG*>(*ite);
+				if(ptr != NULL){
+//						std::cout << "Ptr non nul :)" << std::endl;
+					//Make sure not pushed twice
+					for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
+						assert(ptr != *ite2);
+					}
+// 						std::cout << "pushing " << ptr << std::endl;
+// 						std::cout << " pushed edges " << std::endl;
+					edges_prior.push_back(ptr);
+// 						std::cout << "pushed edges done " << std::endl;
+				}
+			}
+			return edges_prior;
+		}
+
+//		void initAngles(){
+//			std::cout << "New vert"<<std::endl;
+//
+//			auto edges_prior = getPriorEgdes();
+//
+//			if(edges_prior.size() > 1) {
+////					std::cout << "This should always be right :) : edges_prior.size() : " << edges_prior.size() << std::endl;
+//				auto comp = [this](g2o::EdgeXYPriorACG *a, g2o::EdgeXYPriorACG *b) {
+//					auto from_vec2d = a->getOrientation2D(*this);
+//					auto to_vec2d = b->getOrientation2D(*this);
+//					//Rotate
+//
+//					double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
+//					if (angle_from < 0) angle_from += 2 * M_PI;
+//					double angle_to = atan2(to_vec2d(1), to_vec2d(0)) - atan2(0, 1);
+//					if (angle_to < 0) angle_to += 2 * M_PI;
+//
+//					return angle_from < angle_to;
+//
+//				};
+//
+//				std::sort(edges_prior.begin(), edges_prior.end(), comp);
+//
+//// 					std::cout << "angle first " << edges.size() << std::endl;
+//				auto ite = edges_prior.begin();
+//				auto ite_end = edges_prior.back();
+//
+//				anglesPrior ap;
+//				ap.from = ite_end;
+//				ap.toward = *ite;
+//				ap.base = this;
+//				ap.first_angle_in_rad = angle((*ite_end), *(*ite)).first;
+//				_angles_neighbors.insert(ap);
+//
+//			}
+//		}
+
+
+//		double angleDiff(g2o::EdgeXYPriorACG* of_this_edge){
+//			double total_diff = 0;
+//			for(auto angles : _angles_neighbors){
+//				if(angles.from == of_this_edge || angles.toward == of_this_edge){
+//					double angles_updated = angle(*angles.from, *angles.toward).first;
+//					double diff = std::abs(angles_updated - angles.first_angle_in_rad);
+//					total_diff += diff;
+//				}
+//			}
+//			return total_diff;
+//		}
 
 		//List of associated landmark. For visualization purpose
 //		std::set<const g2o::VertexLandmarkNDT*> landmarks;
@@ -28,71 +120,74 @@ namespace g2o{
 
 			std::vector<std::pair<double, double> > out;
 // 			std::cout << "edges " << std::endl;
-			auto edges = this->edges();
+//			auto edges = this->edges();
 // 			std::cout << "edges done " << std::endl;
-			std::vector<g2o::EdgeXYPriorACG*> edges_prior;
+//			std::vector<g2o::EdgeXYPriorACG*> edges_prior;
+			auto edges_prior = getPriorEgdes();
 			//Get only prior edges
-			if(edges.size() >= 1){
-				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
-//					std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPriorACG*>(*ite) << std::endl;
-					g2o::EdgeXYPriorACG* ptr = dynamic_cast<g2o::EdgeXYPriorACG*>(*ite);
-					if(ptr != NULL){
-//						std::cout << "Ptr non nul :)" << std::endl;
-						//Make sure not pushed twice
-						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
-							assert(ptr != *ite2);
-						}
-// 						std::cout << "pushing " << ptr << std::endl;
-// 						std::cout << " pushed edges " << std::endl;
-						edges_prior.push_back(ptr);
-// 						std::cout << "pushed edges done " << std::endl;
-					}
-				}
+//			if(edges.size() >= 1){
+//				for ( auto ite = edges.begin(); ite != edges.end(); ++ite ){
+////					std::cout << "pointer " << dynamic_cast<g2o::EdgeXYPriorACG*>(*ite) << std::endl;
+//					g2o::EdgeXYPriorACG* ptr = dynamic_cast<g2o::EdgeXYPriorACG*>(*ite);
+//					if(ptr != NULL){
+////						std::cout << "Ptr non nul :)" << std::endl;
+//						//Make sure not pushed twice
+//						for(auto ite2 = edges_prior.begin(); ite2 != edges_prior.end(); ++ite2 ){
+//							assert(ptr != *ite2);
+//						}
+//// 						std::cout << "pushing " << ptr << std::endl;
+//// 						std::cout << " pushed edges " << std::endl;
+//						edges_prior.push_back(ptr);
+//// 						std::cout << "pushed edges done " << std::endl;
+//					}
+//				}
 
-				if(edges_prior.size() > 1){
+			if(edges_prior.size() > 1){
 //					std::cout << "This should always be right :) : edges_prior.size() : " << edges_prior.size() << std::endl;
-					auto comp = [this](g2o::EdgeXYPriorACG* a, g2o::EdgeXYPriorACG* b)
-					{
-						auto from_vec2d = a->getOrientation2D(*this);
-						auto to_vec2d = b->getOrientation2D(*this);
-						//Rotate
+				auto comp = [this](g2o::EdgeXYPriorACG* a, g2o::EdgeXYPriorACG* b)
+				{
+					auto from_vec2d = a->getOrientation2D(*this);
+					auto to_vec2d = b->getOrientation2D(*this);
+					//Rotate
 
-						double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
-						if (angle_from < 0) angle_from += 2 * M_PI;
-						double angle_to = atan2(to_vec2d(1), to_vec2d(0)) - atan2(0, 1);
-						if (angle_to < 0) angle_to += 2 * M_PI;
+					double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
+					if (angle_from < 0) angle_from += 2 * M_PI;
+					double angle_to = atan2(to_vec2d(1), to_vec2d(0)) - atan2(0, 1);
+					if (angle_to < 0) angle_to += 2 * M_PI;
 
-						return angle_from < angle_to;
+					return angle_from < angle_to;
 
-					};
+				};
 
-					std::sort( edges_prior.begin(), edges_prior.end(), comp );
+				std::sort( edges_prior.begin(), edges_prior.end(), comp );
 
 // 					std::cout << "angle first " << edges.size() << std::endl;
-					auto ite = edges_prior.begin();
-					auto ite_end = edges_prior.back();
-					out.push_back( angle( (*ite_end), *(*ite) ) );
+				auto ite = edges_prior.begin();
+				auto ite_end = edges_prior.back();
+				out.push_back( angle( (*ite_end), *(*ite) ) );
+				assert(out.back().first >= 0);
+				assert(out.back().second >= 0);
+				assert(out.back().first <= 2 * M_PI);
+				assert(out.back().second <= 2 * M_PI);
+
+				for ( auto ite = edges_prior.begin(); ite != edges_prior.end() - 1 ; ++ite ){
+// 						std::cout << "angle more " << edges.size() << std::endl;
+					out.push_back( angle( **ite, **(ite + 1) ) );
 					assert(out.back().first >= 0);
 					assert(out.back().second >= 0);
 					assert(out.back().first <= 2 * M_PI);
 					assert(out.back().second <= 2 * M_PI);
-
-					for ( auto ite = edges_prior.begin(); ite != edges_prior.end() - 1 ; ++ite ){
-// 						std::cout << "angle more " << edges.size() << std::endl;
-						out.push_back( angle( **ite, **(ite + 1) ) );
-						assert(out.back().first >= 0);
-						assert(out.back().second >= 0);
-						assert(out.back().first <= 2 * M_PI);
-						assert(out.back().second <= 2 * M_PI);
-					}
 				}
+			}
 //				else{
 //					throw std::runtime_error("No edge prior :( ??");
 //				}
 
-			}
+//			}
 			else{
-				throw std::runtime_error("No edges at all :(");
+				if(edges_prior.size() == 0) {
+					throw std::runtime_error("No edges at all :(");
+				}
 			}
 			return out;
 

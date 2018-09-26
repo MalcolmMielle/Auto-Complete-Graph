@@ -29,3 +29,27 @@ Eigen::Vector2d g2o::EdgeXYPriorACG::getOrientation2D(const g2o::VertexXYPrior& 
 	return toward - from_1;
 
 }
+
+//
+//void g2o::EdgeXYPriorACG::computeError()
+//{
+////	std::cout << "Compute error XY Prior" << std::endl;
+////	_error = 0;
+////	if(use_distance_error) {
+//		const VertexPointXYACG *v1 = static_cast<const VertexPointXYACG *>(_vertices[0]);
+//		const VertexPointXYACG *v2 = static_cast<const VertexPointXYACG *>(_vertices[1]);
+//		_error = _error + (v2->estimate() - v1->estimate()) - _measurement;
+////	}
+//
+////	if(use_angle_error) {
+////		double angle_error = 0;
+////		for (auto vertex : vertices()) {
+////			g2o::VertexXYPrior *ptr = dynamic_cast<g2o::VertexXYPrior *>(vertex);
+////			angle_error += ptr->angleDiff(this);
+////		}
+////		_error = _error + (360 * angle_error / 2 * M_PI);
+////	}
+//
+//
+//
+//}

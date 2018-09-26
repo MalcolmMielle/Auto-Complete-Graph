@@ -590,7 +590,32 @@ std::tuple<g2o::VertexSE2RobotLocalization*, std::shared_ptr<perception_oru::NDT
 
 			Eigen::Affine3d odom_register;
 			Eigen::MatrixXd odom_cov;
-			std::tie(odom_register, odom_cov) = registerSubmaps(*from, *toward, odom_affine, 2);
+
+
+			auto cov_msg = ndt_graph_localization.graph_map.factors[element - 1].covariance;
+			std::vector<double>::const_iterator it;
+			it = cov_msg.data.begin();
+//			ROS_DEBUG_STREAM("Cov size " << cov_msg.data.size() );
+			assert(cov_msg.data.size() == 36); //6x6 matrix
+
+//			std::vector<double>::const_iterator it_2;
+//			it_2 = cov_msg.data.begin();
+//			ROS_DEBUG_STREAM( cov_msg.data.size() );
+//			assert(cov_msg.data.size() == 36);
+
+			Eigen::MatrixXd cov_3d(6, 6);
+			for (size_t i = 0; i < 6; ++i) {
+				for (size_t j = 0; j < 6; ++j) {
+					cov_3d(i, j) = cov_msg.data[(6 * i) + j];
+				}
+			}
+////			std::cout << "Saving cov to 2d" << std::endl;
+//			Eigen::Matrix3d cov_2d;
+//			cov_2d << cov_3d(0, 0), cov_3d(0, 1), 0,
+//					cov_3d(1, 0), cov_3d(1, 1), 0,
+//					0, 0, cov_3d(5, 5);
+
+			std::tie(odom_register, odom_cov) = registerSubmaps(*from, *toward, odom_affine, 2, cov_3d);
 
 			Eigen::Isometry2d isometry2d_odometry = Affine3d2Isometry2d(odom_register);
 			g2o::SE2 odometry(isometry2d_odometry);
@@ -1052,7 +1077,7 @@ void AASS::acg::AutoCompleteGraphLocalization::testInfoNonNul(const std::string&
 
 
 
-std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocalization::registerSubmaps(const g2o::VertexSE2RobotPose& from, const g2o::VertexSE2RobotPose& toward, Eigen::Affine3d &transformation,	int nb_neighbor) {
+std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocalization::registerSubmaps(const g2o::VertexSE2RobotPose& from, const g2o::VertexSE2RobotPose& toward, Eigen::Affine3d &transformation, int nb_neighbor, const Eigen::MatrixXd& default_cov) {
 //	void ndt_feature::NDTFeatureGraph::registerSubmaps(NDTFeatureLink &link, int nb_neighbours, bool keepScore) {
 	perception_oru::NDTMatcherD2D matcher_d2d;
 	matcher_d2d.n_neighbours = nb_neighbor;
@@ -1092,14 +1117,8 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 		matcher_d2d.covariance(*(from.getMap().get()), *(toward.getMap().get()), transformation, cov);
 	}
 	else{
-		ROS_INFO_STREAM( "NOTHING HAPPENED Creating a identity matrix" );
-		cov = Eigen::MatrixXd::Identity(6, 6);
-		cov << 	0.02, 	0, 		0,    0,    0,    0,
-				0, 		0.02, 	0,    0,    0,    0,
-				0, 		0, 		0.02, 0,    0,    0,
-				0, 		0, 		0,	  0.02, 0,    0,
-				0, 		0,	 	0,	  0,    0.02, 0,
-				0, 		0, 		0,	  0,    0,    0.02;
+		ROS_INFO_STREAM( "NOTHING HAPPENED using default matrix" );
+		cov = default_cov;
 // 		exit(0);
 	}
 //	std::cout << "Size of Covariance : " << cov.rows() << " AND COLS " << cov.cols() << std::endl;
@@ -1111,10 +1130,10 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 
 	if(!converged){
 // 		throw std::runtime_error("ndt_map registration didn't converge");
-		ROS_ERROR_STREAM( "USing odometry input a number to continue. That is bad :/" );
+		ROS_ERROR_STREAM( "USing odometry input a number to continue. That is bad sometimes :/" );
 
 		transformation = before_T;
-		cov = Eigen::MatrixXd::Identity(6, 6);
+		cov = default_cov;
 
 		int a;
 		std::cin >> a;

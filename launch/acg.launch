@@ -4,7 +4,7 @@
 
 <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
 
-	<param name="pause_for_testing" value="false" />
+	<param name="pause_for_testing" value="true" />
 	<param name="use_gt_for_odom" value="false" />
 	<param name="export_iteration_count" value="false" />
 	<param name="add_noise_odometry" value="false" />
@@ -21,17 +21,18 @@
 	<param name="mcl_observation_on_prior" value="true" />
 	<param name="links_prior_classic_ssrr" value="false" />
 	<param name="use_mcl_cov_to_find_prior_observed" value="false" />
-	<!--<param name="world_frame" value="/world" />-->
-	<param name="world_frame" value="/odom" />
-	<!--<param name="sensor_frame" value="/base_laser_link" />-->
-	<param name="sensor_frame" value="/velodyne" />
-    <param name="map_frame" value="/odom" />
+	<param name="world_frame" value="/world" />
+	<!--<param name="world_frame" value="/odom" />-->
+	<param name="sensor_frame" value="/base_laser_link" />
+	<!--<param name="sensor_frame" value="/velodyne" />-->
+	<!--<param name="map_frame" value="/odom" />-->
+	<param name="map_frame" value="/world" />
 	<param name="covariance_to_find_links" value="false" />
 	<param name="gaussian_scaling_factor" value="1" />
 	<param name="threshold_score_link_creation" value="0.05" />
-	<!--param name="prior_file" value="$(find auto_complete_graph)/tests/Dortmund/floor_dormund_walls_fat_wall.png" /-->
-	<param name="prior_file" value="$(find auto_complete_graph)/tests/Hannover/hannover_walls.jpeg" />
-	<!--<param name="prior_file" value="$(find auto_complete_graph)/tests/emergbasement_flipped_nodoor.png"/>-->
+	<!--<param name="prior_file" value="$(find auto_complete_graph)/tests/Dortmund/floor_dormund_walls_fat_wall.png" />-->
+	<!--<param name="prior_file" value="$(find auto_complete_graph)/tests/Hannover/hannover_walls.jpeg" />-->
+	<param name="prior_file" value="$(find auto_complete_graph)/tests/emergbasement_flipped_nodoor.png"/>
 	<!--param name="prior_file" value="$(find auto_complete_graph)/tests/ILIAD/iliad.jpg"/-->
 	<param name="max_deviation_corner_in_prior" value="1.3" /> <!-- More or less 80deg -->
 	<param name="scale" value="1/2" /> <!-- More or less 80deg -->
@@ -42,15 +43,15 @@
 
     <remap from="acg_node_localization/prior_ndt" to ="/ndt_map_init_mcl"/>
  <!-- /auto_complete_graph_rviz_small_optimi -->
-	<param name="min_val_cov_ndt_cell" value="1" />
+	<!--<param name="min_val_cov_ndt_cell" value="1" />-->
 	<param name="min_corner_ndt_cell_distance" value="0" />
-	<param name="max_distance_ndt_cell_from_robot_pose" value="5" />
+	<param name="max_distance_ndt_cell_from_robot_pose" value="-1" />
 
 	<param name="use_huber_kernel" value="true" />
 	<param name="use_dcs_kernel" value="true" />
 	<param name="use_robust_kernel" value="true" />
 	<param name="main_axis_prior_noise" value="10" />
-	<param name="other_axis_prior_noise" value="0.005" />
+	<param name="other_axis_prior_noise" value="0.05" />
 	<param name="use_user_cov_odometry" value="false" />
 	<param name="landmark_noise_x" value="0.05" />
 	<param name="landmark_noise_y" value="0.05" />
