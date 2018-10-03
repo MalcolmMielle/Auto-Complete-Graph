@@ -71,6 +71,8 @@ double scaling_gaussian_occ_map = 1/2;
 double occupancy_grid_resolution = 0.05;
 bool add_noise_odometry = false;
 
+double max_iteration = 100;
+
 
 std::vector<std::pair <uint32_t, uint32_t> > times_of_nodes;
 
@@ -377,11 +379,11 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 	infile << std::endl << "# number_of_nodes mean_error_translation std mean_error_translation_noisy std mean_error_gt std mean_error_angle std mean_error_angle_noisy std mean_error_angle_gt std" << std::endl;
 	infile << oacg.getRobotPoseLocalization().size() << " " << error_t_mean << " " << sum_sqd_t << " " << error_tn_mean << " " << sum_sqd_tn << " " << error_t_mean_gt << " " << sum_sqd_t_gt << " " << error_a_mean << " " << sum_sqd_a << " " << error_an_mean << " " << sum_sqd_an << " " << error_a_mean_gt << " " << sum_sqd_a_gt << std::endl;
 
-
-	auto error_translation_kitti = error_kitti_benchmark_translation(poses_robot, poses_gt);
-	infile << std::endl << "# kitti_translation_error kitti_rotation_error" << std::endl;
-	infile << std::get<0>(error_translation_kitti) << " " << std::get<1>(error_translation_kitti) << std::endl;
-
+	if(use_gt_for_odom == true) {
+		auto error_translation_kitti = error_kitti_benchmark_translation(poses_robot, poses_gt);
+		infile << std::endl << "# kitti_translation_error kitti_rotation_error" << std::endl;
+		infile << std::get<0>(error_translation_kitti) << " " << std::get<1>(error_translation_kitti) << std::endl;
+	}
 
 	infile.close();
 }
@@ -793,7 +795,8 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 				if( /*oacg->checkAbleToOptimize() &&*/  optiquest) {
 					oacg->setFirst();
 					oacg->prepare();
-					iterations = oacg->optimize();
+					std::cout << "ITERATIO COUNT " << max_iteration << std::endl;
+					iterations = oacg->optimize(max_iteration);
 
 				}
 				else{
@@ -1043,6 +1046,13 @@ int main(int argc, char **argv)
 	double landmark_noise_y = 0.05;
 	nh.param<double>("landmark_noise_y", landmark_noise_y, 0.05);
 
+//	double max_iteration = 100;
+	nh.param<double>("max_iteration_acg", max_iteration, 100);
+	std::cout << "INIT MAX ITE " << max_iteration;
+
+	double noise_odom_perc = 0.1;
+	nh.param<double>("noise_odom_percentage", noise_odom_perc, 0.1);
+
 
 	double max_deviation_corner_in_prior = 1;
 	nh.param<double>("max_deviation_corner_in_prior", max_deviation_corner_in_prior, 45 * 3.14159 / 180);
@@ -1109,6 +1119,7 @@ int main(int argc, char **argv)
 	oacg.getPrior()->setPriorNoise(main_axis_prior_noise, other_axis_prior_noise );
 	oacg.useUserCovForRobotPose(use_user_cov_odometry);
 	oacg.setLandmarkNoise(landmark_noise_x, landmark_noise_y);
+	oacg.setPercentageNoiseOdometry(noise_odom_perc);
 
 //	oacg.optimizePrior(optimize_prior);
 

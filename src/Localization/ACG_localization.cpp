@@ -339,14 +339,14 @@ void AASS::acg::AutoCompleteGraphLocalization::updateNDTGraph(const auto_complet
 }
 
 
-void AASS::acg::AutoCompleteGraphLocalization::addNoiseOdometry(g2o::EdgeOdometry_malcolm* edge_odometry, g2o::VertexSE2RobotLocalization* robot) {
+void AASS::acg::AutoCompleteGraphLocalization::addNoiseOdometry(g2o::EdgeOdometry_malcolm* edge_odometry, g2o::VertexSE2RobotLocalization* robot, double percentage_noise) {
 
 	double rand_num_perc = _dis(_gen);
 	//FOR TESTING REMOVE!
 	if (rand_num_perc > 0) {
-		rand_num_perc = 0.2;
+		rand_num_perc = percentage_noise;
 	} else {
-		rand_num_perc = -0.2;
+		rand_num_perc = -percentage_noise;
 	}
 	std::cout << "Percentage of noise: " << rand_num_perc << std::endl;
 
@@ -371,8 +371,13 @@ void AASS::acg::AutoCompleteGraphLocalization::addNoiseOdometry(g2o::EdgeOdometr
 	Eigen::Matrix3d cov_2d = inf_2d.inverse();
 	std::cout << "Old cov " << cov_2d << std::endl;
 
-	cov_2d.block(0, 0, 2, 2).array() = cov_2d.block(0, 0, 2, 2).array() + (length * std::abs(rand_num_perc));
+	cov_2d.block(0, 0, 2, 2).array() = cov_2d.block(0, 0, 2, 2).array() * 100; // + (length * std::abs(rand_num_perc)) );
 	cov_2d(2, 2) = cov_2d(2, 2) + (std::abs(angle) * std::abs(rand_num_perc));
+
+
+//	cov_2d << 3, 0, 0,
+//			0, 3, 0,
+//			0, 0, 0.1745329;
 
 	std::cout << "New cov " << cov_2d << std::endl;
 	edge_odometry->setInformation(cov_2d.inverse());
@@ -398,6 +403,9 @@ void AASS::acg::AutoCompleteGraphLocalization::addNoiseOdometry(g2o::EdgeOdometr
 //		ndt_pose = ndt_pose * noise;
 		ndt_cell->setEstimate(mean_ndt_pose);
 	}
+
+	std::cout << "Verify information after adding noise" << std::endl;
+	verifyInformationMatrices(true);
 
 }
 
@@ -1119,6 +1127,15 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 	else{
 		ROS_INFO_STREAM( "NOTHING HAPPENED using default matrix" );
 		cov = default_cov;
+		if(!testSPD(cov)){
+			std::cout << "THIS IS BAD COV GIVEN WAS NOT SPD, switching to default" << std::endl;
+			cov << 0.1, 0, 0, 0, 0, 0,
+					0, 0.1, 0, 0, 0, 0,
+					0, 0, 0.1, 0, 0, 0,
+					0, 0, 0, 0.1, 0, 0,
+					0, 0, 0, 0, 0.1, 0,
+					0, 0, 0, 0, 0, 0.1;
+		}
 // 		exit(0);
 	}
 //	std::cout << "Size of Covariance : " << cov.rows() << " AND COLS " << cov.cols() << std::endl;
@@ -1134,6 +1151,15 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 
 		transformation = before_T;
 		cov = default_cov;
+		if(!testSPD(cov)){
+			std::cout << "THIS IS BAD COV GIVEN WAS NOT SPD, switching to default" << std::endl;
+			cov << 0.1, 0, 0, 0, 0, 0,
+					0, 0.1, 0, 0, 0, 0,
+					0, 0, 0.1, 0, 0, 0,
+					0, 0, 0, 0.1, 0, 0,
+					0, 0, 0, 0, 0.1, 0,
+					0, 0, 0, 0, 0, 0.1;
+		}
 
 		int a;
 		std::cin >> a;
@@ -1143,6 +1169,30 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 //		int a;
 //		std::cin >> a;
 	}
+
+
+	std::cout << "Testing COV after registration" << std::endl;
+	if(!testSPD(cov)){
+//		throw std::runtime_error("ndt_map registration didn't converge");
+		ROS_ERROR_STREAM( "Cov is not SDP. That is bad :/" );
+
+		transformation = before_T;
+		cov = default_cov;
+		if(!testSPD(cov)){
+			std::cout << "THIS IS BAD COV GIVEN WAS NOT SPD, switching to default" << std::endl;
+			cov << 0.1, 0, 0, 0, 0, 0,
+					0, 0.1, 0, 0, 0, 0,
+					0, 0, 0.1, 0, 0, 0,
+					0, 0, 0, 0.1, 0, 0,
+					0, 0, 0, 0, 0.1, 0,
+					0, 0, 0, 0, 0, 0.1;
+		}
+
+		int a;
+		std::cin >> a;
+	}
+
+
 // 	exit(0);
 // 	std::cin >> a;
 
@@ -1868,7 +1918,7 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 //		std::cout << "Loc poses : " << _nodes_localization.size() << " " << _edge_odometry.size() << std::endl;
 		for(auto odom_edge : _edge_odometry){
 			if(odom_edge->vertices()[0] == robot || odom_edge->vertices()[1] == robot){
-				addNoiseOdometry(odom_edge, robot);
+				addNoiseOdometry(odom_edge, robot, _noise_percentage);
 				count++;
 			}
 		}

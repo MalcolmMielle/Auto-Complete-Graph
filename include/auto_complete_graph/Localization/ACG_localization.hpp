@@ -26,11 +26,52 @@
 
 namespace AASS {
 
-namespace acg{	
+namespace acg{
+
+
+	bool testSPD(const Eigen::MatrixXd& cov){
+		//Test that information is PSD
+		Eigen::SelfAdjointEigenSolver<g2o::MatrixX> eigenSolver;
+		Eigen::MatrixXd information = cov.inverse();
+
+		information = information * 1000;
+		information = information.array().round();
+		information = information / 1000;
+
+		bool isSymmetric = information.transpose() == information;
+		bool okay = isSymmetric;
+		if (isSymmetric) {
+			// compute the eigenvalues
+			eigenSolver.compute(information, Eigen::EigenvaluesOnly);
+			bool isSPD = eigenSolver.eigenvalues()(0) >= 0.;
+			okay = okay && isSPD;
+		}
+
+		if (! okay) {
+			if (! isSymmetric) {
+				std::cerr << "Information Matrix is not symmetric:";
+			}
+			else {
+				std::cerr << "Information Matrix is not SPD:";
+			}
+			if (isSymmetric)
+				std::cerr << "\teigenvalues: " << eigenSolver.eigenvalues().transpose();
+			std::cerr << " information :\n" << information << "\n" << std::endl;
+			std::cerr << " cov :\n" << cov << "\n" << std::endl;
+
+		}
+
+		return okay;
+
+	}
+
+
+
 
     class AutoCompleteGraphLocalization : public AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>{
         protected:
 
+	    double _noise_percentage = 0.1;
 	    double _min_distance_to_corner = 1;
 	    double _min_value_cov_ndt_cell = 0.1;
 	    double _number_of_links_to_prior = 0;
@@ -206,6 +247,7 @@ namespace acg{
 	    void minValueCovNDTCell(double m){_min_value_cov_ndt_cell = m;}
 	    void minDistanceToCornerNDTCell(double m){_min_distance_to_corner = m;}
 	    void maxDistanceOfNDTCellToRobotPose(double m){_max_distance_of_ndt_cell_to_robot = m;}
+	    void setPercentageNoiseOdometry(double s){ _noise_percentage =s;}
 
 	    std::vector<g2o::EdgeLocalization*>& getLocalizationEdges(){return _edges_localization;}
 	    const std::vector<g2o::EdgeLocalization*>& getLocalizationEdges() const {return _edges_localization;}
@@ -263,7 +305,13 @@ namespace acg{
 		**/
 		g2o::VertexXYPrior* setPriorReference();
 
-		void addNoiseOdometry(g2o::EdgeOdometry_malcolm* edge_odometry, g2o::VertexSE2RobotLocalization* robot);
+		/**
+		 *
+		 * @param edge_odometry
+		 * @param robot
+		 * @param percentage_noise between 0 and 1
+		 */
+		void addNoiseOdometry(g2o::EdgeOdometry_malcolm* edge_odometry, g2o::VertexSE2RobotLocalization* robot, double percentage_noise);
 		/**
 		 * @brief Incrementally update the NDTGraph UPDATED TO THE NEW VERSION :)
 		 * Localization and the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
