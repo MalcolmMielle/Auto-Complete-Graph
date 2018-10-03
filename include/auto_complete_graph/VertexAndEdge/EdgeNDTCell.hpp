@@ -68,7 +68,9 @@ namespace g2o{
 //				Eigen::Vector2d CCp = -AC + ACp;
 //			}
 //
-			std::tie (std::ignore, CCp) = AASS::acg::distancePointSegment(C, A, B);
+//			std::tie (std::ignore, CCp) = AASS::acg::distancePointSegment(C, A, B);
+			std::tie (std::ignore, CCp) = AASS::acg::distancePointLine2(C, A, B);
+
 
 			//If less than the size of the cells than ignore the error !!!!
 //			if(CCp.norm() < resolution_of_map){

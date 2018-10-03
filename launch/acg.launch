@@ -4,7 +4,7 @@
 
 <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
 
-	<param name="pause_for_testing" value="false" />
+	<param name="pause_for_testing" value="true" />
 	<param name="use_gt_for_odom" value="false" />
 	<param name="export_iteration_count" value="true" />
 	<param name="add_noise_odometry" value="false" />
@@ -30,11 +30,11 @@
 	<param name="covariance_to_find_links" value="false" />
 	<param name="gaussian_scaling_factor" value="1" />
 	<param name="threshold_score_link_creation" value="0.05" />
-	<!--<param name="prior_file" value="$(find auto_complete_graph)/tests/Dortmund/floor_dormund_walls_fat_wall.png" />-->
+	<param name="prior_file" value="$(find auto_complete_graph)/tests/Dortmund/floor_dormund_walls_fat_wall.png" />
 	<!--<param name="prior_file" value="$(find auto_complete_graph)/tests/Hannover/hannover_walls.jpeg" />-->
-	<param name="prior_file" value="$(find auto_complete_graph)/tests/emergbasement_flipped_nodoor.png"/>
+	<!--<param name="prior_file" value="$(find auto_complete_graph)/tests/emergbasement_flipped_nodoor.png"/>-->
 	<!--param name="prior_file" value="$(find auto_complete_graph)/tests/ILIAD/iliad.jpg"/-->
-	<param name="max_deviation_corner_in_prior" value="1.3" /> <!-- More or less 80deg -->
+	<param name="max_deviation_corner_in_prior" value="1" /> <!-- More or less 80deg -->
 	<param name="scale" value="1/2" /> <!-- More or less 80deg -->
 
 	<param name="gaussian_scaling_occ" value="1" />

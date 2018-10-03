@@ -106,6 +106,32 @@ namespace AASS{
 
 		}
 
+		inline std::tuple<double, Eigen::Vector2d> distancePointLine2(const Eigen::Vector2d& point, const Eigen::Vector2d& p1_line, const Eigen::Vector2d& p2_line){
+
+			Eigen::Vector2d AB = p2_line - p1_line;
+			Eigen::Vector2d AC = point - p1_line;
+			Eigen::Vector2d BC = point - p2_line;
+
+			Eigen::Vector2d CCp = Eigen::Vector2d::Zero();
+			//Check if closest segment point is on the line segment of the wall
+//			First, check to see if the nearest point on the line AB is beyond B (as in the example above) by taking AB ⋅ BC. If this value is greater than 0, it means that the angle between AB and BC is between -90 and 90, exclusive, and therefore the nearest point on the segment AB will be B
+//			if(AB.dot(BC) >= 0){
+//				CCp = -BC;
+//			}else if( (-AB).dot(AC) >= 0 ){
+//				CCp = -AC;
+//			}else {
+				//Vector to line
+				double a1 = AC.dot(AB / AB.norm());
+				Eigen::Vector2d ACp = a1 * (AB / AB.norm());
+				CCp = -AC + ACp;
+//			}
+
+//			std::cout << "CCP " << CCp << std::endl;
+
+			return std::make_tuple(CCp.norm(), CCp);
+
+		}
+
 		//Return the distance and the vector from the point to the line
 		inline std::tuple<double, Eigen::Vector2d> distancePointSegment(const Eigen::Vector2d& point, const Eigen::Vector2d& p1_line, const Eigen::Vector2d& p2_line){
 			Eigen::Vector2d AB = p2_line - p1_line;

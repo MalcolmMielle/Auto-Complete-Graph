@@ -1136,6 +1136,9 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 					0, 0, 0, 0, 0.1, 0,
 					0, 0, 0, 0, 0, 0.1;
 		}
+
+		int a;
+		std::cin >> a;
 // 		exit(0);
 	}
 //	std::cout << "Size of Covariance : " << cov.rows() << " AND COLS " << cov.cols() << std::endl;
@@ -1163,11 +1166,6 @@ std::tuple<Eigen::Affine3d, Eigen::MatrixXd> AASS::acg::AutoCompleteGraphLocaliz
 
 		int a;
 		std::cin >> a;
-	}
-	if(same){
-		ROS_INFO_STREAM( "Manually created the covariance because the matching returned the same transof as before." );
-//		int a;
-//		std::cin >> a;
 	}
 
 
@@ -1840,7 +1838,16 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(g2o::Verte
 			Eigen::Matrix2d ndt_cov_2d;
 			ndt_cov_2d << ndt_cov(0,0), ndt_cov(0,1),
 					ndt_cov(1,0), ndt_cov(1,1);
-//			ndt_cov_2d.array() = ndt_cov_2d.array() * (1 + std::get<2>(cell) );
+
+			double coeff_mult = 1;
+			if(std::get<2>(cell) >= 1){
+				coeff_mult = std::get<2>(cell);
+			}else{
+				coeff_mult = coeff_mult + std::get<2>(cell);
+			}
+//			coeff_mult = coeff_mult * cells.size();
+
+			ndt_cov_2d.array() = ndt_cov_2d.array() * coeff_mult;
 
 			auto ndtcell_edge = addNDTCellAssociation(ndtcell_ver, wall, ndt_cov_2d);
 			ndtcell_edge->resolution_of_map = minval;
