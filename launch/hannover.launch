@@ -12,9 +12,9 @@
 
 <!--include file="$(find gustav_scripts)/URDF/urdf_basement.launch"/-->
 
-<!--node pkg="tf" type="static_transform_publisher" name="world_odom_frame" args="0 0 0 0 0 0 /world /odom 10"/-->
+<!--node pkg="tf" type="static_transform_publisher" name="world_odom_frame" arsgs="0 0 0 0 0 0 /world /odom 10"/-->
 <!-- <node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame" args="1 -50 0 0 0 0 /world /base_link_tmp 10"/> -->
-<node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame_frame" args="0 0 0 0 0 0 /base_link /velodyne 10"/>
+<!--<node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame_frame" args="0 0 0 0 0 0 /laser_front_link /velodyne 10"/>-->
 
 <node pkg="auto_complete_graph" type="graph_map_publisher_localization_ac" name="graph_node" output="screen" >
 
@@ -74,18 +74,21 @@
   <param name="robot_frame" value="/base_link" />
     <!--<param name="world_frame" value="/world" />-->
     <param name="world_frame" value="/odom" />
-      <!--<param name="map_frame" value="/map" />-->
+      <param name="map_frame" value="/map_hannover" />
   <param name="laser_frame_id" value="/velodyne" />
+  <!--<param name="laser_frame_id" value="/laser_front_link" />-->
   <!--<param name="laser_frame_id" value="/base_laser_link" />-->
 
       <param name="matchLaser" value="true" />
       <param name="laser_topic" value="/laser_scan_with_ransac" />
+      <!--<param name="laser_topic" value="/scan_multi" />-->
       <!--<param name="laser_topic" value="/laserscan" />-->
       <!--param name="laser_topic" value="/fused_scan_slam" /-->
 <!--       <param name="points_topic" value="/velodyne_points" /> -->
 
       <!--<param name="useOdometry" value="true" />-->
-      <param name="odometry_topic" value="/odom" />
+      <!--<param name="odometry_topic" value="/odom" />-->
+      <param name="odometry_topic" value="/spencer/sensors/odom" />
       <!--<param name="odometry_topic" value="/vmc_navserver/odom" />-->
       <param name="use_tf_listener" value="false" />
 

@@ -1,0 +1,11 @@
++ prior A :: 38 -9
++ robot A :: -13 14
++ prior B :: 40 19
++ robot B :: -19 4
+
+* 2018-09-24-16-36-02.bag
++ prior A :: -29.5 -3
++ robot A :: 1 -26
++ prior B :: -27 24.5
++ robot B :: -10 -25
+

@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<launch>
+
+
+  <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
+    
+    <!-- <param name="prior_file" value="$(find auto_complete_graph)/tests/emergbasement_flipped_nodoor.png"/> -->
+    <!--param name="prior_file" value="$(find auto_complete_graph)/tests/ILIAD/iliad.jpg"/-->
+             
+    <param name="pause_for_testing" value="true" />
+    <param name="use_gt_for_odom" value="true" />
+    <param name="export_iteration_count" value="true" />
+    <param name="add_noise_odometry" value="false" />
+    <param name="not_incremental_optimization" value="false" />
+    <param name="use_prior" value="true" />
+    <param name="optimize_prior" value="true"/>
+    <param name="use_robot_maps" value="true"/>
+    <param name="match_ndt_maps" value="true"/>
+    <param name="use_corner" value="true" />
+    <param name="use_corner_orientation" value="true" />
+    <param name="corner_covariance" value="false" /> <!-- DOESNT WORK -->
+    <param name="own_registration" value="true" />
+    <!--param name="link_to_prior" value="false" /-->
+    <param name="mcl_observation_on_prior" value="true" />
+    <param name="links_prior_classic_ssrr" value="false" />
+    <param name="use_mcl_cov_to_find_prior_observed" value="false" />
+
+    <!-- TF CUSTOMISATION: -->
+    <param name="world_frame" value="/map_laser2d" />
+    <param name="sensor_frame" value="/robot5/laser2d_floor_link" />
+    <param name="map_frame" value="/map_laser2d" />
+    <!-- :TF CUSTOMISATION -->
+    
+    <param name="covariance_to_find_links" value="false" />
+    <param name="gaussian_scaling_factor" value="1" />
+    <param name="threshold_score_link_creation" value="0.05" />
+    <!--param name="prior_file" value="$(find auto_complete_graph)/tests/Dortmund/floor_dormund_walls_fat_wall.png" /-->
+    <!--param name="prior_file" value="$(find auto_complete_graph)/tests/Hannover/hannover_walls.jpeg" /-->
+    <param name="prior_file" value="$(find auto_complete_graph)/tests/ILIAD/G110.png"/>
+    <param name="max_deviation_corner_in_prior" value="1.3" /> <!-- More or less 80deg -->
+    <param name="scale" value="1/2" /> <!-- More or less 80deg -->
+
+    <param name="gaussian_scaling_occ" value="1" />
+    <param name="occupancy_grid_resolution" value="0.05" />
+    <param name="euclidean_dist_occ_map" value="false" />
+
+    <remap from="acg_node_localization/prior_ndt" to ="/ndt_map_init_mcl"/>
+    <!-- /auto_complete_graph_rviz_small_optimi -->
+    <param name="min_val_cov_ndt_cell" value="1" />
+    <param name="min_corner_ndt_cell_distance" value="0" />
+    <param name="max_distance_ndt_cell_from_robot_pose" value="-1" />
+
+    <param name="use_huber_kernel" value="true" />
+    <param name="use_dcs_kernel" value="true" />
+    <param name="use_robust_kernel" value="true" />
+    <param name="main_axis_prior_noise" value="10" />
+    <param name="other_axis_prior_noise" value="0.005" />
+    <param name="use_user_cov_odometry" value="false" />
+    <param name="landmark_noise_x" value="0.05" />
+    <param name="landmark_noise_y" value="0.05" />
+
+
+
+  </node>
+
+
+</launch>

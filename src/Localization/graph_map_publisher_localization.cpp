@@ -549,7 +549,7 @@ public:
 
 		ROS_INFO("Publishing graph map message");
 		ndt_map::NDTVectorMapMsg vector_maps;
-		perception_oru::graph_map::graphMapToVectorMap(*(fuser_->GetGraph()), vector_maps, map_link_id);
+		perception_oru::graph_map::graphMapToVectorMap(*(fuser_->GetGraph()), vector_maps, world_link_id);
 		graph_map_vector_.publish(vector_maps);
 
 		//Save the new pose associated with the node.
