@@ -1527,7 +1527,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const g2
 
 
 //								if (mahalanobis_distance <= euclidean_distance) {
-								if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
+								if(mahalanobis_distance <= 5.99){
+//								if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
 
 
 //									std::cout << "CREATING OBSERVATION " << std::endl;
@@ -2035,7 +2036,8 @@ std::vector<std::tuple< boost::shared_ptr<perception_oru::NDTCell>, Eigen::Vecto
 					assert(pdf_collision >= 0);
 					assert(pdf_collision <= 1);
 
-					if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
+//					if (pdf_collision >= _threshold_of_score_for_creating_a_link) {
+					if(mahalanobis_distance <= 5.99){
 
 						//USE COVARIANCE INSTEAD
 						//			std::cout << "Close" << std::endl;
