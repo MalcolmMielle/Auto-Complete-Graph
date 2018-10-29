@@ -87,6 +87,9 @@ std::tuple<double, double> error_kitti_benchmark_single(const Eigen::Vector3d& p
 	double angle = pose(2) - pose_2(2);
 	double angle_gt = gt(2) - gt_2(2);
 	double error_rot = std::abs(angle - angle_gt);
+	if(error_rot >=M_PI){
+		error_rot =(2 * M_PI) - error_rot;
+	}
 
 	return std::make_tuple(error, error_rot);
 }
@@ -249,6 +252,12 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 		double error_a = std::abs(robot_pose.toVector()(2) - pose_original_se2.toVector()(2));
 		double error_t_n = (robot_pose_noisy.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
 		double error_a_n = std::abs(robot_pose_noisy.toVector()(2) - pose_original_se2.toVector()(2));
+		if(error_a_n >=M_PI){
+			error_a_n = (2 * M_PI) - error_a_n;
+		}
+		if(error_a >=M_PI){
+			error_a = (2 * M_PI) - error_a;
+		}
 
 		error_t_mean += error_t;
 		error_tn_mean += error_t_n;
@@ -332,6 +341,12 @@ bool exportErrorNoiseOdometry(const AASS::acg::AutoCompleteGraphLocalization& oa
 		double error_a = std::abs(robot_pose.toVector()(2) - pose_original_se2.toVector()(2));
 		double error_t_n = (robot_pose_noisy.toVector().head(2) - pose_original_se2.toVector().head(2)).norm();
 		double error_a_n = std::abs(robot_pose_noisy.toVector()(2) - pose_original_se2.toVector()(2));
+		if(error_a_n >=M_PI){
+			error_a_n = (2 * M_PI) - error_a_n;
+		}
+		if(error_a >=M_PI){
+			error_a = (2 * M_PI) - error_a;
+		}
 
 		sum_sqd_t = sum_sqd_t + ( (error_t - error_t_mean) * (error_t - error_t_mean) );
 		sum_sqd_tn = sum_sqd_tn + ( (error_t_n - error_tn_mean) * (error_t_n - error_tn_mean) );
@@ -835,7 +850,7 @@ void gotGraphandOptimize(const auto_complete_graph::GraphMapLocalizationMsg::Con
 
 
 
-				if(export_iteration_count == true){
+				if(export_iteration_count == true && optiquest){
 					bool done = exportIterationCOunt(*oacg, iterations, corner_extract_tt, opti);
 				}
 		// 		std::cout << "PRESS ANYTHING OPTIMISED" << std::endl;
@@ -1041,6 +1056,8 @@ int main(int argc, char **argv)
 	nh.param<double>("other_axis_prior_noise", other_axis_prior_noise , 0.005);
 	bool use_user_cov_odometry;
 	nh.param("use_user_cov_odometry",use_user_cov_odometry,false);
+	double error_under_witch_stop_optimization = 1;
+	nh.param<double>("error_under_witch_stop_optimization", error_under_witch_stop_optimization, 1);
 	double landmark_noise_x = 0.05;
 	nh.param<double>("landmark_noise_x", landmark_noise_x, 0.05);
 	double landmark_noise_y = 0.05;
@@ -1120,6 +1137,7 @@ int main(int argc, char **argv)
 	oacg.useUserCovForRobotPose(use_user_cov_odometry);
 	oacg.setLandmarkNoise(landmark_noise_x, landmark_noise_y);
 	oacg.setPercentageNoiseOdometry(noise_odom_perc);
+	oacg.errorUnderWhichWeStopTheOptimization(error_under_witch_stop_optimization);
 
 //	oacg.optimizePrior(optimize_prior);
 

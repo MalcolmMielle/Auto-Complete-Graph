@@ -34,9 +34,9 @@ namespace acg{
 		Eigen::SelfAdjointEigenSolver<g2o::MatrixX> eigenSolver;
 		Eigen::MatrixXd information = cov.inverse();
 
-		information = information * 1000;
+		information = information * 100;
 		information = information.array().round();
-		information = information / 1000;
+		information = information / 100;
 
 		bool isSymmetric = information.transpose() == information;
 		bool okay = isSymmetric;
