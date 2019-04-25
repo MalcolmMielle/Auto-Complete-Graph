@@ -40,7 +40,7 @@
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>ndt_feature</build_depend>
+  <!--<build_depend>ndt_feature</build_depend>-->
   <build_depend>ndt_map</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
@@ -62,7 +62,7 @@
   <run_depend>occupancy_grid_utils</run_depend>
   <run_depend>message_generation</run_depend>
   <run_depend>message_runtime</run_depend>
-  <run_depend>ndt_feature</run_depend>
+  <!--<run_depend>ndt_feature</run_depend>-->
   <run_depend>ndt_map</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>

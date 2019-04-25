@@ -4,7 +4,7 @@
 
 #include <random>
 #include <cmath>
-#include "auto_complete_graph/ACG.hpp"
+#include "auto_complete_graph/ACGBase.hpp"
 #include "auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp"
 #include "auto_complete_graph/VertexAndEdge/EdgePriorObservation.hpp"
 #include "auto_complete_graph/VertexAndEdge/VertexSE2RobotLocalization.hpp"
@@ -18,6 +18,8 @@
 //Needed for registraiton between submaps
 #include <ndt_registration/ndt_matcher_d2d_2d.h>
 #include <ndt_registration/ndt_matcher_d2d.h>
+
+#include <ndt_map/ndt_conversions.h>
 
 #include "NDTCellsBundle.hpp"
 
@@ -144,19 +146,19 @@ namespace acg{
 	    }
 
 
-        AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, 
-						const Eigen::Vector2d& tn, 
-						double rn,
-						const Eigen::Vector2d& ln,
-						const Eigen::Vector2d& pn,
-						double rp,
-						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _gen(_rd()), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, ndt_graph){
-
-	        if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
-		        throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
-	        }
-        }
+//        AutoCompleteGraphLocalization(const g2o::SE2& sensoffset,
+//						const Eigen::Vector2d& tn,
+//						double rn,
+//						const Eigen::Vector2d& ln,
+//						const Eigen::Vector2d& pn,
+//						double rp,
+//						ndt_feature::NDTFeatureGraph* ndt_graph
+//  					) : _gen(_rd()), AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(sensoffset, tn, rn, ln, pn, rp, ndt_graph){
+//
+//	        if(_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior){
+//		        throw std::runtime_error("ATTENTION: you used some funny parameters here young padawan. Link prior and MCL Observation edge on prior together, will lead to the prior being linked in two different ways. Take care.");
+//	        }
+//        }
   		
   		AutoCompleteGraphLocalization(const g2o::SE2& sensoffset, 
 						  const Eigen::Vector2d& tn, 

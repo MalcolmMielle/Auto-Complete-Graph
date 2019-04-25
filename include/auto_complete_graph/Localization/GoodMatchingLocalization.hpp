@@ -4,6 +4,7 @@
 #include "opencv2/opencv.hpp"
 
 #include "RvizPointsLocalization.hpp"
+#include <geometry_msgs/PointStamped.h>
 
 namespace AASS {
 

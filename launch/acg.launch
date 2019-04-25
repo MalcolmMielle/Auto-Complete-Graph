@@ -56,8 +56,8 @@
 	<param name="landmark_noise_x" value="0.05" />
 	<param name="landmark_noise_y" value="0.05" />
 
-	<param name="max_iteration_acg" value="500" />
-	<param name="noise_odom_percentage" value="0.9" />
+	<param name="max_iteration_acg" value="250" />
+	<param name="noise_odom_percentage" value="0.6" />
 	<param name="error_under_witch_stop_optimization" value="1" />
 	<param name="gaussian_scaling_factor" value="2" />
 

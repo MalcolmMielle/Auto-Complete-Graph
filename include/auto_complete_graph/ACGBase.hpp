@@ -6,7 +6,9 @@
 #include <fstream>
 #include <random>
 #include "g2o/types/slam2d/parameter_se2_offset.h"
-#include "ndt_feature/ndt_feature_graph.h"
+
+//#include "ndt_feature/ndt_feature_graph.h"
+
 #include "Eigen/Core"
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
@@ -224,7 +226,7 @@ namespace acg{
 		AASS::acg::OptimizableAutoCompleteGraph _optimizable_graph;
 
 		//ATTENTION : I should avoid that if I want to run both thread at the same time since no copy is made. I should instead copy it
-		ndt_feature::NDTFeatureGraph* _ndt_graph;
+//		ndt_feature::NDTFeatureGraph* _ndt_graph;
 
 // 		std::vector < NDTCornerGraphElement > _ndt_corners;
 		double _first_Kernel_size;
@@ -245,19 +247,19 @@ namespace acg{
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-		AutoCompleteGraphBase(const g2o::SE2& sensoffset,
-						const Eigen::Vector2d& tn,
-						double rn,
-						const Eigen::Vector2d& ln,
-						const Eigen::Vector2d& pn,
-						double rp,
-						ndt_feature::NDTFeatureGraph* ndt_graph
-  					) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _previous_number_of_node_in_ndtgraph(1), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new Prior(pn, rp, sensoffset)) {
-						// add the parameter representing the sensor offset ATTENTION was ist das ?
-						_sensorOffset = new g2o::ParameterSE2Offset;
-						_sensorOffset->setOffset(_sensorOffsetTransf);
-						_sensorOffset->setId(0);
-					}
+//		AutoCompleteGraphBase(const g2o::SE2& sensoffset,
+//						const Eigen::Vector2d& tn,
+//						double rn,
+//						const Eigen::Vector2d& ln,
+//						const Eigen::Vector2d& pn,
+//						double rp,
+//						ndt_feature::NDTFeatureGraph* ndt_graph
+//  					) : _z_elevation(0), _use_user_robot_pose_cov(false), _use_prior(true), _sensorOffsetTransf(sensoffset), _transNoise(tn), _rotNoise(rn), _landmarkNoise(ln), _previous_number_of_node_in_ndtgraph(1), _optimizable_graph(sensoffset), _ndt_graph(ndt_graph), _first_Kernel_size(1), _age_step(0.1), _age_start_value(0.1), _flag_optimize(false), _flag_use_robust_kernel(true), _max_age(-1), _min_age(0), new_id_(0), _error_threshold_stop_optimization(1), _check_error_stable_over(10), _flag_use_corner_orientation(false), _prior(new Prior(pn, rp, sensoffset)) {
+//						// add the parameter representing the sensor offset ATTENTION was ist das ?
+//						_sensorOffset = new g2o::ParameterSE2Offset;
+//						_sensorOffset->setOffset(_sensorOffsetTransf);
+//						_sensorOffset->setId(0);
+//					}
 
 		AutoCompleteGraphBase(const g2o::SE2& sensoffset,
 						  const Eigen::Vector2d& tn,
@@ -271,7 +273,7 @@ namespace acg{
 						_sensorOffset = new g2o::ParameterSE2Offset;
 						_sensorOffset->setOffset(_sensorOffsetTransf);
 						_sensorOffset->setId(0);
-						_ndt_graph = NULL;
+//						_ndt_graph = NULL;
 
 					}
 
@@ -330,7 +332,7 @@ namespace acg{
 			_sensorOffset = new g2o::ParameterSE2Offset;
 			_sensorOffset->setOffset(_sensorOffsetTransf);
 			_sensorOffset->setId(0);
-			_ndt_graph = NULL;
+//			_ndt_graph = NULL;
 
 			if(infile.eof() == true){
 				throw std::runtime_error("NOT ENOUGH PARAMETERS IN FILE");
@@ -533,9 +535,9 @@ namespace acg{
 		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
 		 * Add NDT-corners and Robot poses.
 		 */
-		void updateNDTGraph(){
-			updateNDTGraph(*_ndt_graph);
-		}
+//		void updateNDTGraph(){
+//			updateNDTGraph(*_ndt_graph);
+//		}
 
 
 		/**
@@ -543,7 +545,7 @@ namespace acg{
 		 * Only the new nodes are added to the graph. If the g2o graph has 4 nodes, only nodes 5 to last node of the NDT graph are added to it.
 		 * Add NDT-corners and Robot poses.
 		 */
-		virtual void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag = false, double deviation = 0.5);
+//		virtual void updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag = false, double deviation = 0.5);
 
 
 		void initializeOptimization(){
@@ -647,13 +649,17 @@ namespace acg{
 
 		virtual int optimize_simple(int max_iter);
 
+
+
+
+
 		/**
 		 * @brief Check if the error in the graph was stable over time
 		 * return true if it is and false if it was not
 		 */
 		bool ErrorStable(const std::deque<double>& _chi_kernel, int max_steps = 10);
 
-		std::shared_ptr< perception_oru::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
+//		std::shared_ptr< perception_oru::NDTMap > addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos);
 
 		virtual void extractCornerNDTMap(const std::shared_ptr< perception_oru::NDTMap >& map, g2o::VertexSE2RobotPose* robot_ptr, const g2o::SE2& robot_pos);
 

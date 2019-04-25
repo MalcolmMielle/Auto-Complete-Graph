@@ -1,8 +1,8 @@
 #ifndef AUTOCOMPLETEGRAPH_CONVERSION_22072016
 #define AUTOCOMPLETEGRAPH_CONVERSION_22072016
 
-#include "ndt_feature/ndt_feature_graph.h"
-#include "ndt_feature/utils.h"
+//#include "ndt_feature/ndt_feature_graph.h"
+//#include "ndt_feature/utils.h"
 #include "g2o/types/slam2d/se2.h"
 #include "g2o/types/slam2d/vertex_se2.h"
 #include "g2o/types/slam2d/edge_se2.h"
@@ -13,10 +13,29 @@
 
 namespace AASS{
 namespace acg{
-	
-	
-	inline Eigen::Isometry2d Affine3d2Isometry2d(const Eigen::Affine3d& affine) {
-		Eigen::Affine2d affine2d = ndt_feature::eigenAffine3dTo2d(affine);
+
+	inline double getRobustYawFromAffine3d(const Eigen::Affine3d &a) {
+		// To simply get the yaw from the euler angles is super sensitive to numerical errors which will cause roll and pitch to have angles very close to PI...
+		Eigen::Vector3d v1(1,0,0);
+		Eigen::Vector3d v2 = a.rotation()*v1;
+		double dot = v1(0)*v2(0)+v1(1)*v2(1); // Only compute the rotation in xy plane...
+		double angle = acos(dot);
+		// Need to find the sign
+		if (v1(0)*v2(1)-v1(1)*v2(0) > 0)
+			return angle;
+		return -angle;
+	}
+
+
+
+	inline Eigen::Affine2d eigenAffine3dTo2d(const Eigen::Affine3d &a3d) {
+		return Eigen::Translation2d(a3d.translation().topRows<2>()) *
+		       Eigen::Rotation2D<double>(getRobustYawFromAffine3d(a3d));//a3d.linear().topLeftCorner<2,2>();
+
+	}
+
+		inline Eigen::Isometry2d Affine3d2Isometry2d(const Eigen::Affine3d& affine) {
+		Eigen::Affine2d affine2d = eigenAffine3dTo2d(affine);
 		Eigen::Isometry2d isometry2d;
 		isometry2d.translation() = affine2d.translation();
 		isometry2d.linear() = affine2d.rotation();
@@ -57,14 +76,14 @@ namespace acg{
 
 	}
 
-	inline g2o::SE2 NDTFeatureLink2EdgeSE2(const ndt_feature::NDTFeatureLink& link){
-		Eigen::Affine3d affine = link.getRelPose();		
-		Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
-// 		double x = cumulated_translation(0, 3);
-// 		double y = cumulated_translation(1, 3);
-		g2o::SE2 se2(isometry2d);
-		return se2;	
-	}
+//	inline g2o::SE2 NDTFeatureLink2EdgeSE2(const ndt_feature::NDTFeatureLink& link){
+//		Eigen::Affine3d affine = link.getRelPose();
+//		Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
+//// 		double x = cumulated_translation(0, 3);
+//// 		double y = cumulated_translation(1, 3);
+//		g2o::SE2 se2(isometry2d);
+//		return se2;
+//	}
 	
 
 	inline void updateGraphMap(const auto_complete_graph::ACGMaps::ConstPtr& acg_maps, boost::shared_ptr<perception_oru::graph_map::GraphMapNavigator>& graph_map){

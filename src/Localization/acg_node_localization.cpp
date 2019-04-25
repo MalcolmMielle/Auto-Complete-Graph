@@ -9,9 +9,9 @@
 #include <boost/filesystem/path.hpp>
 
 
-#include "ndt_feature/NDTGraphMsg.h"
-#include "ndt_feature/ndt_feature_graph.h"
-#include "ndt_feature/ndtgraph_conversion.h"
+//#include "ndt_feature/NDTGraphMsg.h"
+//#include "ndt_feature/ndt_feature_graph.h"
+//#include "ndt_feature/ndtgraph_conversion.h"
 #include "auto_complete_graph/Localization/ACG_localization.hpp"
 #include "auto_complete_graph/OptimizableAutoCompleteGraph.hpp"
 #include "auto_complete_graph/Basement.hpp"
@@ -629,7 +629,7 @@ inline double getTime() //in millisecond
 	return (tv.tv_sec*1000000+tv.tv_usec)*1.0/1000;
 }
 
-inline void printImages(AASS::acg::AutoCompleteGraph* oacg){
+inline void printImages(AASS::acg::AutoCompleteGraphLocalization* oacg){
 	nav_msgs::OccupancyGrid* omap_tmpt = new nav_msgs::OccupancyGrid();
 	nav_msgs::OccupancyGrid::Ptr occ_outt(omap_tmpt);
 	AASS::acg::ACGtoOccupancyGrid(*oacg, occ_outt);
@@ -684,54 +684,54 @@ inline void moveOccupancyMap(nav_msgs::OccupancyGrid &occ_grid, const Eigen::Aff
   Eigen::Affine3d new_map_origin = pose*map_origin;
   tf::poseEigenToMsg(new_map_origin, occ_grid.info.origin);
 }
-
-
-
-void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
-	ROS_DEBUG("Got a new graph ");
-	
-	ndt_feature::NDTFeatureGraph graph;
-	
-	std::string frame;
-	ndt_feature::msgToNDTGraph(*msg, graph, frame);	
-	
-
-	acg->updateNDTGraph(graph);
-	
-	
-	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_";
-	std::ostringstream convert;   // stream used for the conversion
-	convert << graph.getNbNodes(); 
-	file_out = file_out + convert.str();
-	file_out = file_out + "nodes.g2o";
-	acg->getGraph().save(file_out.c_str());
-	
-	std::cout << "saved to " << file_out << std::endl;
-	
-// 	exit(0);
-		
-}
-
-
-void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
-	abort_f = true;
-	std::string frame;
-	ndt_feature::NDTFeatureGraph graph;
-	ndt_feature::msgToNDTGraph(*msg, graph, frame);
-	
-	ndt_map::NDTMapMsg msgio;
-// 			ATTENTION Frame shouldn't be fixed
-	bool good = perception_oru::toMessage(graph.getNode(0).map->map, msgio, map_frame);
-// 			perception_oru::NDTMap* map_copy = new perception_oru::NDTMap(new perception_oru::LazyGrid(resolution));
-	
-	perception_oru::NDTMap* map_copy;
-	perception_oru::LazyGrid* lz;
-// 			bool good = perception_oru::fromMessage(lz, fuser.map, m.map, frame);
-	bool good2 = perception_oru::fromMessage(lz, map_copy, msgio, frame, true);
-	std::shared_ptr<perception_oru::NDTMap> s(map_copy);
-	
-// 	delete map_copy;
-}
+//
+//
+//
+//void gotGraph(const ndt_feature::NDTGraphMsg::ConstPtr msg, AASS::acg::AutoCompleteGraph* acg, AASS::acg::VisuAutoCompleteGraphLocalization& visu){
+//	ROS_DEBUG("Got a new graph ");
+//
+//	ndt_feature::NDTFeatureGraph graph;
+//
+//	std::string frame;
+//	ndt_feature::msgToNDTGraph(*msg, graph, frame);
+//
+//
+//	acg->updateNDTGraph(graph);
+//
+//
+//	std::string file_out = "/home/malcolm/ACG_folder/ACG_RVIZ_SMALL/acg_";
+//	std::ostringstream convert;   // stream used for the conversion
+//	convert << graph.getNbNodes();
+//	file_out = file_out + convert.str();
+//	file_out = file_out + "nodes.g2o";
+//	acg->getGraph().save(file_out.c_str());
+//
+//	std::cout << "saved to " << file_out << std::endl;
+//
+//// 	exit(0);
+//
+//}
+//
+//
+//void testMsg(const ndt_feature::NDTGraphMsg::ConstPtr msg){
+//	abort_f = true;
+//	std::string frame;
+//	ndt_feature::NDTFeatureGraph graph;
+//	ndt_feature::msgToNDTGraph(*msg, graph, frame);
+//
+//	ndt_map::NDTMapMsg msgio;
+//// 			ATTENTION Frame shouldn't be fixed
+//	bool good = perception_oru::toMessage(graph.getNode(0).map->map, msgio, map_frame);
+//// 			perception_oru::NDTMap* map_copy = new perception_oru::NDTMap(new perception_oru::LazyGrid(resolution));
+//
+//	perception_oru::NDTMap* map_copy;
+//	perception_oru::LazyGrid* lz;
+//// 			bool good = perception_oru::fromMessage(lz, fuser.map, m.map, frame);
+//	bool good2 = perception_oru::fromMessage(lz, map_copy, msgio, frame, true);
+//	std::shared_ptr<perception_oru::NDTMap> s(map_copy);
+//
+//// 	delete map_copy;
+//}
 
 
 

@@ -557,103 +557,103 @@ inline Eigen::Vector3d AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, Edge
 
 
 
-template< typename Prior, typename VertexPrior, typename EdgePrior>
-inline std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
-{
-
-	//Return Gaussian white noise
-	auto randomNoise = [](double mean, double deviationt) -> double {
-		std::default_random_engine engine{std::random_device()() };
-		std::normal_distribution<double> dist(mean, deviationt);
-		return dist(engine);
-	};
-
-	Eigen::Vector3d diff_vec = getLastTransformation();
-
-	//Calculate noise
-	auto noise_x = randomNoise(0, deviation);
-	auto noise_y = randomNoise(0, deviation);
-	auto noise_t = randomNoise(0, deviation);
-	g2o::SE2 noise_se2(noise_x, noise_y, noise_t);
-
-	std::cout << "Checking node nb " << element << std::endl;
-
-	//RObot pose
-// 			ndt_feature::NDTFeatureNode& feature = dynamic_cast<ndt_feature::NDTFeatureNode&>(ndt_graph.getNodeInterface(i));
-	std::cout << "Copy feature" << std::endl;
-
-// 			feature.copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
-	Eigen::Affine3d affine = Eigen::Affine3d(ndt_graph.getNodeInterface(element).getPose());
-	Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
-
-	//TODO make this work
-// 			isometry2d =  diff * isometry2d;
-
-	//BUG IS AFTER
-	std::cout << "print" << std::endl;
-
-	robot_pos = g2o::SE2(isometry2d);
-// 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
-	g2o::SE2 diff_vec_se2(diff_vec);
-// 			std::cout << "diff vec done" << diff_vec << std::endl;
-	robot_pos = robot_pos * diff_vec_se2;
-//	std::cout << "multiply" << std::endl;
-
-	perception_oru::NDTMap* map = ndt_graph.getMap(element);
-
-//	std::cout << "get res" << std::endl;
-// 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;
-// 			Use a a msg to copy to a new pointer so it doesn't get forgotten :|
-	ndt_map::NDTMapMsg msg;
-// 			ATTENTION Frame shouldn't be fixed
-	bool good = perception_oru::toMessage(map, msg, "/world");
-	perception_oru::NDTMap* map_copy;
-	perception_oru::LazyGrid* lz;
-	std::string frame;
-	bool good2 = perception_oru::fromMessage(lz, map_copy, msg, frame);
-	std::shared_ptr<perception_oru::NDTMap> shared_map(map_copy);
-
-	*robot_ptr = addRobotPose(robot_pos, affine, shared_map);
-	assert(*robot_ptr != NULL);
-	//Add Odometry if it is not the first node
-	if(element > 0 ){
-		ROS_DEBUG("adding the odometry");
-
-		g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
-		ROS_DEBUG_STREAM(" ref " << links[element-1].getRefIdx() << " and mov " << links[element-1].getMovIdx() );
-
-		assert( links[element-1].getRefIdx() < _nodes_ndt.size() );
-		assert( links[element-1].getMovIdx() < _nodes_ndt.size() );
-
-		auto from = _nodes_ndt[ links[element-1].getRefIdx() ] ;
-		auto toward = _nodes_ndt[ links[element-1].getMovIdx() ] ;
-
-		ROS_DEBUG("Saving cov ");
-		//TODO : transpose to 3d and use in odometry!
-		Eigen::MatrixXd cov = links[element - 1].cov_3d;
-
-		ROS_DEBUG_STREAM("COV " << cov);
-
-		ROS_DEBUG_STREAM("Saving cov to 2d");
-		Eigen::Matrix3d cov_2d;
-		cov_2d << 	cov(0, 0), 	cov(0, 1), 	0,
-					cov(1, 0), 	cov(1, 1), 	0,
-					0, 		 	0, 			cov(5, 5);
-
-		ROS_DEBUG_STREAM("Saving information ");
-		Eigen::Matrix3d information = cov_2d.inverse();
-
-// 				if(noise_flag = true && i != 0){
-// 					odometry = odometry * noise_se2;
-// 				}
-
-		ROS_DEBUG_STREAM("Saving odometry ");
-		addOdometry(odometry, from, toward, information);
-	}
-
-	return shared_map;
-
-}
+//		template< typename Prior, typename VertexPrior, typename EdgePrior>
+//		inline std::shared_ptr<perception_oru::NDTMap> AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::addElementNDT(ndt_feature::NDTFeatureGraph& ndt_graph, const std::vector< ndt_feature::NDTFeatureLink >& links, int element, double deviation, g2o::VertexSE2RobotPose** robot_ptr, g2o::SE2& robot_pos)
+//		{
+//
+//			//Return Gaussian white noise
+//			auto randomNoise = [](double mean, double deviationt) -> double {
+//				std::default_random_engine engine{std::random_device()() };
+//				std::normal_distribution<double> dist(mean, deviationt);
+//				return dist(engine);
+//			};
+//
+//			Eigen::Vector3d diff_vec = getLastTransformation();
+//
+//			//Calculate noise
+//			auto noise_x = randomNoise(0, deviation);
+//			auto noise_y = randomNoise(0, deviation);
+//			auto noise_t = randomNoise(0, deviation);
+//			g2o::SE2 noise_se2(noise_x, noise_y, noise_t);
+//
+//			std::cout << "Checking node nb " << element << std::endl;
+//
+//			//RObot pose
+//// 			ndt_feature::NDTFeatureNode& feature = dynamic_cast<ndt_feature::NDTFeatureNode&>(ndt_graph.getNodeInterface(i));
+//			std::cout << "Copy feature" << std::endl;
+//
+//// 			feature.copyNDTFeatureNode( (const ndt_feature::NDTFeatureNode&)ndt_graph.getNodeInterface(i) );
+//			Eigen::Affine3d affine = Eigen::Affine3d(ndt_graph.getNodeInterface(element).getPose());
+//			Eigen::Isometry2d isometry2d = Affine3d2Isometry2d(affine);
+//
+//			//TODO make this work
+//// 			isometry2d =  diff * isometry2d;
+//
+//			//BUG IS AFTER
+//			std::cout << "print" << std::endl;
+//
+//			robot_pos = g2o::SE2(isometry2d);
+//// 			std::cout << "robot pose done : " << isometry2d.matrix() << std::endl;
+//			g2o::SE2 diff_vec_se2(diff_vec);
+//// 			std::cout << "diff vec done" << diff_vec << std::endl;
+//			robot_pos = robot_pos * diff_vec_se2;
+////	std::cout << "multiply" << std::endl;
+//
+//			perception_oru::NDTMap* map = ndt_graph.getMap(element);
+//
+////	std::cout << "get res" << std::endl;
+//// 			double resolution = dynamic_cast<ndt_feature::NDTFeatureNode&>( ndt_graph.getNodeInterface(i) ).map->params_.resolution;
+//// 			Use a a msg to copy to a new pointer so it doesn't get forgotten :|
+//			ndt_map::NDTMapMsg msg;
+//// 			ATTENTION Frame shouldn't be fixed
+//			bool good = perception_oru::toMessage(map, msg, "/world");
+//			perception_oru::NDTMap* map_copy;
+//			perception_oru::LazyGrid* lz;
+//			std::string frame;
+//			bool good2 = perception_oru::fromMessage(lz, map_copy, msg, frame);
+//			std::shared_ptr<perception_oru::NDTMap> shared_map(map_copy);
+//
+//			*robot_ptr = addRobotPose(robot_pos, affine, shared_map);
+//			assert(*robot_ptr != NULL);
+//			//Add Odometry if it is not the first node
+//			if(element > 0 ){
+//				ROS_DEBUG("adding the odometry");
+//
+//				g2o::SE2 odometry = NDTFeatureLink2EdgeSE2(links[element - 1]);
+//				ROS_DEBUG_STREAM(" ref " << links[element-1].getRefIdx() << " and mov " << links[element-1].getMovIdx() );
+//
+//				assert( links[element-1].getRefIdx() < _nodes_ndt.size() );
+//				assert( links[element-1].getMovIdx() < _nodes_ndt.size() );
+//
+//				auto from = _nodes_ndt[ links[element-1].getRefIdx() ] ;
+//				auto toward = _nodes_ndt[ links[element-1].getMovIdx() ] ;
+//
+//				ROS_DEBUG("Saving cov ");
+//				//TODO : transpose to 3d and use in odometry!
+//				Eigen::MatrixXd cov = links[element - 1].cov_3d;
+//
+//				ROS_DEBUG_STREAM("COV " << cov);
+//
+//				ROS_DEBUG_STREAM("Saving cov to 2d");
+//				Eigen::Matrix3d cov_2d;
+//				cov_2d << 	cov(0, 0), 	cov(0, 1), 	0,
+//						cov(1, 0), 	cov(1, 1), 	0,
+//						0, 		 	0, 			cov(5, 5);
+//
+//				ROS_DEBUG_STREAM("Saving information ");
+//				Eigen::Matrix3d information = cov_2d.inverse();
+//
+//// 				if(noise_flag = true && i != 0){
+//// 					odometry = odometry * noise_se2;
+//// 				}
+//
+//				ROS_DEBUG_STREAM("Saving odometry ");
+//				addOdometry(odometry, from, toward, information);
+//			}
+//
+//			return shared_map;
+//
+//		}
 
 
 template< typename Prior, typename VertexPrior, typename EdgePrior>
@@ -862,75 +862,75 @@ inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::ext
 
 
 
-template< typename Prior, typename VertexPrior, typename EdgePrior>
-inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
+// template< typename Prior, typename VertexPrior, typename EdgePrior>
+// inline void AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::updateNDTGraph(ndt_feature::NDTFeatureGraph& ndt_graph, bool noise_flag, double deviation){
 
-	ROS_DEBUG_STREAM("BEfore " );
-// 	printCellsNum();
-	ROS_DEBUG_STREAM("Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph );
+// 	ROS_DEBUG_STREAM("BEfore " );
+// // 	printCellsNum();
+// 	ROS_DEBUG_STREAM("Should we check " <<ndt_graph.getNbNodes() << ">" << _previous_number_of_node_in_ndtgraph );
 
-	//************* Add and create all new nodes, and extract the corners from the new NDT maps *********//
+// 	//************* Add and create all new nodes, and extract the corners from the new NDT maps *********//
 
-	if(ndt_graph.getNbNodes() > _previous_number_of_node_in_ndtgraph){
+// 	if(ndt_graph.getNbNodes() > _previous_number_of_node_in_ndtgraph){
 
-		ROS_DEBUG_STREAM("Found new nodes");
+// 		ROS_DEBUG_STREAM("Found new nodes");
 
-		//TODO just get the links that are interesting for you instead of all of them !
-		//Doing the registration here myself
+// 		//TODO just get the links that are interesting for you instead of all of them !
+// 		//Doing the registration here myself
 
-		auto links = ndt_graph.getOdometryLinks();
+// 		auto links = ndt_graph.getOdometryLinks();
 
-		//Update the link in all node not already added
+// 		//Update the link in all node not already added
 
-		//Need at least three node to start considering link since the last one is garbage
-		if(_previous_number_of_node_in_ndtgraph >= 2){
-			//Ignore last link
-			for (size_t i = _previous_number_of_node_in_ndtgraph - 2; i < links.size() - 1; i++) {
-		      ROS_DEBUG_STREAM("updating link : " << i << " (size of links :" << links.size() << ")" );
-				ndt_graph.updateLinkUsingNDTRegistration(links[i], 10, true);
-			}
-		}
-		else{
-			ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
-		}
-
-
-
-		//Calculate the original transformation of all
-
-		//Assume that all node in the NDT graph must been analysed
-		size_t i;
-		i = _previous_number_of_node_in_ndtgraph - 1;
-// 		std::vector<cv::Point2f> ret_opencv_point_corner;
-// 		std::vector<std::pair<double, double> > angles;
-
-		//ATTENTION Ignore the last node because it's not good usually !
-		for (i; i < ndt_graph.getNbNodes() - 1 ; ++i) {
-
-			g2o::VertexSE2RobotPose* robot_ptr;
-			g2o::SE2 robot_pos;
-			auto map = addElementNDT(ndt_graph, links, i, deviation, &robot_ptr, robot_pos);
-			assert(robot_ptr != NULL);
-			ROS_DEBUG_STREAM("TEST pointer " << robot_ptr->getPose().matrix() );
-			//********************** Extract the corners *****************//
-			extractCornerNDTMap(map, robot_ptr, robot_pos);
-			//********************** Add the time stamp ******************//
-			robot_ptr->setTime(ndt_graph.getNode(i).time_last_update);
-
-		}
-		//Save new number of nodes to update
-
-// 		assert(corners_end.size() == ret_opencv_point_corner.size());
-// 		std::vector<g2o::VertexLandmarkNDT*> all_new_landmarks;
-
-		// ************ Add the landmarks that were added the corners_end ************************************//
-
-		//Add stuff directly in the optimization graph :
-		_previous_number_of_node_in_ndtgraph = ndt_graph.getNbNodes();
-	}
+// 		//Need at least three node to start considering link since the last one is garbage
+// 		if(_previous_number_of_node_in_ndtgraph >= 2){
+// 			//Ignore last link
+// 			for (size_t i = _previous_number_of_node_in_ndtgraph - 2; i < links.size() - 1; i++) {
+// 		      ROS_DEBUG_STREAM("updating link : " << i << " (size of links :" << links.size() << ")" );
+// 				ndt_graph.updateLinkUsingNDTRegistration(links[i], 10, true);
+// 			}
+// 		}
+// 		else{
+// 			ndt_graph.updateLinksUsingNDTRegistration(links, 10, true);
+// 		}
 
 
-}
+
+// 		//Calculate the original transformation of all
+
+// 		//Assume that all node in the NDT graph must been analysed
+// 		size_t i;
+// 		i = _previous_number_of_node_in_ndtgraph - 1;
+////  		std::vector<cv::Point2f> ret_opencv_point_corner;
+// // 		std::vector<std::pair<double, double> > angles;
+
+// 		//ATTENTION Ignore the last node because it's not good usually !
+// 		for (i; i < ndt_graph.getNbNodes() - 1 ; ++i) {
+
+// 			g2o::VertexSE2RobotPose* robot_ptr;
+// 			g2o::SE2 robot_pos;
+// 			auto map = addElementNDT(ndt_graph, links, i, deviation, &robot_ptr, robot_pos);
+// 			assert(robot_ptr != NULL);
+// 			ROS_DEBUG_STREAM("TEST pointer " << robot_ptr->getPose().matrix() );
+// 			//********************** Extract the corners *****************//
+// 			extractCornerNDTMap(map, robot_ptr, robot_pos);
+// 			//********************** Add the time stamp ******************//
+// 			robot_ptr->setTime(ndt_graph.getNode(i).time_last_update);
+
+// 		}
+// 		//Save new number of nodes to update
+//
+// // 		assert(corners_end.size() == ret_opencv_point_corner.size());
+// // 		std::vector<g2o::VertexLandmarkNDT*> all_new_landmarks;
+
+// 		// ************ Add the landmarks that were added the corners_end ************************************//
+
+// 		//Add stuff directly in the optimization graph :
+// 		_previous_number_of_node_in_ndtgraph = ndt_graph.getNbNodes();
+// 	}
+//
+//
+// }
 
 
 

@@ -6,10 +6,13 @@
 #include "grid_map_ros/GridMapRosConverter.hpp"
 #include <grid_map_cv/grid_map_cv.hpp>
 #include "occupancy_grid_utils/combine_grids.h"
-#include "ndt_feature/ndt_feature_graph.h"
+//#include "ndt_feature/ndt_feature_graph.h"
 #include "ndt_map/NDTVectorMapMsg.h"
 #include "auto_complete_graph/ACGMaps.h"
 #include "auto_complete_graph/ACGMapsOM.h"
+
+#include <tf/transform_datatypes.h>
+
 
 #include "ACGBase.hpp"
 

@@ -2,7 +2,7 @@ add_subdirectory(VertexAndEdge)
 
 ## Declare a C++ library
 add_library(auto_complete_graph_lib
-        ACG.cpp
+#        ACG.cpp
   OptimizableAutoCompleteGraph.cpp
   PriorLoaderInterface.cpp
         ACGPriorSE2.cpp
@@ -19,16 +19,16 @@ add_subdirectory(Localization)
 ## Execs
 
 
-add_executable(acg_node_review acg_node_review.cpp)
-
-# Add cmake target dependencies of the executable
-# same as for the library above
-add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
-
-# Specify libraries to link a library or executable target against
-target_link_libraries(acg_node_review
-  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
-)
+#add_executable(acg_node_review acg_node_review.cpp)
+#
+## Add cmake target dependencies of the executable
+## same as for the library above
+#add_dependencies(acg_node_review ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} auto_complete_graph_generate_messages_cpp)
+#
+## Specify libraries to link a library or executable target against
+#target_link_libraries(acg_node_review
+#  ${catkin_LIBRARIES} auto_complete_graph_lib ${G2O_LIBS} ${vodigrex_LIBRARIES}
+#)
 
 #add_executable(acg_node_logger acg_node_logger.cpp)
 

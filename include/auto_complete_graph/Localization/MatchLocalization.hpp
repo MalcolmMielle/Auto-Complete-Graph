@@ -5,6 +5,8 @@
 
 #include "ACG_localization.hpp"
 
+#include <geometry_msgs/PointStamped.h>
+
 namespace AASS {
 
 	namespace acg{
