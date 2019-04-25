@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
 #  ndt_feature
   ndt_feature_finder
   ndt_localization
-  flirtlib_ros 
+#  flirtlib_ros
   ndt_map
   roscpp
   rospy
@@ -413,7 +413,7 @@ catkin_package(
         INCLUDE_DIRS include
         LIBRARIES ${G2O_LIBS} ${vodigrex_LIBRARIES} auto_complete_graph_lib auto_complete_graph_vertexedges_lib auto_complete_graph_localization_lib
         #  LIBRARIES auto_complete_graph
-        CATKIN_DEPENDS message_runtime  ndt_feature_finder flirtlib_ros ndt_map roscpp rospy std_msgs message_generation occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv graph_map message_generation geometry_msgs std_msgs ndt_localization
+        CATKIN_DEPENDS message_runtime  ndt_feature_finder ndt_map roscpp rospy std_msgs message_generation occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv graph_map message_generation geometry_msgs std_msgs ndt_localization
         DEPENDS EIGEN OpenCV Boost vodigrex
 )
 
