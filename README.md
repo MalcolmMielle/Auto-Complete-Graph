@@ -13,8 +13,12 @@ The goal of this program is described [in this blog post](https://malcolmmielle.
 ## Paper
 
 The auto-complete graph uses a circular strategy to integrate an emergency map and a robot build map in a global representation. The robot build a map of the environment using NDT mapping, and in parallel do localization in the emergency map using Monte-Carlo Localization. Corners are extracted in both the robot map and the emergency map. Using the information from the localization, a graph-SLAM is created where observation of the emergency map corner are determined using the localization covariance and the position of the emergency map's corners compared to the position of corners detected in the robot map. The graph is further constrained by having emergency map walls able to stretch or shrink but being hard to rotate. This is done because emergency maps have usually local scaling problems but do have correct topology.
+The paper for the method has been published through [MDPI](https://www.mdpi.com/2218-6581/8/2/40).
 
-A first version of the auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv and was publish in [SSRR2017]() where it got the best student paper award. This version integrates the emergency map in the robot map using a specific graph matching strategy.
+    @article{Mielle_2019, title={The Auto-Complete Graph: Merging and Mutual Correction of Sensor and Prior Maps for SLAM}, volume={8}, ISSN={2218-6581}, url={http://dx.doi.org/10.3390/robotics8020040}, DOI={10.3390/robotics8020040}, number={2}, journal={Robotics}, publisher={MDPI AG}, author={Mielle, Malcolm and Magnusson, Martin and Lilienthal, Achim J.}, year={2019}, month={May}, pages={40}}
+
+A first version of the auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv and was publish in [SSRR2017](https://ieeexplore.ieee.org/abstract/document/8088137?reload=true) where it got the best student paper award. This version integrates the emergency map in the robot map using a specific graph matching strategy.
+ 
 
 
 ## To run the code
