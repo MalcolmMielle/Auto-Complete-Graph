@@ -78,8 +78,6 @@ Run both launch files `hannover.launch` and `acg.launch`.
 In case the prior map of the mapping system doesn't update according to the updates of the ACG, you have to remap the topic `acg_maps` of `hannover.launch` and of `acg.launch` so that they have the same namespace.
 They need to communicate for the prior map update of the ACG to be linked to the prior map of the mapping.
 
-* The parameters for ACG are loaded from a file. The file is determined by a string in `acg_node_review.cpp` named `parameters_for_ACG`. An example of parameter file is present in `ACG_params/param.txt`
-
 * In Rviz, one can give an approximation of the position\_in\_robot\_frame of the prior compared to robot map using the Publish point button. Only two links are needed to initialize. First click on corner in the emergency map and then in the equivalent corner in the robot map.
 
 ## Dependencies
