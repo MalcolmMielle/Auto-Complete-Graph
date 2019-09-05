@@ -86,7 +86,6 @@ They need to communicate for the prior map update of the ACG to be linked to the
 * [VoDiGrEx](https://github.com/MalcolmMielle/VoDiGrEx)
 * [G2O](https://github.com/RainerKuemmerle/g2o)
 * [perception_oru](https://github.com/OrebroUniversity/perception_oru)
-* [ndt_feature](https://github.com/MalcolmMielle/ndt_feature_graph)
 * [occupancy_grid_utils](https://github.com/clearpathrobotics/occupancy_grid_utils)
 * [grid_map](https://github.com/ethz-asl/grid_map)
 * OpenCV
