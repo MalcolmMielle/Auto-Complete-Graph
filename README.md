@@ -15,7 +15,20 @@ The goal of this program is described [in this blog post](https://malcolmmielle.
 The auto-complete graph uses a circular strategy to integrate an emergency map and a robot build map in a global representation. The robot build a map of the environment using NDT mapping, and in parallel do localization in the emergency map using Monte-Carlo Localization. Corners are extracted in both the robot map and the emergency map. Using the information from the localization, a graph-SLAM is created where observation of the emergency map corner are determined using the localization covariance and the position of the emergency map's corners compared to the position of corners detected in the robot map. The graph is further constrained by having emergency map walls able to stretch or shrink but being hard to rotate. This is done because emergency maps have usually local scaling problems but do have correct topology.
 The paper for the method has been published through [MDPI](https://www.mdpi.com/2218-6581/8/2/40).
 
-    @article{Mielle_2019, title={The Auto-Complete Graph: Merging and Mutual Correction of Sensor and Prior Maps for SLAM}, volume={8}, ISSN={2218-6581}, url={http://dx.doi.org/10.3390/robotics8020040}, DOI={10.3390/robotics8020040}, number={2}, journal={Robotics}, publisher={MDPI AG}, author={Mielle, Malcolm and Magnusson, Martin and Lilienthal, Achim J.}, year={2019}, month={May}, pages={40}}
+    @article{Mielle_2019, 
+	    title={The Auto-Complete Graph: Merging and Mutual Correction of Sensor and Prior Maps for SLAM}, 
+	    volume={8}, 
+	    ISSN={2218-6581}, 
+	    url={http://dx.doi.org/10.3390/robotics8020040}, 
+	    DOI={10.3390/robotics8020040}, 
+	    number={2}, 
+	    journal={Robotics}, 
+	    publisher={MDPI AG}, 
+	    author={Mielle, Malcolm and Magnusson, Martin and Lilienthal, Achim J.}, 
+	    year={2019}, 
+	    month={May}, 
+	    pages={40}
+    }
 
 A first version of the auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv and was publish in [SSRR2017](https://ieeexplore.ieee.org/abstract/document/8088137?reload=true) where it got the best student paper award. This version integrates the emergency map in the robot map using a specific graph matching strategy.
  
@@ -73,9 +86,10 @@ Two launch file are used to run the code: one for the mapping and localization, 
 
 ## Run the code example
 
-Run both launch files `hannover.launch` and `acg.launch`
+Run both launch files `hannover.launch` and `acg.launch`.
 
-* The parameters for ACG are loaded from a file. The file is determined by a string in `acg_node_review.cpp` named `parameters_for_ACG`. An example of parameter file is present in `ACG_params/param.txt`
+In case the prior map of the mapping system doesn't update according to the updates of the ACG, you have to remap the topic `acg_maps` of `hannover.launch` and of `acg.launch` so that they have the same namespace.
+They need to communicate for the prior map update of the ACG to be linked to the prior map of the mapping.
 
 * In Rviz, one can give an approximation of the position\_in\_robot\_frame of the prior compared to robot map using the Publish point button. Only two links are needed to initialize. First click on corner in the emergency map and then in the equivalent corner in the robot map.
 
@@ -85,7 +99,6 @@ Run both launch files `hannover.launch` and `acg.launch`
 * [VoDiGrEx](https://github.com/MalcolmMielle/VoDiGrEx)
 * [G2O](https://github.com/RainerKuemmerle/g2o)
 * [perception_oru](https://github.com/OrebroUniversity/perception_oru)
-* [ndt_feature](https://github.com/MalcolmMielle/ndt_feature_graph)
 * [occupancy_grid_utils](https://github.com/clearpathrobotics/occupancy_grid_utils)
 * [grid_map](https://github.com/ethz-asl/grid_map)
 * OpenCV
