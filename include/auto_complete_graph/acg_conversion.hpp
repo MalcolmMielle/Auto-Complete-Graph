@@ -21,7 +21,7 @@
 namespace AASS{
 namespace acg{
 
-	inline bool toGridMap(perception_oru::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::__cxx11::string frame_id, std::string layer_name);
+	inline bool toGridMap(perception_oru::NDTMap* ndt_map, grid_map::GridMap& map, double resolution, std::string frame_id, std::string layer_name);
 
 	template< typename Prior, typename VertexPrior, typename EdgePrior>
 	inline void ACGPriortoGridMap(const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg, grid_map::GridMap& gridMap, double resolution);

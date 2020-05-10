@@ -41,7 +41,7 @@
 // #include "graph_map/GraphMapMsg.h"
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 #include "ndt_map/NDTVectorMapMsg.h"
-#include "graph_map/graph_map_conversion.h"
+#include "graph_map/graph_map_conversions.h"
 
 #include "auto_complete_graph/Localization/AcgMclLocalization.hpp"
 #include "auto_complete_graph/conversion.hpp"
