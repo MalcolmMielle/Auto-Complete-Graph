@@ -33,53 +33,59 @@
 #include "g2o/core/base_binary_edge.h"
 //#include "g2o/types/slam2d/g2o_types_slam2d_api.h"
 
-namespace g2o {
+namespace g2o
+{
 
 	class EdgeSE2PointXYACG : public BaseBinaryEdge<2, Vector2, VertexSE2ACG, VertexPointXYACG>
-{
-	public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	EdgeSE2PointXYACG();
-
-	void computeError()
 	{
-		const VertexSE2ACG* v1 = static_cast<const VertexSE2ACG*>(_vertices[0]);
-		const VertexPointXYACG* l2 = static_cast<const VertexPointXYACG*>(_vertices[1]);
-		_error = (v1->estimate().inverse() * l2->estimate()) - _measurement;
-	}
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		EdgeSE2PointXYACG();
 
-	virtual bool setMeasurementData(const number_t* d){
-		_measurement[0]=d[0];
-		_measurement[1]=d[1];
-		return true;
-	}
+		void computeError()
+		{
+			const VertexSE2ACG *v1 = static_cast<const VertexSE2ACG *>(_vertices[0]);
+			const VertexPointXYACG *l2 = static_cast<const VertexPointXYACG *>(_vertices[1]);
+			_error = (v1->estimate().inverse() * l2->estimate()) - _measurement;
+		}
 
-	virtual bool getMeasurementData(number_t* d) const{
-		d[0] = _measurement[0];
-		d[1] = _measurement[1];
-		return true;
-	}
+		virtual bool setMeasurementData(const number_t *d)
+		{
+			_measurement[0] = d[0];
+			_measurement[1] = d[1];
+			return true;
+		}
 
-	virtual int measurementDimension() const {return 2;}
+		virtual bool getMeasurementData(number_t *d) const
+		{
+			d[0] = _measurement[0];
+			d[1] = _measurement[1];
+			return true;
+		}
 
-	virtual bool setMeasurementFromState(){
-		const VertexSE2ACG* v1 = static_cast<const VertexSE2ACG*>(_vertices[0]);
-		const VertexPointXYACG* l2 = static_cast<const VertexPointXYACG*>(_vertices[1]);
-		_measurement = v1->estimate().inverse() * l2->estimate();
-		return true;
-	}
+		virtual int measurementDimension() const { return 2; }
 
-	virtual bool read(std::istream& is);
-	virtual bool write(std::ostream& os) const;
+		virtual bool setMeasurementFromState()
+		{
+			const VertexSE2ACG *v1 = static_cast<const VertexSE2ACG *>(_vertices[0]);
+			const VertexPointXYACG *l2 = static_cast<const VertexPointXYACG *>(_vertices[1]);
+			_measurement = v1->estimate().inverse() * l2->estimate();
+			return true;
+		}
 
-	virtual void initialEstimate(const OptimizableGraph::VertexSet& from, OptimizableGraph::Vertex* to);
-	virtual number_t initialEstimatePossible(const OptimizableGraph::VertexSet& from, OptimizableGraph::Vertex* to) { (void) to; return (from.count(_vertices[0]) == 1 ? 1.0 : -1.0);}
+		virtual bool read(std::istream &is);
+		virtual bool write(std::ostream &os) const;
+
+		virtual void initialEstimate(const OptimizableGraph::VertexSet &from, OptimizableGraph::Vertex *to);
+		virtual number_t initialEstimatePossible(const OptimizableGraph::VertexSet &from, OptimizableGraph::Vertex *to)
+		{
+			(void)to;
+			return (from.count(_vertices[0]) == 1 ? 1.0 : -1.0);
+		}
 #ifndef NUMERIC_JACOBIAN_TWO_D_TYPES
-	virtual void linearizeOplus();
+		virtual void linearizeOplus();
 #endif
-};
-
-
+	};
 
 } // end namespace
 

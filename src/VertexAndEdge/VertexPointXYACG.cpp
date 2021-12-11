@@ -26,33 +26,28 @@
 
 #include "auto_complete_graph/VertexAndEdge/VertexPointXYACG.hpp"
 
-
 #include <typeinfo>
 
 #include "g2o/stuff/macros.h"
 
-namespace g2o {
+namespace g2o
+{
 
-	VertexPointXYACG::VertexPointXYACG() :
-			BaseVertex<2, Vector2>()
+	VertexPointXYACG::VertexPointXYACG() : BaseVertex<2, Vector2>()
 	{
 		_estimate.setZero();
 	}
 
-	bool VertexPointXYACG::read(std::istream& is)
+	bool VertexPointXYACG::read(std::istream &is)
 	{
 		is >> _estimate[0] >> _estimate[1];
 		return true;
 	}
 
-	bool VertexPointXYACG::write(std::ostream& os) const
+	bool VertexPointXYACG::write(std::ostream &os) const
 	{
 		os << estimate()(0) << " " << estimate()(1);
 		return os.good();
 	}
-
-
-
-
 
 } // end namespace

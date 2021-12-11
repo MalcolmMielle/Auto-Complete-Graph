@@ -4,17 +4,16 @@
 #include "EdgeSE2PointXYACG.hpp"
 #include "EdgeInterfaceMalcolm.hpp"
 
-namespace g2o{
-	
-class EdgeLinkXY_malcolm : public g2o::EdgeSE2PointXYACG
+namespace g2o
 {
-public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	AASS::acg::EdgeInterfaceMalcolm interface;
-	//       EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-	EdgeLinkXY_malcolm() : EdgeSE2PointXYACG() {};
 
-};
+	class EdgeLinkXY_malcolm : public g2o::EdgeSE2PointXYACG
+	{
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+		AASS::acg::EdgeInterfaceMalcolm interface;
+		EdgeLinkXY_malcolm() : EdgeSE2PointXYACG(){};
+	};
 
 }
 #endif

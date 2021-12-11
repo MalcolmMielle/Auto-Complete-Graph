@@ -31,22 +31,23 @@
 //#include "g2o/stuff/opengl_primitives.h"
 //#endif
 
-namespace g2o {
+namespace g2o
+{
 
-	EdgePointXYACG::EdgePointXYACG() :
-			BaseBinaryEdge<2, Vector2, VertexPointXYACG, VertexPointXYACG>()
+	EdgePointXYACG::EdgePointXYACG() : BaseBinaryEdge<2, Vector2, VertexPointXYACG, VertexPointXYACG>()
 	{
-//		_information.setIdentity();
-//		_error.setZero();
+		//		_information.setIdentity();
+		//		_error.setZero();
 	}
 
-	bool EdgePointXYACG::read(std::istream& is)
+	bool EdgePointXYACG::read(std::istream &is)
 	{
 		Vector2 p;
 		is >> p[0] >> p[1];
 		setMeasurement(p);
 		for (int i = 0; i < 2; ++i)
-			for (int j = i; j < 2; ++j) {
+			for (int j = i; j < 2; ++j)
+			{
 				is >> information()(i, j);
 				if (i != j)
 					information()(j, i) = information()(i, j);
@@ -54,7 +55,7 @@ namespace g2o {
 		return true;
 	}
 
-	bool EdgePointXYACG::write(std::ostream& os) const
+	bool EdgePointXYACG::write(std::ostream &os) const
 	{
 		Vector2 p = measurement();
 		os << p.x() << " " << p.y();
@@ -64,14 +65,12 @@ namespace g2o {
 		return os.good();
 	}
 
-
 #ifndef NUMERIC_JACOBIAN_TWO_D_TYPES
 	void EdgePointXYACG::linearizeOplus()
 	{
-		_jacobianOplusXi=-Matrix2::Identity();
-		_jacobianOplusXj= Matrix2::Identity();
+		_jacobianOplusXi = -Matrix2::Identity();
+		_jacobianOplusXj = Matrix2::Identity();
 	}
 #endif
-
 
 } // end namespace

@@ -6,15 +6,16 @@
 
 #include "auto_complete_graph/utils.hpp"
 
-namespace AASS {
+namespace AASS
+{
 
-	namespace acg {
+	namespace acg
+	{
 
-
-		class VisuAutoCompleteGraphLocalization : public VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG> {
+		class VisuAutoCompleteGraphLocalization : public VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>
+		{
 
 		protected:
-
 			visualization_msgs::Marker _localization_edge_markers;
 			visualization_msgs::Marker _prior_observations;
 			visualization_msgs::Marker _ndt_node_localization_markers;
@@ -40,15 +41,10 @@ namespace AASS {
 			ros::Publisher _ndt_cell_association_pub;
 			ros::Publisher _correct_robot_pose_pub;
 
-
-//			AutoCompleteGraphLocalization *_acg;
-
-
 		public:
-			VisuAutoCompleteGraphLocalization(const ros::NodeHandle &nh, const std::string& world_frame_id = "/world")
-					: VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(nh, world_frame_id) {
-
-//				_acg = acg;
+			VisuAutoCompleteGraphLocalization(const ros::NodeHandle &nh, const std::string &world_frame_id = "/world")
+				: VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(nh, world_frame_id)
+			{
 
 				_localization_pub = _nh.advertise<visualization_msgs::Marker>("localization_markers", 10);
 				_localization_pose_pub = _nh.advertise<visualization_msgs::Marker>("localization_pose_markers", 10);
@@ -72,7 +68,6 @@ namespace AASS {
 				_localization_edge_markers.color.b = 1.0f;
 				_localization_edge_markers.color.a = 1.0;
 
-
 				_prior_observations.type = visualization_msgs::Marker::LINE_LIST;
 				_prior_observations.header.frame_id = world_frame_id;
 				_prior_observations.ns = "acg";
@@ -90,7 +85,6 @@ namespace AASS {
 				_last_seen_landmark_in_mcl_pose.scale.y = 0.5;
 				_last_seen_landmark_in_mcl_pose.color.b = 1.0f;
 				_last_seen_landmark_in_mcl_pose.color.a = 1.0;
-
 
 				_mcl_angles_markers.type = visualization_msgs::Marker::LINE_LIST;
 				_mcl_angles_markers.header.frame_id = world_frame_id;
@@ -119,7 +113,6 @@ namespace AASS {
 				_ndt_node_localization_markers.color.r = 1.0f;
 				_ndt_node_localization_markers.color.g = 1.0f;
 				_ndt_node_localization_markers.color.a = 1.0;
-
 
 				_ndt_cells.type = visualization_msgs::Marker::POINTS;
 				_ndt_cells.header.frame_id = world_frame_id;
@@ -159,7 +152,6 @@ namespace AASS {
 				_ndt_cell_associations.color.b = 1.0f;
 				_ndt_cell_associations.color.a = 1.0;
 
-
 				_correct_robot_pose.type = visualization_msgs::Marker::POINTS;
 				_correct_robot_pose.header.frame_id = world_frame_id;
 				_correct_robot_pose.ns = "acg";
@@ -178,30 +170,29 @@ namespace AASS {
 				_mcl_poses.color.b = 0.5f;
 				_mcl_poses.color.g = 0.5f;
 				_mcl_poses.color.a = 1.0;
-
-
 			}
 
-			void drawLocalizations(const AutoCompleteGraphLocalization& acg);
-			void drawPoseLocalizations(const AutoCompleteGraphLocalization& acg);
-			void drawPriorObservations(const AutoCompleteGraphLocalization& acg);
-			void drawCorrectRobotPoses(const AutoCompleteGraphLocalization& acg);
+			void drawLocalizations(const AutoCompleteGraphLocalization &acg);
+			void drawPoseLocalizations(const AutoCompleteGraphLocalization &acg);
+			void drawPriorObservations(const AutoCompleteGraphLocalization &acg);
+			void drawCorrectRobotPoses(const AutoCompleteGraphLocalization &acg);
 
-			void drawPrior(const AutoCompleteGraphLocalization& acg);
-			void drawLocalizationLandmarks(const AutoCompleteGraphLocalization& acg);
-			void drawMCL(const AutoCompleteGraphLocalization& acg);
+			void drawPrior(const AutoCompleteGraphLocalization &acg);
+			void drawLocalizationLandmarks(const AutoCompleteGraphLocalization &acg);
+			void drawMCL(const AutoCompleteGraphLocalization &acg);
 			void drawMCLAngles(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCellObservations(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCellAssociations(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCells(const AutoCompleteGraphLocalization &acg);
 			void drawNDTCellsMCL(const AutoCompleteGraphLocalization &acg);
 
+			void updateRviz(const AutoCompleteGraphLocalization &acg)
+			{
 
-			void updateRviz(const AutoCompleteGraphLocalization& acg){
-
-//				std::cout << "What the fuck " << _nb_of_zone << " and " << acg.getRobotPoseLocalization().size() << std::endl;
-//				exit(0);
-				if(_nb_of_zone != acg.getRobotPoseLocalization().size()) {
+				//				std::cout << "What the fuck " << _nb_of_zone << " and " << acg.getRobotPoseLocalization().size() << std::endl;
+				//				exit(0);
+				if (_nb_of_zone != acg.getRobotPoseLocalization().size())
+				{
 					drawLocalizations(acg);
 					drawMCLAngles(acg);
 					drawPoseLocalizations(acg);
@@ -211,15 +202,16 @@ namespace AASS {
 					drawMCL(acg);
 					drawNDTCellsMCL(acg);
 
-// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
-					if(acg.getRobotPoseLocalization().size() > 0) {
+					// 					initOccupancyGrid(*omap, 250, 250, 0.4, "/world");
+					if (acg.getRobotPoseLocalization().size() > 0)
+					{
 						nav_msgs::OccupancyGrid omap_occ;
 						int size_rl = acg.getRobotPoseLocalization().size();
 						perception_oru::toOccupancyGrid(acg.getRobotPoseLocalization()[size_rl - 1]->getMap().get(), omap_occ, 0.1,
-						                                "/world");
+														"/world");
 						_last_ndtmap2_occ.publish(omap_occ);
 					}
-//					_nb_of_zone = acg.getRobotNodes().size();
+					//					_nb_of_zone = acg.getRobotNodes().size();
 				}
 
 				VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>::updateRviz(acg);
@@ -227,56 +219,45 @@ namespace AASS {
 				drawNDTCellObservations(acg);
 				drawNDTCellAssociations(acg);
 				drawNDTCells(acg);
-//
-//
-//					auto_complete_graph::ACGMaps mapmsg;
-//					std::cout << "PUSH acg maps message" << std::endl;
-//					AASS::acg::ACGToACGMapsMsg<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>(acg, mapmsg);
-//					_acg_gdim.publish(mapmsg);
-//
-//					_nb_of_zone = acg.getRobotPoseLocalization().size();
-//				}
-
 			}
-
-
 		};
 
-
-
-
-
-
-		inline void VisuAutoCompleteGraphLocalization::drawLocalizations(const AutoCompleteGraphLocalization& acg)
+		inline void VisuAutoCompleteGraphLocalization::drawLocalizations(const AutoCompleteGraphLocalization &acg)
 		{
 			_localization_edge_markers.header.stamp = ros::Time::now();
 			auto edges = acg.getLocalizationEdges();
-			if(edges.size() != _localization_edge_markers.points.size()){
+			if (edges.size() != _localization_edge_markers.points.size())
+			{
 				_localization_edge_markers.points.clear();
 				auto it = edges.begin();
-				for(it ; it != edges.end() ; ++it){
-					for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+				for (it; it != edges.end(); ++it)
+				{
+					for (auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end(); ++ite2)
+					{
 
 						geometry_msgs::Point p;
 
-						g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
-						g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
+						g2o::VertexSE2ACG *ptr = dynamic_cast<g2o::VertexSE2ACG *>((*ite2));
+						g2o::VertexPointXYACG *ptr2 = dynamic_cast<g2o::VertexPointXYACG *>((*ite2));
 
-						if(ptr != NULL){
-// 						std::cout << "Got a VertexSE2" << std::endl;
+						if (ptr != NULL)
+						{
+							// 						std::cout << "Got a VertexSE2" << std::endl;
 							auto vertex = ptr->estimate().toVector();
 							p.x = vertex(0);
 							p.y = vertex(1);
 							p.z = 0;
 						}
-						else if(ptr2 != NULL){
-// 						std::cout << "Got a VertexPOINTXY" << std::endl;
+						else if (ptr2 != NULL)
+						{
+							// 						std::cout << "Got a VertexPOINTXY" << std::endl;
 							auto vertex = ptr2->estimate();
 							p.x = vertex(0);
 							p.y = vertex(1);
 							p.z = 0;
 						}
-						else{
+						else
+						{
 							throw std::runtime_error("Links do not have the good vertex type");
 						}
 
@@ -287,45 +268,48 @@ namespace AASS {
 			_localization_pub.publish(_localization_edge_markers);
 		}
 
-
-		inline void VisuAutoCompleteGraphLocalization::drawCorrectRobotPoses(const AutoCompleteGraphLocalization& acg)
+		inline void VisuAutoCompleteGraphLocalization::drawCorrectRobotPoses(const AutoCompleteGraphLocalization &acg)
 		{
 			_correct_robot_pose.header.stamp = ros::Time::now();
 			auto poses = acg.getRobotPoseLocalization();
-			if(poses.size() != _correct_robot_pose.points.size()){
-			_correct_robot_pose.points.clear();
-			for(auto pose : poses){
-//					for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+			if (poses.size() != _correct_robot_pose.points.size())
+			{
+				_correct_robot_pose.points.clear();
+				for (auto pose : poses)
+				{
 
-				geometry_msgs::Point p;
-				Eigen::Affine3d pose_affine = pose->getPose();
-				Eigen::Isometry2d pose_iso = Affine3d2Isometry2d(pose_affine);
-				g2o::SE2 pose_se2(pose_iso);
-				p.x = pose_se2.toVector()(0);
-				p.y = pose_se2.toVector()(1);
-				p.z = 0;
-				_correct_robot_pose.points.push_back(p);
+					geometry_msgs::Point p;
+					Eigen::Affine3d pose_affine = pose->getPose();
+					Eigen::Isometry2d pose_iso = Affine3d2Isometry2d(pose_affine);
+					g2o::SE2 pose_se2(pose_iso);
+					p.x = pose_se2.toVector()(0);
+					p.y = pose_se2.toVector()(1);
+					p.z = 0;
+					_correct_robot_pose.points.push_back(p);
 				}
 			}
 
 			_correct_robot_pose_pub.publish(_correct_robot_pose);
 		}
 
-		inline void VisuAutoCompleteGraphLocalization::drawLocalizationLandmarks(const AutoCompleteGraphLocalization& acg)
+		inline void VisuAutoCompleteGraphLocalization::drawLocalizationLandmarks(const AutoCompleteGraphLocalization &acg)
 		{
 			_last_seen_landmark_in_mcl_pose.header.stamp = ros::Time::now();
 			_last_seen_landmark_in_mcl_pose.points.clear();
 
 			std::cout << "There are " << acg.getLandmarkNodes().size() << " nodes " << std::endl;
 
-			for(auto landmark : acg.getLandmarkNodes()){
+			for (auto landmark : acg.getLandmarkNodes())
+			{
 
-				std::unordered_set <std::shared_ptr<AASS::acg::LocalizationPointer>> localization = landmark->getLocalization();
+				std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer>> localization = landmark->getLocalization();
 
-				for (auto loc: localization) {
+				for (auto loc : localization)
+				{
 					auto locali = acg.getRobotPoseLocalization();
 
-					if(loc->vertex_mcl_pose == locali[ acg.getRobotPoseLocalization().size() -1 ] ){
+					if (loc->vertex_mcl_pose == locali[acg.getRobotPoseLocalization().size() - 1])
+					{
 						geometry_msgs::Point p;
 						Eigen::Vector2d pose_landmark = loc->landmarkSeenByMCLInGlobalFrame().head(2);
 						p.x = pose_landmark(0);
@@ -333,67 +317,66 @@ namespace AASS {
 						p.z = 0;
 						_last_seen_landmark_in_mcl_pose.points.push_back(p);
 					}
-
 				}
-					//The landmark pose should be in the mcl pose frame and not the robot mapping frame.
-
 			}
 
 			_last_landmark.publish(_last_seen_landmark_in_mcl_pose);
 		}
 
-		inline  void VisuAutoCompleteGraphLocalization::drawPoseLocalizations(const AutoCompleteGraphLocalization &acg) {
+		inline void VisuAutoCompleteGraphLocalization::drawPoseLocalizations(const AutoCompleteGraphLocalization &acg)
+		{
 
 			_ndt_node_localization_markers.header.stamp = ros::Time::now();
 			_ndt_node_localization_markers.points.clear();
 			auto loc_vec = acg.getRobotPoseLocalization();
-			for(auto loc : loc_vec) {
+			for (auto loc : loc_vec)
+			{
 
 				geometry_msgs::Point p;
-				g2o::VertexSE2RobotLocalization* ptr = dynamic_cast<g2o::VertexSE2RobotLocalization*>(loc);
+				g2o::VertexSE2RobotLocalization *ptr = dynamic_cast<g2o::VertexSE2RobotLocalization *>(loc);
 				auto vertex = ptr->localizationInGlobalFrame();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
 				p.y = vertex(1);
 				p.z = acg.getZElevation();
 				_ndt_node_localization_markers.points.push_back(p);
-
-
 			}
 			_localization_pose_pub.publish(_ndt_node_localization_markers);
 		}
 
-		inline  void VisuAutoCompleteGraphLocalization::drawPriorObservations(const AutoCompleteGraphLocalization &acg) {
-
-
-//			std::cout << "Prior observatrion print DRAWING " << _prior_observations.points.size() << std::endl;
-//			int aaa;
-//			std::cin >> aaa;
-
+		inline void VisuAutoCompleteGraphLocalization::drawPriorObservations(const AutoCompleteGraphLocalization &acg)
+		{
 			_prior_observations.points.clear();
 			_prior_observations.header.stamp = ros::Time::now();
 			auto observations = acg.getPriorObservations();
-			for(auto obs : observations) {
+			for (auto obs : observations)
+			{
 
 				bool from_mcl = false;
-				for(auto vertex : obs->vertices() ){
+				for (auto vertex : obs->vertices())
+				{
 					geometry_msgs::Point p;
-					g2o::VertexXYPrior* ptr = dynamic_cast<g2o::VertexXYPrior*>(vertex);
-					if(ptr != NULL){
+					g2o::VertexXYPrior *ptr = dynamic_cast<g2o::VertexXYPrior *>(vertex);
+					if (ptr != NULL)
+					{
 						from_mcl = true;
 					}
 				}
-				if(from_mcl == true){
+				if (from_mcl == true)
+				{
 
 					int old_size = _prior_observations.points.size();
 
 					Eigen::Vector2d measurement = obs->measurement();
-					Eigen::Vector3d measurement3d; measurement3d << measurement(0), measurement(1), 0;
+					Eigen::Vector3d measurement3d;
+					measurement3d << measurement(0), measurement(1), 0;
 
 					g2o::SE2 robot_frame;
-					for(auto vertex : obs->vertices() ){
-						g2o::VertexSE2RobotLocalization* ptr = dynamic_cast<g2o::VertexSE2RobotLocalization*>(vertex);
-						if(ptr != NULL){
+					for (auto vertex : obs->vertices())
+					{
+						g2o::VertexSE2RobotLocalization *ptr = dynamic_cast<g2o::VertexSE2RobotLocalization *>(vertex);
+						if (ptr != NULL)
+						{
 							robot_frame = ptr->estimate();
 							auto vertex = robot_frame.toVector();
 							//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
@@ -415,85 +398,21 @@ namespace AASS {
 					_prior_observations.points.push_back(p2);
 
 					assert(_prior_observations.points.size() == old_size + 2);
-
-
-//					for(auto vertex : obs->vertices() ){
-//						geometry_msgs::Point p;
-//						g2o::VertexXYPrior* ptr = dynamic_cast<g2o::VertexXYPrior*>(vertex);
-//						g2o::VertexSE2RobotLocalization* ptr_loc = dynamic_cast<g2o::VertexSE2RobotLocalization*>(vertex);
-////						g2o::VertexSE2RobotPose* ptr_robot_pose = dynamic_cast<g2o::VertexSE2RobotPose*>(vertex);
-//						if(ptr != NULL){
-//							auto vertex = ptr->estimate();
-//							//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-//							p.x = vertex(0);
-//							p.y = vertex(1);
-//							p.z = acg.getZElevation();
-////							_prior_observations.points.push_back(p);
-//
-//							assert(ptr->landmarks.size() > 0);
-//
-//							bool empty = true;
-//							if(_prior_observations.points.size() > 0){
-//								std::cout << "PRIOR OBS " << p.x << " " << p.y << std::endl;
-//								_prior_observations.points.push_back(p);
-//								empty = false;
-//							}
-//
-//							std::cout << "Landmarks " << ptr->landmarks.size() << std::endl;
-//							for(auto land : ptr->landmarks){
-//								geometry_msgs::Point p_land;
-//								auto vertex_land = land->estimate();
-//								//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-//								p_land.x = vertex_land(0);
-//								p_land.y = vertex_land(1);
-//								p_land.z = acg.getZElevation();
-//								_prior_observations.points.push_back(p);
-//								_prior_observations.points.push_back(p_land);
-//								std::cout << "Between: " << vertex_land << " and the prior " << vertex << std::endl;
-//							}
-//
-//							if(empty) {
-//								std::cout << "PRIOR OBS " << p.x << " " << p.y << std::endl;
-//								_prior_observations.points.push_back(p);
-//							}
-//
-//						}
-//						else if(ptr_loc != NULL){
-//							auto vertex = ptr_loc->estimate().toVector();
-//							//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-//							p.x = vertex(0);
-//							p.y = vertex(1);
-//							p.z = acg.getZElevation();
-//							std::cout << "PRIOR OBS Loc " << p.x << " " << p.y << std::endl;
-//							_prior_observations.points.push_back(p);
-//						}
-////						else if(ptr_robot_pose != NULL){
-////							auto vertex = ptr_robot_pose->estimate().toVector();
-////							//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
-////							p.x = vertex(0);
-////							p.y = vertex(1);
-////							p.z = acg.getZElevation();
-////							std::cout << "PRIOR OBS Robot pose " << p.x << " " << p.y << std::endl;
-////							_prior_observations.points.push_back(p);
-////						}
-//						else{
-//							throw std::runtime_error("Vertex type not found in visu of mcl observation edge");
-//						}
-//					}
 				}
-				else{
+				else
+				{
 					ROS_DEBUG_STREAM("Not from mcl");
 				}
-
 			}
-//			std::cout << "Prior observatrion print " << _prior_observations.points.size() << std::endl;
 			_prior_observations_pub.publish(_prior_observations);
 		}
 
-		inline void VisuAutoCompleteGraphLocalization::drawMCL(const AutoCompleteGraphLocalization &acg){
+		inline void VisuAutoCompleteGraphLocalization::drawMCL(const AutoCompleteGraphLocalization &acg)
+		{
 			_mcl_poses.header.stamp = ros::Time::now();
 			_mcl_poses.points.clear();
-			for(auto robotpose : acg.getRobotPoseLocalization()){
+			for (auto robotpose : acg.getRobotPoseLocalization())
+			{
 				Eigen::Vector3d loc = robotpose->localizationInGlobalFrame();
 
 				geometry_msgs::Point p;
@@ -506,35 +425,29 @@ namespace AASS {
 			_mcl_localization.publish(_mcl_poses);
 		}
 
-		inline void VisuAutoCompleteGraphLocalization::drawMCLAngles(const AutoCompleteGraphLocalization &acg) {
+		inline void VisuAutoCompleteGraphLocalization::drawMCLAngles(const AutoCompleteGraphLocalization &acg)
+		{
 			ROS_DEBUG_STREAM("Getting the angles");
 			_mcl_angles_markers.header.stamp = ros::Time::now();
 			auto localizations = acg.getRobotPoseLocalization();
 			_mcl_angles_markers.points.clear();
 
-			for(auto loc : localizations){
+			for (auto loc : localizations)
+			{
 
 				geometry_msgs::Point p;
-				// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXYACG*>((*it));
 				auto vertex = loc->localizationInGlobalFrame();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
 				p.y = vertex(1);
 				p.z = acg.getZElevation();
 				_mcl_angles_markers.points.push_back(p);
-
-				// 				std::cout << "getting the angle" << std::endl;
-
 				double angle = vertex(2);
-//				double anglew = (*it)->getAngleWidth(i);
-
-				// 				std::cout << "angle " << angle<< std::endl;
 				geometry_msgs::Point p2;
 				p2.x = p.x + (2 * std::cos(angle));
 				p2.y = p.y + (2 * std::sin(angle));
 				p2.z = acg.getZElevation();
 				_mcl_angles_markers.points.push_back(p2);
-
 			}
 
 			_mcl_angles_pub.publish(_mcl_angles_markers);
@@ -542,10 +455,10 @@ namespace AASS {
 			auto robotpose = acg.getRobotNodes();
 			_robot_pose_angles_markers.points.clear();
 
-			for(auto robop : robotpose){
+			for (auto robop : robotpose)
+			{
 
 				geometry_msgs::Point p;
-				// 				VertexLandmarkNDT* ptr = dynamic_cast<g2o::VertexPointXYACG*>((*it));
 				auto vertex = robop->estimate().toVector();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
@@ -553,40 +466,34 @@ namespace AASS {
 				p.z = acg.getZElevation();
 				_robot_pose_angles_markers.points.push_back(p);
 
-				// 				std::cout << "getting the angle" << std::endl;
-
 				double angle = vertex(2);
-//				double anglew = (*it)->getAngleWidth(i);
-
-				// 				std::cout << "angle " << angle<< std::endl;
 				geometry_msgs::Point p2;
 				p2.x = p.x + (2 * std::cos(angle));
 				p2.y = p.y + (2 * std::sin(angle));
 				p2.z = acg.getZElevation();
 				_robot_pose_angles_markers.points.push_back(p2);
-
 			}
-//
+			//
 			_robot_pose_angles_pub.publish(_robot_pose_angles_markers);
 		}
 
-
-
 		//Specialized this one
-		template<>
-		inline void AASS::acg::VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>::drawPrior(const AASS::acg::AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>& acg)
+		template <>
+		inline void AASS::acg::VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG>::drawPrior(const AASS::acg::AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior, g2o::EdgeXYPriorACG> &acg)
 		{
-//			std::cout << "Drawing the prior" << std::endl;
 			_prior_edge_markers.header.stamp = ros::Time::now();
 			auto edges = acg.getPrior()->getEdges();
-			if(edges.size() != _prior_edge_markers.points.size()){
+			if (edges.size() != _prior_edge_markers.points.size())
+			{
 				_prior_edge_markers.points.clear();
 
 				auto it = edges.begin();
-				for(it ; it != edges.end() ; ++it){
-					for(auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end() ; ++ite2){
+				for (it; it != edges.end(); ++it)
+				{
+					for (auto ite2 = (*it)->vertices().begin(); ite2 != (*it)->vertices().end(); ++ite2)
+					{
 						geometry_msgs::Point p;
-						g2o::VertexXYPrior* ptr = dynamic_cast<g2o::VertexXYPrior*>((*ite2));
+						g2o::VertexXYPrior *ptr = dynamic_cast<g2o::VertexXYPrior *>((*ite2));
 						auto vertex = ptr->estimate();
 						//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 						p.x = vertex(0);
@@ -603,90 +510,85 @@ namespace AASS {
 				_angles_prior_markers.header.stamp = ros::Time::now();
 				_anglesw_prior_markers.header.stamp = ros::Time::now();
 				auto itt = prior_node.begin();
-				for(itt ; itt != prior_node.end() ; ++itt){
+				for (itt; itt != prior_node.end(); ++itt)
+				{
 
 					geometry_msgs::Point p;
-					g2o::VertexXYPrior* ptr = dynamic_cast<g2o::VertexXYPrior*>((*itt));
+					g2o::VertexXYPrior *ptr = dynamic_cast<g2o::VertexXYPrior *>((*itt));
 					auto vertex = ptr->estimate();
 					//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 					p.x = vertex(0);
 					p.y = vertex(1);
 					p.z = acg.getZElevation();
 					_prior_node_markers.points.push_back(p);
-
-// 				std::cout << "Drawing angles landmark" << std::endl;
-					//NO PRIOR ANGLE YET HERE
 					drawPriorAngles(acg, *ptr, vertex);
-
 				}
-			}else{
-				ROS_DEBUG_STREAM("SAME SIZE PRIOR " );
 			}
-//			std::cout << "Edges size prior " << _prior_edge_markers.points.size() << std::endl;
+			else
+			{
+				ROS_DEBUG_STREAM("SAME SIZE PRIOR ");
+			}
 			_marker_pub.publish(_prior_edge_markers);
 			_prior_node_pub.publish(_prior_node_markers);
 			_angles_prior_pub.publish(_angles_prior_markers);
 			_anglesw_prior_pub.publish(_anglesw_prior_markers);
-
-//			exit(0);
 		}
 
-
-
-		inline void VisuAutoCompleteGraphLocalization::drawNDTCellObservations(const AutoCompleteGraphLocalization &acg){
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCellObservations(const AutoCompleteGraphLocalization &acg)
+		{
 			_ndt_cell_observations.header.stamp = ros::Time::now();
 			auto edges = acg.getNDTCellObservations();
 
-//			if(edges.size() != _ndt_cell_observations.points.size()){
+			_ndt_cell_observations.points.clear();
 
-				_ndt_cell_observations.points.clear();
+			for (auto edge : edges)
+			{
 
-				for(auto edge : edges){
+				for (auto ite2 = edge->vertices().begin(); ite2 != edge->vertices().end(); ++ite2)
+				{
 
+					geometry_msgs::Point p;
 
-					for(auto ite2 = edge->vertices().begin(); ite2 != edge->vertices().end() ; ++ite2){
+					g2o::VertexSE2ACG *ptr = dynamic_cast<g2o::VertexSE2ACG *>((*ite2));
+					g2o::VertexPointXYACG *ptr2 = dynamic_cast<g2o::VertexPointXYACG *>((*ite2));
 
-						geometry_msgs::Point p;
-
-						g2o::VertexSE2ACG* ptr = dynamic_cast<g2o::VertexSE2ACG*>((*ite2));
-						g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
-
-						if(ptr != NULL){
-// 						std::cout << "Got a VertexSE2" << std::endl;
-							auto vertex = ptr->estimate().toVector();
-							p.x = vertex(0);
-							p.y = vertex(1);
-							p.z = 0;
-						}
-						else if(ptr2 != NULL){
-// 						std::cout << "Got a VertexPOINTXY" << std::endl;
-							auto vertex = ptr2->estimate();
-							p.x = vertex(0);
-							p.y = vertex(1);
-							p.z = 0;
-						}
-						else{
-							throw std::runtime_error("Links do not have the good vertex type");
-						}
-
-						_ndt_cell_observations.points.push_back(p);
+					if (ptr != NULL)
+					{
+						// 						std::cout << "Got a VertexSE2" << std::endl;
+						auto vertex = ptr->estimate().toVector();
+						p.x = vertex(0);
+						p.y = vertex(1);
+						p.z = 0;
 					}
+					else if (ptr2 != NULL)
+					{
+						auto vertex = ptr2->estimate();
+						p.x = vertex(0);
+						p.y = vertex(1);
+						p.z = 0;
+					}
+					else
+					{
+						throw std::runtime_error("Links do not have the good vertex type");
+					}
+
+					_ndt_cell_observations.points.push_back(p);
 				}
-//			}
+			}
 			_ndt_cell_observation_pub.publish(_ndt_cell_observations);
 		}
 
-		inline void VisuAutoCompleteGraphLocalization::drawNDTCellAssociations(const AutoCompleteGraphLocalization &acg){
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCellAssociations(const AutoCompleteGraphLocalization &acg)
+		{
 			_ndt_cell_associations.header.stamp = ros::Time::now();
 			auto edges = acg.getNDTCellAssociations();
 
-//			if(edges.size() != _ndt_cell_observations.points.size()){
-
 			_ndt_cell_associations.points.clear();
 
-			for(auto edge : edges){
+			for (auto edge : edges)
+			{
 
-				g2o::VertexNDTCell* cell =  dynamic_cast<g2o::VertexNDTCell*>(edge->vertices()[0]);
+				g2o::VertexNDTCell *cell = dynamic_cast<g2o::VertexNDTCell *>(edge->vertices()[0]);
 
 				geometry_msgs::Point p_cell;
 				p_cell.x = cell->estimate()(0);
@@ -695,8 +597,9 @@ namespace AASS {
 
 				auto wall = edge->getPriorWall();
 
-				for(auto vert : wall->vertices()){
-					g2o::VertexPointXYACG* ptr = dynamic_cast<g2o::VertexPointXYACG*>(vert);
+				for (auto vert : wall->vertices())
+				{
+					g2o::VertexPointXYACG *ptr = dynamic_cast<g2o::VertexPointXYACG *>(vert);
 
 					geometry_msgs::Point p;
 					auto vertex = ptr->estimate();
@@ -708,46 +611,49 @@ namespace AASS {
 					_ndt_cell_associations.points.push_back(p_cell);
 				}
 			}
-//			}
 			_ndt_cell_association_pub.publish(_ndt_cell_associations);
 		}
-		inline void VisuAutoCompleteGraphLocalization::drawNDTCells(const AutoCompleteGraphLocalization &acg){
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCells(const AutoCompleteGraphLocalization &acg)
+		{
 			_ndt_cells.header.stamp = ros::Time::now();
 			_ndt_cells.points.clear();
 			auto node_ndtcell = acg.getNDTCells();
-			for(auto cell : node_ndtcell) {
+			for (auto cell : node_ndtcell)
+			{
 
 				geometry_msgs::Point p;
-//				g2o::VertexSE2RobotLocalization* ptr = dynamic_cast<g2o::VertexSE2RobotLocalization*>(cell);
 				auto vertex = cell->estimate();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = vertex(0);
 				p.y = vertex(1);
 				p.z = acg.getZElevation();
 				_ndt_cells.points.push_back(p);
-
 			}
 			_ndt_cell_pub.publish(_ndt_cells);
 		}
 
-		inline void VisuAutoCompleteGraphLocalization::drawNDTCellsMCL(const AutoCompleteGraphLocalization &acg){
+		inline void VisuAutoCompleteGraphLocalization::drawNDTCellsMCL(const AutoCompleteGraphLocalization &acg)
+		{
 			_ndt_cells_mcl.header.stamp = ros::Time::now();
 			_ndt_cells_mcl.points.clear();
-//			auto node_ndtcell = acg.getNDTCellObservations();
-			for(auto edge : acg.getNDTCellObservations()) {
+			for (auto edge : acg.getNDTCellObservations())
+			{
 
-				g2o::VertexSE2RobotLocalization* cell_robot;
-				g2o::VertexNDTCell* cell_node;
+				g2o::VertexSE2RobotLocalization *cell_robot;
+				g2o::VertexNDTCell *cell_node;
 
-				g2o::VertexSE2RobotLocalization* cell =  dynamic_cast<g2o::VertexSE2RobotLocalization*>(edge->vertices()[0]);
-				if(cell != NULL){
+				g2o::VertexSE2RobotLocalization *cell = dynamic_cast<g2o::VertexSE2RobotLocalization *>(edge->vertices()[0]);
+				if (cell != NULL)
+				{
 					cell_robot = cell;
-					cell_node = dynamic_cast<g2o::VertexNDTCell*>(edge->vertices()[1]);
+					cell_node = dynamic_cast<g2o::VertexNDTCell *>(edge->vertices()[1]);
 					assert(cell_node != NULL);
 				}
-				else{
-					cell_node = dynamic_cast<g2o::VertexNDTCell*>(edge->vertices()[0]);;
-					cell_robot = dynamic_cast<g2o::VertexSE2RobotLocalization*>(edge->vertices()[1]);
+				else
+				{
+					cell_node = dynamic_cast<g2o::VertexNDTCell *>(edge->vertices()[0]);
+					;
+					cell_robot = dynamic_cast<g2o::VertexSE2RobotLocalization *>(edge->vertices()[1]);
 					assert(cell_node != NULL);
 					assert(cell_robot != NULL);
 				}
@@ -759,7 +665,8 @@ namespace AASS {
 				g2o::SE2 diff_se2(diff);
 
 				Eigen::Vector2d cell_pose_t = cell_node->estimate();
-				Eigen::Vector3d cell_pose; cell_pose << cell_pose_t(0), cell_pose_t(1), loc_read(2);
+				Eigen::Vector3d cell_pose;
+				cell_pose << cell_pose_t(0), cell_pose_t(1), loc_read(2);
 
 				Eigen::Vector2d cell_trans = cell_pose_t - loc_read.head(2);
 				g2o::SE2 loc_real_se2(loc_read);
@@ -767,28 +674,21 @@ namespace AASS {
 
 				g2o::SE2 diff_se2_cell_loc = loc_real_se2.inverse() * cell_pose_real;
 
-				Eigen::Vector3d cell_trans_3d; cell_trans_3d << cell_trans(0), cell_trans(1), loc(2);
+				Eigen::Vector3d cell_trans_3d;
+				cell_trans_3d << cell_trans(0), cell_trans(1), loc(2);
 				g2o::SE2 cell_trans_se2(cell_trans_3d);
 				g2o::SE2 loc_se2(loc);
 				g2o::SE2 new_cell_pose = loc_se2 * diff_se2_cell_loc;
 
-//				g2o::SE2 cell_pose_se2(cell_pose);
-//				cell_pose_se2 = cell_pose_se2 * diff_se2;
-
 				geometry_msgs::Point p;
-//				g2o::VertexSE2RobotLocalization* ptr = dynamic_cast<g2o::VertexSE2RobotLocalization*>(cell);
-//				auto vertex = cell->estimate();
 				//Getting the translation out of the transform : https://en.wikipedia.org/wiki/Transformation_matrix
 				p.x = new_cell_pose.toVector()(0);
 				p.y = new_cell_pose.toVector()(1);
 				p.z = acg.getZElevation();
 				_ndt_cells_mcl.points.push_back(p);
-
 			}
 			_mcl_ndt_cell_pub.publish(_ndt_cells_mcl);
 		}
-
-
 
 	}
 }

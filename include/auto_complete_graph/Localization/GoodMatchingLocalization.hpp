@@ -6,93 +6,69 @@
 #include "RvizPointsLocalization.hpp"
 #include <geometry_msgs/PointStamped.h>
 
-namespace AASS {
+namespace AASS
+{
 
-	namespace acg{
-
+	namespace acg
+	{
 
 		/*
 		 * Get Points from Rviz. THose point are used to marked good links and the class can use them to calculate a number of outliers
 		 */
-		class GoodMatchingsLocalization : public RvizPointsLocalization {
+		class GoodMatchingsLocalization : public RvizPointsLocalization
+		{
 
 		public:
-			GoodMatchingsLocalization(ros::NodeHandle nh, AutoCompleteGraphLocalization* acg) : RvizPointsLocalization(nh, acg){
+			GoodMatchingsLocalization(ros::NodeHandle nh, AutoCompleteGraphLocalization *acg) : RvizPointsLocalization(nh, acg)
+			{
 			}
 
 			/**
 			 * @brief register a point from either the prior or the robot map. Start with the prior
 			 */
-			virtual void clicked(const geometry_msgs::PointStamped::ConstPtr& msg){
+			virtual void clicked(const geometry_msgs::PointStamped::ConstPtr &msg)
+			{
 				std::cout << "Clicked !!! " << _flag_go << std::endl;
 				cv::Point2f point(msg->point.x, msg->point.y);
 
-				if(_flag_go == false){
+				if (_flag_go == false)
+				{
 					_tmp_point = point;
 				}
-				else{
+				else
+				{
 					std::cout << "add point" << std::endl;
 					MatchLocalization match(_tmp_point, point);
 					match.getNodes(*_acg);
 
-					if(checkMatchExist(match) == false)
+					if (checkMatchExist(match) == false)
 					{
 						_points.push_back(match);
 					}
 				}
 
-				if(_flag_go == true){
+				if (_flag_go == true)
+				{
 					_flag_go = false;
 				}
-				else{
+				else
+				{
 					_flag_go = true;
 				}
 
 				publishAll();
-
 			}
 
-			/**
-			 * @brief return the number of outliers link-edges.
-			 */
-//			void getOutliers(){
-//				int good = 0;
-//				int all = _acg->getLinkEdges().size();
-//				for(auto it = _points.begin(); it != _points.end(); ++it){
-//					auto links = _acg->getLinkEdges();
-//					for(auto it_acg = links.begin(); it_acg != links.end(); ++it_acg){
-//
-//						g2o::VertexSE2Prior* ptr = dynamic_cast<g2o::VertexSE2Prior*>((*it_acg)->vertices()[0]);
-//						if(ptr == NULL){
-//							std::cout << ptr << " and " << (*it_acg)->vertices()[0] << std::endl;
-//							throw std::runtime_error("Links do not have the good vertex type. Prior lae");
-//						}
-//						g2o::VertexPointXYACG* ptr2 = dynamic_cast<g2o::VertexPointXYACG*>((*it_acg)->vertices()[1]);
-//						if(ptr2 == NULL){
-//							throw std::runtime_error("Links do not have the good vertex type. Landmark");
-//						}
-//
-//						if(it->getLandmarkNode() == ptr2 && it->getPriorNode() == ptr){
-//							++good;
-//						}
-//
-//					}
-//				}
-//
-//				std::cout << "/******************************************************************/" << std::endl;
-//				std::cout << "outliers : " << all - good << " with " << good << " good links" << std::endl;
-//				std::cout << "/******************************************************************/" << std::endl;
-//
-//			}
-
-			void publishAll(){
+			void publishAll()
+			{
 
 				std::cout << "Publishing " << _points.size() << std::endl;
 
 				_link_markers.points.clear();
 				_link_markers.header.stamp = ros::Time::now();
 
-				for(auto it = _points.begin(); it != _points.end(); ++it){
+				for (auto it = _points.begin(); it != _points.end(); ++it)
+				{
 					geometry_msgs::Point p;
 
 					auto vertex = it->getPriorNode()->estimate();
@@ -112,27 +88,25 @@ namespace AASS {
 					std::cout << "second point " << p.x << " " << p.y << std::endl;
 
 					_link_markers.points.push_back(p);
-
 				}
 
 				_link_pub.publish(_link_markers);
-
 			}
 
 		private:
-			bool checkMatchExist(MatchLocalization& match){
+			bool checkMatchExist(MatchLocalization &match)
+			{
 
-				for(auto it = _points.begin(); it != _points.end(); ++it){
-					if(match.getPriorNode() == it->getPriorNode() && match.getLandmarkNode() == it->getLandmarkNode() ){
+				for (auto it = _points.begin(); it != _points.end(); ++it)
+				{
+					if (match.getPriorNode() == it->getPriorNode() && match.getLandmarkNode() == it->getLandmarkNode())
+					{
 						return true;
 					}
 				}
 
 				return false;
-
 			}
-
-
 		};
 	}
 

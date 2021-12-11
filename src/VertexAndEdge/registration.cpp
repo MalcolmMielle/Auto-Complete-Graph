@@ -33,7 +33,8 @@
 #include <iostream>
 //#include <auto_complete_graph/VertexAndEdge/VertexSE2RobotPose.hpp>
 
-namespace g2o {
+namespace g2o
+{
 
 	G2O_REGISTER_TYPE_GROUP(acgvertex);
 
@@ -41,7 +42,6 @@ namespace g2o {
 	G2O_REGISTER_TYPE(VERTEX_SE2_PRIOR, VertexSE2Prior);
 	G2O_REGISTER_TYPE(VERTEX_SE2_LANDMARK, VertexLandmarkNDT);
 	G2O_REGISTER_TYPE(VERTEX_XY_PRIOR, VertexXYPrior);
-
 
 	G2O_REGISTER_TYPE(EDGE_SE2_PRIOR, EdgeSE2Prior_malcolm);
 	G2O_REGISTER_TYPE(EDGE_LANDMARK, EdgeLandmark_malcolm);
@@ -51,6 +51,6 @@ namespace g2o {
 	G2O_REGISTER_TYPE(EDGE_XY_PRIOR_ACG, EdgeXYPriorACG);
 	G2O_REGISTER_TYPE(EDGE_XY_XY, EdgePointXYACG);
 
-//	EdgeXYPrior e;
+	//	EdgeXYPrior e;
 
 } // end namespace

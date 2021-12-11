@@ -44,8 +44,6 @@
 #include <auto_complete_graph/VertexAndEdge/EdgeXYPrior.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgePriorObservation.hpp>
 
-
 //EdgeXYPrior e;
-
 
 #endif

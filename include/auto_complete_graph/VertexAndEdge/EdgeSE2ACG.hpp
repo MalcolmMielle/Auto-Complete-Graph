@@ -32,67 +32,69 @@
 #include "g2o/core/base_binary_edge.h"
 //#include "g2o/types/slam2d/g2o_types_slam2d_api.h"
 
-namespace g2o {
+namespace g2o
+{
 
 	/**
 	 * \brief 2D edge between two Vertex2
 	 */
 	class EdgeSE2ACG : public BaseBinaryEdge<3, SE2, VertexSE2ACG, VertexSE2ACG>
-{
-	public:
-	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	EdgeSE2ACG();
-
-	void computeError()
 	{
-		const VertexSE2ACG* v1 = static_cast<const VertexSE2ACG*>(_vertices[0]);
-		const VertexSE2ACG* v2 = static_cast<const VertexSE2ACG*>(_vertices[1]);
-		SE2 delta = _inverseMeasurement * (v1->estimate().inverse()*v2->estimate());
-		_error = delta.toVector();
-	}
-	virtual bool read(std::istream& is);
-	virtual bool write(std::ostream& os) const;
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		EdgeSE2ACG();
 
-	virtual void setMeasurement(const SE2& m){
-		_measurement = m;
-		_inverseMeasurement = m.inverse();
-	}
+		void computeError()
+		{
+			const VertexSE2ACG *v1 = static_cast<const VertexSE2ACG *>(_vertices[0]);
+			const VertexSE2ACG *v2 = static_cast<const VertexSE2ACG *>(_vertices[1]);
+			SE2 delta = _inverseMeasurement * (v1->estimate().inverse() * v2->estimate());
+			_error = delta.toVector();
+		}
+		virtual bool read(std::istream &is);
+		virtual bool write(std::ostream &os) const;
 
-	virtual bool setMeasurementData(const number_t* d){
-		_measurement=SE2(d[0], d[1], d[2]);
-		_inverseMeasurement = _measurement.inverse();
-		return true;
-	}
+		virtual void setMeasurement(const SE2 &m)
+		{
+			_measurement = m;
+			_inverseMeasurement = m.inverse();
+		}
 
-	virtual bool getMeasurementData(number_t* d) const {
-		Vector3 v=_measurement.toVector();
-		d[0] = v[0];
-		d[1] = v[1];
-		d[2] = v[2];
-		return true;
-	}
+		virtual bool setMeasurementData(const number_t *d)
+		{
+			_measurement = SE2(d[0], d[1], d[2]);
+			_inverseMeasurement = _measurement.inverse();
+			return true;
+		}
 
-	virtual int measurementDimension() const {return 3;}
+		virtual bool getMeasurementData(number_t *d) const
+		{
+			Vector3 v = _measurement.toVector();
+			d[0] = v[0];
+			d[1] = v[1];
+			d[2] = v[2];
+			return true;
+		}
 
-	virtual bool setMeasurementFromState() {
-		const VertexSE2ACG* v1 = static_cast<const VertexSE2ACG*>(_vertices[0]);
-		const VertexSE2ACG* v2 = static_cast<const VertexSE2ACG*>(_vertices[1]);
-		_measurement = v1->estimate().inverse()*v2->estimate();
-		_inverseMeasurement = _measurement.inverse();
-		return true;
-	}
+		virtual int measurementDimension() const { return 3; }
 
+		virtual bool setMeasurementFromState()
+		{
+			const VertexSE2ACG *v1 = static_cast<const VertexSE2ACG *>(_vertices[0]);
+			const VertexSE2ACG *v2 = static_cast<const VertexSE2ACG *>(_vertices[1]);
+			_measurement = v1->estimate().inverse() * v2->estimate();
+			_inverseMeasurement = _measurement.inverse();
+			return true;
+		}
 
-	virtual number_t initialEstimatePossible(const OptimizableGraph::VertexSet& , OptimizableGraph::Vertex* ) { return 1.;}
-	virtual void initialEstimate(const OptimizableGraph::VertexSet& from, OptimizableGraph::Vertex* to);
+		virtual number_t initialEstimatePossible(const OptimizableGraph::VertexSet &, OptimizableGraph::Vertex *) { return 1.; }
+		virtual void initialEstimate(const OptimizableGraph::VertexSet &from, OptimizableGraph::Vertex *to);
 #ifndef NUMERIC_JACOBIAN_TWO_D_TYPES
-	virtual void linearizeOplus();
+		virtual void linearizeOplus();
 #endif
 	protected:
-	SE2 _inverseMeasurement;
-};
-
-
+		SE2 _inverseMeasurement;
+	};
 
 } // end namespace
 
