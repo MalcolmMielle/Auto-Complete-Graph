@@ -21,20 +21,12 @@ namespace acg {
  */
 class ACGMCLLocalization : public perception_oru::particle_filter {
    protected:
-    // 		boost::shared_ptr<perception_oru::particle_filter> _ndtmcl;
     bool mcl_loaded_;
-
     Eigen::Affine3d _sensor_pose;
-
     std::vector<Localization> _localization;
 
    public:
-    // map publishing function
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-    //		ACGMCLLocalization(std::string mapFile_, int particleCount_) :
-    // mcl_loaded_(false), perception_oru::particle_filter(mapFile_,
-    // particleCount_){};
 
     ACGMCLLocalization(perception_oru::NDTMap* ndtMap_,
                        int particleCount_ /*, init_type initializationType_*/,
@@ -117,10 +109,6 @@ class ACGMCLLocalization : public perception_oru::particle_filter {
         loc.cov = cov;
         loc.index = index;
         _localization.push_back(loc);
-
-        //			_mean_saved.push_back(mean);
-        //			_cov_saved.push_back(cov);
-        //			_indexes.push_back(index);
     }
 
     void saveCov(int index = -1) {
@@ -136,7 +124,6 @@ class ACGMCLLocalization : public perception_oru::particle_filter {
 
     void toMessage(auto_complete_graph::GraphMapLocalizationMsg& msg) {
         for (auto const& localization : _localization) {
-            //				assert(localization.cov(0, 0) != -1);
             auto_complete_graph::LocalizationMsg loc_msg =
                 AASS::acg::toMessage(localization);
             msg.localizations.push_back(loc_msg);
@@ -155,7 +142,6 @@ class ACGMCLLocalization : public perception_oru::particle_filter {
 };
 
 }  // namespace acg
-
 }  // namespace AASS
 
 #endif

@@ -33,8 +33,6 @@
 #include <auto_complete_graph/VertexAndEdge/VertexXYPrior.hpp>
 #include "g2o/config.h"
 
-//#include <auto_complete_graph/VertexAndEdge/EdgeInterfaceMalcolm.hpp>
-
 #include <auto_complete_graph/VertexAndEdge/EdgeLandmark.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeLinkXY.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeLocalization.hpp>
@@ -43,7 +41,5 @@
 #include <auto_complete_graph/VertexAndEdge/EdgePriorObservation.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeSE2Prior.hpp>
 #include <auto_complete_graph/VertexAndEdge/EdgeXYPrior.hpp>
-
-// EdgeXYPrior e;
 
 #endif

@@ -197,14 +197,12 @@ class AutoCompleteGraph
             // Update ALL links
             auto it = this->_nodes_landmark.begin();
             for (it; it != this->_nodes_landmark.end(); it++) {
-                // 		std::cout << "Working on links " << std::endl;
                 Eigen::Vector2d pose_landmark = (*it)->estimate();
                 auto it_prior = this->_prior->getNodes().begin();
                 for (it_prior; it_prior != this->_prior->getNodes().end();
                      ++it_prior) {
                     // Don't add the same link twice
                     if (this->linkAlreadyExist(*it, *it_prior) == false) {
-                        // TODO TEST IT
                         if (this->_flag_use_corner_orientation == false ||
                             (this->_flag_use_corner_orientation == true &&
                              (*it)->sameOrientation(
@@ -215,9 +213,6 @@ class AutoCompleteGraph
                             pose_prior << pose_tmp(0), pose_tmp(1);
                             double norm_tmp =
                                 (pose_prior - pose_landmark).norm();
-                            // 				std::cout << "new" <<
-                            // std::endl;
-
                             // Update the link
                             if (norm_tmp <= _min_distance_for_link_in_meter) {
                                 g2o::Vector2 vec;
@@ -243,8 +238,6 @@ class AutoCompleteGraph
 
     void checkLinkNotTooBig() {
         std::cout << "check no big links" << std::endl;
-        // Check if no small links are ledft out
-
         // Check if the link are not too big
         for (auto it_old_links = _edge_link.begin();
              it_old_links != _edge_link.end(); it_old_links++) {

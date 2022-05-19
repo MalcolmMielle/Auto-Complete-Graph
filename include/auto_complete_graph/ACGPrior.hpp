@@ -47,7 +47,6 @@ class AutoCompleteGraphPrior : public GraphElements<VERTEXTYPE, EDGETYPE> {
     void useUserCovForPrior(bool u) { _use_user_prior_cov = u; }
     bool isUsingUserCovForPrior() const { return _use_user_prior_cov; }
 
-    // FUNTION TO ADD A PRIOR GRAPH INTO THE GRAPH
     /**
      * @brief Directly use the prior graph to init the prior part of the ACG
      *

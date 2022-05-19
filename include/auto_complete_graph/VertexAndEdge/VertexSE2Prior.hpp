@@ -81,21 +81,10 @@ class VertexSE2Prior : public g2o::VertexSE2ACG {
                                     const g2o::EdgeSE2Prior_malcolm& to) const {
         auto from_vec2d = from.getOrientation2D(*this);
         auto to_vec2d = to.getOrientation2D(*this);
-
-        // 			std::cout << "from " << from_vec2d << " , " <<
-        // &from
-        // << " to " << to_vec2d << ", " << &to << std::endl;
-        // Rotate
-        // 			angle = atan2(vector2.y, vector2.x) -
-        // atan2(vector1.y, vector1.x);
         double angle_between = atan2(to_vec2d(1), to_vec2d(0)) -
                                atan2(from_vec2d(1), from_vec2d(0));
-        // 			std::cout << "Angle between " << angle_between
-        // << std::endl;
         if (angle_between < 0)
             angle_between += 2 * M_PI;
-        // 			std::cout << "Angle between " << angle_between
-        // << std::endl;
 
         double angle_from = atan2(from_vec2d(1), from_vec2d(0)) - atan2(0, 1);
         if (angle_from < 0)
@@ -116,9 +105,6 @@ class VertexSE2Prior : public g2o::VertexSE2ACG {
         }
 
         double width = std::abs(angle_to - angle_from);
-
-        // 			std::cout << "Angle between " << angle_between
-        // << std::endl;
         assert(angle_between >= 0.08);
         assert(direction >= 0);
         assert(angle_between >= 0);

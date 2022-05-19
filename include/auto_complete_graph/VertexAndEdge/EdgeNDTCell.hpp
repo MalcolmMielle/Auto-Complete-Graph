@@ -16,9 +16,7 @@ class VertexXYPrior;
 
 namespace g2o {
 
-class EdgeNDTCell : public EdgePointXYACG  // BaseBinaryEdge<1, double,
-                                           // VertexNDTCell, VertexPointXYACG>
-{
+class EdgeNDTCell : public EdgePointXYACG {
    public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
     AASS::acg::EdgeInterfaceMalcolm interface;
@@ -47,11 +45,11 @@ class EdgeNDTCell : public EdgePointXYACG  // BaseBinaryEdge<1, double,
 
         Eigen::Vector2d CCp = Eigen::Vector2d::Zero();
         //			Check if closest segment point is on the line
-        // segment of the wall 			First, check to see if the nearest
-        // point on the line AB is beyond B (as in the example above) by taking
-        // AB ⋅ BC. If this value is greater than 0, it means that the angle
-        // between AB and BC is between -90 and 90, exclusive, and therefore the
-        // nearest point on the segment AB will be B
+        // segment of the wall 			First, check to see if the
+        // nearest point on the line AB is beyond B (as in the example above) by
+        // taking AB ⋅ BC. If this value is greater than 0, it means that the
+        // angle between AB and BC is between -90 and 90, exclusive, and
+        // therefore the nearest point on the segment AB will be B
         std::tie(std::ignore, CCp) = AASS::acg::distancePointLine2(C, A, B);
         error << CCp(0), CCp(1);
         _error = error;

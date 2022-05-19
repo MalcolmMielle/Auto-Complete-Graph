@@ -3,10 +3,9 @@
 
 #include <random>
 
+#include "PriorLoaderInterface.hpp"
 #include "bettergraph/PseudoGraph.hpp"
 #include "vodigrex/linefollower/SimpleNode.hpp"
-// #include "das/CornerDetector.hpp"
-#include "PriorLoaderInterface.hpp"
 
 namespace AASS {
 namespace acg {

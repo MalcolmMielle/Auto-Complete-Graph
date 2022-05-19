@@ -202,9 +202,6 @@ class VisuAutoCompleteGraphLocalization
     void drawNDTCellsMCL(const AutoCompleteGraphLocalization& acg);
 
     void updateRviz(const AutoCompleteGraphLocalization& acg) {
-        //				std::cout << "What the fuck " << _nb_of_zone
-        //<< " and " << acg.getRobotPoseLocalization().size() << std::endl;
-        //				exit(0);
         if (_nb_of_zone != acg.getRobotPoseLocalization().size()) {
             drawLocalizations(acg);
             drawMCLAngles(acg);
@@ -215,8 +212,6 @@ class VisuAutoCompleteGraphLocalization
             drawMCL(acg);
             drawNDTCellsMCL(acg);
 
-            // 					initOccupancyGrid(*omap, 250, 250, 0.4,
-            // "/world");
             if (acg.getRobotPoseLocalization().size() > 0) {
                 nav_msgs::OccupancyGrid omap_occ;
                 int size_rl = acg.getRobotPoseLocalization().size();
@@ -225,8 +220,6 @@ class VisuAutoCompleteGraphLocalization
                     omap_occ, 0.1, "/world");
                 _last_ndtmap2_occ.publish(omap_occ);
             }
-            //					_nb_of_zone =
-            //acg.getRobotNodes().size();
         }
 
         VisuAutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior,
@@ -256,15 +249,11 @@ inline void VisuAutoCompleteGraphLocalization::drawLocalizations(
                     dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
 
                 if (ptr != NULL) {
-                    // 						std::cout << "Got a VertexSE2" <<
-                    // std::endl;
                     auto vertex = ptr->estimate().toVector();
                     p.x = vertex(0);
                     p.y = vertex(1);
                     p.z = 0;
                 } else if (ptr2 != NULL) {
-                    // 						std::cout << "Got a VertexPOINTXY" <<
-                    // std::endl;
                     auto vertex = ptr2->estimate();
                     p.x = vertex(0);
                     p.y = vertex(1);
@@ -472,7 +461,6 @@ inline void VisuAutoCompleteGraphLocalization::drawMCLAngles(
         p2.z = acg.getZElevation();
         _robot_pose_angles_markers.points.push_back(p2);
     }
-    //
     _robot_pose_angles_pub.publish(_robot_pose_angles_markers);
 }
 
@@ -552,8 +540,6 @@ inline void VisuAutoCompleteGraphLocalization::drawNDTCellObservations(
                 dynamic_cast<g2o::VertexPointXYACG*>((*ite2));
 
             if (ptr != NULL) {
-                // 						std::cout << "Got a VertexSE2"
-                // << std::endl;
                 auto vertex = ptr->estimate().toVector();
                 p.x = vertex(0);
                 p.y = vertex(1);

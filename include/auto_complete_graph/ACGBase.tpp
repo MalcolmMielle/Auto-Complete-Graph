@@ -126,7 +126,6 @@ AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::addOdometry(
         covariance_robot.fill(0.);
         covariance_robot(0, 0) = _transNoise[0] * _transNoise[0];
         covariance_robot(1, 1) = _transNoise[1] * _transNoise[1];
-        // 	covariance_prior(2, 2) = 13;//<- Rotation covariance prior
         // landmark is more than 4PI
         covariance_robot(2, 2) = _rotNoise * _rotNoise;
         information = covariance_robot.inverse();
@@ -143,9 +142,6 @@ AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::addOdometry(
     odometry->vertices()[1] = v2;
     odometry->setMeasurement(se2);
     odometry->setInformation(information);
-
-    // 	odometry->interface.setAge(_age_start_value);
-
     _optimizable_graph.addEdge(odometry);
     _edge_odometry.push_back(odometry);
 

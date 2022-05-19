@@ -4,10 +4,6 @@
 #include <auto_complete_graph/Localization/Localization.hpp>
 #include "EdgeLandmark.hpp"
 #include "VertexSE2RobotLocalization.hpp"
-//
-// namespace g2o{
-//	class VertexXYPrior;
-//}
 
 namespace AASS {
 namespace acg {
