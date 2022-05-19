@@ -67,12 +67,7 @@ class RvizPoints {
         } else {
             std::cout << "add point" << std::endl;
             Match match(_tmp_point, point);
-            // 				match.getNodes(*_acg);
-
-            // 				if(checkMatchExist(match) == false)
-            // 				{
             _points.push_back(match);
-            // 				}
         }
 
         if (_flag_go == true) {
@@ -92,9 +87,6 @@ class RvizPoints {
 
         for (auto it = _points.begin(); it != _points.end(); ++it) {
             geometry_msgs::Point p;
-
-            // 				auto vertex =
-            // it->getPriorNode()->estimate().toVector();
             auto vertex = it->getPriorPoint();
             p.x = vertex.x;
             p.y = vertex.y;
@@ -103,9 +95,6 @@ class RvizPoints {
             std::cout << "first point " << p.x << " " << p.y << std::endl;
 
             _link_markers.points.push_back(p);
-
-            // 				auto vertex2 =
-            // it->getLandmarkNode()->estimate();
             auto vertex2 = it->getLandmarkPoint();
             p.x = vertex2.x;
             p.y = vertex2.y;

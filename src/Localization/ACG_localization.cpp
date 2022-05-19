@@ -2486,7 +2486,8 @@ AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(
                     // std::endl; 		Eigen::Vector2d p2 =
                     // dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
                     //				std::cout << "p2 " << p2 <<
-                    // std::endl; 				std::cout << "p0 "
+                    // std::endl; 				std::cout << "p0
+                    // "
                     // << p0
                     // << std::endl;
 

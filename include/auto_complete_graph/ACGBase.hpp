@@ -143,7 +143,7 @@ class AutoCompleteGraphBase {
     ///@brief vector storing the odometry
     std::vector<g2o::EdgeOdometry_malcolm*> _edge_odometry;
 
-    ///@brief the main dish : the graph
+    ///@brief the main dish: the graph
     AASS::acg::OptimizableAutoCompleteGraph _optimizable_graph;
 
     // 		std::vector < NDTCornerGraphElement > _ndt_corners;
@@ -461,9 +461,7 @@ class AutoCompleteGraphBase {
                                     g2o::HyperGraph::Vertex* v1,
                                     g2o::HyperGraph::Vertex* v2);
 
-    // FUNCTION TO REMOVE A VERTEX
     void removeVertex(g2o::HyperGraph::Vertex* v1);
-    // 		void removeEdge(g2o::HyperGraph::Edge* v1);
 
     int findRobotNode(g2o::HyperGraph::Vertex* v);
     int findLandmarkNode(g2o::HyperGraph::Vertex* v);
@@ -629,7 +627,6 @@ class AutoCompleteGraphBase {
         std::vector<AASS::acg::NDTCornerGraphElement>& corners_end);
 
     // FOR TESTING
-
     virtual bool verifyInformationMatrices(bool verbose) const {
         bool allEdgeOk = true;
         Eigen::SelfAdjointEigenSolver<g2o::MatrixX> eigenSolver;

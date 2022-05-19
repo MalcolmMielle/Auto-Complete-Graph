@@ -42,7 +42,6 @@ class AutoCompleteGraphPriorSE2
                                                g2o::HyperGraph::Vertex* v1,
                                                g2o::HyperGraph::Vertex* v2);
 
-    // FUNTION TO ADD A PRIOR GRAPH INTO THE GRAPH
     /**
      * @brief Directly use the prior graph to init the prior part of the ACG
      *

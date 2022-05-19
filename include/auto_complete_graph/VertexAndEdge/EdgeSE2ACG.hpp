@@ -30,7 +30,6 @@
 #include "VertexSE2ACG.hpp"
 #include "g2o/config.h"
 #include "g2o/core/base_binary_edge.h"
-//#include "g2o/types/slam2d/g2o_types_slam2d_api.h"
 
 namespace g2o {
 

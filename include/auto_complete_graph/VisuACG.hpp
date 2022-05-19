@@ -24,7 +24,6 @@ class VisuAutoCompleteGraphBase {
     ros::Publisher _ndt_node_pub;
     ros::Publisher _prior_node_pub;
     ros::Publisher _corner_ndt_node_pub;
-    //		ros::Publisher _link_pub;
     ros::Publisher _ndtmap;
     ros::Publisher _angles_pub;
     ros::Publisher _angles_prior_pub;
@@ -36,9 +35,7 @@ class VisuAutoCompleteGraphBase {
     ros::Publisher _acg_gdim_om;
     ros::Publisher _observation_edge_pub;
 
-    // 		nav_msgs::OccupancyGrid omap;
     int _nb_of_zone;
-    //		AutoCompleteGraph* _acg;
     std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
     std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids_original;
     visualization_msgs::Marker _prior_edge_markers;
@@ -46,7 +43,6 @@ class VisuAutoCompleteGraphBase {
     visualization_msgs::Marker _ndt_node_markers;
     visualization_msgs::Marker _prior_node_markers;
     visualization_msgs::Marker _corner_ndt_node_markers;
-    //		visualization_msgs::Marker _link_markers;
     visualization_msgs::Marker _angles_markers;
     visualization_msgs::Marker _anglesw_markers;
     visualization_msgs::Marker _angles_prior_markers;
@@ -470,9 +466,6 @@ inline void AASS::acg::
             }
         }
     }
-    //			std::cout << "************************ -> Drawing " <<
-    //edges.size()
-    //<< std::endl;
     _observation_edge_pub.publish(_observation_edge_markers);
 }
 
@@ -607,8 +600,6 @@ AASS::acg::VisuAutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>::drawAngles(
         for (it; it != landmark.end(); ++it) {
             for (int i = 0; i < (*it)->getAnglesAndOrientations().size(); ++i) {
                 geometry_msgs::Point p;
-                // 				VertexLandmarkNDT* ptr =
-                // dynamic_cast<g2o::VertexPointXYACG*>((*it));
                 auto vertex = (*it)->estimate();
                 // Getting the translation out of the transform :
                 // https://en.wikipedia.org/wiki/Transformation_matrix
@@ -708,7 +699,6 @@ inline void AASS::acg::
     _ndt_node_pub.publish(_ndt_node_markers);
 }
 
-// Specialized this one
 template <>
 inline void AASS::acg::VisuAutoCompleteGraphBase<AutoCompleteGraphPriorSE2,
                                                  g2o::VertexSE2Prior,
