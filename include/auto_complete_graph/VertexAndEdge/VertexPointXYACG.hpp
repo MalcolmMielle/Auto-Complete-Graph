@@ -27,71 +27,55 @@
 #ifndef AUTOCOMPLETEGRAPH_VERTEXPOINTXYACG_11032018
 #define AUTOCOMPLETEGRAPH_VERTEXPOINTXYACG_11032018
 
-#include "g2o/types/slam2d/g2o_types_slam2d_api.h"
 #include "g2o/config.h"
 #include "g2o/core/base_vertex.h"
 #include "g2o/core/hyper_graph_action.h"
+#include "g2o/types/slam2d/g2o_types_slam2d_api.h"
 
 #include <Eigen/Core>
 
-namespace g2o
-{
+namespace g2o {
 
-	class VertexPointXYACG : public BaseVertex<2, Vector2>
-	{
-	public:
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
-		VertexPointXYACG();
+class VertexPointXYACG : public BaseVertex<2, Vector2> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+    VertexPointXYACG();
 
-		virtual void setToOriginImpl()
-		{
-			_estimate.setZero();
-		}
+    virtual void setToOriginImpl() { _estimate.setZero(); }
 
-		virtual bool setEstimateDataImpl(const number_t *est)
-		{
-			_estimate[0] = est[0];
-			_estimate[1] = est[1];
-			return true;
-		}
+    virtual bool setEstimateDataImpl(const number_t* est) {
+        _estimate[0] = est[0];
+        _estimate[1] = est[1];
+        return true;
+    }
 
-		virtual bool getEstimateData(number_t *est) const
-		{
-			est[0] = _estimate[0];
-			est[1] = _estimate[1];
-			return true;
-		}
+    virtual bool getEstimateData(number_t* est) const {
+        est[0] = _estimate[0];
+        est[1] = _estimate[1];
+        return true;
+    }
 
-		virtual int estimateDimension() const
-		{
-			return 2;
-		}
+    virtual int estimateDimension() const { return 2; }
 
-		virtual bool setMinimalEstimateDataImpl(const number_t *est)
-		{
-			return setEstimateData(est);
-		}
+    virtual bool setMinimalEstimateDataImpl(const number_t* est) {
+        return setEstimateData(est);
+    }
 
-		virtual bool getMinimalEstimateData(number_t *est) const
-		{
-			return getEstimateData(est);
-		}
+    virtual bool getMinimalEstimateData(number_t* est) const {
+        return getEstimateData(est);
+    }
 
-		virtual int minimalEstimateDimension() const
-		{
-			return 2;
-		}
+    virtual int minimalEstimateDimension() const { return 2; }
 
-		virtual void oplusImpl(const number_t *update)
-		{
-			_estimate[0] += update[0];
-			_estimate[1] += update[1];
-		}
+    virtual void oplusImpl(const number_t* update) {
+        _estimate[0] += update[0];
+        _estimate[1] += update[1];
+    }
 
-		virtual bool read(std::istream &is);
-		virtual bool write(std::ostream &os) const;
-	};
+    virtual bool read(std::istream& is);
+    virtual bool write(std::ostream& os) const;
+};
 
-}
+}  // namespace g2o
 
 #endif

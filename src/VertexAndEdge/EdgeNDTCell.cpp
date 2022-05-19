@@ -31,50 +31,52 @@
 //#include "g2o/stuff/opengl_primitives.h"
 //#endif
 
-namespace g2o
+namespace g2o {
+
+EdgeNDTCell::EdgeNDTCell(g2o::EdgeXYPriorACG* edge_prior)
+    : _prior_edge_collinear(edge_prior),
+      EdgePointXYACG()  // BaseBinaryEdge<1, double, VertexNDTCell,
+                        // VertexPointXYACG>()
 {
+    //		Eigen::Matrix2d cov = Eigen::Matrix2d::Identity();
+    //		Eigen::Matrix2d information_prior = cov.inverse();
+    //		setInformation(information_prior);
+    //		_information.setIdentity();
+    //		_error.setZero();
+}
 
-	EdgeNDTCell::EdgeNDTCell(g2o::EdgeXYPriorACG *edge_prior) : _prior_edge_collinear(edge_prior), EdgePointXYACG() //BaseBinaryEdge<1, double, VertexNDTCell, VertexPointXYACG>()
-	{
-		//		Eigen::Matrix2d cov = Eigen::Matrix2d::Identity();
-		//		Eigen::Matrix2d information_prior = cov.inverse();
-		//		setInformation(information_prior);
-		//		_information.setIdentity();
-		//		_error.setZero();
-	}
+//	bool EdgeNDTCell::read(std::istream& is)
+//	{
+//		throw(std::runtime_error("NOy implemented"));
+////		Vector2 p;
+////		is >> p[0] >> p[1];
+////		setMeasurement(p);
+////		for (int i = 0; i < 2; ++i)
+////			for (int j = i; j < 2; ++j) {
+////				is >> information()(i, j);
+////				if (i != j)
+////					information()(j, i) = information()(i,
+/// j); /			} /		return true;
+//	}
+//
+//	bool EdgeNDTCell::write(std::ostream& os) const
+//	{
+//		throw(std::runtime_error("NOy implemented"));
+////		Vector2 p = measurement();
+////		os << p.x() << " " << p.y();
+////		for (int i = 0; i < 2; ++i)
+////			for (int j = i; j < 2; ++j)
+////				os << " " << information()(i, j);
+////		return os.good();
+//	}
 
-	//	bool EdgeNDTCell::read(std::istream& is)
-	//	{
-	//		throw(std::runtime_error("NOy implemented"));
-	////		Vector2 p;
-	////		is >> p[0] >> p[1];
-	////		setMeasurement(p);
-	////		for (int i = 0; i < 2; ++i)
-	////			for (int j = i; j < 2; ++j) {
-	////				is >> information()(i, j);
-	////				if (i != j)
-	////					information()(j, i) = information()(i, j);
-	////			}
-	////		return true;
-	//	}
-	//
-	//	bool EdgeNDTCell::write(std::ostream& os) const
-	//	{
-	//		throw(std::runtime_error("NOy implemented"));
-	////		Vector2 p = measurement();
-	////		os << p.x() << " " << p.y();
-	////		for (int i = 0; i < 2; ++i)
-	////			for (int j = i; j < 2; ++j)
-	////				os << " " << information()(i, j);
-	////		return os.good();
-	//	}
+//#ifndef NUMERIC_JACOBIAN_TWO_D_TYPES
+//	void EdgeNDTCell::linearizeOplus()
+//	{
+//		_jacobianOplusXi=-Eigen::Matrix<double, 1, Di,
+// Eigen::RowMajor>::AlignedMapType::Identity(); _jacobianOplusXj=
+// Eigen::Matrix<double, 1, Dj, Eigen::RowMajor>::AlignedMapType::Identity();
+//	}
+//#endif
 
-	//#ifndef NUMERIC_JACOBIAN_TWO_D_TYPES
-	//	void EdgeNDTCell::linearizeOplus()
-	//	{
-	//		_jacobianOplusXi=-Eigen::Matrix<double, 1, Di, Eigen::RowMajor>::AlignedMapType::Identity();
-	//		_jacobianOplusXj= Eigen::Matrix<double, 1, Dj, Eigen::RowMajor>::AlignedMapType::Identity();
-	//	}
-	//#endif
-
-} // end namespace
+}  // namespace g2o
