@@ -27,26 +27,21 @@
 #include "auto_complete_graph/VertexAndEdge/VertexSE2ACG.hpp"
 #include <typeinfo>
 
-namespace g2o
-{
+namespace g2o {
 
-	VertexSE2ACG::VertexSE2ACG() : BaseVertex<3, SE2>()
-	{
-	}
+VertexSE2ACG::VertexSE2ACG() : BaseVertex<3, SE2>() {}
 
-	bool VertexSE2ACG::read(std::istream &is)
-	{
-		Vector3 p;
-		is >> p[0] >> p[1] >> p[2];
-		setEstimate(p);
-		return true;
-	}
+bool VertexSE2ACG::read(std::istream& is) {
+    Vector3 p;
+    is >> p[0] >> p[1] >> p[2];
+    setEstimate(p);
+    return true;
+}
 
-	bool VertexSE2ACG::write(std::ostream &os) const
-	{
-		Vector3 p = estimate().toVector();
-		os << p[0] << " " << p[1] << " " << p[2];
-		return os.good();
-	}
+bool VertexSE2ACG::write(std::ostream& os) const {
+    Vector3 p = estimate().toVector();
+    os << p[0] << " " << p[1] << " " << p[2];
+    return os.good();
+}
 
-} // end namespace
+}  // namespace g2o

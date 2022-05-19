@@ -1,178 +1,161 @@
 #ifndef AUTOCOMPLETEGRAPH_ACGMCLLOCALIZATION_26072018
 #define AUTOCOMPLETEGRAPH_ACGMCLLOCALIZATION_26072018
 
-#include <ndt_localization/particle_filter.hpp>
 #include <pcl/common/transforms.h>
+
+#include <ndt_localization/particle_filter.hpp>
 
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 #include "auto_complete_graph/Localization/Localization.hpp"
 #include "auto_complete_graph/Localization/LocalizationConvertion.hpp"
-
 #include "auto_complete_graph/conversion.hpp"
 #include "g2o/types/slam2d/se2.h"
 
-namespace AASS
-{
+namespace AASS {
 
-	namespace acg
-	{
+namespace acg {
 
-		/**
+/**
  * A class doing the localization published in
  * graph_map_publisher_localization.cpp
  */
-		class ACGMCLLocalization : public perception_oru::particle_filter
-		{
+class ACGMCLLocalization : public perception_oru::particle_filter {
+   protected:
+    // 		boost::shared_ptr<perception_oru::particle_filter> _ndtmcl;
+    bool mcl_loaded_;
 
-		protected:
-			// 		boost::shared_ptr<perception_oru::particle_filter> _ndtmcl;
-			bool mcl_loaded_;
+    Eigen::Affine3d _sensor_pose;
 
-			Eigen::Affine3d _sensor_pose;
+    std::vector<Localization> _localization;
 
-			std::vector<Localization> _localization;
+   public:
+    // map publishing function
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-		public:
-			// map publishing function
-			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    //		ACGMCLLocalization(std::string mapFile_, int particleCount_) :
+    // mcl_loaded_(false), perception_oru::particle_filter(mapFile_,
+    // particleCount_){};
 
-			//		ACGMCLLocalization(std::string mapFile_, int particleCount_) :
-			// mcl_loaded_(false), perception_oru::particle_filter(mapFile_,
-			// particleCount_){};
+    ACGMCLLocalization(perception_oru::NDTMap* ndtMap_,
+                       int particleCount_ /*, init_type initializationType_*/,
+                       bool be2D_ = true,
+                       bool forceSIR_ = true,
+                       double varLimit_ = 0,
+                       int sirCount_ = 0)
+        : mcl_loaded_(false),
+          perception_oru::particle_filter(ndtMap_,
+                                          particleCount_,
+                                          be2D_,
+                                          forceSIR_,
+                                          varLimit_,
+                                          sirCount_) {
+        std::cout << "FORCE SIR << forceSir_--------------->< " << forceSIR_
+                  << std::endl;
+    }
 
-			ACGMCLLocalization(perception_oru::NDTMap *ndtMap_,
-							   int particleCount_ /*, init_type initializationType_*/,
-							   bool be2D_ = true,
-							   bool forceSIR_ = true,
-							   double varLimit_ = 0,
-							   int sirCount_ = 0)
-				: mcl_loaded_(false), perception_oru::particle_filter(ndtMap_,
-																	  particleCount_,
-																	  be2D_,
-																	  forceSIR_,
-																	  varLimit_,
-																	  sirCount_)
-			{
-				std::cout << "FORCE SIR << forceSir_--------------->< " << forceSIR_
-						  << std::endl;
-			}
+    void init(double xx,
+              double yy,
+              double yaw,
+              double initVar,
+              double cov_x_mcl,
+              double cov_y_mcl,
+              double cov_yaw_mcl,
+              double scale_gaussian_mcl,
+              double numPart,
+              bool forceSIR) {
+        setMotionModelCovX(cov_x_mcl);
+        setMotionModelCovY(cov_y_mcl);
+        setMotionModelCovYaw(cov_yaw_mcl);
+        setScalingFactorGaussian(scale_gaussian_mcl);
 
-			void init(double xx,
-					  double yy,
-					  double yaw,
-					  double initVar,
-					  double cov_x_mcl,
-					  double cov_y_mcl,
-					  double cov_yaw_mcl,
-					  double scale_gaussian_mcl,
-					  double numPart,
-					  bool forceSIR)
-			{
-				setMotionModelCovX(cov_x_mcl);
-				setMotionModelCovY(cov_y_mcl);
-				setMotionModelCovYaw(cov_yaw_mcl);
-				setScalingFactorGaussian(scale_gaussian_mcl);
+        InitializeNormalConstantAngle(xx, yy, yaw, initVar);
+        mcl_loaded_ = true;
+    }
 
-				InitializeNormalConstantAngle(xx, yy, yaw, initVar);
-				mcl_loaded_ = true;
-			}
+    /// Laser scan to PointCloud expressed in the base frame
+    std::tuple<Eigen::Vector3d, Eigen::Matrix3d> localization(
+        const Eigen::Affine3d& Tmotion,
+        const pcl::PointCloud<pcl::PointXYZ>& cloud,
+        const Eigen::Affine3d& sensorpose,
+        double fraction,
+        double cutoff) {
+        if (mcl_loaded_ = true) {
+            UpdateAndPredictEff(Tmotion, cloud, sensorpose, fraction, cutoff);
+            Eigen::Matrix3d cov;
+            Eigen::Vector3d mean;
+            GetPoseMeanAndVariance2D(mean, cov);
+            return std::make_tuple(mean, cov);
+        } else {
+            std::cout << "You need to init MCL to start MCL localization"
+                      << std::endl;
+            Eigen::Matrix3d cov;
+            Eigen::Vector3d mean;
+            return std::make_tuple(mean, cov);
+        }
+    }
 
-			/// Laser scan to PointCloud expressed in the base frame
-			std::tuple<Eigen::Vector3d, Eigen::Matrix3d> localization(
-				const Eigen::Affine3d &Tmotion,
-				const pcl::PointCloud<pcl::PointXYZ> &cloud,
-				const Eigen::Affine3d &sensorpose,
-				double fraction,
-				double cutoff)
-			{
+    void setSensorPose(const Eigen::Affine3d& sen) { _sensor_pose = sen; }
 
-				if (mcl_loaded_ = true)
-				{
-					UpdateAndPredictEff(Tmotion, cloud, sensorpose, fraction, cutoff);
-					Eigen::Matrix3d cov;
-					Eigen::Vector3d mean;
-					GetPoseMeanAndVariance2D(mean, cov);
-					return std::make_tuple(mean, cov);
-				}
-				else
-				{
-					std::cout << "You need to init MCL to start MCL localization"
-							  << std::endl;
-					Eigen::Matrix3d cov;
-					Eigen::Vector3d mean;
-					return std::make_tuple(mean, cov);
-				}
-			}
+    void savePos(int index = -1) {
+        Eigen::Matrix3d cov;
+        Eigen::Vector3d mean;
+        GetPoseMeanAndVariance2D(mean, cov);
 
-			void setSensorPose(const Eigen::Affine3d &sen) { _sensor_pose = sen; }
+        Eigen::Affine3d mean_tmp =
+            Eigen::Translation<double, 3>(mean(0), mean(1), 0) *
+            Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitX()) *
+            Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitY()) *
+            Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ());
 
-			void savePos(int index = -1)
-			{
-				Eigen::Matrix3d cov;
-				Eigen::Vector3d mean;
-				GetPoseMeanAndVariance2D(mean, cov);
+        mean_tmp = mean_tmp * _sensor_pose;
+        Eigen::Isometry2d iso = Affine3d2Isometry2d(mean_tmp);
+        g2o::SE2 se(iso);
+        Eigen::Vector3d mean_sensor = se.toVector();
 
-				Eigen::Affine3d mean_tmp =
-					Eigen::Translation<double, 3>(mean(0), mean(1), 0) *
-					Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitX()) *
-					Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitY()) *
-					Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ());
+        Localization loc;
+        loc.mean = mean_sensor;
+        loc.cov = cov;
+        loc.index = index;
+        _localization.push_back(loc);
 
-				mean_tmp = mean_tmp * _sensor_pose;
-				Eigen::Isometry2d iso = Affine3d2Isometry2d(mean_tmp);
-				g2o::SE2 se(iso);
-				Eigen::Vector3d mean_sensor = se.toVector();
+        //			_mean_saved.push_back(mean);
+        //			_cov_saved.push_back(cov);
+        //			_indexes.push_back(index);
+    }
 
-				Localization loc;
-				loc.mean = mean_sensor;
-				loc.cov = cov;
-				loc.index = index;
-				_localization.push_back(loc);
+    void saveCov(int index = -1) {
+        Eigen::Matrix3d cov;
+        Eigen::Vector3d mean;
+        GetPoseMeanAndVariance2D(mean, cov);
+        _localization[index].cov = cov;
+    }
 
-				//			_mean_saved.push_back(mean);
-				//			_cov_saved.push_back(cov);
-				//			_indexes.push_back(index);
-			}
+    const std::vector<Localization>& getLocalizations() const {
+        return _localization;
+    }
 
-			void saveCov(int index = -1)
-			{
-				Eigen::Matrix3d cov;
-				Eigen::Vector3d mean;
-				GetPoseMeanAndVariance2D(mean, cov);
-				_localization[index].cov = cov;
-			}
+    void toMessage(auto_complete_graph::GraphMapLocalizationMsg& msg) {
+        for (auto const& localization : _localization) {
+            //				assert(localization.cov(0, 0) != -1);
+            auto_complete_graph::LocalizationMsg loc_msg =
+                AASS::acg::toMessage(localization);
+            msg.localizations.push_back(loc_msg);
+        }
+    }
 
-			const std::vector<Localization> &getLocalizations() const
-			{
-				return _localization;
-			}
+    /**
+     * Update the internal map and copy it
+     * @param ndtMap new map
+     */
+    void setMap(const perception_oru::NDTMap& ndtMap) {
+        std::shared_ptr<perception_oru::NDTMap> ndtmapcopy(
+            new perception_oru::NDTMap(ndtMap));
+        perception_oru::particle_filter::setMap(ndtmapcopy);
+    }
+};
 
-			void toMessage(auto_complete_graph::GraphMapLocalizationMsg &msg)
-			{
+}  // namespace acg
 
-				for (auto const &localization : _localization)
-				{
-					//				assert(localization.cov(0, 0) != -1);
-					auto_complete_graph::LocalizationMsg loc_msg =
-						AASS::acg::toMessage(localization);
-					msg.localizations.push_back(loc_msg);
-				}
-			}
-
-			/**
-   * Update the internal map and copy it
-   * @param ndtMap new map
-   */
-			void setMap(const perception_oru::NDTMap &ndtMap)
-			{
-				std::shared_ptr<perception_oru::NDTMap> ndtmapcopy(
-					new perception_oru::NDTMap(ndtMap));
-				perception_oru::particle_filter::setMap(ndtmapcopy);
-			}
-		};
-
-	}
-
-}
+}  // namespace AASS
 
 #endif

@@ -33,63 +33,54 @@
 #include "g2o/types/slam2d/se2.h"
 //#include "g2o/types/slam2d/g2o_types_slam2d_api.h"
 
-namespace g2o
-{
+namespace g2o {
 
-	/**
-	 * \brief 2D pose Vertex, (x,y,theta)
-	 */
-	class VertexSE2ACG : public g2o::BaseVertex<3, SE2>
-	{
-	public:
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-		VertexSE2ACG();
+/**
+ * \brief 2D pose Vertex, (x,y,theta)
+ */
+class VertexSE2ACG : public g2o::BaseVertex<3, SE2> {
+   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    VertexSE2ACG();
 
-		virtual void setToOriginImpl()
-		{
-			_estimate = SE2();
-		}
+    virtual void setToOriginImpl() { _estimate = SE2(); }
 
-		virtual void oplusImpl(const number_t *update)
-		{
-			Vector2 t = _estimate.translation();
-			t += Eigen::Map<const Vector2>(update);
-			number_t angle = normalize_theta(_estimate.rotation().angle() + update[2]);
-			_estimate.setTranslation(t);
-			_estimate.setRotation(Rotation2D(angle));
-		}
+    virtual void oplusImpl(const number_t* update) {
+        Vector2 t = _estimate.translation();
+        t += Eigen::Map<const Vector2>(update);
+        number_t angle =
+            normalize_theta(_estimate.rotation().angle() + update[2]);
+        _estimate.setTranslation(t);
+        _estimate.setRotation(Rotation2D(angle));
+    }
 
-		virtual bool setEstimateDataImpl(const number_t *est)
-		{
-			_estimate = SE2(est[0], est[1], est[2]);
-			return true;
-		}
+    virtual bool setEstimateDataImpl(const number_t* est) {
+        _estimate = SE2(est[0], est[1], est[2]);
+        return true;
+    }
 
-		virtual bool getEstimateData(number_t *est) const
-		{
-			Eigen::Map<Vector3> v(est);
-			v = _estimate.toVector();
-			return true;
-		}
+    virtual bool getEstimateData(number_t* est) const {
+        Eigen::Map<Vector3> v(est);
+        v = _estimate.toVector();
+        return true;
+    }
 
-		virtual int estimateDimension() const { return 3; }
+    virtual int estimateDimension() const { return 3; }
 
-		virtual bool setMinimalEstimateDataImpl(const number_t *est)
-		{
-			return setEstimateData(est);
-		}
+    virtual bool setMinimalEstimateDataImpl(const number_t* est) {
+        return setEstimateData(est);
+    }
 
-		virtual bool getMinimalEstimateData(number_t *est) const
-		{
-			return getEstimateData(est);
-		}
+    virtual bool getMinimalEstimateData(number_t* est) const {
+        return getEstimateData(est);
+    }
 
-		virtual int minimalEstimateDimension() const { return 3; }
+    virtual int minimalEstimateDimension() const { return 3; }
 
-		virtual bool read(std::istream &is);
-		virtual bool write(std::ostream &os) const;
-	};
+    virtual bool read(std::istream& is);
+    virtual bool write(std::ostream& os) const;
+};
 
-} // end namespace
+}  // namespace g2o
 
 #endif
