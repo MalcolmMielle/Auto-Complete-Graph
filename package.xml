@@ -57,6 +57,7 @@
   <build_depend>std_msgs     </build_depend>
   <build_depend>nav_msgs     </build_depend>
   <build_depend>graph_map     </build_depend>
+  <build_depend>graph_map_custom_msgs</build_depend>
   <build_depend>ndt_localization     </build_depend>
   
   <run_depend>occupancy_grid_utils</run_depend>
@@ -77,6 +78,7 @@
   <run_depend>std_msgs     </run_depend>
   <run_depend>nav_msgs     </run_depend>
   <run_depend>graph_map     </run_depend>
+  <run_depend>graph_map_custom_msgs</run_depend>
   <run_depend>ndt_localization     </run_depend>
 
 
