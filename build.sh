@@ -1,9 +1,10 @@
 #!/bin/bash
 # source /opt/ros/melodic/setup.bash
-# cd acg_ws/src
+
+# RUN THIS SCRIPT FROM `your-workspace/src/`
 vcs import < Auto-Complete-Graph/rosinstall
 sudo apt update
-rosdep install --from-paths src --ignore-src -r -y
+rosdep install --from-paths . --ignore-src -r -y
 
 # Stop g2o from complaining about old cmake version
 g2o_cmake="libraries/g2o/CMakeLists.txt"
@@ -20,4 +21,5 @@ pushd libraries/VoDiGrEx && mkdir -p build && cd build && cmake .. && sudo make 
 popd
 pushd libraries/g2o && mkdir -p build && cd build && cmake .. && sudo make install
 popd
+
 catkin build
