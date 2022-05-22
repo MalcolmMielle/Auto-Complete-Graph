@@ -1,6 +1,7 @@
 Header header          #standard header information
 
-graph_map/GraphMapMsg graph_map
+#graph_map/GraphMapMsg graph_map
+graph_map_custom_msgs/GraphMapMsg graph_map
 
 auto_complete_graph/LocalizationMsg[] localizations
 

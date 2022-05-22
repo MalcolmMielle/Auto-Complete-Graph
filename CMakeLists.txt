@@ -27,6 +27,7 @@ find_package(catkin REQUIRED COMPONENTS
   grid_map_cv
 
   graph_map
+  graph_map_custom_msgs 
 
   message_generation
   geometry_msgs
@@ -86,7 +87,8 @@ add_message_files(
 
 generate_messages(
   DEPENDENCIES
-  geometry_msgs std_msgs ndt_map grid_map_msgs graph_map auto_complete_graph
+  geometry_msgs std_msgs ndt_map grid_map_msgs auto_complete_graph  #graph_map
+  graph_map_custom_msgs 
 )
 
 
@@ -108,6 +110,7 @@ catkin_package(
         LIBRARIES ${G2O_LIBS} ${vodigrex_LIBRARIES} auto_complete_graph_lib auto_complete_graph_vertexedges_lib auto_complete_graph_localization_lib
         #  LIBRARIES auto_complete_graph
         CATKIN_DEPENDS message_runtime  ndt_feature_finder ndt_map roscpp rospy std_msgs message_generation occupancy_grid_utils grid_map_core grid_map_ros grid_map_msgs grid_map_cv graph_map message_generation geometry_msgs std_msgs ndt_localization
+	graph_map_custom_msgs 
         DEPENDS EIGEN OpenCV Boost vodigrex
 )
 
