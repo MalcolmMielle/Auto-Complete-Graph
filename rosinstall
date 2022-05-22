@@ -1,0 +1,60 @@
+#-*-yaml-*-
+repositories:
+  # non-catkin stuff
+  libraries/BetterGraph:
+    type: git
+    url: https://github.com/MalcolmMielle/BetterGraph.git
+    version: master
+  libraries/VoDiGrEx:
+    type: git
+    url: https://github.com/MalcolmMielle/VoDiGrEx.git
+    version: master
+  libraries/g2o:
+    type: git
+    url: https://github.com/RainerKuemmerle/g2o.git
+    version: master
+
+
+  occupancy_grid_utils:
+    type: git
+    url: https://github.com/clearpathrobotics/occupancy_grid_utils.git 
+    version: indigo-devel    # noetic-devel
+  octomap:
+    type: git
+    url: https://github.com/OctoMap/octomap.git
+    version: master
+  velodyne_pointcloud_oru:
+    type: git
+    url: https://github.com/dan11003/velodyne_pointcloud_oru.git
+    version: master
+  graph_map_public:
+    type: git
+    url: https://gitsvn-nt.oru.se/software/graph_map_public.git
+    version: merging #!
+  Auto-Complete-Graph:
+    type: git
+    url: https://github.com/MalcolmMielle/Auto-Complete-Graph.git
+    version: master
+  grid_map:
+    type: git
+    url: https://github.com/ANYbotics/grid_map.git 
+    version: melodic-devel
+  ndt_core_public:
+    type: git
+    url: https://gitsvn-nt.oru.se/software/ndt_core_public.git
+    version: melodic-devel
+  ndt_tools_public:
+    type: git
+    url: https://gitsvn-nt.oru.se/software/ndt_tools_public.git 
+    version: melodic-devel
+
+
+# #Stuff that should be in rosdep
+# sudo apt install libopencv-dev
+# sudo apt install ros-${ROS_DISTRO}-costmap-2d  ros-${ROS_DISTRO}-tf2 ros-${ROS_DISTRO}-tf2-bullet
+# sudo apt install ros-${ROS_DISTRO}-velodyne
+# sudo apt install ros-${ROS_DISTRO}-filters
+# sudo apt install ros-${ROS_DISTRO}-pcl-ros
+# sudo apt install ros-${ROS_DISTRO}-tf-conversions
+
+
