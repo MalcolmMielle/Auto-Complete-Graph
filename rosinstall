@@ -14,7 +14,7 @@ repositories:
     url: https://github.com/RainerKuemmerle/g2o.git
     version: master
 
-
+  # catkin stuff
   occupancy_grid_utils:
     type: git
     url: https://github.com/clearpathrobotics/occupancy_grid_utils.git 
@@ -31,10 +31,10 @@ repositories:
     type: git
     url: https://gitsvn-nt.oru.se/software/graph_map_public.git
     version: merging #!
-  Auto-Complete-Graph:
-    type: git
-    url: https://github.com/MalcolmMielle/Auto-Complete-Graph.git
-    version: master
+  # Auto-Complete-Graph:
+  #   type: git
+  #   url: https://github.com/MalcolmMielle/Auto-Complete-Graph.git
+  #   version: master
   grid_map:
     type: git
     url: https://github.com/ANYbotics/grid_map.git 
