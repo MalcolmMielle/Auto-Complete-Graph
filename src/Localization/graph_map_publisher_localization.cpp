@@ -38,7 +38,7 @@
 
 #include "graph_map/lidarUtils/lidar_utilities.h"
 
-// #include "graph_map/GraphMapMsg.h"
+#include "graph_map_custom_msgs/GraphMapMsg.h"
 #include "auto_complete_graph/GraphMapLocalizationMsg.h"
 #include "ndt_map/NDTVectorMapMsg.h"
 #include "graph_map/graph_map_conversions.h"
@@ -130,7 +130,7 @@ Eigen::Affine3d getPose(const std::string &base_frame, const std::string &to_fra
 }
 
 using namespace perception_oru::graph_map;
-using namespace ::graph_map;
+//using namespace ::graph_map;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, nav_msgs::Odometry> LaserOdomSync;
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, geometry_msgs::PoseStamped> LaserPoseSync;
@@ -469,7 +469,7 @@ public:
 
 		//Publisher of graph_map message
 
-		graphmap_pub_ = param_nh.advertise<::graph_map::GraphMapMsg>("graph_map", 50);
+		graphmap_pub_ = param_nh.advertise<graph_map_custom_msgs::GraphMapMsg>("graph_map", 50);
 		graph_map_vector_ = param_nh.advertise<ndt_map::NDTVectorMapMsg>("graph_map_vector", 50);
 		graphmap_localization_pub = param_nh.advertise<auto_complete_graph::GraphMapLocalizationMsg>("graph_map_localization", 50);
 
@@ -535,7 +535,7 @@ public:
 		//				 acg_localization->savePos(nb_of_node_new - 1);
 		ROS_DEBUG("PUBLISH: now");
 		//Publish message
-		::graph_map::GraphMapMsg graphmapmsg;
+		graph_map_custom_msgs::GraphMapMsg graphmapmsg;
 		perception_oru::graph_map::graphMapToMsg(*(fuser_->GetGraph()), graphmapmsg, map_link_id);
 
 		assert(times.size() == graphmapmsg.nodes.size());
