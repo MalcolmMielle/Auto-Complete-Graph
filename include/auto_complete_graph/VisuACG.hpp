@@ -227,7 +227,8 @@ class VisuAutoCompleteGraphBase {
 
     void toOcc(
         const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg) {
-        drawPrior(acg) drawCornersNdt(acg);
+        drawPrior(acg);
+        drawCornersNdt(acg);
         drawAngles(acg);
 
         if (_nb_of_zone != acg.getRobotNodes().size()) {

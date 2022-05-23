@@ -1,3 +1,5 @@
+set (CMAKE_CXX_STANDARD 14)
+
 add_library(auto_complete_graph_localization_lib
     ACG_localization.cpp
         ACGPriorXY.cpp
