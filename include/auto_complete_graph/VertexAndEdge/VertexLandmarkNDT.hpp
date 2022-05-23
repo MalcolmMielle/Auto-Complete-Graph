@@ -14,7 +14,8 @@
 #include "registration.hpp"
 #include "EdgeLandmark.hpp"
 
-#include "LocalizationPointer.hpp" namespace g2o
+#include "LocalizationPointer.hpp"
+namespace g2o
 {
 
 	class VertexLandmarkNDT : public g2o::VertexPointXYACG

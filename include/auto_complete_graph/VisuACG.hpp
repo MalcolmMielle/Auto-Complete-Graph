@@ -217,7 +217,7 @@ namespace AASS
 
 			void toOcc(const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior> &acg)
 			{
-				drawPrior(acg)
+				drawPrior(acg);
 					drawCornersNdt(acg);
 				drawAngles(acg);
 
