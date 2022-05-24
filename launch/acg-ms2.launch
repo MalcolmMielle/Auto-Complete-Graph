@@ -3,10 +3,10 @@
 
 
   <node pkg="auto_complete_graph" type="acg_node_localization" name="acg_node_localization" output="screen" >
-    
+
     <!-- <param name="prior_file" value="$(find auto_complete_graph)/tests/emergbasement_flipped_nodoor.png"/> -->
     <!--param name="prior_file" value="$(find auto_complete_graph)/tests/ILIAD/iliad.jpg"/-->
-             
+
     <param name="pause_for_testing" value="true" />
     <param name="use_gt_for_odom" value="true" />
     <param name="export_iteration_count" value="true" />
@@ -20,18 +20,13 @@
     <param name="use_corner_orientation" value="true" />
     <param name="corner_covariance" value="false" /> <!-- DOESNT WORK -->
     <param name="own_registration" value="true" />
-    <!--param name="link_to_prior" value="false" /-->
-    <param name="mcl_observation_on_prior" value="true" />
-    <param name="links_prior_classic_ssrr" value="false" />
-    <param name="use_mcl_cov_to_find_prior_observed" value="false" />
 
     <!-- TF CUSTOMISATION: -->
     <param name="world_frame" value="/map_laser2d" />
     <param name="sensor_frame" value="/robot5/laser2d_floor_link" />
     <param name="map_frame" value="/map_laser2d" />
     <!-- :TF CUSTOMISATION -->
-    
-    <param name="covariance_to_find_links" value="false" />
+
     <param name="gaussian_scaling_factor" value="1" />
     <param name="threshold_score_link_creation" value="0.05" />
     <!--param name="prior_file" value="$(find auto_complete_graph)/tests/Dortmund/floor_dormund_walls_fat_wall.png" /-->

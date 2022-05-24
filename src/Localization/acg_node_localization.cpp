@@ -760,19 +760,10 @@ int main(int argc, char** argv) {
     nh.param("link_to_prior", link_to_prior, true);
     bool use_corner_covariance = true;
     nh.param("corner_covariance", use_corner_covariance, true);
-    bool use_covariance_to_find_links = false;
-    nh.param("covariance_to_find_links", use_covariance_to_find_links, false);
-    bool use_mcl_observation_on_prior;
-    nh.param("mcl_observation_on_prior", use_mcl_observation_on_prior, false);
     ///@brief Add link in between ndt corner and prior corner based on a
     /// distance threshold.
-    bool use_links_prior_classic_ssrr;
-    nh.param("links_prior_classic_ssrr", use_links_prior_classic_ssrr, false);
     //	bool optimize_prior;
     nh.param("optimize_prior", optimize_prior, true);
-    bool use_mcl_cov_to_find_prior_observed;
-    nh.param("use_mcl_cov_to_find_prior_observed",
-             use_mcl_cov_to_find_prior_observed, false);
     double gaussian_scale = 1;
     nh.param<double>("gaussian_scaling_factor", gaussian_scale, 0);
     double threshold_score_link_creation = 0.5;
@@ -873,9 +864,6 @@ int main(int argc, char** argv) {
     oacg.doOwnRegistrationBetweenSubmaps(own_registration);
     oacg.setZElevation(sensor_pose.getOrigin().getZ());
     oacg.useCornerCovariance(use_corner_covariance);
-    oacg.useCovarianceToFindLinks(use_covariance_to_find_links);
-    oacg.useLinksPriorSSRR(use_links_prior_classic_ssrr);
-    oacg.useMCLObservationOnPrior(use_mcl_observation_on_prior);
     oacg.useRobotMaps(use_robot_maps);
     oacg.matchRobotMaps(match_ndt_maps);
     oacg.addNoiseToOdometryMeasurements(add_noise_odometry);
@@ -893,8 +881,6 @@ int main(int argc, char** argv) {
     oacg.setPercentageNoiseOdometry(noise_odom_perc);
     oacg.errorUnderWhichWeStopTheOptimization(
         error_under_witch_stop_optimization);
-
-    oacg.useMCLCovToFindPriorObserved(use_mcl_cov_to_find_prior_observed);
 
     oacg.setScalingFactorOfGaussians(gaussian_scale);
     oacg.setThrehsoldOfScoreForCreatingLink(threshold_score_link_creation);

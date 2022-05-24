@@ -1448,277 +1448,10 @@ void AASS::acg::AutoCompleteGraphLocalization::AddObservationsMCLPrior() {}
 
 void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(
     const g2o::VertexLandmarkNDT* landmark) {
-    //	std::cout << "Start for landmark " << landmark << " at pose " <<
-    // landmark->estimate() << std::endl;
-    //
-    //	if(_use_mcl_cov_to_find_prior_observed) {
-    //		for (auto prior_corner : _prior->getNodes()) {
-    //			std::cout << "NEW PRIOR" << std::endl;
-
-    //			if (_use_mcl_observation_on_prior) {
-    //
-    //				std::unordered_set
-    //<std::shared_ptr<AASS::acg::LocalizationPointer>> localization =
-    // landmark->getLocalization();
-    //
-    //				for (auto loc: localization) {
-    //
-    //					//The landmark pose should be in the mcl
-    // pose frame and not the robot mapping frame.
-    // Eigen::Vector2d pose_landmark =
-    // loc->landmarkSeenByMCLInGlobalFrame().head(2);
-    // Eigen::Vector2d pose_landmark_test = landmark->estimate();
-    // Eigen::Vector2d pose_prior = prior_corner->estimate();
-    //
-    //					double euclidean_distance = (pose_prior
-    //-
-    // pose_landmark).norm(); 					std::cout <<
-    // "Poses
-    // :
-    // "
-    // << pose_prior
-    // << " - " << pose_landmark << " ( actual landmark pose: "
-    //					          << pose_landmark_test << " )
-    // distance
-    //"
-    //<< euclidean_distance << std::endl;
-    //
-    //					if (euclidean_distance <= 5) {
-    //
-    //						auto is_found =
-    // std::find(loc->_prior_linked_using_landmark.begin(),
-    //						                          loc->_prior_linked_using_landmark.end(),
-    // prior_corner); 						if (is_found ==
-    // loc->_prior_linked_using_landmark.end()) {
-    ////
-    /// loc->vertex_mcl_pose->estimate().toVector().head(2); /
-    /// assert(pose_landmark(0) ==
-    /// loc->vertex->estimate().toVector().head(2)(0));
-    ////				assert(pose_landmark(1) ==
-    /// loc->vertex->estimate().toVector().head(2)(1));
-    //
-    //							//Create rotation
-    // covariance
-    ////						assert(loc->cov(2, 2) >=
-    ///-1); /						assert(loc->cov(2, 2) <=
-    /// 1);
-    //
-    //// Eigen::Rotation2D<double>
-    /// rot2(loc->cov(2, 2));
-    //
-    //							//TODO : TO TEST
-    //							Eigen::Matrix2d
-    // cov_inv_2d; 							bool
-    // test = false; if (test == true) {
-    //
-    //								Eigen::Vector2d
-    // mcl_pose = loc->vertex_mcl_pose->estimate().toVector().head(2);
-    // double euclidean_distance_to_mcl = (pose_landmark - mcl_pose).norm();
-    // double opposite_side = euclidean_distance_to_mcl * std::tan(loc->cov(2,
-    // 2)); Eigen::Vector2d eigen = (pose_landmark
-    // - mcl_pose) / euclidean_distance_to_mcl; Eigen::Vector2d main_eigen;
-    // main_eigen << -eigen(1), eigen(0);
-    //
-    //								Eigen::Matrix2d
-    // eigenvec; eigenvec
-    // << main_eigen(0), eigen(0), main_eigen(1), eigen(1);
-    //
-    //								//For testing
-    //								std::pair<double,
-    // double>
-    // eigenval; eigenval.first = opposite_side; eigenval.second = opposite_side
-    // / 10; Eigen::Matrix2d cov_rotation = getCovariance(eigenvec, eigenval);
-    //
-    //								Eigen::Matrix2d
-    // cov_2d; 								cov_2d
-    // << loc->cov(0, 0) / _scaling_factor_gaussian, loc->cov(0, 1)
-    /// 								                                                     _scaling_factor_gaussian,
-    /// loc->cov(1, 0) / _scaling_factor_gaussian,
-    // loc->cov(1, 1) /
-    // _scaling_factor_gaussian;
-    // cov_2d = cov_2d
-    // +
-    // cov_rotation; cov_2d = cov_2d / 2;
-    //
-    ////							Eigen::Matrix2d
-    /// cov_inv_2d;
-    //								bool exist =
-    // false;
-    // cov_2d.computeInverseWithCheck(cov_inv_2d, exist);
-    // assert(exist
-    // == true);
-    //
-    //							} else {
-    ////							Eigen::Matrix2d
-    /// icov
-    ///=
-    /// loc.cov_inverse();
-    //
-    //								//https://math.stackexchange.com/questions/708994/proof-of-the-inverse-of-a-scalar-times-a-matrix
-    //								//Divided by 2
-    // so that we double the size of the covariance
-    ////						Eigen::Matrix2d
-    /// cov_inv_2d;
-    //								cov_inv_2d <<
-    // loc->cov_inverse(0, 0)
-    ///
-    //_scaling_factor_gaussian,
-    // loc->cov_inverse(0, 1) / _scaling_factor_gaussian,
-    // loc->cov_inverse(1, 0) / _scaling_factor_gaussian, loc->cov_inverse(1, 1)
-    // /
-    //_scaling_factor_gaussian;
-    //							}
-    //							double
-    // probabilistic_distance = (pose_prior
-    //-
-    // pose_landmark).dot(
-    // cov_inv_2d
-    // * (pose_prior
-    // - pose_landmark));
-    //
-    //							//I need to remove that
-    // 2 in the formula since we haven't added the covariance together ! Hence
-    // no need to divided by two
-    //:)
-    //
-    //							//That score is stupid
-    // as a measurement measure
-    //							//
-    // double score = 0.1
-    //+ 0.9
-    //* exp(-_scaling_factor_gaussian * probabilistic_distance); /// / 2.0);
-    //
-    //							//Instead we will say
-    // that if the probabilistic distance is less than the euclidean distance,
-    // we associated them ! That makes a lot more sense. Indeed, it is less if
-    // each points are "in the covariance. See test_prior_localization.cpp.
-    //
-    //							std::cout << "Poses : "
-    //<< pose_prior
-    //<<
-    //"
-    //-
-    //"
-    //<< pose_landmark
-    //							          << " ( actual
-    // landmark pose:
-    //"
-    //<< pose_landmark_test << " ) inverse cov\n"
-    //							          <<
-    // cov_inv_2d.matrix()
-    //<<
-    //"\n and cov\n" << loc->cov.matrix()
-    //							          << "
-    //\nprobabilistic_distance
-    //"
-    //<< probabilistic_distance
-    //							          << " euclidean
-    // distance
-    //"
-    //<< euclidean_distance << " threshold "
-    //							          <<
-    //_threshold_of_score_for_creating_a_link << std::endl;
-    //
-    //							if
-    //(probabilistic_distance
-    //<= euclidean_distance) {
-    ////					if (score >=
-    ///_threshold_of_score_for_creating_a_link)
-    ///{
-    //								//
-    // g2o::Vector2 vec;
-    //								//
-    // vec
-    //<< 0, 0;
-    //
-    //								//
-    // throw std::runtime_error("DO not use MCL observation yet");
-    //
-    //								//ATTENTION
-    // MASSIVE
-    // TODO
-    //								//
-    // g2o::VertexSE2RobotPose* rpose = loc->vertex->getEquivalentRobotPose();
-    //								//
-    // g2o::EdgeLandmark_malcolm* observation = findObservation(rpose,
-    // landmark);
-    //
-    //								//TODO USE MCL
-    // COVARIANCE
-    // g2o::EdgeLandmark_malcolm *observation_mcl =
-    // addLandmarkObservation(loc->observation, loc->vertex_mcl_pose,
-    // prior_corner,
-    // loc->cov.block(0,0,2,2));
-    //								//To know link
-    // was already done
-    //!
-    //// loc->link_created
-    ///=
-    /// true;
-    //								loc->_prior_linked_using_landmark.insert(prior_corner);
-    //								bool
-    // test_pointer_type
-    //=
-    // false; 								for
-    // (auto vertex : observation_mcl->vertices()) { g2o::VertexXYPrior *ptr =
-    // dynamic_cast<g2o::VertexXYPrior *>(vertex);
-    // if (ptr != NULL) {
-    // test_pointer_type = true;
-    //									}
-    //								}
-    //								assert(test_pointer_type
-    //== true);
-    //
-    //								bool
-    // test_pointer_type2
-    //=
-    // false; 								for
-    // (auto vertex
-    // :
-    // observation_mcl->vertices()) {
-    // g2o::VertexSE2RobotLocalization *ptr =
-    // dynamic_cast<g2o::VertexSE2RobotLocalization *>(vertex);
-    // if (ptr != NULL) {
-    // test_pointer_type2 = true;
-    //									}
-    //								}
-    //								assert(test_pointer_type2
-    //== true);
-    //
-    //								prior_corner->landmarks.insert(landmark);
-    //								_number_of_links_to_prior++;
-    //								//
-    // addPriorObservation();
-    //								//
-    // addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
-    //							}
-    //						}
-    //
-    //					}
-    //				}
-    //
-    //			} else {
-    //				std::cout << "What else to use :( " <<
-    // std::endl; 				throw std::runtime_error("no
-    // matching function");
-    //			}
-    //
-    //		}
-    //	}
-    //	else{
-
-    //		std::cout << "New corner matching " << std::endl;
-
     std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer>>
         localization = landmark->getLocalization();
 
     for (auto loc : localization) {
-        //			assert(loc->vertex_robot_pose ==
-        // loc->vertex_mcl_pose->getEquivalentRobotPose());
-
-        //			std::cout << "Number of landmark observation" <<
-        //_edge_landmark.size() << std::endl;
-
         for (auto edge : _edge_landmark) {
             if (loc->vertex_mcl_pose == edge->vertices()[0] &&
                     landmark == edge->vertices()[1] ||
@@ -1738,14 +1471,6 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(
         Eigen::Vector2d pose_landmark =
             loc->landmarkSeenByMCLInGlobalFrame().head(2);
         Eigen::Vector2d pose_landmark_test = landmark->estimate();
-        // Other strategy based on edge
-        //			if (landmarkgaussianonanedge){
-        //				for (auto corner_prior :
-        // edge->vertices()) { 					cov = cov_mcl *
-        // eucliddistance;
-        //				}
-        //			}
-        //			else{
         for (auto prior_corner : _prior->getNodes()) {
             auto is_found = std::find(loc->_prior_linked_using_landmark.begin(),
                                       loc->_prior_linked_using_landmark.end(),
@@ -1758,8 +1483,6 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(
                 if (euclidean_distance <= 5) {
                     auto angles_width =
                         prior_corner->getAnglesAndOrientations();
-                    //							assert(angles_width.size()
-                    //> 0);
 
                     if (this->_flag_use_corner_orientation == false ||
                         (this->_flag_use_corner_orientation == true &&
@@ -1767,10 +1490,6 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(
                         Eigen::Matrix2d cov_inv_2d =
                             loc->cov_inverse.block(0, 0, 2, 2) /
                             _scaling_factor_gaussian;
-                        //								double
-                        // probabilistic_distance = (pose_prior
-                        //- pose_landmark).dot(
-                        // cov_inv_2d * (pose_prior - pose_landmark));
 
                         // I need to remove that 2 in the formula since we
                         // haven't added the covariance together ! Hence no need
@@ -1796,10 +1515,6 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(
                         // distribution ;)
 
                         double radius_around_landmark = 1;
-                        //								double
-                        // factor = radius_around_landmark
-                        //* radius_around_landmark / (2 *
-                        // std::sqrt(loc->determinant) );
                         double mahalanobis_distance =
                             (pose_prior - pose_landmark)
                                 .dot(cov_inv_2d * (pose_prior - pose_landmark));
@@ -1809,67 +1524,8 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(
                         assert(pdf_collision >= 0);
                         assert(pdf_collision <= 1);
 
-                        //								std::cout
-                        //<< "Poses
-                        //:
-                        //"
-                        //<< pose_prior
-                        //<<
-                        //"
-                        //-
-                        //"
-                        //<< pose_landmark
-                        //								          <<
-                        //" ( actual landmark pose:
-                        //"
-                        //<< pose_landmark_test << " ) inverse cov\n"
-                        //								          <<
-                        // cov_inv_2d.matrix()
-                        //<<
-                        //"\n and cov\n"
-                        //<< loc->cov.matrix()
-                        //								          <<
-                        //" \nprobabilistic_distance
-                        //"
-                        //<< mahalanobis_distance
-                        //		                                    << "
-                        // euclidean
-                        // distance
-                        //"
-                        //<< euclidean_distance << " threshold "
-                        //		                                    << "
-                        // score " <<
-                        // pdf_collision << " threshold "
-                        //								          <<
-                        //_threshold_of_score_for_creating_a_link << std::endl;
-
-                        //								if
-                        //(mahalanobis_distance
-                        //<= euclidean_distance)
-                        //{
                         if (mahalanobis_distance <= 5.99) {
-                            //								if
-                            //(pdf_collision >=
-                            //_threshold_of_score_for_creating_a_link) {
-
-                            //									std::cout
-                            //<< "CREATING OBSERVATION " << std::endl; Cov is
-                            // cov factor
-                            // square of distance
-                            Eigen::Matrix2d cov = loc->cov.block(
-                                0, 0, 2, 2);  // * (euclidean_distance *
-                                              // euclidean_distance);
-
-                            //									std::cout
-                            //<< "Mcl cov " << loc->cov.block(0, 0, 2,
-                            // 2).matrix()
-                            //									          <<
-                            //" euclidean distance "
-                            //									          <<
-                            // euclidean_distance << " cov used for observation
-                            // " << cov.matrix()
-                            //									          <<
-                            // std::endl;
+                            Eigen::Matrix2d cov = loc->cov.block(0, 0, 2, 2);
 
                             // Making sure the observation doesn't already exist
                             // !
@@ -1913,298 +1569,23 @@ void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(
                                 }
                             }
 
-                            //									std::cout
-                            //<< "Old observation " << loc->observation << " and
-                            // new
-                            // observation " <<
-                            // current_landmark_observation->measurement() <<
-                            // std::endl;
-
                             g2o::EdgePriorObservation* observation_mcl =
                                 addPriorObservation(
                                     loc->observation, loc->vertex_mcl_pose,
                                     prior_corner, cov,
                                     loc->edge_observation_from_mcl_pose);
-                            // To know link was already done !
-                            //							loc->link_created
-                            //= true;
+
                             loc->_prior_linked_using_landmark.insert(
                                 prior_corner);
 
-                            //									prior_corner->landmarks.insert(landmark);
                             _number_of_links_to_prior++;
-
-                            //									int
-                            // aa;
-                            // std::cin >> aa;
                         }
                     }
                 }
             }
-            //				}
         }
     }
-    //	}
-
-    //	std::cout << "Stop" << std::endl;
-    //	int aaa;
-    //	std::cin >> aaa;
 }
-
-// void AASS::acg::AutoCompleteGraphLocalization::addObservationMCLToPrior(const
-// g2o::VertexLandmarkNDT* landmark) const {
-//
-//	for(auto prior_corner : _prior->getNodes() ){
-//
-//		if (_use_mcl_observation_on_prior) {
-//
-//			std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer>
-//> localization = landmark->getLocalization(); 			for
-//(auto loc: localization) {
-//
-//				Eigen::Vector2d pose_landmark =
-// loc->vertex->estimate().toVector().head(2);
-//
-//				assert(pose_landmark(0) ==
-// loc->vertex->estimate().toVector().head(2)(0));
-// assert(pose_landmark(1) == loc->vertex->estimate().toVector().head(2)(1));
-//
-//				Eigen::Vector2d pose_prior =
-// prior_corner->estimate();
-////							Eigen::Matrix2d icov =
-/// loc.cov_inverse();
-//				Eigen::Matrix2d cov_inv_2d;
-//				cov_inv_2d << loc->cov_inverse(0, 0),
-// loc->cov_inverse(0, 1),
-// loc->cov_inverse(1, 0), loc->cov_inverse(1, 1);
-//
-//				double l = (pose_prior -
-// pose_landmark).dot(cov_inv_2d
-//* (pose_prior - pose_landmark)); 				double score =
-// 0.1
-//+ 0.9 * exp(-_scaling_factor_gaussian * l / 2.0);
-//
-//				if (score >=
-//_threshold_of_score_for_creating_a_link)
-//{
-////					g2o::Vector2 vec;
-////					vec << 0, 0;
-//
-////					throw std::runtime_error("DO not use MCL
-/// observation yet");
-//
-//					//ATTENTION MASSIVE TODO
-//					g2o::VertexSE2RobotPose* rpose =
-// loc->vertex->getEquivalentRobotPose();
-//
-//					g2o::EdgeLandmark_malcolm* observation =
-// findObservation(rpose, landmark);
-//
-//					g2o::EdgeLandmark_malcolm*
-// observation_mcl = addLandmarkObservation(observation->measurement(),
-// loc->vertex,
-// prior_corner);
-//
-////
-/// addPriorObservation(); /
-/// addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
-//				}
-//			}
-//		}
-//		else{
-//			std::cout << "What else to use :( " << std::endl;
-//			throw std::runtime_error("no mathcing function");
-//		}
-//
-//	}
-//
-//}
-
-// int AASS::acg::AutoCompleteGraphLocalization::createNewLinks()
-//{
-//	std::cout << "Creating the new links in Localization" << std::endl;
-//	int count = 0;
-//	if(_use_links_prior) {
-//// 	std::vector < std::pair < g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>
-///> links;
-//
-//		std::cout << "Number new landmarks " << _nodes_landmark.size()
-//<<
-// std::endl; 		std::cout << "Prior " << _prior->getNodes().size() <<
-// std::endl;
-//// 	if(_nodes_prior.size() > 0){
-//
-//		//Update ALL links
-////		auto it = _nodes_landmark.begin();
-//		for (auto landmark : _nodes_landmark) {
-//// 		std::cout << "Working on links " << std::endl;
-//			Eigen::Vector2d pose_landmark = landmark->estimate();
-////			auto it_prior = _nodes_prior.begin();
-//			for (auto prior_node : _prior->getNodes()) {
-//
-//				//Don't add the same link twice
-//				if (linkAlreadyExist(landmark, prior_node) ==
-// false)
-//{
-//
-//					//TODO TEST IT
-//					if (_flag_use_corner_orientation ==
-// false
-//||
-//					    (_flag_use_corner_orientation ==
-// true
-//&& landmark->sameOrientation(prior_node->getAnglesAndOrientations() ))) {
-//
-//						Eigen::Vector2d pose_prior =
-// prior_node->estimate();
-////						Eigen::Vector2d pose_prior;
-////						pose_prior << pose_tmp(0),
-/// pose_tmp(1);
-//
-//						if
-//(_use_links_prior_classic_ssrr)
-//{
-//
-//							std::cout << "Using
-// classic SSRR links please switch to AutoCompleteGraph" << std::endl;
-// throw std::runtime_error("g2o::VertexXYPrior. If that's what you wish");
-//
-//							double norm_tmp =
-//(pose_prior
-//- pose_landmark).norm();
-//							//
-// std::cout
-//<< "new" << std::endl;
-//
-//							if
-//(_use_covariance_for_links)
-//{
-//
-//								throw
-// std::runtime_error(
-// "This parameter is not usable. The reason for this is that one obstacle can
-// be seen from multiple MCL poses. Hence it is impossible to choose which MCL
-// covariance to use for one link which can be created from multiple MCL poses.
-// Please use the _use_mcl_observation_on_prior parameter
-//;).");
-////							//Find distance needed
-/// using covariance of corner. STOLEN FROM LOCALIZATION *monkey which hides it
-/// eyes* /
-/// Eigen::Matrix2d icov = landmark->getInverseCovarianceObservation(); /
-/// double l = (pose_prior - pose_landmark).dot(icov * (pose_prior -
-/// pose_landmark));
-////							double score = 0.1 + 0.9
-///* exp(-_scaling_factor_gaussian * l / 2.0);
-////
-////							if(score >=
-///_threshold_of_score_for_creating_a_link){ /
-/// g2o::Vector2 vec;
-////								vec << 0, 0;
-//// addLinkBetweenMaps(vec, prior_node, landmark, ); / }
-//							}
-//
-//								//Update the
-// link 							else if
-// (norm_tmp
-// <= _min_distance_for_link_in_meter) { std::cout << "NORM " << norm_tmp <<
-// "min dist " <<
-//_min_distance_for_link_in_meter
-//								          <<
-// std::endl;
-//								//
-// ptr_closest = *it_prior;
-//								//
-// norm = norm_tmp;
-//								//Pushing the
-// link
-//								//
-// std::cout << "Pushing " << *it << " and " << ptr_closest << std::endl;
-//								//
-// links.push_back(std::pair<g2o::VertexLandmarkNDT*, g2o::VertexSE2Prior*>(*it,
-//*it_prior));
-//
-//								g2o::Vector2
-// vec; 								vec <<
-// 0, 0; addLinkBetweenMaps(vec, prior_node, landmark);
-//
-//								++count;
-//							}
-//						}
-//
-//						if
-//(_use_mcl_observation_on_prior)
-//{
-//
-//							std::unordered_set<std::shared_ptr<AASS::acg::LocalizationPointer>
-//> localization = landmark->getLocalization();
-// for (auto loc: localization) {
-//
-////							Eigen::Matrix2d icov =
-/// loc.cov_inverse();
-//								Eigen::Matrix2d
-// cov_2d; 								cov_2d
-// << loc->cov_inverse(0,0), loc->cov_inverse(0,1),
-// loc->cov_inverse(1,0), loc->cov_inverse(1,1);
-//
-//										double
-// l = (pose_prior - pose_landmark).dot( cov_2d * (pose_prior - pose_landmark));
-//								double score =
-// 0.1
-//+ 0.9
-//* exp(-_scaling_factor_gaussian * l / 2.0);
-//
-//								if (score >=
-//_threshold_of_score_for_creating_a_link) {
-// g2o::Vector2 vec;
-// vec
-// << 0, 0;
-//
-//									throw
-// std::runtime_error("DO not use MCL observation yet");
-//
-//									//ATTENTION
-// MASSIVE
-// TODO
-//
-//
-////
-/// addPriorObservation(); /
-/// addLinkBetweenMaps(vec, prior_node, landmark, loc.vertex);
-//								}
-//							}
-//						}
-//					} else {
-//
-//						std::cout << "Not same
-// orientation"
-//<< std::endl;
-//					}
-//				} else {
-//
-//					std::cout << "Already exist" <<
-// std::endl;
-//				}
-//			}
-//			//Pushing the link
-//// 			std::cout << "Pushing " << *it << " and " << ptr_closest
-///<< std::endl; /
-/// links.push_back(std::pair<g2o::VertexLandmarkNDT*,
-/// g2o::VertexSE2Prior*>(*it,
-///  ptr_closest));
-//		}
-//
-//// 	auto it_links = links.begin();
-//// 	for(it_links ; it_links != links.end() ; it_links++){
-//// 		g2o::Vector2 vec;
-//// 		vec << 0, 0;
-//// 		std::cout << "Creating " << it_links->second << " and " <<
-/// it_links->first << std::endl; / 		addLinkBetweenMaps(vec,
-/// it_links->second, it_links->first); / 	} / 	}
-//	}
-//
-//		return count;
-//
-//}
 
 void AASS::acg::AutoCompleteGraphLocalization::updatePriorObservations() {
     updateExistingPriorObservations();
@@ -2242,19 +1623,10 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(
             already_created_ndt_cells_to_update;
         auto cells = collisionsNDTMapWithPriorEdge(
             *robot, *wall, already_created_ndt_cells_to_update);
-        //		std::cout << "Found links " << cells.size() <<
-        // std::endl;
         for (auto cell : cells) {
             auto ndtcell_ver =
                 addNDTCellVertex(std::get<1>(cell), std::get<0>(cell), robot);
 
-            // Use cell size for covariance
-            //			double cx, cy, cz;
-            //			robot->getMap()->getCellSizeInMeters(cx, cy,
-            // cz); 			double minval = std::min(cx,
-            // std::min(cy, cz));
-
-            //			Eigen::Matrix3d ndt_cov = cell.first->getCov();
             Eigen::Matrix3d ndt_cov =
                 robot->getCovariance() * _scaling_factor_gaussian;
             Eigen::Matrix2d ndt_cov_2d;
@@ -2267,8 +1639,6 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(
             } else {
                 coeff_mult = coeff_mult + std::get<2>(cell);
             }
-            //			coeff_mult = coeff_mult * cells.size();
-
             ndt_cov_2d.array() = ndt_cov_2d.array() * coeff_mult;
 
             auto ndtcell_edge =
@@ -2277,104 +1647,10 @@ void AASS::acg::AutoCompleteGraphLocalization::createWallAssociations(
 
             count_walls++;
         }
-        // DOESN'T WORK IN THE OPTIMIZATION STEP: Use bundle of NDT Cells
-        //		for (auto cell_node :
-        // already_created_ndt_cells_to_update){
-        //
-        //			auto link_ndt_cell_exist = [this]
-        //(g2o::HyperGraph::Vertex* v_ndt_cell, g2o::EdgeXYPriorACG* wall) ->
-        // bool {
-        //				//Check if already exist
-        //
-        //				for (auto edge_ndt : _edges_ndt_cell) {
-        //					if( (wall->vertices()[0] ==
-        // edge_ndt->vertices()[0]
-        //&& v_ndt_cell == edge_ndt->vertices()[1] ) ||
-        // (wall->vertices()[0] == edge_ndt->vertices()[1] && v_ndt_cell ==
-        // edge_ndt->vertices()[0] )
-        //){ 						return true;
-        //					}
-        //				}
-        //				return false;
-        //			};
-        //			auto ndt_cell_observed = [this]
-        //(g2o::HyperGraph::Vertex* v_ndt_cell, g2o::VertexSE2RobotLocalization*
-        // v_robot) -> bool  {
-        //				//Check if already exist
-        //
-        //				for (auto edge_ndt :
-        //_edges_ndt_cell_observation)
-        //{ 					if( (v_robot ==
-        // edge_ndt->vertices()[0]
-        //&& v_ndt_cell
-        //== edge_ndt->vertices()[1] ) ||
-        // (v_robot == edge_ndt->vertices()[1] && v_ndt_cell ==
-        // edge_ndt->vertices()[0] )	){
-        // return true;
-        //					}
-        //				}
-        //				return false;
-        //			};
-        //
-        //			//Link the cell to all robot pose
-        //			for(auto cells :
-        // std::get<0>(cell_node)->getEquivalentNDTCells()) {
-        // if(!ndt_cell_observed()) {
-        // Eigen::Vector2d pose_landmark =
-        // std::get<0>(cell_node)->getCell()->getMean().head(2);
-        ////	auto edge = addNDTCellObservation(pose_landmark, robot_node,
-        /// ndt_cell_v, cell->getCov().block(0,0,2,2));
-        //					auto edge =
-        // addNDTCellObservation(pose_landmark, robot, std::get<0>(cell_node));
-        //				}
-        //			}
-        //
-        //			if(!link_ndt_cell_exist(std::get<0>(cell_node),
-        // wall)) {
-        //
-        //				std::cout << "New ndtcell double link"
-        //<<
-        // std::endl; 				int a = 0;
-        // std::cin
-        // >> a;
-        //
-        //				auto ndtcell_ver  =
-        // addNDTCellVertex(std::get<1>(cell_node),
-        // std::get<0>(cell_node)->getCell(), robot);
-        //
-        //				//Use cell size for covariance
-        ////			double cx, cy, cz;
-        ////			robot->getMap()->getCellSizeInMeters(cx, cy,
-        /// cz); /			double minval = std::min(cx,
-        /// std::min(cy, cz));
-        //
-        ////			Eigen::Matrix3d ndt_cov = cell.first->getCov();
-        //				Eigen::Matrix3d ndt_cov =
-        // robot->getCovariance()
-        //* _scaling_factor_gaussian;
-        // Eigen::Matrix2d ndt_cov_2d; 				ndt_cov_2d <<
-        // ndt_cov(0,0), ndt_cov(0,1),
-        // ndt_cov(1,0), ndt_cov(1,1); ndt_cov_2d.array() = ndt_cov_2d.array() +
-        // std::get<2>(cell_node);
-        //
-        //				auto ndtcell_edge =
-        // addNDTCellAssociation(ndtcell_ver, wall,
-        // ndt_cov_2d);
-        // ndtcell_edge->resolution_of_map = minval;
-        //
-        //				count_walls++;
-        //			}
-        //
-        //
-        //		}
     }
 
     if (_add_odometry_noise) {
         int count = 0;
-        //		std::cout << "Loc poses : " <<
-        //_nodes_localization.size()
-        //<< " "
-        //<< _edge_odometry.size() << std::endl;
         for (auto odom_edge : _edge_odometry) {
             if (odom_edge->vertices()[0] == robot ||
                 odom_edge->vertices()[1] == robot) {
@@ -2424,13 +1700,6 @@ AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(
 
     auto cells = map->getAllCellsShared();
 
-    //	std::vector<boost::shared_ptr<perception_oru::NDTCell> > cells;
-
-    // Keep one cell every three
-    //	for(int i = 0 ; i < cells_all.size() ; i = i + 3){
-    //		cells.push_back(cells_all[i]);
-    //	}
-
     for (auto cell : cells) {
         perception_oru::NDTCell* cell_closest = NULL;
 
@@ -2470,41 +1739,10 @@ AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(
                 ((p0 - loc_pose.toVector().head(2)).norm() <
                      _max_distance_of_ndt_cell_to_robot ||
                  _max_distance_of_ndt_cell_to_robot < 0)) {
-                //
-                //			//Check if closest segment point is on
-                // the line
-                // segment of the wall:
                 if (p1p2.dot(p2p0) <= 0 && (-p1p2).dot(p1p0) <= 0) {
-                    //		pcl::PointXYZ p;
-                    //		p.x = p0[0];
-                    //		p.y = p0[1];
-                    //		p.z = mean[2];
-                    //		map->getCellAtPoint(p, cell_closest);
-                    //        Eigen::Vector2d p1 =
-                    //        dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[0])->estimate().head(2);
-                    //				std::cout << "p1 " << p1 <<
-                    // std::endl; 		Eigen::Vector2d p2 =
-                    // dynamic_cast<g2o::VertexXYPrior*>(wall.vertices()[1])->estimate().head(2);
-                    //				std::cout << "p2 " << p2 <<
-                    // std::endl; 				std::cout << "p0
-                    // "
-                    // << p0
-                    // << std::endl;
-
                     double distance = -1;
                     Eigen::Vector2d ccp;
                     std::tie(distance, ccp) = distancePointSegment(p0, p1, p2);
-
-                    //				std::cout << "min value " <<
-                    // minval
-                    //<<
-                    //"
-                    // distance
-                    //"
-                    //<< distance << std::endl; if (distance
-                    //<=
-                    // minval)
-                    //{
 
                     // USE COLLISION TO FIND MATCHING ?
                     Eigen::Matrix2d cov_inv_2d =
@@ -2512,9 +1750,6 @@ AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(
                             0, 0, 2, 2) /
                         _scaling_factor_gaussian;
                     double radius_around_landmark = 1;
-                    //								double
-                    // factor = radius_around_landmark * radius_around_landmark
-                    // / (2 * std::sqrt(loc->determinant) );
                     double mahalanobis_distance =
                         (p0 - (p0 + ccp)).dot(cov_inv_2d * (p0 - (p0 + ccp)));
 
@@ -2523,62 +1758,14 @@ AASS::acg::AutoCompleteGraphLocalization::collisionsNDTMapWithPriorEdge(
                     assert(pdf_collision >= 0);
                     assert(pdf_collision <= 1);
 
-                    //					if (pdf_collision >=
-                    //_threshold_of_score_for_creating_a_link) {
                     if (mahalanobis_distance <= 5.99) {
-                        // USE COVARIANCE INSTEAD
-                        //			std::cout << "Close" <<
-                        // std::endl;
-
                         g2o::SE2 rob_pose = robot_pose_vertex.estimate();
                         Eigen::Vector2d mean_robot_pose =
                             (rob_pose * mean_se2).toVector().head(2);
                         auto resultat = std::make_tuple(
                             cell, mean_robot_pose.head(2), distance);
 
-                        //					auto
-                        // close_ndt_cell = [this,
-                        // minval] (const Eigen::Vector2d& p0) ->
-                        // g2o::VertexNDTCell*  {
-                        //						//Check
-                        // if already
-                        // exist for (auto cell_nodes : _vertices_ndt_cell) { if
-                        // (cell_nodes->estimate()(0)
-                        //+ minval
-                        //>= p0(0)
-                        //&& cell_nodes->estimate()(0) - minval <= p0(0) &&
-                        //							    cell_nodes->estimate()(1)
-                        //+ minval
-                        //>= p0(1)
-                        //&& cell_nodes->estimate()(1) - minval <= p0(1)) {
-                        // return cell_nodes;
-                        //							}
-                        //						}
-                        //						return
-                        // NULL;
-                        //					};
-
-                        //					g2o::VertexNDTCell*
-                        // cell_node =
-                        // close_ndt_cell(p0); if(cell_node
-                        // == NULL)
-                        // {
                         set_ret.push_back(resultat);
-                        //					}
-                        //					else{
-                        //						auto
-                        // resultat_node
-                        //=
-                        // std::make_tuple(cell_node, mean_robot_pose.head(2),
-                        // distance);
-                        //						already_created_ndt_cells_to_update.push_back(resultat_node);
-                        //					}
-
-                    } else {
-                        //					std::cout <<
-                        //"Not Close"
-                        //<<
-                        // std::endl;
                     }
                 }
             } else {

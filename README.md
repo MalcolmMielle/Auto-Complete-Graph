@@ -1,4 +1,4 @@
-# Auto Complete Graph (ACG).
+# Auto Complete Graph (ACG)
 
 Using emergency maps to help robots save you in emergencies
 
@@ -15,34 +15,32 @@ The goal of this program is described [in this blog post](https://malcolmmielle.
 The auto-complete graph uses a circular strategy to integrate an emergency map and a robot build map in a global representation. The robot build a map of the environment using NDT mapping, and in parallel do localization in the emergency map using Monte-Carlo Localization. Corners are extracted in both the robot map and the emergency map. Using the information from the localization, a graph-SLAM is created where observation of the emergency map corner are determined using the localization covariance and the position of the emergency map's corners compared to the position of corners detected in the robot map. The graph is further constrained by having emergency map walls able to stretch or shrink but being hard to rotate. This is done because emergency maps have usually local scaling problems but do have correct topology.
 The paper for the method has been published through [MDPI](https://www.mdpi.com/2218-6581/8/2/40).
 
-    @article{Mielle_2019, 
-	    title={The Auto-Complete Graph: Merging and Mutual Correction of Sensor and Prior Maps for SLAM}, 
-	    volume={8}, 
-	    ISSN={2218-6581}, 
-	    url={http://dx.doi.org/10.3390/robotics8020040}, 
-	    DOI={10.3390/robotics8020040}, 
-	    number={2}, 
-	    journal={Robotics}, 
-	    publisher={MDPI AG}, 
-	    author={Mielle, Malcolm and Magnusson, Martin and Lilienthal, Achim J.}, 
-	    year={2019}, 
-	    month={May}, 
-	    pages={40}
+    @article{Mielle_2019,
+     title={The Auto-Complete Graph: Merging and Mutual Correction of Sensor and Prior Maps for SLAM},
+     volume={8},
+     ISSN={2218-6581},
+     url={http://dx.doi.org/10.3390/robotics8020040},
+     DOI={10.3390/robotics8020040},
+     number={2},
+     journal={Robotics},
+     publisher={MDPI AG},
+     author={Mielle, Malcolm and Magnusson, Martin and Lilienthal, Achim J.},
+     year={2019},
+     month={May},
+     pages={40}
     }
 
 A first version of the auto complete graph method is presented in [this article](https://www.arxiv.org/abs/1702.05087) on arxiv and was publish in [SSRR2017](https://ieeexplore.ieee.org/abstract/document/8088137?reload=true) where it got the best student paper award. This version integrates the emergency map in the robot map using a specific graph matching strategy.
- 
-
 
 ## To run the code
 
 Two launch file are used to run the code: one for the mapping and localization, and another for the graph-SLAM optimization.
 
-### Mapping and localization parameters:
+### Mapping and localization parameters
 
 * use\_mcl: if true, use MCL in the emergency map.
 * use\_graph\_map\_registration: if true, use NDT mapping.
-* zfilter\_min: 
+* zfilter\_min:
 * fraction:
 * cutoff:
 * init\_var:
@@ -55,7 +53,6 @@ Two launch file are used to run the code: one for the mapping and localization, 
 * cov\_x\_mcl: starting cov along the x axis for the MCL.
 * cov\_y\_mcl: starting cov along the y axis for the MCL.
 * cov\_yaw\_mcl: starting cov along the yaw axis for the MCL.
-
 
 ### ACG parameters
 
@@ -70,12 +67,8 @@ Two launch file are used to run the code: one for the mapping and localization, 
 * use\_corner\_orientation: use the corner orientation as a parameter for corner matching.
 * corner\_covariance: use an approximation of the corner covariance given the NDT used to find it.
 * own\_registration: register the submaps.
-* mcl\_observation\_on\_prior: use MCL to find correspondences between the emergency map and the robot map. UNUSED
-* links\_prior\_classic\_ssrr: use old strategy. DOESN'T WORK ANYMORE.
-* use\_mcl\_cov\_to\_find\_prior\_observed: UNUSED
 * world\_frame: the world frame
-* sensor\_frame: the sensor frame
-* covariance\_to\_find\_links: UNUSED
+* sensor\_frame: the sensor framev
 * gaussian\_scaling\_factor: scaling factor of the MCL covariance.
 * threshold\_score\_link\_creation: probability above which the corner are considered the same and matched. This should be only slightly above zero.
 * prior\_file: file localization for the emergency map image.
@@ -105,7 +98,7 @@ They need to communicate for the prior map update of the ACG to be linked to the
 * Eigen
 * Boost
 
-## ROS 
+## ROS
 
 ### Topics
 
@@ -117,6 +110,7 @@ Header header #standard header information
 ndt_map/NDTVectorMapMsg ndt_maps #All robot submap and associated translations
 grid_map_msgs/GridMap prior #Prior map as a gridMap with resolution 0.1 and frame "/world"
 ```
+
 Each ndt map is centered where the corresponding robot pose node is situated. The robot pose node can be found be adding all transformations.
 
 Another topic where one can find the results is `/auto_complete_graph_rviz_small_optimi/acg_maps_om`. The message format is as follow:
@@ -128,6 +122,7 @@ grid_map_msgs/GridMap[] ndt_maps_om #All robot submap as grid maps. The layer is
 geometry_msgs/Pose[] robot_poses #transformation between the previous submap and the next.
 grid_map_msgs/GridMap prior #Prior map as a gridMap with resolution 0.1 and origin frame "/world"
 ```
+
 Each ndt map is centered where the corresponding robot pose node is situated.
 
 The results can be visualized using the [auto-complete-graph visualization]() package.
@@ -141,8 +136,7 @@ The MCL poses can be considered as _"where the robot thinks he is in the emergen
 * Every MCL pose is associated with an equivalent robot map pose and a submap.
 * For every corner in the submap, its coordinate are changed to assume it is seen from the MCL position instead of the robot map pose, i.e. we translate the submap from the robot map pose to the MCL pose.
 * We score the likeliness that a corner correspond to a emergency map corner by using the MCL covariance:
-	* We calculate the mahalanobis distance using the MCL covariance: `(pose_prior - pose_landmark).dot( mcl_cov_inverse * (pose_prior - pose_landmark));`
-	* We then calculate the probability of the corners being the same: `prob = exp(mahalanobis distance)`
-	This probability will be only slightly superior to zero if the corner pose _"fit in the covariance"_. Hence we only need to look for a score slightly superior to zero to get a matching ; we use 5%.
+  * We calculate the mahalanobis distance using the MCL covariance: `(pose_prior - pose_landmark).dot( mcl_cov_inverse * (pose_prior - pose_landmark));`
+  * We then calculate the probability of the corners being the same: `prob = exp(mahalanobis distance)`
+ This probability will be only slightly superior to zero if the corner pose _"fit in the covariance"_. Hence we only need to look for a score slightly superior to zero to get a matching ; we use 5%.
 * If the corner match we create an observation from the robot pose to emergency map corner. This observation's covariance is the equivalent MCL pose covariance.
-
