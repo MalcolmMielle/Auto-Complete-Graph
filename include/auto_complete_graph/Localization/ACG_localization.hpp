@@ -78,21 +78,7 @@ class AutoCompleteGraphLocalization
     bool _extract_corners = true;
     ///@brief Use the gaussian of the corner approximated by ndt_feature_finder
     bool _use_corner_covariance = true;
-    ///@brief Use the covariance of MCL into the link between corner in submaps
-    /// and prior. NOT WORKING :)
 
-    // UNUSED
-    bool _use_covariance_for_links = false;
-    ///@brief Add an observation between mcl poses and prior corner if the prior
-    /// is close enough to a NDT corner. The obervation is the corner
-    /// observation from the robot to the NDT corner.
-
-    // UNUSED
-    bool _use_mcl_observation_on_prior = true;
-    ///@brief Add link in between ndt corner and prior corner based on a
-    /// distance
-    /// threshold.
-    bool _use_links_prior_classic_ssrr = false;
     ///@brief when adding obersvation between the prior and mcl, this is the
     /// threshold of the score for creating an observation. Score depend on mcl
     /// cov and distance between corners.
@@ -102,9 +88,6 @@ class AutoCompleteGraphLocalization
 
     bool _use_robot_maps = true;
     bool _match_robot_maps;
-
-    // UNUSED
-    bool _use_mcl_cov_to_find_prior_observed = false;
 
     // Size of the neighbor used by the mcl in graph_map. Make sure the value is
     // the same for both. in meter
@@ -145,15 +128,6 @@ class AutoCompleteGraphLocalization
                                                      ln,
                                                      pn,
                                                      0) {
-        if (_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior) {
-            throw std::runtime_error(
-                "ATTENTION: you used some funny parameters here young padawan. "
-                "Link "
-                "prior and MCL Observation edge on prior together, will lead "
-                "to "
-                "the "
-                "prior being linked in two different ways. Take care.");
-        }
         // Just to be sure :|
         _use_user_robot_pose_cov = false;
     }
@@ -172,34 +146,14 @@ class AutoCompleteGraphLocalization
                                                      rn,
                                                      ln,
                                                      pn,
-                                                     rp) {
-        if (_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior) {
-            throw std::runtime_error(
-                "ATTENTION: you used some funny parameters here young padawan. "
-                "Link "
-                "prior and MCL Observation edge on prior together, will lead "
-                "to "
-                "the "
-                "prior being linked in two different ways. Take care.");
-        }
-    }
+                                                     rp) {}
 
     AutoCompleteGraphLocalization(const g2o::SE2& sensoffset,
                                   const std::string& load_file)
         : _gen(_rd()),
           AutoCompleteGraphBase<AutoCompleteGraphPriorXY,
                                 g2o::VertexXYPrior,
-                                g2o::EdgeXYPriorACG>(sensoffset, load_file) {
-        if (_use_links_prior_classic_ssrr && _use_mcl_observation_on_prior) {
-            throw std::runtime_error(
-                "ATTENTION: you used some funny parameters here young padawan. "
-                "Link "
-                "prior and MCL Observation edge on prior together, will lead "
-                "to "
-                "the "
-                "prior being linked in two different ways. Take care.");
-        }
-    }
+                                g2o::EdgeXYPriorACG>(sensoffset, load_file) {}
 
     void print() const {
         AutoCompleteGraphBase<AutoCompleteGraphPriorXY, g2o::VertexXYPrior,
@@ -218,22 +172,6 @@ class AutoCompleteGraphLocalization
         ///@brief Use the gaussian of the corner approximated by
         /// ndt_feature_finder
         std::cout << "Use corner covariance: " << _use_corner_covariance
-                  << std::endl;
-        ///@brief Use the covariance of MCL into the link between corner in
-        /// submaps
-        /// and prior. NOT WORKING :)
-        std::cout << "Use MCL covariance in links: "
-                  << _use_covariance_for_links << std::endl;
-        ///@brief Add an observation between mcl poses and prior corner if the
-        /// prior
-        /// is close enough to a NDT corner. The obervation is the corner
-        /// observation from the robot to the NDT corner.
-        std::cout
-            << "Use MCL corner observatino to directly link to the prior: "
-            << _use_mcl_observation_on_prior << std::endl;
-        ///@brief Add link in between ndt corner and prior corner based on a
-        /// distance threshold.
-        std::cout << "Use SSRR link strategy: " << _use_links_prior_classic_ssrr
                   << std::endl;
         ///@brief when adding obersvation between the prior and mcl, this is the
         /// threshold of the score for creating an observation. Score depend on
@@ -276,26 +214,15 @@ class AutoCompleteGraphLocalization
     }
     void extractCorners(bool setter) { _extract_corners = setter; }
     void useCornerCovariance(bool setter) { _use_corner_covariance = setter; }
-    void useCovarianceToFindLinks(bool setter) {
-        _use_covariance_for_links = setter;
-    }
     void setScalingFactorOfGaussians(double setter) {
         _scaling_factor_gaussian = setter;
     }
     void setThrehsoldOfScoreForCreatingLink(double setter) {
         _threshold_of_score_for_creating_a_link = setter;
     }
-    void useMCLObservationOnPrior(bool setter) {
-        _use_mcl_observation_on_prior = setter;
-    }
-    void useLinksPriorSSRR(bool setter) {
-        _use_links_prior_classic_ssrr = setter;
-    }
+
     void useRobotMaps(bool setter) { _use_robot_maps = setter; }
     void matchRobotMaps(bool setter) { _match_robot_maps = setter; }
-    void useMCLCovToFindPriorObserved(bool setter) {
-        _use_mcl_cov_to_find_prior_observed = setter;
-    }
     void sizeMCLNeighbor(double si) { _neighbor_mcl_neighbor = si; }
     void addNoiseToOdometryMeasurements(bool add) { _add_odometry_noise = add; }
     void addIncrementalOptimization(bool add) { _not_incremental = add; }
