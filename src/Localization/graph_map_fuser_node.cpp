@@ -332,7 +332,6 @@ public:
 		m.lock();
 		fuser_->ProcessFrame<pcl::PointXYZ>(cloud, pose_, Tmotion);
 		m.unlock();
-		fuser_->PlotMapType();
 		tf::Transform Transform;
 		tf::transformEigenToTF(pose_, Transform);
 		tf_.sendTransform(tf::StampedTransform(Transform, tplot, world_link_id, fuser_base_link_id));
@@ -542,7 +541,6 @@ public:
 		plotPointcloud2(cloud);
 		m.lock();
 		fuser_->ProcessFrame(cloud, pose_, Tmotion);
-		fuser_->PlotMapType();
 		m.unlock();
 	}
 	void GTLaserPointsOdomCallbackTF(const sensor_msgs::PointCloud2::ConstPtr &msg_in) //this callback is used for GT based mapping with TF lookup
@@ -564,7 +562,6 @@ public:
 			tf_.sendTransform(tf::StampedTransform(tf_sensor_pose_, t_stamp, std::string("online_") + state_base_link_id, laser_link_id));
 			plotPointcloud2(cloud, t_stamp);
 			fuser_->ProcessFrame(cloud, pose_, Tmotion);
-			fuser_->PlotMapType();
 			m.unlock();
 		}
 	}
