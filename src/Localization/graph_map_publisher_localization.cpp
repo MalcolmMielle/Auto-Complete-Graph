@@ -185,6 +185,7 @@ class GraphMapFuserNode {
     std::string world_link_id, map_link_id, odometry_link_id,
         fuser_base_link_id, laser_link_id, init_pose_frame, gt_topic, bag_name,
         state_base_link_id;
+    std::string acg_maps_topic;
     double size_x, size_y, size_z, resolution, sensor_range, min_laser_range_;
     bool visualize, match2D, matchLaser, beHMT, useOdometry, initPoseFromGT,
         initPoseFromTF, initPoseSet, gt_mapping;
@@ -251,6 +252,9 @@ class GraphMapFuserNode {
         param_nh.param<std::string>("points_topic", points_topic, "points");
         /// topic to wait for laser scan messages, if available
         param_nh.param<std::string>("laser_topic", laser_topic, "laser_scan");
+
+        param_nh.param<std::string>("acg_maps_topic", acg_maps_topic,
+                                    "acg_maps");
 
         /// only match 2ith 3dof
         param_nh.param("match2D", match2D, true);
@@ -563,7 +567,7 @@ class GraphMapFuserNode {
             // 		std::cout << "new mcl done" << std::endl;
             // 		ndtmcl_ = boost::shared_ptr<NDTMCL>(ndtmcl);
             ndt_mcl_map = nh_.subscribe<auto_complete_graph::ACGMaps>(
-                "acg_maps", 10, &GraphMapFuserNode::updateAll, this);
+                acg_maps_topic, 10, &GraphMapFuserNode::updateAll, this);
 
             mcl_pub_ = nh_.advertise<nav_msgs::Odometry>("ndt_mcl", 10);
 
@@ -1111,6 +1115,8 @@ class GraphMapFuserNode {
                 ROS_DEBUG_STREAM(
                     "NDT MCL needs to be init for the registration to start if "
                     "you want to use both MCL and registration");
+                ROS_DEBUG_STREAM("use_mcl : " << use_mcl_ << ", mcl_loaded "
+                                              << mcl_loaded_);
             }
         }
     }
