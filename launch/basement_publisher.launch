@@ -10,7 +10,7 @@
 	
 <!-- //Launch basement bag file !!!!!-->
 	
-<include file="$(find gustav_scripts)/URDF/urdf_basement.launch"/>
+<!-- <include file="$(find gustav_scripts)/URDF/urdf_basement.launch"/> -->
 	
 <node pkg="tf" type="static_transform_publisher" name="world_odom_frame" args="0 0 0 0 0 0 /world /odom 10"/>
 <!-- <node pkg="tf" type="static_transform_publisher" name="world_laser_frame_frame" args="1 -50 0 0 0 0 /world /base_link_tmp 10"/> -->
@@ -79,6 +79,8 @@
       <param name="odometry_topic" value="/odom" />
       <param name="use_tf_listener" value="false" />
 
+      <param name="acg_maps_topic" value="/acg_node_localization/acg_maps" />
+      
       <param name="max_translation_norm" value="0.4" />
       <param name="max_rotation_norm" value="0.78539816339" />
 
