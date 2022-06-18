@@ -32,8 +32,8 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(
 
             double res = cv::norm(point_land - corners_end[i].position);
 
-            // 			std::cout << "res : " << res << " points "  << point_land <<
-            // " " << corners_end[i].point << "  cell size " << cell_size <<
+            // 			std::cout << "res : " << res << " points "  << point_land
+            // << " " << corners_end[i].point << "  cell size " << cell_size <<
             // std::endl;
 
             // If we found the landmark, we save the data
@@ -44,8 +44,8 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(
         }
         if (seen == false) {
             // 			std::cout << "New point " << i << " " <<
-            // ret_opencv_point_corner.size() << std::endl; 			assert(i
-            // < ret_export.size());
+            // ret_opencv_point_corner.size() << std::endl;
+            // assert(i < ret_export.size());
             g2o::Vector2D position_globalframe;
             position_globalframe << corners_end[i].position.x,
                 corners_end[i].position.y;
@@ -90,7 +90,8 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(
             //  p_observation.y = corners_end[i].getObservations()(1);
             cv::Point2i center = perception_oru::ndt_feature_finder::scalePoint(
                 p_observation, max, min, size_image_max);
-            // 			std::cout << "Position " << center << "max min " << max << "
+            // 			std::cout << "Position " << center << "max min " << max <<
+            // "
             // "
             // << min << std::endl;
             assert(center.x <= size_image_max);
@@ -120,11 +121,11 @@ void AASS::acg::AutoCompleteGraphFeature::extractCornerNDTMap(
 
             // 			cv::Mat copyy;
             // 			ndt_img.copyTo(copyy);
-            // 			cv::circle(copyy, center, 20, cv::Scalar(255, 255,
-            // 255),
-            // 5); 			cv::line(copyy, center, p2, cv::Scalar(255, 255, 255),
-            // 1); 			cv::line(copyy, center, p2_p, cv::Scalar(255, 255, 255), 1);
-            // cv::line(copyy, center, p2_m, cv::Scalar(255, 255, 255), 1);
+            // 			cv::circle(copyy, center, 20, cv::Scalar(255,
+            // 255, 255), 5); 			cv::line(copyy, center, p2,
+            // cv::Scalar(255, 255, 255), 1); 			cv::line(copyy,
+            // center, p2_p, cv::Scalar(255, 255, 255), 1); cv::line(copyy,
+            // center, p2_m, cv::Scalar(255, 255, 255), 1);
             //
             // 			cv::imshow("NDT_map", copyy);
             // 			cv::waitKey(0);
@@ -233,7 +234,7 @@ void AASS::acg::AutoCompleteGraphFeature::SIFTNdtLandmark(
     cv::Mat img_tmpp;
     img.convertTo(img_tmpp, CV_8U);
     cv::Mat img_tmp;
-    cv::cvtColor(img_tmpp, img_tmp, CV_BGR2GRAY);
+    cv::cvtColor(img_tmpp, img_tmp, cv::COLOR_BGR2GRAY);
     std::string type = type2str(img_tmp.type());
     std::cout << ">Type " << type << std::endl;
     assert(type == "8UC1");

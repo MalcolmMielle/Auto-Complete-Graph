@@ -4,7 +4,7 @@
   <version>0.0.0</version>
   <description>The auto_complete_graph package</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
+  <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
   <maintainer email="malcolm.mielle@protonmail.com">Malcolm Mielle</maintainer>
@@ -58,7 +58,8 @@
   <build_depend>nav_msgs     </build_depend>
   <build_depend>graph_map     </build_depend>
   <build_depend>ndt_localization     </build_depend>
-  
+  <build_depend>graph_map_custom_msgs</build_depend>
+
   <run_depend>occupancy_grid_utils</run_depend>
   <run_depend>message_generation</run_depend>
   <run_depend>message_runtime</run_depend>
@@ -78,6 +79,7 @@
   <run_depend>nav_msgs     </run_depend>
   <run_depend>graph_map     </run_depend>
   <run_depend>ndt_localization     </run_depend>
+  <run_depend>graph_map_custom_msgs</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

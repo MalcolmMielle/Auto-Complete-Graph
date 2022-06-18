@@ -52,7 +52,8 @@ void AASS::acg::PriorLoaderInterface::transformOntoSLAM() {
     //  _graph.getNumVertices() << std::endl; int i = 0 ;
     for (vp = boost::vertices(_prior_graph); vp.first != vp.second;
          ++vp.first) {
-        // 					std::cout << "going throught grph " << i
+        // 					std::cout << "going throught grph " <<
+        // i
         // << std::endl; ++i;
         PriorVertex v = *vp.first;
         // ATTENTION !
@@ -88,7 +89,7 @@ void AASS::acg::PriorLoaderInterface::extractCornerPrior() {
     _prior_graph.clear();
 
     cv::Mat src = cv::imread(_file, 1);
-    cv::cvtColor(src, _img_gray, CV_BGR2GRAY);
+    cv::cvtColor(src, _img_gray, cv::COLOR_BGR2GRAY);
 
     AASS::vodigrex::LineFollowerGraphCorners<> graph_corners;
     graph_corners.setD(2);
@@ -151,7 +152,8 @@ void AASS::acg::PriorLoaderInterface::initialize(
         // Matrix multiplication
         cv::Mat point_m = (cv::Mat_<double>(3, 1) << point.x, point.y, 1);
         cv::Mat mat_out = rot_mat * point_m;
-        // 					std::cout << "Mat out " << mat_out
+        // 					std::cout << "Mat out " <<
+        // mat_out
         // << std::endl;
         cv::Point2d point_out;
         point_out.x = mat_out.at<double>(0);
@@ -184,7 +186,8 @@ void AASS::acg::PriorLoaderInterface::rotateGraph(const cv::Mat& rot_mat) {
         // Matrix multiplication
         cv::Mat point_m = (cv::Mat_<double>(3, 1) << point.x, point.y);
         cv::Mat mat_out = rot_mat * point_m;
-        // 					std::cout << "Mat out " << mat_out
+        // 					std::cout << "Mat out " <<
+        // mat_out
         // << std::endl;
         cv::Point2d point_out;
         point_out.x = mat_out.at<double>(0);
@@ -200,7 +203,8 @@ void AASS::acg::PriorLoaderInterface::rotateGraph(const cv::Mat& rot_mat) {
     int i = 0;
     for (vp = boost::vertices(_prior_graph); vp.first != vp.second;
          ++vp.first) {
-        // 					std::cout << "going throught grph " << i
+        // 					std::cout << "going throught grph " <<
+        // i
         // << std::endl; ++i;
         PriorVertex v = *vp.first;
         // ATTENTION !
@@ -234,7 +238,8 @@ void AASS::acg::PriorLoaderInterface::AffineTransformGraph(
         // Matrix multiplication
         cv::Mat point_m = (cv::Mat_<double>(3, 1) << point.x, point.y, 1);
         cv::Mat mat_out = warp_transfo * point_m;
-        // 					std::cout << "Mat out " << mat_out
+        // 					std::cout << "Mat out " <<
+        // mat_out
         // << std::endl;
         cv::Point2d point_out;
         point_out.x = mat_out.at<double>(0);
@@ -252,7 +257,8 @@ void AASS::acg::PriorLoaderInterface::AffineTransformGraph(
     int i = 0;
     for (vp = boost::vertices(_prior_graph); vp.first != vp.second;
          ++vp.first) {
-        // 					std::cout << "going throught grph " << i
+        // 					std::cout << "going throught grph " <<
+        // i
         // << std::endl; ++i;
         PriorVertex v = *vp.first;
         // ATTENTION !
@@ -264,7 +270,8 @@ void AASS::acg::PriorLoaderInterface::AffineTransformGraph(
 
         // Matrix multiplication
 
-        // 					std::cout << "Point out " << point_out
+        // 					std::cout << "Point out " <<
+        // point_out
         // << std::endl;
 
         // 					std::cout << "OLD value " <<
@@ -274,8 +281,8 @@ void AASS::acg::PriorLoaderInterface::AffineTransformGraph(
         _corner_prior_matched.push_back(point_out);
         // 					std::cout << "New value " <<
         // _corner_prior_matched[i].x << " " << _corner_prior_matched[i].y <<
-        // std::endl; 					std::cout << "New value " <<
-        // _prior_graph[v].getX() << " "
+        // std::endl; 					std::cout << "New value "
+        // << _prior_graph[v].getX() << " "
         // << _prior_graph[v].getY() << std::endl;
         ++i;
     }
@@ -319,13 +326,14 @@ void AASS::acg::PriorLoaderInterface::noTwiceSameEdge(
             edge_seen;
 
         //		std::cout << "Vertiuce size " <<
-        //vertices_out_edge.size()
+        // vertices_out_edge.size()
         //<< std::endl; 		std::cout << " v has " <<
-        //graph.getNumEdges(v) << std::endl;
+        // graph.getNumEdges(v) << std::endl;
 
         for (boost::tie(out_i, out_end) = boost::out_edges(v, graph);
              out_i != out_end; ++out_i) {
-            //			std::cout << "Vertiuce size " << vertices_out_edge.size()
+            //			std::cout << "Vertiuce size " <<
+            //vertices_out_edge.size()
             //<< std::endl; 			std::cout << "Removing an edge
             // test" << std::endl;
             e = *out_i;
@@ -336,7 +344,8 @@ void AASS::acg::PriorLoaderInterface::noTwiceSameEdge(
                      edge_seen.begin();
                  it != edge_seen.end(); ++it) {
                 if (e == *it) {
-                    //					std::cout << "EDGE seen on this node :("
+                    //					std::cout << "EDGE seen on this node
+                    //:("
                     //<< std::endl;
                     assert(true == false);
                 }

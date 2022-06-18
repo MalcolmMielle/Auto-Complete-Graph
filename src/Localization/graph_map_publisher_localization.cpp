@@ -130,7 +130,6 @@ Eigen::Affine3d getPose(const std::string& base_frame,
 }
 
 using namespace perception_oru::graph_map;
-using namespace ::graph_map;
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan,
                                                         nav_msgs::Odometry>
@@ -531,8 +530,8 @@ class GraphMapFuserNode {
 
         // Publisher of graph_map message
 
-        graphmap_pub_ =
-            param_nh.advertise<::graph_map::GraphMapMsg>("graph_map", 50);
+        graphmap_pub_ = param_nh.advertise<graph_map_custom_msgs::GraphMapMsg>(
+            "graph_map", 50);
         graph_map_vector_ = param_nh.advertise<ndt_map::NDTVectorMapMsg>(
             "graph_map_vector", 50);
         graphmap_localization_pub =
@@ -609,7 +608,7 @@ class GraphMapFuserNode {
         //- 1);
         ROS_DEBUG("PUBLISH: now");
         // Publish message
-        ::graph_map::GraphMapMsg graphmapmsg;
+        graph_map_custom_msgs::GraphMapMsg graphmapmsg;
         perception_oru::graph_map::graphMapToMsg(*(fuser_->GetGraph()),
                                                  graphmapmsg, map_link_id);
 
@@ -624,7 +623,8 @@ class GraphMapFuserNode {
             count++;
         }
 
-        // 			std::cout << "PUBLISH " << graphmapmsg.nodes.size()
+        // 			std::cout << "PUBLISH " <<
+        // graphmapmsg.nodes.size()
         // << std::endl;
         //
         if (use_mcl_ && mcl_loaded_) {
@@ -632,7 +632,8 @@ class GraphMapFuserNode {
                 "*************************** > Real Localization < "
                 "****************************");
 
-            //			std::cout << acg_localization->getLocalizations().size()
+            //			std::cout <<
+            // acg_localization->getLocalizations().size()
             //<< " == " <<  nb_of_node_new << std::endl;
             //			assert(acg_localization->getLocalizations().size()
             //== nb_of_node_new);
@@ -657,8 +658,10 @@ class GraphMapFuserNode {
 
             //					 bool unstop = true;
             //					 while(nb_of_node_new >= 6 &&
-            // unstop){ 						 std::cout << "Keep publishing ? " << std::endl;
-            // std::cin
+            // unstop){ 						 std::cout << "Keep publishing
+            // ?
+            // "
+            // << std::endl; std::cin
             //>> unstop;
             //						 graphmap_localization_pub.publish(graphmaplocalizationmsg);
             //
@@ -759,7 +762,7 @@ class GraphMapFuserNode {
         double y = sensorpose_tmp.getOrigin().getY();
         double z = sensorpose_tmp.getOrigin().getZ();
         //			std::cout << "xyz : " << x << " " << y << " " <<
-        //z
+        // z
         //<< std::endl; TEST
         // 	x = 16.6;
         // 	y = 3.0;
@@ -1050,7 +1053,7 @@ class GraphMapFuserNode {
                 m.lock();
                 fuser_->ProcessFrame<pcl::PointXYZ>(cloud, pose_, Tmotion);
                 m.unlock();
-                fuser_->PlotMapType();
+                // fuser_->PlotMapType();
                 tf::Transform Transform;
                 tf::transformEigenToTF(pose_, Transform);
 
@@ -1335,7 +1338,7 @@ class GraphMapFuserNode {
         plotPointcloud2(cloud);
         m.lock();
         fuser_->ProcessFrame(cloud, pose_, Tmotion);
-        fuser_->PlotMapType();
+        // fuser_->PlotMapType();
         m.unlock();
     }
     void GTLaserPointsOdomCallbackTF(
@@ -1365,7 +1368,7 @@ class GraphMapFuserNode {
                 std::string("online_") + state_base_link_id, laser_link_id));
             plotPointcloud2(cloud, t_stamp);
             fuser_->ProcessFrame(cloud, pose_, Tmotion);
-            fuser_->PlotMapType();
+            // fuser_->PlotMapType();
             m.unlock();
         }
     }
