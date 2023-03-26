@@ -855,8 +855,7 @@ class GraphMapFuserNode {
                 Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ());
 
             pcl::PointCloud<pcl::PointXYZ> transformed_cloud2;
-
-            pcl::transformPointCloud(cloud, transformed_cloud2, sensorpose2);
+            pcl::transformPointCloud(transformed_cloud, transformed_cloud2, sensorpose2);
 
             sensor_msgs::PointCloud2 pcloudmsg;
             pcl::toROSMsg(transformed_cloud2, pcloudmsg);
