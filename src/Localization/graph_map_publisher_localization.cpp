@@ -122,9 +122,9 @@ Eigen::Affine3d getPose(const std::string& base_frame,
 
     Eigen::Affine3d pose_sensor =
         Eigen::Translation<double, 3>(x, y, z) *
-        Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX()) *
+        Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ()) *
         Eigen::AngleAxis<double>(pitch, Eigen::Vector3d::UnitY()) *
-        Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ());
+        Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX());
 
     return pose_sensor;
 }
@@ -421,9 +421,9 @@ class GraphMapFuserNode {
         sensorPose_ =
             Eigen::Translation<double, 3>(sensor_pose_x, sensor_pose_y,
                                           sensor_pose_z) *
-            Eigen::AngleAxis<double>(sensor_pose_r, Eigen::Vector3d::UnitX()) *
+            Eigen::AngleAxis<double>(sensor_pose_t, Eigen::Vector3d::UnitZ()) *
             Eigen::AngleAxis<double>(sensor_pose_p, Eigen::Vector3d::UnitY()) *
-            Eigen::AngleAxis<double>(sensor_pose_t, Eigen::Vector3d::UnitZ());
+            Eigen::AngleAxis<double>(sensor_pose_r, Eigen::Vector3d::UnitX());
 
         tf::poseEigenToTF(sensorPose_, tf_sensor_pose_);
 
@@ -431,11 +431,9 @@ class GraphMapFuserNode {
             pose_ =
                 Eigen::Translation<double, 3>(pose_init_x, pose_init_y,
                                               pose_init_z) *
-                Eigen::AngleAxis<double>(pose_init_r,
-                                         Eigen::Vector3d::UnitX()) *
-                Eigen::AngleAxis<double>(pose_init_p,
-                                         Eigen::Vector3d::UnitY()) *
-                Eigen::AngleAxis<double>(pose_init_t, Eigen::Vector3d::UnitZ());
+                Eigen::AngleAxis<double>(pose_init_t, Eigen::Vector3d::UnitZ()) *
+                Eigen::AngleAxis<double>(pose_init_p, Eigen::Vector3d::UnitY()) *
+                Eigen::AngleAxis<double>(pose_init_r, Eigen::Vector3d::UnitX());
             initPoseSet = true;
 
             fuser_ = new GraphMapFuser(map_type_name, reg_type_name, pose_,
@@ -770,9 +768,9 @@ class GraphMapFuserNode {
 
         Eigen::Affine3d sensorpose =
             Eigen::Translation<double, 3>(x, y, z) *
-            Eigen::AngleAxis<double>(rollt, Eigen::Vector3d::UnitX()) *
+            Eigen::AngleAxis<double>(yawt, Eigen::Vector3d::UnitZ()) *
             Eigen::AngleAxis<double>(pitcht, Eigen::Vector3d::UnitY()) *
-            Eigen::AngleAxis<double>(yawt, Eigen::Vector3d::UnitZ());
+            Eigen::AngleAxis<double>(rollt, Eigen::Vector3d::UnitX());
         acg_localization->setSensorPose(sensorpose);
 
         // 		perception_oru::particle_filter* pMCL = new
@@ -828,10 +826,9 @@ class GraphMapFuserNode {
 
             Eigen::Affine3d sensorpose =
                 Eigen::Translation<double, 3>(x, y, z) *
-                Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX()) *
+                Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ()) *
                 Eigen::AngleAxis<double>(pitch, Eigen::Vector3d::UnitY()) *
-                Eigen::AngleAxis<double>(yaw, Eigen::Vector3d::UnitZ());
-
+                Eigen::AngleAxis<double>(roll, Eigen::Vector3d::UnitX());
             Eigen::Matrix3d cov;
             Eigen::Vector3d mean;
 
@@ -847,12 +844,11 @@ class GraphMapFuserNode {
 
             mcl_pose.header.stamp = time;
             mcl_pub_.publish(mcl_pose);
-
             Eigen::Affine3d sensorpose2 =
                 Eigen::Translation<double, 3>(mean(0), mean(1), 0) *
-                Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitX()) *
+                Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ()) *
                 Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitY()) *
-                Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ());
+                Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitX());
 
             pcl::PointCloud<pcl::PointXYZ> transformed_cloud2;
             pcl::transformPointCloud(transformed_cloud, transformed_cloud2, sensorpose2);
