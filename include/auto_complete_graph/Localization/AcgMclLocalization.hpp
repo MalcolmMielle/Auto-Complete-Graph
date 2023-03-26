@@ -95,9 +95,9 @@ class ACGMCLLocalization : public perception_oru::particle_filter {
 
         Eigen::Affine3d mean_tmp =
             Eigen::Translation<double, 3>(mean(0), mean(1), 0) *
-            Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitX()) *
+            Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ()) *
             Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitY()) *
-            Eigen::AngleAxis<double>(mean(2), Eigen::Vector3d::UnitZ());
+            Eigen::AngleAxis<double>(0, Eigen::Vector3d::UnitX());
 
         mean_tmp = mean_tmp * _sensor_pose;
         Eigen::Isometry2d iso = Affine3d2Isometry2d(mean_tmp);
