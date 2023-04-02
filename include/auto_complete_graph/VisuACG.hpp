@@ -239,23 +239,6 @@ class VisuAutoCompleteGraphBase {
         }
     }
 
-    void publishFullOccGrid(
-        const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg) {
-        grid_map::GridMap gridMap;
-        ACGToGridMap(acg, gridMap);
-        nav_msgs::OccupancyGrid* omap_tmp = new nav_msgs::OccupancyGrid();
-        nav_msgs::OccupancyGrid::Ptr occ_out(omap_tmp);
-        grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "all", 0, 1,
-                                                       *occ_out);
-        _last_ndtmap_full_occ.publish<nav_msgs::OccupancyGrid>(*occ_out);
-
-        nav_msgs::OccupancyGrid* omap_tmp_p = new nav_msgs::OccupancyGrid();
-        nav_msgs::OccupancyGrid::Ptr occ_out_p(omap_tmp_p);
-        grid_map::GridMapRosConverter::toOccupancyGrid(gridMap, "prior", 0, 1,
-                                                       *occ_out_p);
-        _prior_map_occ.publish<nav_msgs::OccupancyGrid>(*occ_out_p);
-    }
-
     void updateRviz(
         const AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg) {
         drawPrior(acg);

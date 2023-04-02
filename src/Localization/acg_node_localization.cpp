@@ -34,7 +34,6 @@ ros::Publisher occupancy_grid;
 ros::Publisher occ_send;
 ros::Publisher prior_cloud, prior_ndt;
 ros::Publisher acg_gdim;
-ros::Publisher acg_gdim_om;
 
 ros::Publisher last_grid_map;
 ros::Publisher last_ndtmap;
@@ -104,16 +103,6 @@ std::tuple<double, double> error_kitti_benchmark_translation(
 
         error_t = error_t + std::get<0>(errors);
         error_rot = error_rot + std::get<1>(errors);
-
-        //		Eigen::Vector2d motion = pose[i-1].head(2) -
-        // pose[i].head(2); 		Eigen::Vector2d motion_gt =
-        // gt[i-1].head(2) -
-        // gt[i].head(2); 		error = error + (motion -
-        // motion_gt).norm();
-        //
-        //		double angle = pose[i-1](2) - pose[i](2);
-        //		double angle_gt = gt[i-1](2) - gt[i](2);
-        //		error_rot = error_rot + std::abs(angle - angle_gt);
     }
     error_t = error_t / pose.size();
     error_rot = error_rot / pose.size();
@@ -127,15 +116,12 @@ inline bool exists_test3(const std::string& name) {
 }
 
 void getGroundTruth(const nav_msgs::OdometryConstPtr& odom) {
-    //	std::cout << "Savong odom " << odom->header.stamp.sec << " " <<
-    // odom->header.stamp.nsec << std::endl;
     gt_odometry.push_back(*odom);
 }
 
 tf::StampedTransform getPoseTFTransform(const std::string& base_frame,
                                         const std::string& to_frame,
                                         ros::Time time = ros::Time(0)) {
-    std::cout << "GEt pose " << std::endl;
     tf::TransformListener listener;
     tf::StampedTransform transform;
     bool good_transformation = true;
@@ -184,7 +170,6 @@ int getClosestTime(g2o::VertexSE2RobotLocalization* robot_vertex) {
         }
     }
 
-    std::cout << "CLosest " << place_in_vec << std::endl;
     return place_in_vec;
 }
 
@@ -192,7 +177,6 @@ bool exportErrorNoiseOdometry(
     const AASS::acg::AutoCompleteGraphLocalization& oacg) {
     std::string file_out =
         "/home/malcolm/ros_catkin_ws/lunar_ws/acg_error_odometry.dat";
-    //	std::ostringstream convert;   // stream used for the conversion
     std::ofstream infile(file_out, std::ofstream::app);
 
     infile << std::endl << std::endl;
@@ -272,9 +256,6 @@ bool exportErrorNoiseOdometry(
             std::cout << "xy" << x << " " << y << std::endl;
             std::cout << "Robot pose " << robot_pose.toVector().head(2)
                       << std::endl;
-
-            //			Eigen::Vector2d position_gt; position_gt << x,
-            // y; 			double angle_gt; angle_gt << roll;
 
             std::tuple<double, double> errors_gt = std::make_tuple(0, 0);
             if (poses_robot.size() > 1) {
@@ -437,7 +418,6 @@ bool exportIterationCOunt(const AASS::acg::AutoCompleteGraphLocalization& oacg,
 
     convert << oacg.getRobotNodes().size();
     std::ofstream infile(file_out, std::ofstream::app);
-    // 			int co = 0;
     std::cout << node_number << " " << edge_number << " " << iterations.first
               << " " << iterations.second << " " << time_corner << " "
               << time_opti << std::endl;
@@ -481,8 +461,7 @@ void latchOccGrid(const std_msgs::Bool::ConstPtr msg,
 }
 
 void publishACGOM(const AASS::acg::AutoCompleteGraphLocalization& oacg) {
-    //	std::cout << "PUB2" << std::endl;
-    // Puclish message for GDIM
+    // Publish message for GDIM
     auto_complete_graph::ACGMaps mapmsg;
     ROS_INFO("PUSH acg maps message");
     AASS::acg::ACGToACGMapsMsg(oacg, mapmsg, map_frame);
@@ -733,7 +712,6 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg,
     priorloader.initialize(slam_pt, prior_pt);
 
     // We use the already registered points
-    //  	priorloader.extractCornerPrior();
     priorloader.transformOntoSLAM();
     auto graph_prior = priorloader.getGraph();
 
@@ -744,7 +722,6 @@ void initAll(AASS::acg::AutoCompleteGraphLocalization& oacg,
 
     initialiser.clear();
 
-    //	publishPriorNDT(oacg);
     publishACGOM(oacg);
 
     if (optimize_prior == false) {
@@ -962,8 +939,6 @@ int main(int argc, char** argv) {
         nh.advertise<nav_msgs::OccupancyGrid>("/occupancy_map_asif", 10, true);
 
     acg_gdim = nh.advertise<auto_complete_graph::ACGMaps>("acg_maps", 10);
-    acg_gdim_om =
-        nh.advertise<auto_complete_graph::ACGMapsOM>("acg_maps_om", 10);
     last_ndtmap = nh.advertise<ndt_map::NDTMapMsg>("lastgraphmap_acg", 10);
     last_occ_map =
         nh.advertise<nav_msgs::OccupancyGrid>("occ_lastgraphmap_acg", 10);
