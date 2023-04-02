@@ -487,67 +487,6 @@ inline void getPriorSizes(
     }
 }
 
-// TODO : BROKEN FUNCTION FOR NOW
-template <typename Prior, typename VertexPrior, typename EdgePrior>
-inline void ACGToGridMap(
-    const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg,
-    grid_map::GridMap& map) {
-    double resol = 0.1;
-    double size_x, size_y;
-    getPriorSizes<Prior, VertexPrior, EdgePrior>(acg, size_x, size_y);
-
-    /***********************************/
-
-    map.setFrameId("/world");
-    map.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol,
-                    grid_map::Position(0.0, 0.0));
-
-    map.add("prior");
-    map["prior"].setZero();
-
-    ACGPriortoGridMap<Prior, VertexPrior, EdgePrior>(acg, map, resol);
-
-    if (acg.getRobotNodes().size() > 0) {
-        grid_map::GridMap gridMaptmp({"all"});
-        gridMaptmp["all"].setZero();
-
-        gridMaptmp.setFrameId("/world");
-        gridMaptmp.setGeometry(grid_map::Length(4 * size_x, 4 * size_y), resol,
-                               grid_map::Position(0.0, 0.0));
-
-        nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
-        nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
-
-        grid_map::GridMapRosConverter::toOccupancyGrid(gridMaptmp, "all", 0, 1.,
-                                                       *prior_occ);
-
-        auto occ_out = ACGNDTtoOcc(acg, ptr_prior_occ, resol);
-
-        grid_map::GridMap mapNDT;
-        // THis ruin prior because they are of different sizes ! Need my custom
-        // fuse function :)
-        grid_map::GridMapRosConverter::fromOccupancyGrid(*occ_out, "ndt",
-                                                         mapNDT);
-
-        grid_map::Matrix& data = mapNDT["ndt"];
-        for (grid_map::GridMapIterator iterator(mapNDT); !iterator.isPastEnd();
-             ++iterator) {
-            const grid_map::Index index(*iterator);
-            if (std::isnan(data(index(0), index(1)))) {
-                data(index(0), index(1)) = -1;
-            }
-        }
-
-        grid_map::GridMap gridtmptmp;
-        fuseGridMap(mapNDT, map, gridtmptmp, "ndt", "prior");
-        map.add("all");
-        map["all"] = gridtmptmp["combined"];
-    } else {
-        map.add("all");
-        map["all"] = map["prior"];
-    }
-}
-
 /**
  *
  * \brief builds ocuupancy grid message
