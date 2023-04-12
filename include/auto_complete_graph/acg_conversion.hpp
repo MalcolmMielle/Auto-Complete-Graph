@@ -124,14 +124,34 @@ inline nav_msgs::OccupancyGrid::Ptr ACGNDTtoOcc(
     return occ_out;
 }
 
+/**
+ * @brief This method exports the ACG to an occupancy grid map where the prior
+ * and ndt map are one occupancy grid
+ *
+ * @tparam Prior: the prior map type
+ * @tparam VertexPrior: the type of vertex in the prior map
+ * @tparam EdgePrior: the type of edges in the prior map
+ * @param acg: the ACG graph to convert
+ * @param occ_out: the output occupancy map
+ * @param start: the first ndt map to export. Defaults to 0.
+ * @param end: the last occupancy map to export. Defaults the
+ * acg.getRobotNodes().size()
+ */
 template <typename Prior, typename VertexPrior, typename EdgePrior>
 inline void ACGtoOccupancyGrid(
     const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg,
     nav_msgs::OccupancyGrid::Ptr& occ_out,
     int start = 0,
     int end = -1) {
+    if (end < start && end != -1)
+        || (start >= acg.getRobotNodes().size()) {
+            throw std::runtime_error(
+                "End pointer is before the start. Can draw zones backward in "
+                "ACG_CONVERSION.hpp");
+        }
+
     //************* TODO : shorten this code !
-    // Get max sinze of prior
+    // Get max size of prior
     grid_map::GridMap map;
     auto edges = acg.getPrior()->getEdges();
 
@@ -196,34 +216,47 @@ inline void ACGtoOccupancyGrid(
     map["ndt"].setZero();
     map["all"].setZero();
 
-    std::cout << "Pos again1" << map.getPosition() << std::endl;
-
-    std::cout << "update the zones again" << std::endl;
     ACGPriortoGridMap<Prior, VertexPrior, EdgePrior>(acg, map, 0.1);
-
-    std::cout << "Pos again" << map.getPosition() << std::endl;
 
     nav_msgs::OccupancyGrid* prior_occ = new nav_msgs::OccupancyGrid();
     nav_msgs::OccupancyGrid::ConstPtr ptr_prior_occ(prior_occ);
     grid_map::GridMapRosConverter::toOccupancyGrid(map, "prior", 0, 1.,
                                                    *prior_occ);
 
-    std::cout << "POsition " << prior_occ->info.origin.position << std::endl;
-    std::cout << "ORientation " << prior_occ->info.origin.orientation
-              << std::endl;
-
     std::vector<nav_msgs::OccupancyGrid::ConstPtr> grids;
     grids.push_back(ptr_prior_occ);
 
-    std::cout << "Building the final thingy " << grids.size() << std::endl;
+    if (acg.getRobotNodes().size() != 0) {
+        std::vector<g2o::VertexSE2RobotPose*>::const_iterator it =
+            acg.getRobotNodes().begin() + start;
+        std::vector<g2o::VertexSE2RobotPose*>::const_iterator it_end =
+            acg.getRobotNodes().end();
+
+        if (end != -1) {
+            it_end = acg.getRobotNodes().begin() + end;
+        }
+
+        ACGNdtNodetoVecGrids(acg, it, it_end, grids);
+    }
+
     if (grids.size() > 0) {
         occ_out = occupancy_grid_utils::combineGrids(grids);
         occ_out->header.frame_id = "/world";
         occ_out->header.stamp = ros::Time::now();
     }
-    std::cout << "Out" << std::endl;
 }
 
+/**
+ * @brief Write all the submap in `acg` into a vector of occupancy grids
+ *
+ * @tparam Prior: the prior map type
+ * @tparam VertexPrior: the type of vertex in the prior map
+ * @tparam EdgePrior: the type of edges in the prior map
+ * @param acg: the ACG graph to convert
+ * @param it_start: the first ndt map to export.
+ * @param it_end: the last occupancy map to export.
+ * @param grids_out: the output vector of grids
+ */
 template <typename Prior, typename VertexPrior, typename EdgePrior>
 inline void ACGNdtNodetoVecGrids(
     const AASS::acg::AutoCompleteGraphBase<Prior, VertexPrior, EdgePrior>& acg,
@@ -231,27 +264,20 @@ inline void ACGNdtNodetoVecGrids(
     std::vector<g2o::VertexSE2RobotPose*>::const_iterator& it_end,
     std::vector<nav_msgs::OccupancyGrid::ConstPtr>& grids_out) {
     for (it_start; it_start != it_end; ++it_start) {
-        std::cout << "Node" << std::endl;
         nav_msgs::OccupancyGrid* omap = new nav_msgs::OccupancyGrid();
-        std::cout
-            << "Node size"
-            << (*it_start)->getMap()->getAllInitializedCellsShared().size()
-            << std::endl;
+
         assert(
             (*it_start)->getMap()->getAllInitializedCellsShared().size() ==
             (*it_start)->getMap().get()->getAllInitializedCellsShared().size());
 
-        std::cout << "Node size"
-                  << (*it_start)->getMap()->getAllCellsShared().size()
-                  << std::endl;
         assert((*it_start)->getMap()->getAllCellsShared().size() ==
                (*it_start)->getMap().get()->getAllCellsShared().size());
+
         perception_oru::toOccupancyGrid((*it_start)->getMap().get(), *omap, 0.3,
                                         "/world");
         auto node = *it_start;
         auto vertex = node->estimate().toIsometry();
 
-        std::cout << "Move" << std::endl;
         moveOccupancyMap(*omap, vertex);
         omap->header.frame_id = "/world";
         omap->header.stamp = ros::Time::now();
